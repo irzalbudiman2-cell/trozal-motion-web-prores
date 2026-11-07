@@ -317,7 +317,7 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
 .mt-toolbar-actions #mtUndo:disabled,.mt-toolbar-actions #mtRedo:disabled{opacity:.35;cursor:not-allowed}
 .mt-toolbar-actions #mtSnapToggle[aria-pressed="true"]{border-color:#73d99c;color:#aaf0c0;background:#153e2c}
 .mt-toolbar-actions #mtSnapToggle[aria-pressed="false"]{border-color:#5c5140;color:#b9ad93;background:#29251f}
-@media(max-width:1050px){.app{grid-template-columns:minmax(200px,var(--trozal-left)) 8px minmax(300px,1fr)}.right{display:none}}
+@media(max-width:1050px){.app{grid-template-columns:minmax(200px,var(--trozal-left)) 8px minmax(300px,1fr)}.right{display:none}.layout-resizer[data-edge="right"]{display:none}}
 @media(max-width:720px){
  .app{display:flex;flex-direction:column;height:auto;overflow:visible}
  .layout-resizer{display:none}
