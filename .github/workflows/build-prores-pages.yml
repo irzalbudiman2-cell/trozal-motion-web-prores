@@ -66,19 +66,21 @@ jobs:
           from pathlib import Path
           p = Path("Dockerfile")
           text = p.read_text()
-          needle = "RUN bash -x /src/build.sh \\\n--enable-gpl \\\n"
-          addition = (
-              "RUN bash -x /src/build.sh \\\n"
-              "--enable-encoder=prores_ks \\\n"
-              "--enable-decoder=png \\\n"
-              "--enable-demuxer=image2 \\\n"
-              "--enable-muxer=mov \\\n"
-              "--enable-protocol=file \\\n"
-              "--enable-gpl \\\n"
+          import re
+          pattern = r"(?m)^(?P<indent>[ ]*)RUN bash -x /src/build\\.sh \\\\\n(?P=indent)      --enable-gpl \\\\\n"
+          replacement = (
+              r"\\g<indent>RUN bash -x /src/build.sh \\\\"
+              r"\\n\\g<indent>      --enable-encoder=prores_ks \\\\"
+              r"\\n\\g<indent>      --enable-decoder=png \\\\"
+              r"\\n\\g<indent>      --enable-demuxer=image2 \\\\"
+              r"\\n\\g<indent>      --enable-muxer=mov \\\\"
+              r"\\n\\g<indent>      --enable-protocol=file \\\\"
+              r"\\n\\g<indent>      --enable-gpl \\\\"
           )
-          if needle not in text:
-              raise SystemExit("Could not find the pinned FFmpeg Dockerfile configure block; refusing an unverified build.")
-          p.write_text(text.replace(needle, addition, 1))
+          patched, count = re.subn(pattern, replacement, text, count=1)
+          if count != 1:
+              raise SystemExit("Could not locate FFmpeg configure block with indentation; no build performed.")
+          p.write_text(patched)
           PY
           make prd
           mkdir -p "$GITHUB_WORKSPACE/site/vendor/prores-core"
