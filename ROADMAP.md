@@ -35,18 +35,28 @@ Acceptance checks:
 
 ## Phase 2 — Keyframe & Graph Editor
 
-Planned:
-- Unified keyframe lanes for position X/Y, scale, rotation, opacity and supported effect parameters.
-- Auto-keyframe mode that inserts/updates a key when an animated property changes at the playhead.
-- Per-keyframe interpolation: Hold, Linear, Ease In, Ease Out, Easy Ease, and editable cubic Bezier.
-- Graph Editor with value/speed curves, tangent handles and numeric easing controls.
-- Motion-path overlay with draggable position points.
-- Frame-accurate stepping and snap-to-marker/keyframe.
+**Status: Initial implementation committed; browser interaction and export parity still require validation.**
+
+Implemented:
+- Per-layer keyframe editor for X/Y position, rotation, scale, and opacity.
+- Auto Keyframe mode writes changes to the current playhead when a transform value is edited.
+- Per-keyframe outgoing interpolation: Hold, Linear, Ease In, Ease Out, Easy Ease, and custom cubic Bezier.
+- Editable Bezier control values (X1/Y1/X2/Y2) stored with the outgoing keyframe.
+- Value Graph for Position X, Position Y, Rotation, Scale, and Opacity. Drag points to change keyframe time and value.
+- Motion Path X/Y graph. Drag points to change X/Y position while keeping keyframe time.
+- Keyframe easing and Bezier values are persisted as part of the existing project keyframe data; Auto Keyframe preference is saved per layer.
+- Legacy keyframes without easing data continue to use the previous smooth/ease-in-out interpolation.
+
+Still planned for this phase:
+- Dedicated velocity/speed graph and tangent handles on the visible curve.
+- On-stage motion path overlay with editable handles.
+- Frame snapping, keyframe snapping, and undo/redo integration for graph edits.
 
 Acceptance checks:
-- Preview and exported frames evaluate the same keyframe interpolation function.
-- Existing project keyframes migrate without changing their current smooth interpolation.
-- Graph edits are undoable and are persisted in project JSON.
+- Preview and exported frames use the same keyframe interpolation function.
+- Older project JSON files without easing/graph fields continue to load with the old smooth interpolation.
+- Save/reopen preserves easing mode, Bezier values, Auto Keyframe preference, and all keyframe values.
+- Dragging graph points updates the same layer keyframe data used by preview and render.
 
 ## Phase 3 — Text Animation Studio
 
