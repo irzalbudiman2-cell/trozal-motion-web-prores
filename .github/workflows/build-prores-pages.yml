@@ -1,0 +1,112 @@
+name: Build ProRes WASM and Deploy GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - name: Checkout TROZAL MOTION
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Prepare static site
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p site/vendor/ffmpeg site/vendor/prores-core
+          cp index.html site/index.html
+          touch site/.nojekyll
+
+      - name: Vendor FFmpeg worker package and JSZip locally
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/npm-ffmpeg /tmp/npm-jszip
+          npm pack @ffmpeg/ffmpeg@0.12.15 --pack-destination /tmp/npm-ffmpeg
+          tar -xzf /tmp/npm-ffmpeg/ffmpeg-ffmpeg-0.12.15.tgz -C /tmp/npm-ffmpeg
+          cp -R /tmp/npm-ffmpeg/package/dist/esm/. site/vendor/ffmpeg/
+          npm pack jszip@3.10.1 --pack-destination /tmp/npm-jszip
+          tar -xzf /tmp/npm-jszip/jszip-3.10.1.tgz -C /tmp/npm-jszip
+          cp /tmp/npm-jszip/package/dist/jszip.min.js site/vendor/jszip.min.js
+          test -s site/vendor/ffmpeg/index.js
+          test -s site/vendor/ffmpeg/worker.js
+          test -s site/vendor/jszip.min.js
+
+      - name: Build FFmpeg core with ProRes 4444 enabled
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch v12.15 https://github.com/ffmpegwasm/ffmpeg.wasm.git /tmp/ffmpeg-wasm
+          cd /tmp/ffmpeg-wasm
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("Dockerfile")
+          text = p.read_text()
+          needle = "RUN bash -x /src/build.sh \\\n--enable-gpl \\\n"
+          addition = (
+              "RUN bash -x /src/build.sh \\\n"
+              "--enable-encoder=prores_ks \\\n"
+              "--enable-decoder=png \\\n"
+              "--enable-demuxer=image2 \\\n"
+              "--enable-muxer=mov \\\n"
+              "--enable-protocol=file \\\n"
+              "--enable-gpl \\\n"
+          )
+          if needle not in text:
+              raise SystemExit("Could not find the pinned FFmpeg Dockerfile configure block; refusing an unverified build.")
+          p.write_text(text.replace(needle, addition, 1))
+          PY
+          make prd
+          mkdir -p "$GITHUB_WORKSPACE/site/vendor/prores-core"
+          cp packages/core/dist/esm/ffmpeg-core.js "$GITHUB_WORKSPACE/site/vendor/prores-core/"
+          cp packages/core/dist/esm/ffmpeg-core.wasm "$GITHUB_WORKSPACE/site/vendor/prores-core/"
+          test -s "$GITHUB_WORKSPACE/site/vendor/prores-core/ffmpeg-core.js"
+          test -s "$GITHUB_WORKSPACE/site/vendor/prores-core/ffmpeg-core.wasm"
+
+      - name: Verify build outputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q -- '--enable-encoder=prores_ks' /tmp/ffmpeg-wasm/Dockerfile
+          test -s site/index.html
+          test -s site/vendor/ffmpeg/worker.js
+          test -s site/vendor/prores-core/ffmpeg-core.js
+          test -s site/vendor/prores-core/ffmpeg-core.wasm
+          ls -lh site/vendor/prores-core site/vendor/ffmpeg | head -40
+          du -sh site
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
