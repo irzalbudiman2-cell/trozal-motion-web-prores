@@ -499,6 +499,13 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
    <div class="row"><div><label>Perataan</label><select id="textLayerAlign"><option value="center">Tengah</option><option value="left">Kiri</option><option value="right">Kanan</option></select></div><div><label>Jarak huruf (px)</label><input type="number" id="textLayerTracking" min="-5" max="30" step=".5" value="0"></div></div>
    <div class="row"><div><label>Posisi X (%)</label><input type="number" id="textLayerX" min="-100" max="100" value="0"></div><div><label>Posisi Y (%)</label><input type="number" id="textLayerY" min="-100" max="100" value="28"></div></div>
    <div class="row"><div><label>Mulai (detik)</label><input type="number" id="textLayerStart" min="0" max="300" step=".1" value="0"></div><div><label>Durasi (detik)</label><input type="number" id="textLayerDuration" min=".1" max="300" step=".1" value="1.2"></div></div>
+   
+   <label>Preset teks</label><select id="textLayerPreset">
+    <option value="custom">Custom</option><option value="cinematic">Cinematic Title</option><option value="lowerthird">Lower Third</option><option value="subtitle">Subtitle</option><option value="neon">Neon Headline</option><option value="minimal">Minimal Caption</option><option value="impact">Impact Headline</option>
+   </select>
+   <div class="row"><div><label>Mode animasi</label><select id="textLayerGranularity"><option value="whole">Satu teks</option><option value="character">Per karakter</option><option value="word">Per kata</option></select></div><div><label>Arah gerak</label><select id="textLayerDirection"><option value="up">Dari bawah</option><option value="down">Dari atas</option><option value="left">Dari kiri</option><option value="right">Dari kanan</option><option value="scale">Zoom masuk</option><option value="none">Tanpa arah</option></select></div></div>
+   <label>Jeda antar karakter/kata (detik)</label><input type="number" id="textLayerStagger" min="0" max="2" step=".01" value=".04">
+   <div class="row"><button type="button" id="textLayerUpBtn">↑ Naikkan urutan</button><button type="button" id="textLayerDownBtn">↓ Turunkan urutan</button></div>
    <label>Animasi masuk</label><select id="textLayerAnimation"><option value="fade">Fade In</option><option value="rise">Rise + Fade</option><option value="typewriter">Typewriter</option><option value="none">Tanpa animasi</option></select>
    <div class="row"><button type="button" id="textLayerReset">Reset</button><span class="help" id="textLayerStatus">Text layer nonaktif.</span></div>
   </section>
@@ -1415,8 +1422,8 @@ function wireMotionPathOverlay(){
 
 
 
-const TEXT_LAYER_FIELDS=['textLayerEnabled','textLayerContent','textLayerFont','textLayerWeight','textLayerSize','textLayerColor','textLayerAlign','textLayerTracking','textLayerX','textLayerY','textLayerStart','textLayerDuration','textLayerAnimation'];
-const TEXT_LAYER_DEFAULTS={textLayerEnabled:true,textLayerContent:'TROZAL MOTION',textLayerFont:'Arial',textLayerWeight:'700',textLayerSize:'6',textLayerColor:'#ffffff',textLayerAlign:'center',textLayerTracking:'0',textLayerX:'0',textLayerY:'28',textLayerStart:'0',textLayerDuration:'1.2',textLayerAnimation:'fade'};
+const TEXT_LAYER_FIELDS=['textLayerEnabled','textLayerContent','textLayerFont','textLayerWeight','textLayerSize','textLayerColor','textLayerAlign','textLayerTracking','textLayerX','textLayerY','textLayerStart','textLayerDuration','textLayerAnimation','textLayerGranularity','textLayerDirection','textLayerStagger'];
+const TEXT_LAYER_DEFAULTS={textLayerEnabled:true,textLayerContent:'TROZAL MOTION',textLayerFont:'Arial',textLayerWeight:'700',textLayerSize:'6',textLayerColor:'#ffffff',textLayerAlign:'center',textLayerTracking:'0',textLayerX:'0',textLayerY:'28',textLayerStart:'0',textLayerDuration:'1.2',textLayerAnimation:'fade',textLayerGranularity:'whole',textLayerDirection:'up',textLayerStagger:'.04'};
 let nativeTextLayers=[{id:'text-1',name:'Text 1',...TEXT_LAYER_DEFAULTS}],selectedTextLayerId='text-1',textLayerIdCounter=1;
 function readTextLayerControls(){const o={};TEXT_LAYER_FIELDS.forEach(k=>{const el=$(k);if(el)o[k]=el.type==='checkbox'?el.checked:el.value});return o}
 function writeTextLayerControls(layer){TEXT_LAYER_FIELDS.forEach(k=>{const el=$(k);if(el&&layer[k]!==undefined){if(el.type==='checkbox')el.checked=!!layer[k];else el.value=layer[k]}})}
@@ -1440,16 +1447,52 @@ function deleteTextLayer(){
  const idx=nativeTextLayers.findIndex(x=>x.id===selectedTextLayerId);nativeTextLayers.splice(Math.max(0,idx),1);
  const next=nativeTextLayers[Math.max(0,idx-1)]||nativeTextLayers[0];selectedTextLayerId=next.id;writeTextLayerControls(next);refreshTextLayerManager();updateTextLayerPreview(playhead);scheduleAutosave();
 }
+
+function textLayerPresetApply(preset){
+ saveActiveTextLayer();const layer=nativeTextLayers.find(x=>x.id===selectedTextLayerId);if(!layer)return;
+ const presets={
+  cinematic:{textLayerFont:'Georgia',textLayerWeight:'700',textLayerSize:'8',textLayerColor:'#f6e6bd',textLayerAlign:'center',textLayerTracking:'3',textLayerY:'20',textLayerAnimation:'rise',textLayerGranularity:'word',textLayerDirection:'up',textLayerStagger:'.07'},
+  lowerthird:{textLayerFont:'Arial',textLayerWeight:'700',textLayerSize:'4.2',textLayerColor:'#ffffff',textLayerAlign:'left',textLayerTracking:'.5',textLayerX:'-25',textLayerY:'34',textLayerAnimation:'rise',textLayerGranularity:'whole',textLayerDirection:'left',textLayerStagger:'.04'},
+  subtitle:{textLayerFont:'Arial',textLayerWeight:'600',textLayerSize:'3.5',textLayerColor:'#ffffff',textLayerAlign:'center',textLayerTracking:'0',textLayerX:'0',textLayerY:'40',textLayerAnimation:'fade',textLayerGranularity:'word',textLayerDirection:'up',textLayerStagger:'.025'},
+  neon:{textLayerFont:'Arial',textLayerWeight:'900',textLayerSize:'8',textLayerColor:'#70f5ff',textLayerAlign:'center',textLayerTracking:'2',textLayerY:'0',textLayerAnimation:'fade',textLayerGranularity:'character',textLayerDirection:'scale',textLayerStagger:'.035'},
+  minimal:{textLayerFont:'Verdana',textLayerWeight:'400',textLayerSize:'3.5',textLayerColor:'#ffffff',textLayerAlign:'left',textLayerTracking:'1',textLayerX:'-28',textLayerY:'38',textLayerAnimation:'fade',textLayerGranularity:'whole',textLayerDirection:'none',textLayerStagger:'0'},
+  impact:{textLayerFont:'Impact',textLayerWeight:'900',textLayerSize:'10',textLayerColor:'#ffe34d',textLayerAlign:'center',textLayerTracking:'1',textLayerY:'0',textLayerAnimation:'rise',textLayerGranularity:'character',textLayerDirection:'up',textLayerStagger:'.025'}
+ };
+ if(presets[preset])Object.assign(layer,presets[preset]);
+ writeTextLayerControls(layer);updateTextLayerPreview(playhead);scheduleAutosave();
+}
+function moveTextLayer(direction){
+ saveActiveTextLayer();const i=nativeTextLayers.findIndex(x=>x.id===selectedTextLayerId),j=i+direction;
+ if(i<0||j<0||j>=nativeTextLayers.length)return;
+ [nativeTextLayers[i],nativeTextLayers[j]]=[nativeTextLayers[j],nativeTextLayers[i]];
+ refreshTextLayerManager();updateTextLayerPreview(playhead);scheduleAutosave();
+}
+function textUnitProgress(p,index,count,layer){
+ const stagger=Math.max(0,+layer.textLayerStagger||0),duration=Math.max(.1,+layer.textLayerDuration||1.2);
+ const span=Math.max(.01,duration-stagger*Math.max(0,count-1));
+ return Math.max(0,Math.min(1,(p*duration-index*stagger)/span));
+}
+function textUnitOffset(direction,p,size){
+ const d=(1-p)*size*.55;
+ return direction==='left'?[-d,0]:direction==='right'?[d,0]:direction==='down'?[0,-d]:direction==='up'?[0,d]:[0,0];
+}
 function updateTextLayerPreview(t){
  const host=$('nativeTextPreview');if(!host)return;saveActiveTextLayer();host.innerHTML='';
  const stageW=$('stage').clientWidth||640;
  nativeTextLayers.forEach(layer=>{
   const content=layer.textLayerContent||'',start=Math.max(0,+layer.textLayerStart||0),duration=Math.max(.1,+layer.textLayerDuration||1.2);
   if(!layer.textLayerEnabled||!content||t<start)return;
-  const p=Math.max(0,Math.min(1,(t-start)/duration)),mode=layer.textLayerAnimation,chars=Array.from(content),el=document.createElement('div');
-  el.textContent=mode==='typewriter'?chars.slice(0,Math.ceil(chars.length*p)).join(''):content;
-  el.style.position='absolute';el.style.left=(50+(+layer.textLayerX||0))+'%';el.style.top=(50+(+layer.textLayerY||0))+'%';el.style.width='90%';el.style.padding='2%';el.style.boxSizing='border-box';el.style.whiteSpace='pre-wrap';el.style.wordBreak='break-word';el.style.lineHeight='1.12';el.style.transform='translate(-50%,'+(mode==='rise'?-50+(1-p)*7:-50)+'%)';
-  el.style.fontFamily='"'+layer.textLayerFont+'"';el.style.fontWeight=layer.textLayerWeight;el.style.fontSize=(Math.max(1,+layer.textLayerSize||6)*stageW/100)+'px';el.style.color=layer.textLayerColor;el.style.textAlign=layer.textLayerAlign;el.style.letterSpacing=(+layer.textLayerTracking||0)+'px';el.style.opacity=mode==='fade'||mode==='rise'?p:1;el.style.textShadow='0 2px 12px #0009';host.appendChild(el);
+  const p=Math.max(0,Math.min(1,(t-start)/duration)),mode=layer.textLayerAnimation,gran=layer.textLayerGranularity||'whole',units=gran==='character'?Array.from(content):gran==='word'?content.match(/\s+|[^\s]+/gu)||[]:[content];
+  const wrapper=document.createElement('div');wrapper.style.position='absolute';wrapper.style.left=(50+(+layer.textLayerX||0))+'%';wrapper.style.top=(50+(+layer.textLayerY||0))+'%';wrapper.style.width='90%';wrapper.style.padding='2%';wrapper.style.boxSizing='border-box';wrapper.style.whiteSpace='pre-wrap';wrapper.style.wordBreak='break-word';wrapper.style.lineHeight='1.12';wrapper.style.transform='translate(-50%,'+(mode==='rise'?-50+(1-p)*7:-50)+'%)';wrapper.style.fontFamily='"'+layer.textLayerFont+'"';wrapper.style.fontWeight=layer.textLayerWeight;wrapper.style.fontSize=(Math.max(1,+layer.textLayerSize||6)*stageW/100)+'px';wrapper.style.color=layer.textLayerColor;wrapper.style.textAlign=layer.textLayerAlign;wrapper.style.letterSpacing=(+layer.textLayerTracking||0)+'px';wrapper.style.opacity=mode==='fade'||mode==='rise'?p:1;wrapper.style.textShadow='0 2px 12px #0009';
+  if(gran==='whole'){wrapper.textContent=mode==='typewriter'?Array.from(content).slice(0,Math.ceil(content.length*p)).join(''):content;}
+  else{
+   let idx=0;const lines=content.split('\n');
+   lines.forEach((line,lineIndex)=>{const row=document.createElement('div');row.style.minHeight='1.12em';const lineUnits=gran==='character'?Array.from(line):(line.match(/\s+|[^\s]+/gu)||[]);
+    lineUnits.forEach(unit=>{const span=document.createElement('span'),q=textUnitProgress(p,idx++,units.length,layer),off=textUnitOffset(layer.textLayerDirection,q,Math.max(8,stageW*.04));span.textContent=unit;span.style.display='inline-block';span.style.opacity=q;span.style.transform=layer.textLayerDirection==='scale'?'scale('+(.45+.55*q)+')':'translate('+off[0]+'px,'+off[1]+'px)';span.style.transition='none';row.appendChild(span)});
+    wrapper.appendChild(row);if(lineIndex<lines.length-1)wrapper.appendChild(document.createElement('br'));
+   });
+  }
+  host.appendChild(wrapper);
  });
  host.style.display=host.childElementCount?'block':'none';
 }
@@ -1458,14 +1501,34 @@ function drawTextLayerToCanvas(ctx,w,h,t){
  nativeTextLayers.forEach(layer=>{
   if(!layer.textLayerEnabled)return;const content=layer.textLayerContent||'';if(!content)return;
   const start=Math.max(0,+layer.textLayerStart||0),duration=Math.max(.1,+layer.textLayerDuration||1.2);if(t<start)return;
-  const mode=layer.textLayerAnimation,p=Math.max(0,Math.min(1,(t-start)/duration)),chars=Array.from(content),value=mode==='typewriter'?chars.slice(0,Math.ceil(chars.length*p)).join(''):content;if(!value)return;
-  const size=Math.max(1,+layer.textLayerSize||6)*w/100,x=w/2+(+layer.textLayerX||0)*w/100,y=h/2+(+layer.textLayerY||0)*h/100-(mode==='rise'?(1-p)*h*.07:0);
+  const mode=layer.textLayerAnimation,p=Math.max(0,Math.min(1,(t-start)/duration)),gran=layer.textLayerGranularity||'whole',size=Math.max(1,+layer.textLayerSize||6)*w/100,x=w/2+(+layer.textLayerX||0)*w/100,y=h/2+(+layer.textLayerY||0)*h/100-(mode==='rise'?(1-p)*h*.07:0);
   ctx.save();ctx.globalAlpha*=mode==='fade'||mode==='rise'?p:1;ctx.font=layer.textLayerWeight+' '+size+'px "'+layer.textLayerFont+'"';ctx.textAlign=layer.textLayerAlign;ctx.textBaseline='middle';ctx.fillStyle=layer.textLayerColor;if('letterSpacing' in ctx)ctx.letterSpacing=(+layer.textLayerTracking||0)+'px';
-  const lines=value.split(/\r?\n/),lineH=size*1.15;lines.forEach((line,i)=>ctx.fillText(line,x,y+(i-(lines.length-1)/2)*lineH,w*.9));ctx.restore();
+  const lines=content.split(/\r?\n/),lineH=size*1.15;
+  lines.forEach((line,lineIndex)=>{
+   if(gran==='whole'){
+    let value=line;if(mode==='typewriter'){const total=Array.from(content).length,shown=Math.ceil(total*p),before=lines.slice(0,lineIndex).join('').length+lineIndex;value=Array.from(line).slice(0,Math.max(0,shown-before)).join('')}
+    if(value)ctx.fillText(value,x,y+(lineIndex-(lines.length-1)/2)*lineH,w*.9);return;
+   }
+   const units=gran==='character'?Array.from(line):(line.match(/\s+|[^\s]+/gu)||[]),count=gran==='character'?Array.from(content).length:(content.match(/\s+|[^\s]+/gu)||[]).length;
+   const widths=units.map(u=>ctx.measureText(u).width+(+layer.textLayerTracking||0)*Math.max(0,Array.from(u).length-1)),total=widths.reduce((a,b)=>a+b,0);
+   let cursor=layer.textLayerAlign==='left'?x-w*.45:layer.textLayerAlign==='right'?x+w*.45-total:x-total/2;
+   let indexBase=gran==='character'?Array.from(lines.slice(0,lineIndex).join('\n')).length:((content.slice(0,content.indexOf(line)).match(/\s+|[^\s]+/gu)||[]).length);
+   units.forEach((unit,i)=>{const q=textUnitProgress(p,indexBase+i,count,layer),off=textUnitOffset(layer.textLayerDirection,q,size),alpha=ctx.globalAlpha;ctx.globalAlpha=alpha*q;
+    if(layer.textLayerDirection==='scale'){ctx.translate(cursor+widths[i]/2,y+(lineIndex-(lines.length-1)/2)*lineH);ctx.scale(.45+.55*q,.45+.55*q);ctx.fillText(unit,-widths[i]/2,0);ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=alpha;}
+    else ctx.fillText(unit,cursor+off[0],y+(lineIndex-(lines.length-1)/2)*lineH+off[1]);
+    cursor+=widths[i];
+   });
+  });
+  ctx.restore();
  });
 }
+
 TEXT_LAYER_FIELDS.forEach(id=>{const el=$(id);if(el){el.addEventListener('input',()=>{saveActiveTextLayer();updateTextLayerPreview(playhead);refreshTextLayerManager();scheduleAutosave()});el.addEventListener('change',()=>{saveActiveTextLayer();updateTextLayerPreview(playhead);refreshTextLayerManager();scheduleAutosave()})}});
 $('textLayerSelect')?.addEventListener('change',e=>selectTextLayer(e.target.value));
+$('textLayerPreset')?.addEventListener('change',e=>{if(e.target.value!=='custom')textLayerPresetApply(e.target.value)});
+$('textLayerUpBtn')?.addEventListener('click',()=>moveTextLayer(-1));
+$('textLayerDownBtn')?.addEventListener('click',()=>moveTextLayer(1));
+
 $('textAddBtn')?.addEventListener('click',()=>addTextLayer(false));
 $('textDuplicateBtn')?.addEventListener('click',()=>addTextLayer(true));
 $('textDeleteBtn')?.addEventListener('click',deleteTextLayer);
