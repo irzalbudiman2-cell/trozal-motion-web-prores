@@ -83,7 +83,8 @@ jobs:
           patched, count = re.subn(pattern, patch, text, count=1)
           if count != 1:
               raise SystemExit("Could not locate FFmpeg configure block with indentation; no build performed.")
-          p.write_text(patched)          PY
+          p.write_text(patched)
+          PY
           make prd
           mkdir -p "$GITHUB_WORKSPACE/site/vendor/prores-core"
           cp packages/core/dist/esm/ffmpeg-core.js "$GITHUB_WORKSPACE/site/vendor/prores-core/"
