@@ -1447,7 +1447,7 @@ function applyProject(p){
  layerKeyframes=Array.isArray(p.layerKeyframes)?p.layerKeyframes.map(a=>Array.isArray(a)?a.map(k=>({...k})):[]):[];
  svgLayerHints=Array.isArray(p.svgLayerHints)?p.svgLayerHints.slice():svgPieces.map((piece,i)=>{try{const d=new DOMParser().parseFromString(piece,'image/svg+xml');const n=[...d.documentElement.children].find(x=>!['defs','style','title','desc','metadata'].includes(x.localName));return n?analyzeSvgLayer({node:n,ancestors:[]},i,svgPieces.length):{kind:'detail',entrance:0,loop:0,intensity:0,reason:'Layer dipulihkan; gerakan tetap statis.'}}catch(e){return {kind:'detail',entrance:0,loop:0,intensity:0,reason:'Layer dipulihkan; gerakan tetap statis.'}}});
  svgWasSplit=!!p.svgWasSplit&&svgPieces.length>0;
- timelineMarkers=Array.isArray(p.timelineMarkers)?p.timelineMarkers.map(m=>({id:String(m.id||('marker-'+Date.now()),),t:Math.max(0,Number(m.t)||0),label:String(m.label||'Marker')})):[];
+ timelineMarkers=Array.isArray(p.timelineMarkers)?p.timelineMarkers.map(m=>({id:String(m.id||('marker-'+Date.now())),t:Math.max(0,Number(m.t)||0),label:String(m.label||'Marker')})):[];
  timelineTrackLocks=p.timelineTrackLocks&&typeof p.timelineTrackLocks==='object'?{...p.timelineTrackLocks}:{};
  if(svgWasSplit){
    buildAutoLayerControls();
