@@ -876,19 +876,18 @@ async function encodeMovWithWasm(pngZip,totalFrames,fps,width,height,outputForma
    }
    if(code!==0)throw new Error('FFmpeg gagal meng-encode urutan frame (kode '+code+').');
    setExportStatus(isProRes?'Memverifikasi codec dan alpha MOV…':'Memeriksa hasil MP4…');
-   if(isProRes && typeof ffmpeg.ffprobe==='function'){
-    const probeCode=await ffmpeg.ffprobe([
-     '-v','error','-select_streams','v:0','-show_entries','stream=codec_name,profile,pix_fmt',
-     '-of','default=noprint_wrappers=1',output,'-o','prores_probe.txt'
-    ]);
-    if(probeCode!==0)throw new Error('FFprobe gagal memverifikasi stream ProRes. MOV belum dinyatakan berhasil.');
-    const probeData=await ffmpeg.readFile('prores_probe.txt','utf8');
-    const probeText=typeof probeData==='string'?probeData:new TextDecoder().decode(probeData);
-    if(!/codec_name=prores/i.test(probeText)||!/profile=.*4444/i.test(probeText)||!/pix_fmt=yuva444p(?:10|12)le/i.test(probeText)){
-     throw new Error('Pemeriksaan MOV tidak menemukan ProRes 4444 dengan yuva444p10le. Hasil ditolak: '+probeText.slice(0,500));
+   if(isProRes){
+    // The custom ffmpeg.wasm core ships the FFmpeg CLI, not a standalone ffprobe binary.
+    // Ask FFmpeg to inspect the MOV input; it prints stream metadata before reporting
+    // that no output was requested. Parse that metadata rather than calling ffprobe.
+    encoderLog='';
+    const inspectCode=await ffmpeg.exec(['-hide_banner','-i',output]);
+    const inspectText=encoderLog;
+    const hasProRes4444=/Video:\s*prores\s*\(4444\)/i.test(inspectText)||/Video:\s*prores\s*\([^)]*4444/i.test(inspectText);
+    const hasAlphaPixelFormat=/yuva444p(?:10|12)le/i.test(inspectText);
+    if(!hasProRes4444||!hasAlphaPixelFormat){
+     throw new Error('Pemeriksaan MOV gagal memastikan ProRes 4444 + alpha. FFmpeg exit '+inspectCode+'. Metadata: '+inspectText.slice(-1200));
     }
-   }else if(isProRes){
-    throw new Error('FFprobe tidak tersedia pada custom core; alpha MOV tidak dapat diverifikasi sehingga hasil tidak dinyatakan berhasil.');
    }
    setExportStatus('Membaca hasil video…');
    const data=await ffmpeg.readFile(output);
@@ -899,7 +898,7 @@ async function encodeMovWithWasm(pngZip,totalFrames,fps,width,height,outputForma
    if(outputFormat==='prores'){
     setExportStatus('ProRes 4444 + Alpha tervalidasi: '+(blob.size/1048576).toFixed(1)+' MB · '+width+'×'+height+' · '+fps+' FPS · '+totalFrames+' frame · yuva444p10le.');
     setRenderProgress(100,'MOV ProRes 4444 + Alpha berhasil','success');
-    setStatus('MOV ProRes 4444 berhasil dibuat. FFprobe memverifikasi codec ProRes, profile 4444, dan pixel format alpha yuva444p10le.');
+    setStatus('MOV ProRes 4444 berhasil dibuat. Metadata stream diperiksa oleh FFmpeg: ProRes 4444 dan pixel format alpha yuva444p10le.');
    }else{
     const quality=$('quality').value,crfChoice=$('mp4Crf')?.value||'auto',crf=crfChoice==='auto'?(quality==='max'?15:quality==='high'?18:22):Number(crfChoice);
     setExportStatus('Selesai: MP4 H.264 · CRF '+crf+' · '+(blob.size/1048576).toFixed(1)+' MB · '+width+'×'+height+' · '+fps+' FPS · '+totalFrames+' frame');
