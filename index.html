@@ -299,7 +299,8 @@ select,input[type=text],input[type=number],.ai-tools textarea{background:#071d15
    <label>Opacity <span class="value" id="opacityVal">100%</span></label><input id="opacity" type="range" min="10" max="100" value="100">
   </section>
   <section class="panel"><h3><b>●</b> 7. EKSPOR</h3>
-   <label>Format video</label><select id="format"><option value="webm" selected>WebM (ekspor langsung dari browser)</option><option value="mp4">MP4 / H.264</option><option value="mov">MOV / QuickTime · ProRes 4444 + Alpha</option><option value="pngseq">PNG Sequence ZIP (transparansi / alpha)</option></select>
+   <label>Format video</label><select id="format"><option value="webm">WebM (ekspor langsung dari browser)</option><option value="mp4">MP4 / H.264</option><option value="mov" selected>MOV / QuickTime · ProRes 4444 + Alpha</option><option value="pngseq">PNG Sequence ZIP (transparansi / alpha)</option></select>
+   <div class="control" id="transparentExportMode"><label for="proresMode">Mode ekspor transparan</label><select id="proresMode"><option value="unlimited" selected>ProRes 4444 · tanpa batas ukuran file</option><option value="pngUnlimited">PNG Sequence ZIP · tanpa batas ukuran file</option></select><small class="target-hint" id="proresModeHint">Kualitas ProRes 4444 + alpha dipertahankan tanpa batas ukuran file. MOV dibuat langsung melalui FFmpeg lokal.</small></div>
    <label>Preset kualitas</label><select id="quality"><option value="standard">Standar · file lebih kecil</option><option value="high" selected>Tinggi · detail tajam</option><option value="max">Maksimal · kualitas tertinggi</option></select>
    <label>MP4 H.264 · CRF (kualitas kompresi)</label>
    <select id="mp4Crf"><option value="23">CRF 23 · ukuran lebih kecil</option><option value="20">CRF 20 · seimbang</option><option value="18" selected>CRF 18 · kualitas tinggi</option><option value="16">CRF 16 · sangat tinggi</option><option value="14">CRF 14 · mendekati lossless, file besar</option><option value="auto">Otomatis mengikuti preset kualitas</option></select>
@@ -574,8 +575,10 @@ $('swatches').querySelectorAll('button').forEach(b=>b.onclick=()=>{$('swatches')
 function applyBackground(){let v=$('bgMode').value,st=$('stage');st.className='stage';st.style.backgroundColor='';if(v==='transparent'){}else if(v==='custom'){st.classList.add('solid');st.style.backgroundColor=$('customBg').value}else st.classList.add(v);st.dataset.bgMode=v;} $('bgMode').onchange=()=>{applyBackground();renderAt(playhead)};$('customBg').oninput=()=>{if($('bgMode').value==='custom')applyBackground();renderAt(playhead)};applyBackground();
 function range(id,out,fmt){$(id).oninput=()=>{ $(out).textContent=fmt($(id).value); updateInfo(); if(!playing)renderAt(playhead)}}
 
-const proresModeHint=()=>{const mode=$('proresMode')?.value||'unlimited';if($('proresModeHint'))$('proresModeHint').textContent=mode==='pngUnlimited'?'Mengekspor seluruh frame PNG transparan ke dalam satu ZIP tanpa batas ukuran yang ditetapkan aplikasi. Ukuran besar tetap membutuhkan ruang disk dan RAM yang cukup.':'Kualitas ProRes 4444 + alpha dipertahankan tanpa batas ukuran file. MOV dibuat langsung melalui FFmpeg lokal.'};
-$('proresMode')?.addEventListener('change',proresModeHint);proresModeHint();
+const proresModeHint=()=>{const mode=$('proresMode')?.value||'unlimited';if($('proresModeHint'))$('proresModeHint').textContent=mode==='pngUnlimited'?'Mengekspor seluruh frame PNG transparan ke dalam satu ZIP tanpa batas ukuran yang ditetapkan aplikasi. Ukuran besar tetap membutuhkan ruang disk dan RAM yang cukup.':'Kualitas ProRes 4444 + alpha dipertahankan tanpa batas ukuran file. MOV dibuat langsung melalui FFmpeg.wasm yang di-host pada website.'};
+$('proresMode')?.addEventListener('change',()=>{$('format').value=$('proresMode').value==='pngUnlimited'?'pngseq':'mov';proresModeHint();scheduleAutosave?.()});
+$('format')?.addEventListener('change',()=>{if($('format').value==='mov')$('proresMode').value='unlimited';else if($('format').value==='pngseq')$('proresMode').value='pngUnlimited';proresModeHint()});
+proresModeHint();
 range('duration','durationVal',v=>(+v).toFixed(1)+' dtk');range('effectIntensity','effectIntensityVal',v=>v+'%');range('speed','speedVal',v=>(+v).toFixed(2)+'×');range('intensity','intensityVal',v=>v+'%');range('scale','scaleVal',v=>v+'%');range('posX','xVal',v=>v);range('posY','yVal',v=>v);range('rotation','rotVal',v=>v+'°');range('opacity','opacityVal',v=>v+'%');
 ['fps','resolution'].forEach(id=>$(id).onchange=updateInfo);
 updateInfo();
