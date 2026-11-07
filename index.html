@@ -1127,7 +1127,7 @@ function wireMultiTrackEditor(){
  };
  editor.addEventListener('click',e=>{
   const eye=e.target.closest('[data-mt-eye]');
-  if(eye){const i=Number(eye.dataset.mtEye),el=$('autoLayerVisible'+i);if(el){el.checked=!el.checked;renderAt(playhead);refreshTimelineEditor();scheduleAutosave();}return;}
+  if(eye){const i=Number(eye.dataset.mtEye),el=$('autoLayerVisible'+i);if(el){trozalHistoryBegin();el.checked=!el.checked;renderAt(playhead);refreshTimelineEditor();scheduleAutosave();trozalHistoryCommit('Visibilitas layer '+(i+1));}return;}
   const lock=e.target.closest('[data-mt-lock]');
   if(lock){trozalHistoryBegin();const i=Number(lock.dataset.mtLock);timelineTrackLocks[i]=!timelineTrackLocks[i];refreshTimelineEditor();scheduleAutosave();trozalHistoryCommit('Kunci track');return;}
   const select=e.target.closest('[data-mt-select]');
@@ -1167,12 +1167,12 @@ function wireMultiTrackEditor(){
   const drag=timelineDragState;if(!drag)return;
   const delta=(e.clientX-drag.pointerX)/drag.laneWidth*drag.duration;
   let start=drag.start,end=drag.end;
-  if(drag.edge==='start'){start=Math.max(drag.delay,Math.min(drag.end-.05,drag.start+delta));start=trozalSnapTime(start,{layer:drag.index});}
-  else if(drag.edge==='end'){end=Math.max(drag.start+.05,Math.min(drag.duration,drag.end+delta));end=trozalSnapTime(end,{layer:drag.index});}
+  if(drag.edge==='start'){start=trozalClamp(trozalSnapTime(Math.max(drag.delay,Math.min(drag.end-.05,drag.start+delta)),{layer:drag.index}),drag.delay,drag.end-.05);}
+  else if(drag.edge==='end'){end=trozalClamp(trozalSnapTime(Math.max(drag.start+.05,Math.min(drag.duration,drag.end+delta)),{layer:drag.index}),drag.start+.05,drag.duration);}
   else{
    const length=drag.end-drag.start;
-   start=Math.max(drag.delay,Math.min(drag.duration-length,drag.start+delta));
-   start=trozalSnapTime(start,{layer:drag.index});end=start+length;
+   start=trozalClamp(trozalSnapTime(Math.max(drag.delay,Math.min(drag.duration-length,drag.start+delta)),{layer:drag.index}),drag.delay,Math.max(drag.delay,drag.duration-length));
+   end=start+length;
   }
   const startInput=$('autoLayerStart'+drag.index),endInput=$('autoLayerEnd'+drag.index);
   if(startInput)startInput.value=Math.max(0,start-drag.delay).toFixed(2);
