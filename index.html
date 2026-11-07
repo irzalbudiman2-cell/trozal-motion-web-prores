@@ -268,7 +268,7 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
 <header class="topbar">
  <div class="brand">trozal<span>_MOTION</span></div><div class="topnote">Fix32 · AI Theme Search · HTML Repair · Local ProRes Export</div>
  <div class="render-progress topbar-render-progress is-idle" id="renderProgress" role="status" aria-live="polite"><span class="render-progress-label" id="renderProgressLabel">Siap · 0%</span><div class="render-progress-track"><div class="render-progress-fill" id="renderProgressFill"></div></div></div>
- <div class="topright"><button id="helpBtn">Panduan</button><button id="resetBtn">Reset</button></div>
+ <div class="topright"><button id="helpBtn">Panduan</button><button id="resetLayoutBtn" title="Kembalikan ukuran dan urutan panel">Tata Letak</button><button id="resetBtn">Reset</button></div>
 </header>
 <div class="app">
  <aside class="sidebar">
@@ -372,13 +372,13 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
    <div class="render render-with-progress"><button class="green" id="renderBtn">▶ Render</button></div>
   </div>
   <div class="stagewrap"><div class="stage" id="stage"><div class="stage-badge"><span>TROZAL MOTION</span><b>LIVE PREVIEW</b></div>
-  <canvas id="previewFx" class="preview-fx"></canvas><div id="object"><div class="demo" id="demo"></div></div></div></div>
+  <canvas id="previewFx" class="preview-fx"></canvas><svg id="motionPathOverlay" class="motion-path-overlay" aria-hidden="true"></svg><div id="object"><div class="demo" id="demo"></div></div></div></div>
   <div class="stageinfo"><span>Resolusi: <b id="resolutionInfo">4K UHD (3840×2160)</b></span><span>Durasi: <b id="durationInfo">10.0s</b></span><span>FPS: <b id="fpsInfo">30</b></span><span>Total frame: <b id="frameInfo">300</b></span></div>
   <div class="timeline"><div class="timelinehead"><strong>Timeline & Preview</strong><button id="playBtn">▶ Putar</button><button id="stopBtn">■ Stop</button><button id="prevFrame">◀ Frame</button><button id="nextFrame">Frame ▶</button><span class="muted" id="timeReadout">00:00.0</span></div><input type="range" id="scrubber" min="0" max="1000" value="0"><div class="track"><div class="trackfill" id="trackfill"></div></div><div class="parts" id="timelineTabs" role="tablist" aria-label="Kontrol timeline"><button type="button" class="part active" data-editor-tab="masuk" role="tab" aria-selected="true">01 · Masuk</button><button type="button" class="part" data-editor-tab="gerakan" role="tab" aria-selected="false">02 · Gerakan</button><button type="button" class="part" data-editor-tab="efek" role="tab" aria-selected="false">03 · Efek</button><button type="button" class="part" data-editor-tab="keluar" role="tab" aria-selected="false">04 · Keluar</button><button type="button" class="part" data-editor-tab="loop" role="tab" aria-selected="false">05 · Loop</button><button type="button" class="part" data-editor-tab="ekspor" role="tab" aria-selected="false">06 · Ekspor</button></div><div class="timeline-tab-hint" id="timelineTabHint">Pilih bagian untuk melompat ke waktu preview dan membuka kontrol yang sesuai.</div>
   <section class="multi-track-editor" id="multiTrackEditor" aria-label="Multi-track timeline editor">
    <div class="mt-toolbar">
     <div><strong>Multi-Track Timeline</strong><small id="mtTrackSummary">Komposisi utama · 1 track</small></div>
-    <div class="mt-toolbar-actions"><button type="button" id="mtBuildTracks" title="Pisahkan elemen SVG menjadi track yang dapat diedit">＋ Pecah SVG</button><button type="button" class="primary" id="mtAddMarker">＋ Marker</button><button type="button" id="mtClearMarkers">Hapus Marker</button></div>
+    <div class="mt-toolbar-actions"><button type="button" id="mtUndo" title="Undo · Ctrl+Z" disabled>↶ Undo</button><button type="button" id="mtRedo" title="Redo · Ctrl+Y" disabled>↷ Redo</button><button type="button" id="mtSnapToggle" aria-pressed="true" title="Snap ke frame, keyframe, marker, dan tepi klip">🧲 Snap ON</button><button type="button" id="mtBuildTracks" title="Pisahkan elemen SVG menjadi track yang dapat diedit">＋ Pecah SVG</button><button type="button" class="primary" id="mtAddMarker">＋ Marker</button><button type="button" id="mtClearMarkers">Hapus Marker</button></div>
    </div>
    <div class="mt-ruler-row"><div class="mt-track-name-head">TRACK / LAYER</div><div class="mt-ruler" id="mtRuler"></div></div>
    <div class="mt-track-list" id="mtTrackList"><div class="mt-empty">Muat aset untuk membuat track timeline.</div></div>
@@ -477,6 +477,7 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
 const $=id=>document.getElementById(id);
 let sourceSvg='', sourceUrl='', sourceType='', files=[], playing=false, raf=0, startAt=0, playhead=0, lastBlob=null, lastDownloadName='animove-render.webm', currentColor='#ffbd45', currentMode='single', svgPieces=[], svgWasSplit=false, svgLayerNames=[], svgLayerHints=[], preserveSvgColors=false, soloLayerIndex=-1, selectedLayerIndex=-1, layerKeyframes=[];
 let timelineMarkers=[], timelineTrackLocks={}, timelineDragState=null, keyframeGraphDragState=null;
+let timelineSnapEnabled=true, motionPathDragState=null, trozalUndoStack=[], trozalUndoIndex=-1, trozalHistoryBusy=false;
 // HTML-to-Motion uses an isolated same-origin document and DOM capture; it is not rasterized through SVG foreignObject.
 let htmlMotionSource='', htmlMotionIframe=null, htmlMotionFrame=null, htmlMotionCaptureBusy=false, htmlMotionAnimations=[], htmlMotionFontsReady=null, htmlMotionRenderer=null, htmlMotionLastTime=-1;
 let htmlMotionWidth=1920, htmlMotionHeight=1080, htmlMotionOutputName='', activeRenderBaseName='trozal-render';
@@ -654,7 +655,7 @@ function buildAutoLayerControls(){
    <div class="row layer-timing"><div><label>X (%)</label><input type="number" id="kfX${i}" value="0" step="1"></div><div><label>Y (%)</label><input type="number" id="kfY${i}" value="0" step="1"></div><div><label>ROTASI (°)</label><input type="number" id="kfRot${i}" value="0" step="1"></div></div>
    <div class="row layer-timing"><div><label>SKALA (%)</label><input type="number" id="kfScale${i}" value="100" min="1" max="500"></div><div><label>OPASITAS (%)</label><input type="number" id="kfAlpha${i}" value="100" min="0" max="100"></div><div><label>WAKTU KEYFRAME (dtk)</label><input type="number" id="kfTime${i}" value="0" min="0" step="0.1"></div></div>
    <label><input type="checkbox" id="kfAuto${i}"> Auto Keyframe · simpan perubahan nilai pada playhead</label>
-   <div class="row layer-timing"><div><label>INTERPOLASI KE KEY BERIKUTNYA</label><select id="kfEase${i}"><option value="easeInOut" selected>Easy Ease</option><option value="linear">Linear</option><option value="easeIn">Ease In</option><option value="easeOut">Ease Out</option><option value="hold">Hold / Step</option><option value="bezier">Custom Bezier</option></select></div><div><label>CHANNEL GRAPH</label><select id="kfGraphChannel${i}"><option value="x">Position X</option><option value="y">Position Y</option><option value="rot">Rotation</option><option value="scale">Scale</option><option value="alpha">Opacity</option><option value="path">Motion Path X/Y</option></select></div></div>
+   <div class="row layer-timing"><div><label>INTERPOLASI KE KEY BERIKUTNYA</label><select id="kfEase${i}"><option value="easeInOut" selected>Easy Ease</option><option value="linear">Linear</option><option value="easeIn">Ease In</option><option value="easeOut">Ease Out</option><option value="hold">Hold / Step</option><option value="bezier">Custom Bezier</option></select></div><div><label>CHANNEL GRAPH</label><select id="kfGraphChannel${i}"><option value="x">Position X</option><option value="y">Position Y</option><option value="rot">Rotation</option><option value="scale">Scale</option><option value="alpha">Opacity</option><option value="path">Motion Path X/Y</option><option value="speed">Speed Graph · %/detik</option></select></div></div>
    <div class="row layer-timing kf-bezier-row"><div><label>Bezier X1</label><input type="number" id="kfBx1${i}" value="0.25" min="0" max="1" step="0.01"></div><div><label>Bezier Y1</label><input type="number" id="kfBy1${i}" value="0.1" min="-2" max="2" step="0.01"></div><div><label>Bezier X2</label><input type="number" id="kfBx2${i}" value="0.25" min="0" max="1" step="0.01"></div><div><label>Bezier Y2</label><input type="number" id="kfBy2${i}" value="1" min="-2" max="2" step="0.01"></div></div>
    <div class="btnrow"><button type="button" data-kf-add="${i}">＋ Tambah / Perbarui Keyframe</button><button type="button" data-kf-delete="${i}">Hapus terakhir</button></div>
    <div class="keyframe-track" id="kfTrack${i}"></div><div class="kf-graph-wrap"><div class="kf-graph-head"><strong>VALUE GRAPH</strong><small>Drag titik untuk mengubah waktu dan nilai</small></div><div id="kfGraph${i}" class="kf-graph" data-kf-graph-layer="${i}"></div></div></div>`;
@@ -828,7 +829,7 @@ function paintLayerKeyframes(i){
 function addOrUpdateLayerKeyframe(i,options={}){
  const read=(id,d)=>Number($(id+i)?.value??d);
  const atPlayhead=!!options.atPlayhead||!!$('kfAuto'+i)?.checked;
- const t=Math.max(0,Math.min(+$('duration').value,atPlayhead?playhead:read('kfTime',playhead)));
+ const t=trozalSnapTime(atPlayhead?playhead:read('kfTime',playhead),{layer:i});
  const ease=$('kfEase'+i)?.value||'easeInOut';
  const bezier={x1:Math.max(0,Math.min(1,read('kfBx1',.25))),y1:Math.max(-2,Math.min(2,read('kfBy1',.1))),x2:Math.max(0,Math.min(1,read('kfBx2',.25))),y2:Math.max(-2,Math.min(2,read('kfBy2',1)))};
  const frame={t,x:read('kfX',0),y:read('kfY',0),rot:read('kfRot',0),scale:Math.max(.01,Math.min(5,read('kfScale',100)/100)),alpha:Math.max(0,Math.min(1,read('kfAlpha',100)/100)),ease,bezier};
@@ -1098,6 +1099,49 @@ function wireMultiTrackEditor(){
  refreshTimelineEditor();
 }
 wireMultiTrackEditor();
+
+function trozalClamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function trozalSnapTime(value,opts={}){
+ const duration=Math.max(.1,+$('duration').value||10),fps=Math.max(1,+$('fps').value||30);
+ let t=trozalClamp(Number(value)||0,0,duration);if(!timelineSnapEnabled)return t;
+ const frame=Math.round(t*fps)/fps,tol=Math.max(.055,1.5/fps);let best=frame,bestDist=Infinity;
+ const consider=v=>{const d=Math.abs(Number(v)-t);if(d<=tol&&d<bestDist){best=Number(v);bestDist=d}};
+ consider(0);consider(duration);timelineMarkers.forEach(m=>consider(m.t));
+ (layerKeyframes||[]).forEach((frames,li)=>(frames||[]).forEach(f=>{if(li===opts.layer&&f===opts.frame)return;consider(f.t)}));
+ if(svgPieces.length)svgPieces.forEach((_,i)=>{if(i===opts.layer)return;try{const mt=mtLayerTimes(i);consider(mt.start);consider(mt.end)}catch(_){}});
+ return trozalClamp(best,0,duration);
+}
+function updateSnapButton(){const b=$('mtSnapToggle');if(!b)return;b.textContent=timelineSnapEnabled?'🧲 Snap ON':'🧲 Snap OFF';b.setAttribute('aria-pressed',String(timelineSnapEnabled));b.title=timelineSnapEnabled?'Snap aktif: frame, keyframe, marker, dan tepi klip':'Snap nonaktif'}
+function trozalHistorySnapshot(){
+ const controls={};document.querySelectorAll('#autoLayerControls input, #autoLayerControls select').forEach(el=>{if(!el.id)return;controls[el.id]=el.type==='checkbox'?{checked:el.checked}:{value:el.value}});
+ return JSON.stringify({layerKeyframes,timelineMarkers,timelineTrackLocks,controls,playhead});
+}
+function trozalHistoryPush(label){
+ if(trozalHistoryBusy)return;const state=trozalHistorySnapshot();if(trozalUndoIndex>=0&&trozalUndoStack[trozalUndoIndex]?.state===state)return;
+ trozalUndoStack=trozalUndoStack.slice(0,trozalUndoIndex+1);trozalUndoStack.push({state,label:label||'Perubahan'});
+ if(trozalUndoStack.length>60)trozalUndoStack.shift();trozalUndoIndex=trozalUndoStack.length-1;updateHistoryButtons();
+}
+function trozalHistoryBegin(){trozalHistoryPush('Sebelum perubahan')}
+function trozalHistoryCommit(label){trozalHistoryPush(label||'Perubahan')}
+function updateHistoryButtons(){const u=$('mtUndo'),r=$('mtRedo');if(u)u.disabled=trozalUndoIndex<=0;if(r)r.disabled=trozalUndoIndex<0||trozalUndoIndex>=trozalUndoStack.length-1}
+function trozalRestoreHistory(index){
+ if(index<0||index>=trozalUndoStack.length)return;trozalHistoryBusy=true;
+ try{const snap=JSON.parse(trozalUndoStack[index].state);layerKeyframes=Array.isArray(snap.layerKeyframes)?snap.layerKeyframes:[];timelineMarkers=Array.isArray(snap.timelineMarkers)?snap.timelineMarkers:[];timelineTrackLocks=snap.timelineTrackLocks||{};
+  Object.entries(snap.controls||{}).forEach(([id,v])=>{const el=$(id);if(!el)return;if('checked'in v)el.checked=!!v.checked;else if('value'in v)el.value=v.value});
+  playhead=trozalClamp(Number(snap.playhead)||0,0,+$('duration').value||10);for(let i=0;i<svgPieces.length;i++)paintLayerKeyframes(i);
+  renderAt(playhead);refreshTimelineEditor();scheduleAutosave();trozalUndoIndex=index;updateHistoryButtons();setStatus('Undo/Redo: '+(trozalUndoStack[index].label||'perubahan')+' dipulihkan.');
+ }catch(e){setStatus('Undo/Redo gagal: '+e.message)}trozalHistoryBusy=false;
+}
+function trozalUndo(){if(trozalUndoIndex>0)trozalRestoreHistory(trozalUndoIndex-1)}
+function trozalRedo(){if(trozalUndoIndex<trozalUndoStack.length-1)trozalRestoreHistory(trozalUndoIndex+1)}
+function wireTrozaHistory(){
+ const u=$('mtUndo'),r=$('mtRedo');if(u)u.onclick=trozalUndo;if(r)r.onclick=trozalRedo;
+ const snap=$('mtSnapToggle');if(snap)snap.onclick=()=>{timelineSnapEnabled=!timelineSnapEnabled;updateSnapButton();scheduleAutosave();setStatus(timelineSnapEnabled?'Snap aktif.':'Snap dinonaktifkan.')};
+ document.addEventListener('keydown',e=>{if(!(e.ctrlKey||e.metaKey)||e.altKey)return;const key=e.key.toLowerCase();if(key!=='z'&&key!=='y')return;if(e.target?.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(e.target?.tagName||''))return;e.preventDefault();if(key==='z'&&e.shiftKey)trozalRedo();else if(key==='z')trozalUndo();else trozalRedo()});
+ trozalHistoryPush('Awal proyek');updateSnapButton();
+}
+
+wireTrozaHistory();
 
 function partMotion(t){
  const duration=Math.max(.001,+$('duration').value),p=Math.max(0,Math.min(1,t/duration));
@@ -1628,7 +1672,7 @@ function getProject(){
  const controls={};ids.forEach(k=>{if($(k))controls[k]=$(k).value});
  checks.forEach(k=>{if($(k))controls[k]=$(k).checked});
  const layers=svgPieces.map((piece,i)=>{const l={svg:piece,name:svgLayerNames[i]||('Layer '+(i+1))};['Visible','On','In','Out','Loop','Delay','Start','End','Duration','Speed','Intensity','Scale','Rotation','Direction'].forEach(k=>{const el=$('autoLayer'+k+i);if(el)l[k.toLowerCase()]=el.type==='checkbox'?el.checked:el.value});l.autoKey=!!$('kfAuto'+i)?.checked;return l});
- return {app:'ANIMOVE',version:6,stage:10,savedAt:new Date().toISOString(),controls,currentColor,playhead,sourceSvg,sourceType,sourceName:$('objectName').value,svgWasSplit,svgPieces:[...svgPieces],svgLayerNames:[...svgLayerNames],svgLayerHints:[...svgLayerHints],layerKeyframes:layerKeyframes.map(a=>(a||[]).map(k=>({...k}))),timelineMarkers:timelineMarkers.map(m=>({...m})),timelineTrackLocks:{...timelineTrackLocks},layers};
+ return {app:'ANIMOVE',version:7,stage:10,timelineSnapEnabled,savedAt:new Date().toISOString(),controls,currentColor,playhead,sourceSvg,sourceType,sourceName:$('objectName').value,svgWasSplit,svgPieces:[...svgPieces],svgLayerNames:[...svgLayerNames],svgLayerHints:[...svgLayerHints],layerKeyframes:layerKeyframes.map(a=>(a||[]).map(k=>({...k}))),timelineMarkers:timelineMarkers.map(m=>({...m})),timelineTrackLocks:{...timelineTrackLocks},layers};
 }
 function applyProject(p){
  if(!p||p.app!=='ANIMOVE')throw new Error('File bukan proyek trozal_MOTION');
@@ -1642,7 +1686,7 @@ function applyProject(p){
  svgLayerHints=Array.isArray(p.svgLayerHints)?p.svgLayerHints.slice():svgPieces.map((piece,i)=>{try{const d=new DOMParser().parseFromString(piece,'image/svg+xml');const n=[...d.documentElement.children].find(x=>!['defs','style','title','desc','metadata'].includes(x.localName));return n?analyzeSvgLayer({node:n,ancestors:[]},i,svgPieces.length):{kind:'detail',entrance:0,loop:0,intensity:0,reason:'Layer dipulihkan; gerakan tetap statis.'}}catch(e){return {kind:'detail',entrance:0,loop:0,intensity:0,reason:'Layer dipulihkan; gerakan tetap statis.'}}});
  svgWasSplit=!!p.svgWasSplit&&svgPieces.length>0;
  timelineMarkers=Array.isArray(p.timelineMarkers)?p.timelineMarkers.map(m=>({id:String(m.id||('marker-'+Date.now())),t:Math.max(0,Number(m.t)||0),label:String(m.label||'Marker')})):[];
- timelineTrackLocks=p.timelineTrackLocks&&typeof p.timelineTrackLocks==='object'?{...p.timelineTrackLocks}:{};
+ timelineTrackLocks=p.timelineTrackLocks&&typeof p.timelineTrackLocks==='object'?{...p.timelineTrackLocks}:{};timelineSnapEnabled=p.timelineSnapEnabled!==false;updateSnapButton?.();
  if(svgWasSplit){
    buildAutoLayerControls();
    layerKeyframes.forEach((a,i)=>paintLayerKeyframes(i));
@@ -1656,7 +1700,7 @@ function applyProject(p){
 function saveProjectFile(){
  const blob=new Blob([JSON.stringify(getProject(),null,2)],{type:'application/json'});
  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='animove-project.json';a.click();
- setTimeout(()=>URL.revokeObjectURL(url),1500);setStatus('Proyek v6 tersimpan lengkap: SVG, layer, keyframe, easing, Bezier, marker, dan seluruh pengaturan.');
+ setTimeout(()=>URL.revokeObjectURL(url),1500);setStatus('Proyek v7 tersimpan lengkap: SVG, layer, keyframe, easing, Bezier, marker, dan seluruh pengaturan.');
 }
 $('saveProject').onclick=saveProjectFile;
 $('loadProject').onclick=()=>$('projectInput').click();
