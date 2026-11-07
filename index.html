@@ -243,6 +243,25 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
 .mt-marker-time{font-size:8px;color:#b8a47a;white-space:nowrap}
 .mt-footer{padding-top:6px;color:#9f967f;font-size:8px;line-height:1.4}
 @media(max-width:760px){.mt-ruler-row,.mt-track-row{grid-template-columns:116px minmax(0,1fr);gap:4px}.mt-track-list{max-height:170px}.mt-toolbar-actions button{font-size:8px;padding:4px 5px}}
+
+/* Phase 2 · Keyframe & Graph Editor */
+.kf-graph-wrap{margin-top:8px;padding:7px;border:1px solid #56482d;border-radius:6px;background:linear-gradient(180deg,#1a1a1b,#171719)}
+.kf-graph-head{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:4px}
+.kf-graph-head strong{font-size:9px;letter-spacing:.8px;color:#e8cb87}
+.kf-graph-head small{font-size:8px;color:#a99a78}
+.kf-graph{width:100%;min-height:112px;overflow:hidden;touch-action:pan-y}
+.kf-graph svg{display:block;width:100%;height:112px;overflow:visible;touch-action:pan-y}
+.kf-graph .graph-grid{stroke:rgba(211,184,128,.16);stroke-width:1;fill:none}
+.kf-graph .graph-axis{stroke:rgba(227,204,154,.52);stroke-width:1;fill:none}
+.kf-graph .graph-curve{stroke:#f2cf7f;stroke-width:2.4;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.kf-graph .graph-key{fill:#fff0bd;stroke:#966e2d;stroke-width:2;cursor:grab;touch-action:none}
+.kf-graph .graph-key:focus{stroke:#fff;stroke-width:3;outline:none}
+.kf-graph .graph-label{fill:#a99a78;font:8px Inter,Segoe UI,Arial,sans-serif}
+.kf-graph .graph-playhead{stroke:#70d7bd;stroke-width:1;stroke-dasharray:3 3}
+.kf-bezier-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
+.kf-bezier-row label{font-size:8px}
+.kf-bezier-row input{font-size:10px;padding:5px 4px}
+.kf-graph-empty{padding:18px 8px;text-align:center;font-size:9px;color:#a89a82;border:1px dashed #625235;border-radius:4px}
 </style>
 </head>
 <body>
@@ -457,7 +476,7 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
 <script>
 const $=id=>document.getElementById(id);
 let sourceSvg='', sourceUrl='', sourceType='', files=[], playing=false, raf=0, startAt=0, playhead=0, lastBlob=null, lastDownloadName='animove-render.webm', currentColor='#ffbd45', currentMode='single', svgPieces=[], svgWasSplit=false, svgLayerNames=[], svgLayerHints=[], preserveSvgColors=false, soloLayerIndex=-1, selectedLayerIndex=-1, layerKeyframes=[];
-let timelineMarkers=[], timelineTrackLocks={}, timelineDragState=null;
+let timelineMarkers=[], timelineTrackLocks={}, timelineDragState=null, keyframeGraphDragState=null;
 // HTML-to-Motion uses an isolated same-origin document and DOM capture; it is not rasterized through SVG foreignObject.
 let htmlMotionSource='', htmlMotionIframe=null, htmlMotionFrame=null, htmlMotionCaptureBusy=false, htmlMotionAnimations=[], htmlMotionFontsReady=null, htmlMotionRenderer=null, htmlMotionLastTime=-1;
 let htmlMotionWidth=1920, htmlMotionHeight=1080, htmlMotionOutputName='', activeRenderBaseName='trozal-render';
@@ -631,31 +650,174 @@ function buildAutoLayerControls(){
  svgPieces.forEach((piece,i)=>{
   const d=document.createElement('div');d.className='layer-control';d.dataset.layer=String(i);
   const hint=svgLayerHints[i]||{kind:'detail',entrance:0,loop:0,intensity:0,reason:'Gerakan belum dianalisis.'};
-  d.innerHTML=`<div class="layer-title"><input type="checkbox" id="autoLayerVisible${i}" checked title="Tampilkan layer"><label class="layer-eye-label" for="autoLayerVisible${i}" title="Tampilkan/sembunyikan">◉</label><input type="checkbox" id="autoLayerOn${i}" checked title="Aktifkan animasi"><label for="autoLayerOn${i}">${escapeLayerName(svgLayerNames[i]||('Layer '+(i+1)))}</label><button type="button" class="layer-select" data-select-layer="${i}">Pilih</button><button type="button" class="layer-solo" data-solo="${i}">Solo</button><span class="motion-kind">${escapeLayerName(hint.kind)}</span></div><div class="help motion-reason">${escapeLayerName(hint.reason)}</div><div class="row"><div><label>MASUK</label><select id="autoLayerIn${i}">${optionsHTML(entranceOptions,hint.entrance)}</select></div><div><label>KELUAR</label><select id="autoLayerOut${i}">${optionsHTML(exitOptions,0)}</select></div><div><label>LOOP</label><select id="autoLayerLoop${i}">${optionsHTML(loopOptions,hint.loop)}</select></div></div><div class="row layer-timing"><div><label>DELAY (dtk)</label><input type="number" id="autoLayerDelay${i}" min="0" max="300" step="0.1" value="${Math.min(i*.12,2).toFixed(1)}"></div><div><label>MULAI (dtk)</label><input type="number" id="autoLayerStart${i}" min="0" max="300" step="0.1" value="0"></div><div><label>SELESAI (dtk)</label><input type="number" id="autoLayerEnd${i}" min="0" max="300" step="0.1" placeholder="Akhir video"></div></div><div class="row layer-timing"><div><label>DURASI MASUK/KELUAR</label><input type="number" id="autoLayerDuration${i}" min="0.1" max="300" step="0.1" value="1.2"></div><div><label>KECEPATAN LOOP</label><input type="number" id="autoLayerSpeed${i}" min="0.1" max="8" step="0.1" value="1"></div><div><label>INTENSITAS</label><input type="number" id="autoLayerIntensity${i}" min="0" max="200" step="5" value="${hint.intensity}"></div></div><div class="row layer-timing"><div><label>SKALA (%)</label><input type="number" id="autoLayerScale${i}" min="1" max="300" step="1" value="100"></div><div><label>ROTASI (°)</label><input type="number" id="autoLayerRotation${i}" min="-1440" max="1440" step="1" value="0"></div><div><label>ARAH SLIDE</label><select id="autoLayerDirection${i}"><option value="normal">Default</option><option value="reverse">Balik arah</option></select></div></div><div class="keyframe-editor"><div class="keyframe-head"><strong>KEYFRAME LAYER</strong><span id="keyCount${i}">0 keyframe</span></div><div class="row layer-timing"><div><label>X (%)</label><input type="number" id="kfX${i}" value="0" step="1"></div><div><label>Y (%)</label><input type="number" id="kfY${i}" value="0" step="1"></div><div><label>ROTASI (°)</label><input type="number" id="kfRot${i}" value="0" step="1"></div></div><div class="row layer-timing"><div><label>SKALA (%)</label><input type="number" id="kfScale${i}" value="100" min="1" max="500"></div><div><label>OPASITAS (%)</label><input type="number" id="kfAlpha${i}" value="100" min="0" max="100"></div><div><label>WAKTU (detik)</label><input type="number" id="kfTime${i}" value="0" min="0" step="0.1"></div></div><div class="btnrow"><button type="button" data-kf-add="${i}">＋ Tambah / Perbarui</button><button type="button" data-kf-delete="${i}">Hapus terakhir</button></div><div class="keyframe-track" id="kfTrack${i}"></div></div>`;
+  d.innerHTML=`<div class="layer-title"><input type="checkbox" id="autoLayerVisible${i}" checked title="Tampilkan layer"><label class="layer-eye-label" for="autoLayerVisible${i}" title="Tampilkan/sembunyikan">◉</label><input type="checkbox" id="autoLayerOn${i}" checked title="Aktifkan animasi"><label for="autoLayerOn${i}">${escapeLayerName(svgLayerNames[i]||('Layer '+(i+1)))}</label><button type="button" class="layer-select" data-select-layer="${i}">Pilih</button><button type="button" class="layer-solo" data-solo="${i}">Solo</button><span class="motion-kind">${escapeLayerName(hint.kind)}</span></div><div class="help motion-reason">${escapeLayerName(hint.reason)}</div><div class="row"><div><label>MASUK</label><select id="autoLayerIn${i}">${optionsHTML(entranceOptions,hint.entrance)}</select></div><div><label>KELUAR</label><select id="autoLayerOut${i}">${optionsHTML(exitOptions,0)}</select></div><div><label>LOOP</label><select id="autoLayerLoop${i}">${optionsHTML(loopOptions,hint.loop)}</select></div></div><div class="row layer-timing"><div><label>DELAY (dtk)</label><input type="number" id="autoLayerDelay${i}" min="0" max="300" step="0.1" value="${Math.min(i*.12,2).toFixed(1)}"></div><div><label>MULAI (dtk)</label><input type="number" id="autoLayerStart${i}" min="0" max="300" step="0.1" value="0"></div><div><label>SELESAI (dtk)</label><input type="number" id="autoLayerEnd${i}" min="0" max="300" step="0.1" placeholder="Akhir video"></div></div><div class="row layer-timing"><div><label>DURASI MASUK/KELUAR</label><input type="number" id="autoLayerDuration${i}" min="0.1" max="300" step="0.1" value="1.2"></div><div><label>KECEPATAN LOOP</label><input type="number" id="autoLayerSpeed${i}" min="0.1" max="8" step="0.1" value="1"></div><div><label>INTENSITAS</label><input type="number" id="autoLayerIntensity${i}" min="0" max="200" step="5" value="${hint.intensity}"></div></div><div class="row layer-timing"><div><label>SKALA (%)</label><input type="number" id="autoLayerScale${i}" min="1" max="300" step="1" value="100"></div><div><label>ROTASI (°)</label><input type="number" id="autoLayerRotation${i}" min="-1440" max="1440" step="1" value="0"></div><div><label>ARAH SLIDE</label><select id="autoLayerDirection${i}"><option value="normal">Default</option><option value="reverse">Balik arah</option></select></div></div><div class="keyframe-editor"><div class="keyframe-head"><strong>KEYFRAME & GRAPH EDITOR</strong><span id="keyCount${i}">0 keyframe</span></div>
+   <div class="row layer-timing"><div><label>X (%)</label><input type="number" id="kfX${i}" value="0" step="1"></div><div><label>Y (%)</label><input type="number" id="kfY${i}" value="0" step="1"></div><div><label>ROTASI (°)</label><input type="number" id="kfRot${i}" value="0" step="1"></div></div>
+   <div class="row layer-timing"><div><label>SKALA (%)</label><input type="number" id="kfScale${i}" value="100" min="1" max="500"></div><div><label>OPASITAS (%)</label><input type="number" id="kfAlpha${i}" value="100" min="0" max="100"></div><div><label>WAKTU KEYFRAME (dtk)</label><input type="number" id="kfTime${i}" value="0" min="0" step="0.1"></div></div>
+   <label><input type="checkbox" id="kfAuto${i}"> Auto Keyframe · simpan perubahan nilai pada playhead</label>
+   <div class="row layer-timing"><div><label>INTERPOLASI KE KEY BERIKUTNYA</label><select id="kfEase${i}"><option value="easeInOut" selected>Easy Ease</option><option value="linear">Linear</option><option value="easeIn">Ease In</option><option value="easeOut">Ease Out</option><option value="hold">Hold / Step</option><option value="bezier">Custom Bezier</option></select></div><div><label>CHANNEL GRAPH</label><select id="kfGraphChannel${i}"><option value="x">Position X</option><option value="y">Position Y</option><option value="rot">Rotation</option><option value="scale">Scale</option><option value="alpha">Opacity</option></select></div></div>
+   <div class="row layer-timing kf-bezier-row"><div><label>Bezier X1</label><input type="number" id="kfBx1${i}" value="0.25" min="0" max="1" step="0.01"></div><div><label>Bezier Y1</label><input type="number" id="kfBy1${i}" value="0.1" min="-2" max="2" step="0.01"></div><div><label>Bezier X2</label><input type="number" id="kfBx2${i}" value="0.25" min="0" max="1" step="0.01"></div><div><label>Bezier Y2</label><input type="number" id="kfBy2${i}" value="1" min="-2" max="2" step="0.01"></div></div>
+   <div class="btnrow"><button type="button" data-kf-add="${i}">＋ Tambah / Perbarui Keyframe</button><button type="button" data-kf-delete="${i}">Hapus terakhir</button></div>
+   <div class="keyframe-track" id="kfTrack${i}"></div><div class="kf-graph-wrap"><div class="kf-graph-head"><strong>VALUE GRAPH</strong><small>Drag titik untuk mengubah waktu dan nilai</small></div><div id="kfGraph${i}" class="kf-graph" data-kf-graph-layer="${i}"></div></div></div>`;
   holder.appendChild(d);
  });
- holder.onchange=onAutoLayerChange;holder.oninput=onAutoLayerChange;
- holder.onclick=e=>{const pick=e.target.closest('[data-select-layer]');if(pick){const idx=Number(pick.dataset.selectLayer);selectedLayerIndex=idx;holder.querySelectorAll('.layer-control').forEach((card,j)=>card.classList.toggle('selected-layer',j===idx));renderAt(playhead);setStatus('Layer '+(idx+1)+' dipilih. Ubah Masuk, Keluar, Loop, Delay, Keyframe, skala, rotasi, dan posisi pada kontrol layer ini.');return}const solo=e.target.closest('[data-solo]');if(solo){const idx=Number(solo.dataset.solo);soloLayerIndex=soloLayerIndex===idx?-1:idx;selectedLayerIndex=idx;holder.querySelectorAll('.layer-control').forEach((card,j)=>{card.classList.toggle('selected-layer',j===selectedLayerIndex);const b=card.querySelector('[data-solo]');if(b)b.classList.toggle('active',soloLayerIndex===j)});renderAt(playhead);return}const add=e.target.closest('[data-kf-add]');if(add){addOrUpdateLayerKeyframe(Number(add.dataset.kfAdd));return}const del=e.target.closest('[data-kf-delete]');if(del){removeLastLayerKeyframe(Number(del.dataset.kfDelete));return}const card=e.target.closest('.layer-control');if(card&&!e.target.closest('input,select,button,label')){selectedLayerIndex=Number(card.dataset.layer);holder.querySelectorAll('.layer-control').forEach((x,j)=>x.classList.toggle('selected-layer',j===selectedLayerIndex))}};
+ holder.onchange=e=>{
+  onAutoLayerChange();
+  const id=e.target?.id||'',match=id.match(/^kf(?:X|Y|Rot|Scale|Alpha)(\d+)$/);
+  if(match&&$('kfAuto'+match[1])?.checked)addOrUpdateLayerKeyframe(Number(match[1]),{atPlayhead:true});
+  const graphMatch=id.match(/^kfGraphChannel(\d+)$/);
+  if(graphMatch)drawLayerKeyframeGraph(Number(graphMatch[1]));
+ };
+ holder.oninput=e=>{
+  const id=e.target?.id||'',match=id.match(/^kf(?:X|Y|Rot|Scale|Alpha|Bx1|By1|Bx2|By2|Ease)(\d+)$/);
+  if(match&&!$('kfAuto'+match[1])?.checked){renderAt(playhead);return;}
+  onAutoLayerChange();
+ };
+ holder.onclick=e=>{const pick=e.target.closest('[data-select-layer]');if(pick){const idx=Number(pick.dataset.selectLayer);selectedLayerIndex=idx;holder.querySelectorAll('.layer-control').forEach((card,j)=>card.classList.toggle('selected-layer',j===idx));renderAt(playhead);setStatus('Layer '+(idx+1)+' dipilih. Ubah Masuk, Keluar, Loop, Delay, Keyframe, skala, rotasi, dan posisi pada kontrol layer ini.');return}const solo=e.target.closest('[data-solo]');if(solo){const idx=Number(solo.dataset.solo);soloLayerIndex=soloLayerIndex===idx?-1:idx;selectedLayerIndex=idx;holder.querySelectorAll('.layer-control').forEach((card,j)=>{card.classList.toggle('selected-layer',j===selectedLayerIndex);const b=card.querySelector('[data-solo]');if(b)b.classList.toggle('active',soloLayerIndex===j)});renderAt(playhead);return}const add=e.target.closest('[data-kf-add]');if(add){addOrUpdateLayerKeyframe(Number(add.dataset.kfAdd));return}const del=e.target.closest('[data-kf-delete]');if(del){removeLastLayerKeyframe(Number(del.dataset.kfDelete));return}const graphKey=e.target.closest('[data-graph-key]');if(graphKey){const gi=Number(graphKey.dataset.graphLayer),frames=(layerKeyframes[gi]||[]).slice().sort((a,b)=>a.t-b.t),frame=frames[Number(graphKey.dataset.graphKey)];if(frame)trozalSelectLayerKeyframe(gi,frame);return}const card=e.target.closest('.layer-control');if(card&&!e.target.closest('input,select,button,label')){selectedLayerIndex=Number(card.dataset.layer);holder.querySelectorAll('.layer-control').forEach((x,j)=>x.classList.toggle('selected-layer',j===selectedLayerIndex))}};
  holder.querySelectorAll('[data-solo]').forEach(b=>b.classList.toggle('active',soloLayerIndex===Number(b.dataset.solo)));
+ holder.addEventListener('pointerdown',e=>{
+  const dot=e.target.closest('[data-graph-key]');if(!dot)return;
+  const i=Number(dot.dataset.graphLayer),frames=(layerKeyframes[i]||[]).slice().sort((a,b)=>a.t-b.t),frame=frames[Number(dot.dataset.graphKey)],svg=dot.closest('svg[data-graph-surface]');
+  if(!frame||!svg)return;
+  const channel=$('kfGraphChannel'+i)?.value||'x',rect=svg.getBoundingClientRect(),values=frames.map(f=>trozalGraphStoredValue(f,channel));
+  let min=Math.min(...values),max=Math.max(...values);
+  if(Math.abs(max-min)<.001){const pad=Math.max(10,Math.abs(max)*.2);min-=pad;max+=pad;}else{const pad=(max-min)*.18;min-=pad;max+=pad;}
+  keyframeGraphDragState={i,frame,channel,rect,min,max,duration:Math.max(.1,+$('duration').value||10)};
+  e.preventDefault();
+ });
+ holder.addEventListener('click',e=>{
+  const svg=e.target.closest('svg[data-graph-surface]');if(!svg||e.target.closest('[data-graph-key]'))return;
+  const rect=svg.getBoundingClientRect(),ratio=Math.max(0,Math.min(1,(e.clientX-rect.left)/Math.max(1,rect.width)));
+  mtSetPlayhead(ratio*(+$('duration').value||10));
+ });
+ window.addEventListener('pointermove',e=>{
+  const drag=keyframeGraphDragState;if(!drag)return;
+  const {i,frame,channel,rect,min,max,duration}=drag;
+  const px=Math.max(0,Math.min(1,(e.clientX-rect.left)/Math.max(1,rect.width)));
+  const py=Math.max(0,Math.min(1,(e.clientY-rect.top)/Math.max(1,rect.height)));
+  frame.t=Number((px*duration).toFixed(3));
+  trozalGraphSetStoredValue(frame,channel,max-py*(max-min));
+  $('kfTime'+i).value=frame.t.toFixed(2);$('kfX'+i).value=Number(frame.x||0).toFixed(1);$('kfY'+i).value=Number(frame.y||0).toFixed(1);
+  $('kfRot'+i).value=Number(frame.rot||0).toFixed(1);$('kfScale'+i).value=(Number(frame.scale??1)*100).toFixed(1);$('kfAlpha'+i).value=(Number(frame.alpha??1)*100).toFixed(1);
+  renderAt(playhead);drawLayerKeyframeGraph(i);
+ });
+ window.addEventListener('pointerup',()=>{
+  if(!keyframeGraphDragState)return;
+  const i=keyframeGraphDragState.i;keyframeGraphDragState=null;
+  layerKeyframes[i].sort((a,b)=>a.t-b.t);paintLayerKeyframes(i);renderAt(playhead);scheduleAutosave();
+  setStatus('Graph Editor: keyframe layer '+(i+1)+' diperbarui.');
+ });
  refreshTimelineEditor();
+}
+
+function trozalKeyframeBezierProgress(u,curve){
+ const x1=Math.max(0,Math.min(1,Number(curve?.x1??.25))),x2=Math.max(0,Math.min(1,Number(curve?.x2??.25)));
+ const y1=Math.max(-2,Math.min(2,Number(curve?.y1??.1))),y2=Math.max(-2,Math.min(2,Number(curve?.y2??1)));
+ const coord=(t,a,b)=>3*(1-t)*(1-t)*t*a+3*(1-t)*t*t*b+t*t*t;
+ const slope=(t,a,b)=>3*(1-t)*(1-t)*a+6*(1-t)*t*(b-a)+3*t*t*(1-b);
+ let lo=0,hi=1,t=Math.max(0,Math.min(1,u));
+ for(let n=0;n<14;n++){
+  const x=coord(t,x1,x2),err=x-u;
+  if(Math.abs(err)<1e-5)break;
+  if(err<0)lo=t;else hi=t;
+  const dx=slope(t,x1,x2),candidate=Math.abs(dx)>1e-6?t-err/dx:NaN;
+  t=Number.isFinite(candidate)&&candidate>lo&&candidate<hi?candidate:(lo+hi)/2;
+ }
+ return coord(t,y1,y2);
+}
+function trozalKeyframeEase(u,frame){
+ const mode=frame?.ease||'easeInOut',v=Math.max(0,Math.min(1,u));
+ if(mode==='hold')return v>=1?1:0;
+ if(mode==='linear')return v;
+ if(mode==='easeIn')return v*v;
+ if(mode==='easeOut')return 1-Math.pow(1-v,2);
+ if(mode==='bezier')return trozalKeyframeBezierProgress(v,frame?.bezier);
+ return v*v*(3-2*v);
+}
+function trozalGraphStoredValue(frame,channel){
+ if(channel==='scale')return Number(frame.scale??1)*100;
+ if(channel==='alpha')return Number(frame.alpha??1)*100;
+ return Number(frame[channel]??0);
+}
+function trozalGraphSetStoredValue(frame,channel,value){
+ if(channel==='scale')frame.scale=Math.max(.01,Math.min(5,value/100));
+ else if(channel==='alpha')frame.alpha=Math.max(0,Math.min(1,value/100));
+ else if(channel==='rot')frame.rot=Math.max(-1440,Math.min(1440,value));
+ else frame[channel]=Math.max(-500,Math.min(500,value));
+}
+function trozalSelectLayerKeyframe(i,frame){
+ $('kfTime'+i).value=Number(frame.t).toFixed(2);
+ $('kfX'+i).value=Number(frame.x||0);
+ $('kfY'+i).value=Number(frame.y||0);
+ $('kfRot'+i).value=Number(frame.rot||0);
+ $('kfScale'+i).value=(Number(frame.scale??1)*100).toFixed(1);
+ $('kfAlpha'+i).value=(Number(frame.alpha??1)*100).toFixed(1);
+ $('kfEase'+i).value=frame.ease||'easeInOut';
+ const curve=frame.bezier||{x1:.25,y1:.1,x2:.25,y2:1};
+ $('kfBx1'+i).value=curve.x1??.25;$('kfBy1'+i).value=curve.y1??.1;
+ $('kfBx2'+i).value=curve.x2??.25;$('kfBy2'+i).value=curve.y2??1;
+ mtSetPlayhead(frame.t);
+}
+function drawLayerKeyframeGraph(i){
+ const holder=$('kfGraph'+i);if(!holder)return;
+ const frames=(layerKeyframes[i]||[]).slice().sort((a,b)=>a.t-b.t);
+ const channel=$('kfGraphChannel'+i)?.value||'x',duration=Math.max(.1,+$('duration').value||10);
+ if(!frames.length){holder.innerHTML='<div class="kf-graph-empty">Tambahkan keyframe untuk membuka grafik animasi.</div>';return;}
+ const values=frames.map(f=>trozalGraphStoredValue(f,channel)).filter(Number.isFinite);
+ let min=Math.min(...values),max=Math.max(...values);
+ if(Math.abs(max-min)<.001){const pad=Math.max(10,Math.abs(max)*.2);min-=pad;max+=pad;}
+ else{const pad=(max-min)*.18;min-=pad;max+=pad;}
+ const W=360,H=112,L=24,R=8,T=8,B=17,gw=W-L-R,gh=H-T-B;
+ const X=t=>L+Math.max(0,Math.min(1,t/duration))*gw;
+ const Y=v=>T+(max-Math.max(min,Math.min(max,v)))/(max-min)*gh;
+ const samples=Math.max(48,Math.min(180,Math.round(duration*12))),points=[];
+ for(let n=0;n<=samples;n++){
+  const t=duration*n/samples,m=getLayerKeyframeMotion(i,t);
+  const value=m?trozalGraphStoredValue(m,channel):0;
+  points.push((n?'L':'M')+X(t).toFixed(2)+' '+Y(value).toFixed(2));
+ }
+ const grid=[0,.25,.5,.75,1].map(p=>'<path class="graph-grid" d="M'+L+' '+(T+gh*p)+'H'+(L+gw)+'"/>').join('');
+ const ticks=[0,.5,1].map(p=>'<text class="graph-label" x="'+(L+gw*p)+'" y="'+(H-3)+'" text-anchor="middle">'+(duration*p).toFixed(p===1?1:0)+'s</text>').join('');
+ const axis='<path class="graph-axis" d="M'+L+' '+T+'V'+(T+gh)+'H'+(L+gw)+'"/>';
+ const current='<path class="graph-playhead" d="M'+X(playhead)+' '+T+'V'+(T+gh)+'"/>';
+ const curve='<path class="graph-curve" d="'+points.join(' ')+'"/>';
+ const dots=frames.map((frame,n)=>'<circle class="graph-key" cx="'+X(frame.t)+'" cy="'+Y(trozalGraphStoredValue(frame,channel))+'" r="4.4" tabindex="0" role="button" aria-label="Keyframe '+(n+1)+' pada '+frame.t.toFixed(2)+' detik" data-graph-key="'+n+'" data-graph-layer="'+i+'"><title>'+frame.t.toFixed(2)+'s · '+trozalGraphStoredValue(frame,channel).toFixed(1)+'</title></circle>').join('');
+ holder.innerHTML='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Grafik '+channel+' terhadap waktu" data-graph-surface="'+i+'">'+grid+axis+curve+current+dots+ticks+'</svg><div class="help">Rentang '+min.toFixed(1)+' hingga '+max.toFixed(1)+' · channel '+channel.toUpperCase()+'</div>';
 }
 function paintLayerKeyframes(i){
  const frames=(layerKeyframes[i]||[]).slice().sort((a,b)=>a.t-b.t),track=$('kfTrack'+i),count=$('keyCount'+i);
  if(count)count.textContent=frames.length+' keyframe';
- if(track){track.innerHTML='';frames.forEach((f,n)=>{const b=document.createElement('button');b.type='button';b.className='kf-dot';b.textContent=f.t.toFixed(1)+'s';b.title='Pilih keyframe '+f.t.toFixed(1)+' detik';b.onclick=()=>{ $('kfTime'+i).value=f.t;$('kfX'+i).value=f.x;$('kfY'+i).value=f.y;$('kfRot'+i).value=f.rot;$('kfScale'+i).value=f.scale;$('kfAlpha'+i).value=f.alpha;playhead=f.t;renderAt(playhead)};track.appendChild(b)})}
+ if(track){track.innerHTML='';frames.forEach(frame=>{
+  const b=document.createElement('button');b.type='button';b.className='kf-dot';
+  b.textContent=frame.t.toFixed(1)+'s';b.title='Pilih keyframe '+frame.t.toFixed(1)+' detik · '+(frame.ease||'easeInOut');
+  b.onclick=()=>trozalSelectLayerKeyframe(i,frame);track.appendChild(b);
+ })}
+ drawLayerKeyframeGraph(i);
 }
-function addOrUpdateLayerKeyframe(i){
- const read=(id,d)=>Number($(id+i)?.value??d),t=Math.max(0,Math.min(+$('duration').value,read('kfTime',playhead)));
- const f={t,x:read('kfX',0),y:read('kfY',0),rot:read('kfRot',0),scale:Math.max(.01,read('kfScale',100)/100),alpha:Math.max(0,Math.min(1,read('kfAlpha',100)/100))};
- layerKeyframes[i]=layerKeyframes[i]||[];const at=layerKeyframes[i].findIndex(k=>Math.abs(k.t-t)<.001);
- if(at>=0)layerKeyframes[i][at]=f;else layerKeyframes[i].push(f);
- layerKeyframes[i].sort((a,b)=>a.t-b.t);paintLayerKeyframes(i);renderAt(playhead);scheduleAutosave();setStatus('Keyframe layer '+(i+1)+' tersimpan pada '+t.toFixed(1)+' detik.');
+function addOrUpdateLayerKeyframe(i,options={}){
+ const read=(id,d)=>Number($(id+i)?.value??d);
+ const atPlayhead=!!options.atPlayhead||!!$('kfAuto'+i)?.checked;
+ const t=Math.max(0,Math.min(+$('duration').value,atPlayhead?playhead:read('kfTime',playhead)));
+ const ease=$('kfEase'+i)?.value||'easeInOut';
+ const bezier={x1:Math.max(0,Math.min(1,read('kfBx1',.25))),y1:Math.max(-2,Math.min(2,read('kfBy1',.1))),x2:Math.max(0,Math.min(1,read('kfBx2',.25))),y2:Math.max(-2,Math.min(2,read('kfBy2',1)))};
+ const frame={t,x:read('kfX',0),y:read('kfY',0),rot:read('kfRot',0),scale:Math.max(.01,Math.min(5,read('kfScale',100)/100)),alpha:Math.max(0,Math.min(1,read('kfAlpha',100)/100)),ease,bezier};
+ layerKeyframes[i]=layerKeyframes[i]||[];
+ const at=layerKeyframes[i].findIndex(k=>Math.abs(k.t-t)<.001);
+ if(at>=0)layerKeyframes[i][at]=frame;else layerKeyframes[i].push(frame);
+ layerKeyframes[i].sort((a,b)=>a.t-b.t);
+ $('kfTime'+i).value=t.toFixed(2);
+ paintLayerKeyframes(i);renderAt(playhead);scheduleAutosave();
+ setStatus('Keyframe layer '+(i+1)+' tersimpan pada '+t.toFixed(2)+' detik · '+ease+'.');
 }
-function removeLastLayerKeyframe(i){if(!layerKeyframes[i]?.length)return;layerKeyframes[i].pop();paintLayerKeyframes(i);renderAt(playhead);scheduleAutosave()}
+function removeLastLayerKeyframe(i){
+ if(!layerKeyframes[i]?.length)return;
+ layerKeyframes[i].pop();paintLayerKeyframes(i);renderAt(playhead);scheduleAutosave();
+}
 function getLayerKeyframeMotion(i,t){
  const a=(layerKeyframes[i]||[]).slice().sort((x,y)=>x.t-y.t);if(!a.length)return null;
  if(t<=a[0].t)return a[0];if(t>=a[a.length-1].t)return a[a.length-1];
- let n=0;while(n<a.length-1&&a[n+1].t<t)n++;const p=a[n],q=a[n+1],u=(t-p.t)/Math.max(.0001,q.t-p.t),ease=u*u*(3-2*u),mix=k=>p[k]+(q[k]-p[k])*ease;
+ let n=0;while(n<a.length-1&&a[n+1].t<t)n++;
+ const p=a[n],q=a[n+1],u=(t-p.t)/Math.max(.0001,q.t-p.t),ease=trozalKeyframeEase(u,p);
+ const mix=k=>Number(p[k]??0)+(Number(q[k]??0)-Number(p[k]??0))*ease;
  return {t,x:mix('x'),y:mix('y'),rot:mix('rot'),scale:mix('scale'),alpha:mix('alpha')};
 }
 function escapeLayerName(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -1433,8 +1595,8 @@ function getProject(){
  const checks=['transparentBg','sparkles','shadow','loop','effectOn'];
  const controls={};ids.forEach(k=>{if($(k))controls[k]=$(k).value});
  checks.forEach(k=>{if($(k))controls[k]=$(k).checked});
- const layers=svgPieces.map((piece,i)=>{const l={svg:piece,name:svgLayerNames[i]||('Layer '+(i+1))};['Visible','On','In','Out','Loop','Delay','Start','End','Duration','Speed','Intensity','Scale','Rotation','Direction'].forEach(k=>{const el=$('autoLayer'+k+i);if(el)l[k.toLowerCase()]=el.type==='checkbox'?el.checked:el.value});return l});
- return {app:'ANIMOVE',version:5,stage:10,savedAt:new Date().toISOString(),controls,currentColor,playhead,sourceSvg,sourceType,sourceName:$('objectName').value,svgWasSplit,svgPieces:[...svgPieces],svgLayerNames:[...svgLayerNames],svgLayerHints:[...svgLayerHints],layerKeyframes:layerKeyframes.map(a=>(a||[]).map(k=>({...k}))),timelineMarkers:timelineMarkers.map(m=>({...m})),timelineTrackLocks:{...timelineTrackLocks},layers};
+ const layers=svgPieces.map((piece,i)=>{const l={svg:piece,name:svgLayerNames[i]||('Layer '+(i+1))};['Visible','On','In','Out','Loop','Delay','Start','End','Duration','Speed','Intensity','Scale','Rotation','Direction'].forEach(k=>{const el=$('autoLayer'+k+i);if(el)l[k.toLowerCase()]=el.type==='checkbox'?el.checked:el.value});l.autoKey=!!$('kfAuto'+i)?.checked;return l});
+ return {app:'ANIMOVE',version:6,stage:10,savedAt:new Date().toISOString(),controls,currentColor,playhead,sourceSvg,sourceType,sourceName:$('objectName').value,svgWasSplit,svgPieces:[...svgPieces],svgLayerNames:[...svgLayerNames],svgLayerHints:[...svgLayerHints],layerKeyframes:layerKeyframes.map(a=>(a||[]).map(k=>({...k}))),timelineMarkers:timelineMarkers.map(m=>({...m})),timelineTrackLocks:{...timelineTrackLocks},layers};
 }
 function applyProject(p){
  if(!p||p.app!=='ANIMOVE')throw new Error('File bukan proyek trozal_MOTION');
@@ -1452,7 +1614,7 @@ function applyProject(p){
  if(svgWasSplit){
    buildAutoLayerControls();
    layerKeyframes.forEach((a,i)=>paintLayerKeyframes(i));
-   (p.layers||[]).forEach((l,i)=>{if(!$('autoLayerOn'+i))return;const legacy={Visible:l.visible,On:l.on,In:l.masuk,Out:l.keluar,Loop:l.loop};Object.entries(legacy).forEach(([k,v])=>{if(v!==undefined){const el=$('autoLayer'+k+i);if(el.type==='checkbox')el.checked=!!v;else el.value=v}});['Delay','Start','End','Duration','Speed','Intensity','Scale','Rotation','Direction'].forEach(k=>{const el=$('autoLayer'+k+i);if(el&&l[k.toLowerCase()]!==undefined)el.value=l[k.toLowerCase()]})});
+   (p.layers||[]).forEach((l,i)=>{if(!$('autoLayerOn'+i))return;const legacy={Visible:l.visible,On:l.on,In:l.masuk,Out:l.keluar,Loop:l.loop};Object.entries(legacy).forEach(([k,v])=>{if(v!==undefined){const el=$('autoLayer'+k+i);if(el.type==='checkbox')el.checked=!!v;else el.value=v}});['Delay','Start','End','Duration','Speed','Intensity','Scale','Rotation','Direction'].forEach(k=>{const el=$('autoLayer'+k+i);if(el&&l[k.toLowerCase()]!==undefined)el.value=l[k.toLowerCase()]});if($('kfAuto'+i)&&typeof l.autoKey==='boolean')$('kfAuto'+i).checked=l.autoKey});
    $('object').innerHTML=svgPieces.map((svg,i)=>`<div class="svg-piece" data-piece="${i}">${svg}</div>`).join('');
  }else if(sourceSvg){setObjectMarkup(sourceSvg)}else if(p.assetDataUrl){setObjectMarkup(`<img alt="Restored asset" src="${p.assetDataUrl}">`)}
  playhead=Math.max(0,Math.min(+$('duration').value||10,Number(p.playhead)||0));
