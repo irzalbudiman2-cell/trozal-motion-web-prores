@@ -827,6 +827,7 @@ function paintLayerKeyframes(i){
  drawLayerKeyframeGraph(i);
 }
 function addOrUpdateLayerKeyframe(i,options={}){
+ trozalHistoryBegin();
  const read=(id,d)=>Number($(id+i)?.value??d);
  const atPlayhead=!!options.atPlayhead||!!$('kfAuto'+i)?.checked;
  const t=trozalSnapTime(atPlayhead?playhead:read('kfTime',playhead),{layer:i});
@@ -839,11 +840,11 @@ function addOrUpdateLayerKeyframe(i,options={}){
  layerKeyframes[i].sort((a,b)=>a.t-b.t);
  $('kfTime'+i).value=t.toFixed(2);
  paintLayerKeyframes(i);renderAt(playhead);scheduleAutosave();
- setStatus('Keyframe layer '+(i+1)+' tersimpan pada '+t.toFixed(2)+' detik · '+ease+'.');
+ setStatus('Keyframe layer '+(i+1)+' tersimpan pada '+t.toFixed(2)+' detik · '+ease+'.');trozalHistoryCommit('Keyframe layer '+(i+1));
 }
 function removeLastLayerKeyframe(i){
- if(!layerKeyframes[i]?.length)return;
- layerKeyframes[i].pop();paintLayerKeyframes(i);renderAt(playhead);scheduleAutosave();
+ if(!layerKeyframes[i]?.length)return;trozalHistoryBegin();
+ layerKeyframes[i].pop();paintLayerKeyframes(i);renderAt(playhead);scheduleAutosave();trozalHistoryCommit("Hapus keyframe layer "+(i+1));
 }
 function getLayerKeyframeMotion(i,t){
  const a=(layerKeyframes[i]||[]).slice().sort((x,y)=>x.t-y.t);if(!a.length)return null;
@@ -1025,24 +1026,24 @@ function wireMultiTrackEditor(){
  const editor=$('multiTrackEditor');if(!editor)return;
  $('mtBuildTracks').onclick=()=>{if(!sourceSvg){setStatus('Pecah SVG tersedia untuk aset SVG. Untuk HTML, gunakan komposisi gabungan terlebih dahulu.');return;}if(splitSvgIntoPieces())refreshTimelineEditor()};
  $('mtAddMarker').onclick=()=>{
-  const marker={id:'marker-'+Date.now(),t:Number(playhead.toFixed(2)),label:'Marker '+String(timelineMarkers.length+1).padStart(2,'0')};
-  timelineMarkers.push(marker);refreshTimelineEditor();scheduleAutosave();setStatus('Marker ditambahkan pada '+marker.t.toFixed(2)+' detik.');
+  trozalHistoryBegin();const marker={id:'marker-'+Date.now(),t:Number(trozalSnapTime(playhead).toFixed(3)),label:'Marker '+String(timelineMarkers.length+1).padStart(2,'0')};
+  timelineMarkers.push(marker);refreshTimelineEditor();scheduleAutosave();setStatus('Marker ditambahkan pada '+marker.t.toFixed(2)+' detik.');trozalHistoryCommit('Tambah marker');
  };
  $('mtClearMarkers').onclick=()=>{
   if(!timelineMarkers.length){setStatus('Belum ada marker untuk dihapus.');return;}
-  timelineMarkers=[];refreshTimelineEditor();scheduleAutosave();setStatus('Semua marker timeline dihapus.');
+  trozalHistoryBegin();timelineMarkers=[];refreshTimelineEditor();scheduleAutosave();setStatus('Semua marker timeline dihapus.');trozalHistoryCommit('Hapus semua marker');
  };
  editor.addEventListener('click',e=>{
   const eye=e.target.closest('[data-mt-eye]');
   if(eye){const i=Number(eye.dataset.mtEye),el=$('autoLayerVisible'+i);if(el){el.checked=!el.checked;renderAt(playhead);refreshTimelineEditor();scheduleAutosave();}return;}
   const lock=e.target.closest('[data-mt-lock]');
-  if(lock){const i=Number(lock.dataset.mtLock);timelineTrackLocks[i]=!timelineTrackLocks[i];refreshTimelineEditor();scheduleAutosave();return;}
+  if(lock){trozalHistoryBegin();const i=Number(lock.dataset.mtLock);timelineTrackLocks[i]=!timelineTrackLocks[i];refreshTimelineEditor();scheduleAutosave();trozalHistoryCommit('Kunci track');return;}
   const select=e.target.closest('[data-mt-select]');
   if(select){mtSelectLayer(Number(select.dataset.mtSelect));return;}
   const go=e.target.closest('[data-mt-marker-go]');
   if(go){const m=timelineMarkers.find(x=>x.id===go.dataset.mtMarkerGo);if(m)mtSetPlayhead(m.t);return;}
   const del=e.target.closest('[data-mt-marker-delete]');
-  if(del){timelineMarkers=timelineMarkers.filter(x=>x.id!==del.dataset.mtMarkerDelete);refreshTimelineEditor();scheduleAutosave();return;}
+  if(del){trozalHistoryBegin();timelineMarkers=timelineMarkers.filter(x=>x.id!==del.dataset.mtMarkerDelete);refreshTimelineEditor();scheduleAutosave();trozalHistoryCommit('Hapus marker');return;}
   const lane=e.target.closest('.mt-lane');
   if(lane&&!e.target.closest('.mt-clip')){
    const rect=lane.getBoundingClientRect(),ratio=Math.max(0,Math.min(1,(e.clientX-rect.left)/Math.max(1,rect.width)));
@@ -1067,19 +1068,19 @@ function wireMultiTrackEditor(){
   if(timelineTrackLocks[i]){setStatus('Track terkunci. Buka kunci sebelum memindahkan atau trim klip.');e.preventDefault();return;}
   const time=mtLayerTimes(i),edge=e.target.closest('[data-mt-edge]')?.dataset.mtEdge||'move';
   const lane=clip.parentElement,rect=lane.getBoundingClientRect();
-  timelineDragState={index:i,edge,pointerX:e.clientX,laneWidth:Math.max(1,rect.width),duration:time.duration,start:time.start,end:time.end,delay:time.delay};
+  trozalHistoryBegin();timelineDragState={index:i,edge,pointerX:e.clientX,laneWidth:Math.max(1,rect.width),duration:time.duration,start:time.start,end:time.end,delay:time.delay};
   e.preventDefault();
  });
  window.addEventListener('pointermove',e=>{
   const drag=timelineDragState;if(!drag)return;
   const delta=(e.clientX-drag.pointerX)/drag.laneWidth*drag.duration;
   let start=drag.start,end=drag.end;
-  if(drag.edge==='start'){start=Math.max(drag.delay,Math.min(drag.end-.05,drag.start+delta));}
-  else if(drag.edge==='end'){end=Math.max(drag.start+.05,Math.min(drag.duration,drag.end+delta));}
+  if(drag.edge==='start'){start=Math.max(drag.delay,Math.min(drag.end-.05,drag.start+delta));start=trozalSnapTime(start,{layer:drag.index});}
+  else if(drag.edge==='end'){end=Math.max(drag.start+.05,Math.min(drag.duration,drag.end+delta));end=trozalSnapTime(end,{layer:drag.index});}
   else{
    const length=drag.end-drag.start;
    start=Math.max(drag.delay,Math.min(drag.duration-length,drag.start+delta));
-   end=start+length;
+   start=trozalSnapTime(start,{layer:drag.index});end=start+length;
   }
   const startInput=$('autoLayerStart'+drag.index),endInput=$('autoLayerEnd'+drag.index);
   if(startInput)startInput.value=Math.max(0,start-drag.delay).toFixed(2);
@@ -1092,13 +1093,13 @@ function wireMultiTrackEditor(){
   if(!timelineDragState)return;
   const index=timelineDragState.index;timelineDragState=null;
   refreshTimelineEditor();scheduleAutosave();
-  setStatus('Klip layer '+(index+1)+' diperbarui pada timeline.');
+  setStatus('Klip layer '+(index+1)+' diperbarui pada timeline.');trozalHistoryCommit('Pindah / trim klip layer '+(index+1));
  });
  const objectObserver=typeof MutationObserver!=='undefined'?new MutationObserver(()=>refreshTimelineEditor()):null;
  if(objectObserver&&$('object'))objectObserver.observe($('object'),{childList:true});
  refreshTimelineEditor();
 }
-wireMultiTrackEditor();
+wireMultiTrackEditor();wireMotionPathOverlay();
 
 function trozalClamp(v,a,b){return Math.max(a,Math.min(b,v))}
 function trozalSnapTime(value,opts={}){
@@ -1274,12 +1275,41 @@ function drawExportVisualEffects(c,w,h,elapsed,motion,baseW,baseH,cx,cy,turboMod
  }
  c.restore();
 }
+
+function drawMotionPathOverlay(){
+ const overlay=$('motionPathOverlay'),stage=$('stage');if(!overlay||!stage)return;
+ const i=selectedLayerIndex>=0?selectedLayerIndex:layerKeyframes.findIndex(a=>(a||[]).length>0);
+ const frames=(layerKeyframes[i]||[]).slice().sort((a,b)=>a.t-b.t);
+ if(!svgWasSplit||i<0||frames.length<1){overlay.innerHTML='';overlay.style.display='none';return}
+ const w=Math.max(1,stage.clientWidth),h=Math.max(1,stage.clientHeight);overlay.style.display='block';overlay.setAttribute('viewBox','0 0 '+w+' '+h);
+ const point=f=>({x:w/2+(Number(f.x)||0)*w/100,y:h/2+(Number(f.y)||0)*h/100});
+ const coords=frames.map(point),path=coords.map((p,n)=>(n?'L':'M')+p.x.toFixed(1)+' '+p.y.toFixed(1)).join(' ');
+ const nodes=coords.map((p,n)=>'<circle class="motion-path-key '+(Math.abs(frames[n].t-playhead)<.02?'current':'')+'" cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="6" tabindex="0" role="button" aria-label="Keyframe '+(n+1)+' layer '+(i+1)+'" data-motion-path-key="'+n+'" data-motion-path-layer="'+i+'"><title>'+frames[n].t.toFixed(2)+'s · X '+Number(frames[n].x||0).toFixed(1)+' · Y '+Number(frames[n].y||0).toFixed(1)+'</title></circle>').join('');
+ overlay.innerHTML='<path class="motion-path-line" d="'+path+'"/>'+nodes;
+}
+function wireMotionPathOverlay(){
+ const overlay=$('motionPathOverlay');if(!overlay||overlay.dataset.wired)return;overlay.dataset.wired='1';
+ overlay.addEventListener('pointerdown',e=>{
+  const dot=e.target.closest('[data-motion-path-key]');if(!dot)return;
+  const i=Number(dot.dataset.motionPathLayer),frames=(layerKeyframes[i]||[]).slice().sort((a,b)=>a.t-b.t),frame=frames[Number(dot.dataset.motionPathKey)];
+  if(!frame)return;trozalHistoryBegin();motionPathDragState={i,frame};overlay.setPointerCapture?.(e.pointerId);e.preventDefault();
+ });
+ overlay.addEventListener('pointermove',e=>{
+  const drag=motionPathDragState;if(!drag)return;const rect=$('stage').getBoundingClientRect();
+  drag.frame.x=trozalClamp((e.clientX-rect.left-rect.width/2)/Math.max(1,rect.width)*100,-500,500);
+  drag.frame.y=trozalClamp((e.clientY-rect.top-rect.height/2)/Math.max(1,rect.height)*100,-500,500);
+  $('kfX'+drag.i).value=Number(drag.frame.x).toFixed(1);$('kfY'+drag.i).value=Number(drag.frame.y).toFixed(1);renderAt(playhead);drawLayerKeyframeGraph(drag.i);
+ });
+ const finish=()=>{if(!motionPathDragState)return;const i=motionPathDragState.i;motionPathDragState=null;layerKeyframes[i].sort((a,b)=>a.t-b.t);paintLayerKeyframes(i);renderAt(playhead);scheduleAutosave();trozalHistoryCommit('Edit motion path layer '+(i+1));setStatus('Motion path layer '+(i+1)+' diperbarui.')};
+ overlay.addEventListener('pointerup',finish);overlay.addEventListener('pointercancel',finish);
+}
+
 function renderAt(t){
  playhead=Math.max(0,Math.min(+$('duration').value,t));
  // Seek imported CSS/Web Animations with the same playhead used by the stage controls.
  if(htmlMotionIframe?.contentDocument){try{const htmlSpeed=Math.max(.05,+$('speed').value||1),ms=playhead*1000*htmlSpeed;if(Math.abs(ms-htmlMotionLastTime)>.01){htmlMotionAnimations.forEach(a=>{try{a.pause();a.currentTime=ms;}catch(_){}});htmlMotionLastTime=ms;}}catch(_){}}
  const dur=Math.max(.001,+$('duration').value),p=playhead/dur,tx=+$('posX').value,ty=+$('posY').value,ang=+$('rotation').value,opacity=+$('opacity').value/100,m=getMotionState(playhead);
- if(svgWasSplit)renderSplitPieces(playhead);
+ if(svgWasSplit)renderSplitPieces(playhead);drawMotionPathOverlay();
  $('object').classList.toggle('anim-shine',m.shine>0);$('object').style.setProperty('--shine-x',(-140+m.shine*280)+'%');$('object').classList.toggle('anim-radar',m.radar>0);$('object').style.setProperty('--radar-size',(10+m.radar*85)+'%');$('object').style.setProperty('--radar-alpha',String((1-m.radar)*.55));$('object').style.setProperty('--radar-color',$('effectColor').value);
  if(htmlMotionIframe){
    $('object').style.width='100%';$('object').style.height='100%';$('object').style.transformOrigin='center center';
