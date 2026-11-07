@@ -881,7 +881,7 @@ async function encodeMovWithWasm(pngZip,totalFrames,fps,width,height,outputForma
     if(probeCode!==0)throw new Error('FFprobe gagal memverifikasi stream ProRes. MOV belum dinyatakan berhasil.');
     const probeData=await ffmpeg.readFile('prores_probe.txt','utf8');
     const probeText=typeof probeData==='string'?probeData:new TextDecoder().decode(probeData);
-    if(!/codec_name=prores/i.test(probeText)||!/profile=.*4444/i.test(probeText)||!/pix_fmt=yuva444p10le/i.test(probeText)){
+    if(!/codec_name=prores/i.test(probeText)||!/profile=.*4444/i.test(probeText)||!/pix_fmt=yuva444p(?:10|12)le/i.test(probeText)){
      throw new Error('Pemeriksaan MOV tidak menemukan ProRes 4444 dengan yuva444p10le. Hasil ditolak: '+probeText.slice(0,500));
     }
    }else if(isProRes){
