@@ -328,7 +328,7 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
  .topcontrols .control{cursor:default}
 }
 
-</style>
+#nativeTextPreview{position:absolute;z-index:5;left:50%;top:50%;width:90%;transform:translate(-50%,-50%);display:none;white-space:pre-wrap;overflow:hidden;line-height:1.12;word-break:break-word;pointer-events:none;text-shadow:0 2px 12px #0009;padding:2%}#nativeTextPanel textarea{width:100%;resize:vertical;background:#071d15;border:1px solid #32634a;color:#e8f5ee;border-radius:9px;padding:8px}#nativeTextPanel input[type=color]{width:100%;min-height:34px;padding:2px}</style>
 </head>
 <body>
 <header class="topbar">
@@ -438,7 +438,7 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
    <div class="render render-with-progress"><button class="green" id="renderBtn">▶ Render</button></div>
   </div>
   <div class="stagewrap"><div class="stage" id="stage"><div class="stage-badge"><span>TROZAL MOTION</span><b>LIVE PREVIEW</b></div>
-  <canvas id="previewFx" class="preview-fx"></canvas><svg id="motionPathOverlay" class="motion-path-overlay" aria-hidden="true"></svg><div id="object"><div class="demo" id="demo"></div></div></div></div>
+  <canvas id="previewFx" class="preview-fx"></canvas><svg id="motionPathOverlay" class="motion-path-overlay" aria-hidden="true"></svg><div id="nativeTextPreview" aria-hidden="true"></div><div id="object"><div class="demo" id="demo"></div></div></div></div>
   <div class="stageinfo"><span>Resolusi: <b id="resolutionInfo">4K UHD (3840×2160)</b></span><span>Durasi: <b id="durationInfo">10.0s</b></span><span>FPS: <b id="fpsInfo">30</b></span><span>Total frame: <b id="frameInfo">300</b></span></div>
   <div class="timeline"><div class="timelinehead"><strong>Timeline & Preview</strong><button id="playBtn">▶ Putar</button><button id="stopBtn">■ Stop</button><button id="prevFrame">◀ Frame</button><button id="nextFrame">Frame ▶</button><span class="muted" id="timeReadout">00:00.0</span></div><input type="range" id="scrubber" min="0" max="1000" value="0"><div class="track"><div class="trackfill" id="trackfill"></div></div><div class="parts" id="timelineTabs" role="tablist" aria-label="Kontrol timeline"><button type="button" class="part active" data-editor-tab="masuk" role="tab" aria-selected="true">01 · Masuk</button><button type="button" class="part" data-editor-tab="gerakan" role="tab" aria-selected="false">02 · Gerakan</button><button type="button" class="part" data-editor-tab="efek" role="tab" aria-selected="false">03 · Efek</button><button type="button" class="part" data-editor-tab="keluar" role="tab" aria-selected="false">04 · Keluar</button><button type="button" class="part" data-editor-tab="loop" role="tab" aria-selected="false">05 · Loop</button><button type="button" class="part" data-editor-tab="ekspor" role="tab" aria-selected="false">06 · Ekspor</button></div><div class="timeline-tab-hint" id="timelineTabHint">Pilih bagian untuk melompat ke waktu preview dan membuka kontrol yang sesuai.</div>
   <section class="multi-track-editor" id="multiTrackEditor" aria-label="Multi-track timeline editor">
@@ -484,6 +484,18 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
    <label><input type="checkbox" id="sparkles" checked> Efek partikel / bintang</label>
    <label><input type="checkbox" id="shadow" checked> Bayangan objek</label>
    <label><input type="checkbox" id="loop" checked> Loop animasi</label>
+  </section>
+  <section class="panel" id="nativeTextPanel"><h3><b>✦</b>  TEXT ANIMATION STUDIO</h3>
+   <p class="help">Buat judul dan teks native. Teks ikut playhead serta masuk ke hasil render.</p>
+   <label><input type="checkbox" id="textLayerEnabled"> Aktifkan text layer</label>
+   <label>Isi teks</label><textarea id="textLayerContent" rows="3">TROZAL MOTION</textarea>
+   <div class="row"><div><label>Font</label><select id="textLayerFont"><option>Arial</option><option>Inter</option><option>Georgia</option><option>Impact</option><option>Verdana</option><option>Times New Roman</option><option>Courier New</option></select></div><div><label>Ketebalan</label><select id="textLayerWeight"><option value="400">Regular</option><option value="600">Semi Bold</option><option value="700" selected>Bold</option><option value="800">Extra Bold</option><option value="900">Black</option></select></div></div>
+   <div class="row"><div><label>Ukuran (% lebar)</label><input type="number" id="textLayerSize" min="1" max="25" step=".5" value="6"></div><div><label>Warna</label><input type="color" id="textLayerColor" value="#ffffff"></div></div>
+   <div class="row"><div><label>Perataan</label><select id="textLayerAlign"><option value="center">Tengah</option><option value="left">Kiri</option><option value="right">Kanan</option></select></div><div><label>Jarak huruf (px)</label><input type="number" id="textLayerTracking" min="-5" max="30" step=".5" value="0"></div></div>
+   <div class="row"><div><label>Posisi X (%)</label><input type="number" id="textLayerX" min="-100" max="100" value="0"></div><div><label>Posisi Y (%)</label><input type="number" id="textLayerY" min="-100" max="100" value="28"></div></div>
+   <div class="row"><div><label>Mulai (detik)</label><input type="number" id="textLayerStart" min="0" max="300" step=".1" value="0"></div><div><label>Durasi (detik)</label><input type="number" id="textLayerDuration" min=".1" max="300" step=".1" value="1.2"></div></div>
+   <label>Animasi masuk</label><select id="textLayerAnimation"><option value="fade">Fade In</option><option value="rise">Rise + Fade</option><option value="typewriter">Typewriter</option><option value="none">Tanpa animasi</option></select>
+   <div class="row"><button type="button" id="textLayerReset">Reset</button><span class="help" id="textLayerStatus">Text layer nonaktif.</span></div>
   </section>
   <section class="panel" id="effectsPanel"><h3><b>●</b> 5. EFEK VISUAL</h3>
    <label>Preset efek</label><select id="effectPreset">
@@ -1396,8 +1408,50 @@ function wireMotionPathOverlay(){
  overlay.addEventListener('pointerup',finish);overlay.addEventListener('pointercancel',finish);
 }
 
+
+function updateTextLayerPreview(t){
+ const el=$('nativeTextPreview');if(!el)return;
+ const content=$('textLayerContent')?.value||'',enabled=$('textLayerEnabled')?.checked;
+ const start=Math.max(0,+$('textLayerStart').value||0),duration=Math.max(.1,+$('textLayerDuration').value||1.2);
+ if(!enabled||!content||t<start){el.style.display='none';return}
+ const p=Math.max(0,Math.min(1,(t-start)/duration)),mode=$('textLayerAnimation').value,chars=Array.from(content);
+ el.textContent=mode==='typewriter'?chars.slice(0,Math.ceil(chars.length*p)).join(''):content;
+ el.style.display='block';el.style.left=(50+(+$('textLayerX').value||0))+'%';el.style.top=(50+(+$('textLayerY').value||0))+'%';
+ el.style.transform='translate(-50%,'+(mode==='rise'?-50+(1-p)*7:-50)+'%)';
+ el.style.fontFamily='"'+$('textLayerFont').value+'"';el.style.fontWeight=$('textLayerWeight').value;
+ el.style.fontSize=(Math.max(1,+$('textLayerSize').value||6)*$('stage').clientWidth/100)+'px';
+ el.style.color=$('textLayerColor').value;el.style.textAlign=$('textLayerAlign').value;
+ el.style.letterSpacing=(+$('textLayerTracking').value||0)+'px';
+ el.style.opacity=mode==='fade'||mode==='rise'?p:1;
+ $('textLayerStatus').textContent='Aktif · '+chars.length+' karakter';
+}
+function drawTextLayerToCanvas(ctx,w,h,t){
+ if(!$('textLayerEnabled')?.checked)return;
+ const content=$('textLayerContent')?.value||'';if(!content)return;
+ const start=Math.max(0,+$('textLayerStart').value||0),duration=Math.max(.1,+$('textLayerDuration').value||1.2);
+ if(t<start)return;
+ const mode=$('textLayerAnimation').value,p=Math.max(0,Math.min(1,(t-start)/duration)),chars=Array.from(content);
+ const value=mode==='typewriter'?chars.slice(0,Math.ceil(chars.length*p)).join(''):content;if(!value)return;
+ const size=Math.max(1,+$('textLayerSize').value||6)*w/100,x=w/2+(+$('textLayerX').value||0)*w/100;
+ const y=h/2+(+$('textLayerY').value||0)*h/100-(mode==='rise'?(1-p)*h*.07:0);
+ ctx.save();ctx.globalAlpha*=mode==='fade'||mode==='rise'?p:1;
+ ctx.font=$('textLayerWeight').value+' '+size+'px "'+$('textLayerFont').value+'"';
+ ctx.textAlign=$('textLayerAlign').value;ctx.textBaseline='middle';ctx.fillStyle=$('textLayerColor').value;
+ if('letterSpacing' in ctx)ctx.letterSpacing=(+$('textLayerTracking').value||0)+'px';
+ const lines=value.split(/\r?\n/),lineH=size*1.15;
+ lines.forEach((line,i)=>ctx.fillText(line,x,y+(i-(lines.length-1)/2)*lineH,w*.9));
+ ctx.restore();
+}
+['textLayerEnabled','textLayerContent','textLayerFont','textLayerWeight','textLayerSize','textLayerColor','textLayerAlign','textLayerTracking','textLayerX','textLayerY','textLayerStart','textLayerDuration','textLayerAnimation'].forEach(id=>{
+ const el=$(id);if(el){el.addEventListener('input',()=>{updateTextLayerPreview(playhead);scheduleAutosave()});el.addEventListener('change',()=>{updateTextLayerPreview(playhead);scheduleAutosave()});}
+});
+$('textLayerReset')?.addEventListener('click',()=>{
+ $('textLayerEnabled').checked=false;$('textLayerContent').value='TROZAL MOTION';$('textLayerFont').value='Arial';$('textLayerWeight').value='700';$('textLayerSize').value='6';$('textLayerColor').value='#ffffff';$('textLayerAlign').value='center';$('textLayerTracking').value='0';$('textLayerX').value='0';$('textLayerY').value='28';$('textLayerStart').value='0';$('textLayerDuration').value='1.2';$('textLayerAnimation').value='fade';updateTextLayerPreview(playhead);scheduleAutosave();
+});
+
 function renderAt(t){
  playhead=Math.max(0,Math.min(+$('duration').value,t));
+ updateTextLayerPreview(playhead);
  // Seek imported CSS/Web Animations with the same playhead used by the stage controls.
  if(htmlMotionIframe?.contentDocument){try{const htmlSpeed=Math.max(.05,+$('speed').value||1),ms=playhead*1000*htmlSpeed;if(Math.abs(ms-htmlMotionLastTime)>.01){htmlMotionAnimations.forEach(a=>{try{a.pause();a.currentTime=ms;}catch(_){}});htmlMotionLastTime=ms;}}catch(_){}}
  const dur=Math.max(.001,+$('duration').value),p=playhead/dur,tx=+$('posX').value,ty=+$('posY').value,ang=+$('rotation').value,opacity=+$('opacity').value/100,m=getMotionState(playhead);
@@ -1730,7 +1784,7 @@ try{
  if(htmlMotionSource){const htmlCanvas=await captureHtmlMotionAt(elapsed);drawContained(htmlCanvas)}
  else if(svgPieceImgs.length){svgPieceImgs.forEach((pi,i)=>{const visible=document.getElementById('autoLayerVisible'+i)?.checked!==false,solo=soloLayerIndex<0||soloLayerIndex===i;if(!visible||!solo)return;const lm=getLayerMotion(i,elapsed);ctx.save();ctx.globalAlpha=lm.alpha;drawContained(pi,lm.x*w/100,lm.y*h/100,lm.rot,lm.scale);ctx.restore()})}
  else if(svgImg)drawContained(svgImg);else if(img)drawContained(img);else{ctx.fillStyle=currentColor;ctx.beginPath();ctx.arc(0,0,Math.min(ow,oh)/3,0,Math.PI*2);ctx.fill()}
-}catch(e){ctx.restore();throw new Error('Gagal menggambar aset pada frame '+frame+' ('+elapsed.toFixed(3)+'s): '+(e?.message||e))}ctx.restore();drawExportVisualEffects(ctx,w,h,elapsed,motion,baseW,baseH,cx,cy,turboMode);const renderPercent=Math.max(1,Math.min(100,Math.round(((frame+1)/totalFrames)*100)));setExportStatus('Rendering… '+renderPercent+'%');setRenderProgress(renderPercent,'Merender frame '+(frame+1)+'/'+totalFrames,'running');if(frameSequenceMode){let png;try{png=await new Promise((resolve,reject)=>{try{canvas.toBlob(resolve,'image/png')}catch(e){reject(e)}})}catch(blobError){throw new Error('Canvas tidak dapat diekspor pada frame '+frame+' ('+elapsed.toFixed(3)+'s). Penyebab belum dapat dipastikan (misalnya SVG/foreignObject atau aset eksternal yang tidak mengizinkan CORS): '+(blobError?.message||blobError))}if(!png)throw new Error('Browser mengembalikan PNG kosong pada frame '+frame+' ('+elapsed.toFixed(3)+'s).');pngZip.file('frame_'+String(frame).padStart(6,'0')+'.png',png,{compression:'STORE'});frame++;setTimeout(draw,0)}else{frame++;setTimeout(draw,step)}}
+}catch(e){ctx.restore();throw new Error('Gagal menggambar aset pada frame '+frame+' ('+elapsed.toFixed(3)+'s): '+(e?.message||e))}ctx.restore();drawTextLayerToCanvas(ctx,w,h,elapsed);drawExportVisualEffects(ctx,w,h,elapsed,motion,baseW,baseH,cx,cy,turboMode);const renderPercent=Math.max(1,Math.min(100,Math.round(((frame+1)/totalFrames)*100)));setExportStatus('Rendering… '+renderPercent+'%');setRenderProgress(renderPercent,'Merender frame '+(frame+1)+'/'+totalFrames,'running');if(frameSequenceMode){let png;try{png=await new Promise((resolve,reject)=>{try{canvas.toBlob(resolve,'image/png')}catch(e){reject(e)}})}catch(blobError){throw new Error('Canvas tidak dapat diekspor pada frame '+frame+' ('+elapsed.toFixed(3)+'s). Penyebab belum dapat dipastikan (misalnya SVG/foreignObject atau aset eksternal yang tidak mengizinkan CORS): '+(blobError?.message||blobError))}if(!png)throw new Error('Browser mengembalikan PNG kosong pada frame '+frame+' ('+elapsed.toFixed(3)+'s).');pngZip.file('frame_'+String(frame).padStart(6,'0')+'.png',png,{compression:'STORE'});frame++;setTimeout(draw,0)}else{frame++;setTimeout(draw,step)}}
 
 async function draw(){
  try{await drawUnsafe()}
@@ -1789,12 +1843,12 @@ $('exportFrames').onclick=exportCurrentFramePng;
  }
 })();
 function getProject(){
- const ids=['objectName','duration','fps','resolution','proresMode','animation','speed','intensity','scale','posX','posY','rotation','opacity','bgMode','customBg','effectPreset','effectIntensity','effectColor','particleCount','particleSpeed','format','quality','mp4Crf','renderSpeedMode'];
- const checks=['transparentBg','sparkles','shadow','loop','effectOn'];
+ const ids=['objectName','duration','fps','resolution','proresMode','animation','speed','intensity','scale','posX','posY','rotation','opacity','bgMode','customBg','effectPreset','effectIntensity','effectColor','particleCount','particleSpeed','format','quality','mp4Crf','renderSpeedMode','textLayerContent','textLayerFont','textLayerWeight','textLayerSize','textLayerColor','textLayerAlign','textLayerTracking','textLayerX','textLayerY','textLayerStart','textLayerDuration','textLayerAnimation'];
+ const checks=['transparentBg','sparkles','shadow','loop','effectOn','textLayerEnabled'];
  const controls={};ids.forEach(k=>{if($(k))controls[k]=$(k).value});
  checks.forEach(k=>{if($(k))controls[k]=$(k).checked});
  const layers=svgPieces.map((piece,i)=>{const l={svg:piece,name:svgLayerNames[i]||('Layer '+(i+1))};['Visible','On','In','Out','Loop','Delay','Start','End','Duration','Speed','Intensity','Scale','Rotation','Direction'].forEach(k=>{const el=$('autoLayer'+k+i);if(el)l[k.toLowerCase()]=el.type==='checkbox'?el.checked:el.value});l.autoKey=!!$('kfAuto'+i)?.checked;return l});
- return {app:'ANIMOVE',version:7,stage:10,timelineSnapEnabled,savedAt:new Date().toISOString(),controls,currentColor,playhead,sourceSvg,sourceType,sourceName:$('objectName').value,svgWasSplit,svgPieces:[...svgPieces],svgLayerNames:[...svgLayerNames],svgLayerHints:[...svgLayerHints],layerKeyframes:layerKeyframes.map(a=>(a||[]).map(k=>({...k}))),timelineMarkers:timelineMarkers.map(m=>({...m})),timelineTrackLocks:{...timelineTrackLocks},layers};
+ return {app:'ANIMOVE',version:8,stage:11,timelineSnapEnabled,savedAt:new Date().toISOString(),controls,currentColor,playhead,sourceSvg,sourceType,sourceName:$('objectName').value,svgWasSplit,svgPieces:[...svgPieces],svgLayerNames:[...svgLayerNames],svgLayerHints:[...svgLayerHints],layerKeyframes:layerKeyframes.map(a=>(a||[]).map(k=>({...k}))),timelineMarkers:timelineMarkers.map(m=>({...m})),timelineTrackLocks:{...timelineTrackLocks},layers};
 }
 function applyProject(p){
  if(!p||p.app!=='ANIMOVE')throw new Error('File bukan proyek trozal_MOTION');
