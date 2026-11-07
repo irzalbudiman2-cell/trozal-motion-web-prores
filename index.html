@@ -1488,7 +1488,7 @@ function updateTextLayerPreview(t){
   else{
    let idx=0;const lines=content.split('\n');
    lines.forEach((line,lineIndex)=>{const row=document.createElement('div');row.style.minHeight='1.12em';const lineUnits=gran==='character'?Array.from(line):(line.match(/\s+|[^\s]+/gu)||[]);
-    lineUnits.forEach(unit=>{const span=document.createElement('span'),q=textUnitProgress(p,idx++,units.length,layer),off=textUnitOffset(layer.textLayerDirection,q,Math.max(8,stageW*.04));span.textContent=unit;span.style.display='inline-block';span.style.opacity=q;span.style.transform=layer.textLayerDirection==='scale'?'scale('+(.45+.55*q)+')':'translate('+off[0]+'px,'+off[1]+'px)';span.style.transition='none';row.appendChild(span)});
+    lineUnits.forEach(unit=>{const span=document.createElement('span'),q=textUnitProgress(p,unitIndex++,units,layer),off=textUnitOffset(layer.textLayerDirection,q,Math.max(8,stageW*.04));span.textContent=unit;span.style.display='inline-block';span.style.opacity=q;span.style.transform=layer.textLayerDirection==='scale'?'scale('+(.45+.55*q)+')':'translate('+off[0]+'px,'+off[1]+'px)';span.style.transition='none';row.appendChild(span)});
     wrapper.appendChild(row);if(lineIndex<lines.length-1)wrapper.appendChild(document.createElement('br'));
    });
   }
@@ -1514,7 +1514,7 @@ function drawTextLayerToCanvas(ctx,w,h,t){
    let cursor=layer.textLayerAlign==='left'?x-w*.45:layer.textLayerAlign==='right'?x+w*.45-total:x-total/2;
    let indexBase=gran==='character'?Array.from(lines.slice(0,lineIndex).join('\n')).length:((content.slice(0,content.indexOf(line)).match(/\s+|[^\s]+/gu)||[]).length);
    units.forEach((unit,i)=>{const q=textUnitProgress(p,indexBase+i,count,layer),off=textUnitOffset(layer.textLayerDirection,q,size),alpha=ctx.globalAlpha;ctx.globalAlpha=alpha*q;
-    if(layer.textLayerDirection==='scale'){ctx.translate(cursor+widths[i]/2,y+(lineIndex-(lines.length-1)/2)*lineH);ctx.scale(.45+.55*q,.45+.55*q);ctx.fillText(unit,-widths[i]/2,0);ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=alpha;}
+    if(layer.textLayerDirection==='scale'){ctx.save();ctx.translate(cursor+widths[i]/2,y+(lineIndex-(lines.length-1)/2)*lineH);ctx.scale(.45+.55*q,.45+.55*q);ctx.fillText(unit,-widths[i]/2,0);ctx.restore();ctx.globalAlpha=alpha;}
     else ctx.fillText(unit,cursor+off[0],y+(lineIndex-(lines.length-1)/2)*lineH+off[1]);
     cursor+=widths[i];
    });
