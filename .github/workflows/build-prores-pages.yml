@@ -64,24 +64,26 @@ jobs:
           cd /tmp/ffmpeg-wasm
           python3 - <<'PY'
           from pathlib import Path
+          import re
           p = Path("Dockerfile")
           text = p.read_text()
-          import re
-          pattern = r"(?m)^(?P<indent>[ ]*)RUN bash -x /src/build\\.sh \\\\\n(?P=indent)      --enable-gpl \\\\\n"
-          replacement = (
-              r"\\g<indent>RUN bash -x /src/build.sh \\\\"
-              r"\\n\\g<indent>      --enable-encoder=prores_ks \\\\"
-              r"\\n\\g<indent>      --enable-decoder=png \\\\"
-              r"\\n\\g<indent>      --enable-demuxer=image2 \\\\"
-              r"\\n\\g<indent>      --enable-muxer=mov \\\\"
-              r"\\n\\g<indent>      --enable-protocol=file \\\\"
-              r"\\n\\g<indent>      --enable-gpl \\\\"
-          )
-          patched, count = re.subn(pattern, replacement, text, count=1)
+          pattern = r"(?m)^(?P<indent>[ ]*)RUN bash -x /src/build\.sh \\\n(?P=indent)      --enable-gpl \\\n"
+          def patch(match):
+              indent = match.group("indent")
+              lines = [
+                  "RUN bash -x /src/build.sh \\",
+                  "      --enable-encoder=prores_ks \\",
+                  "      --enable-decoder=png \\",
+                  "      --enable-demuxer=image2 \\",
+                  "      --enable-muxer=mov \\",
+                  "      --enable-protocol=file \\",
+                  "      --enable-gpl \\",
+              ]
+              return "\n".join(indent + line for line in lines) + "\n"
+          patched, count = re.subn(pattern, patch, text, count=1)
           if count != 1:
               raise SystemExit("Could not locate FFmpeg configure block with indentation; no build performed.")
-          p.write_text(patched)
-          PY
+          p.write_text(patched)          PY
           make prd
           mkdir -p "$GITHUB_WORKSPACE/site/vendor/prores-core"
           cp packages/core/dist/esm/ffmpeg-core.js "$GITHUB_WORKSPACE/site/vendor/prores-core/"
