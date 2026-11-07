@@ -132,6 +132,69 @@ select,input[type=text],input[type=number],.ai-tools textarea{background:#071d15
 #renderProgress.is-idle .render-progress-fill{background:#617568}
 @media(max-width:720px){.topbar-render-progress{order:3;width:100%;min-width:100%;margin:5px 0 0}.topbar{gap:8px}}
 
+
+/* TROZAL MOTION · brushed metallic gold monitor skin */
+.stagewrap{
+ background:
+  radial-gradient(ellipse at 50% 46%,rgba(205,158,61,.18),transparent 62%),
+  linear-gradient(145deg,#17140d 0%,#282114 42%,#111318 100%);
+ border-bottom:1px solid rgba(205,164,80,.32);
+}
+.stage{
+ border:4px solid #b48732!important;
+ border-radius:13px!important;
+ outline:1px solid rgba(255,229,157,.72);
+ outline-offset:2px;
+ box-shadow:
+  0 0 0 1px #4d3514,
+  0 10px 32px rgba(0,0,0,.5),
+  0 0 25px rgba(223,180,83,.2),
+  inset 0 0 0 1px rgba(255,255,255,.5)!important;
+}
+.stage::before{
+ content:"";position:absolute;inset:0;z-index:8;pointer-events:none;
+ border:1px solid rgba(255,239,190,.62);border-radius:7px;
+ box-shadow:inset 0 0 0 2px rgba(98,65,17,.35);
+}
+.stage-badge{
+ position:absolute;top:10px;left:12px;z-index:9;pointer-events:none;
+ display:flex;align-items:center;gap:8px;padding:5px 9px;border-radius:5px;
+ color:#f5dda0;font-size:9px;font-weight:800;letter-spacing:1px;
+ background:linear-gradient(110deg,rgba(22,19,13,.86),rgba(67,48,17,.72));
+ border:1px solid rgba(222,183,96,.65);box-shadow:0 2px 10px #0005;
+}
+.stage-badge b{color:#fff0b7;font-size:8px;letter-spacing:.8px}
+.timeline{
+ background:linear-gradient(180deg,#201b10 0%,#191a20 100%);
+ border-top:1px solid #98712b;
+ box-shadow:inset 0 1px 0 rgba(255,231,166,.12);
+}
+button.part{
+ appearance:none;min-width:0;width:100%;font-size:10px;font-weight:750;
+ letter-spacing:.15px;color:#d8c28d;padding:7px 3px;
+ border:1px solid #765a29;border-radius:6px;
+ background:linear-gradient(180deg,#302819 0%,#1d1c1a 100%);
+ box-shadow:inset 0 1px 0 rgba(255,236,180,.1);
+ transition:background .18s ease,box-shadow .18s ease,transform .18s ease;
+}
+button.part:hover{border-color:#e6c36f;color:#fff0bd;transform:translateY(-1px)}
+button.part.active{
+ color:#241909;border-color:#ffe39a;
+ background:linear-gradient(135deg,#fff0b5 0%,#dbb252 26%,#966b22 58%,#f4d982 82%,#a77b2e 100%);
+ box-shadow:0 2px 12px rgba(218,170,65,.24),inset 0 1px 0 #fff8d8,inset 0 -1px 0 #714d16;
+}
+button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
+.timeline-tab-hint{
+ margin-top:7px;padding:6px 9px;border-left:2px solid #bd913a;
+ border-radius:0 5px 5px 0;color:#d3c49d;font-size:10px;
+ background:linear-gradient(90deg,rgba(175,129,39,.13),transparent 90%);
+}
+@media(max-width:900px){
+ .stagewrap{padding:12px}
+ .stage{border-width:3px!important}
+ .parts{gap:3px}
+ button.part{font-size:9px;padding:6px 1px}
+}
 </style>
 </head>
 <body>
@@ -219,7 +282,7 @@ select,input[type=text],input[type=number],.ai-tools textarea{background:#071d15
    <div class="row"><label style="flex:2">Warna kustom</label><input id="customBg" type="color" value="#f4f0e8" style="width:54px;flex:0 0 54px;padding:2px;height:30px"></div>
    <label><input type="checkbox" id="transparentBg" checked> Latar transparan pada ekspor (jika didukung)</label>
   </section>
-  <section class="panel"><h3><b>●</b> 3. BAGIAN BERGERAK</h3>
+  <section class="panel" id="motionPartsPanel"><h3><b>●</b> 3. BAGIAN BERGERAK</h3>
    <p class="help">Atur gerakan, delay, waktu mulai/selesai, durasi, kecepatan, intensitas, skala, dan rotasi secara independen untuk setiap layer.</p>
    <div id="parts"></div>
    <div id="autoLayerControls"></div>
@@ -241,13 +304,13 @@ select,input[type=text],input[type=number],.ai-tools textarea{background:#071d15
    <div class="control" id="transparentExportMode"><label for="proresMode">Mode ekspor transparan</label><select id="proresMode"><option value="unlimited" selected>ProRes 4444 · tanpa batas ukuran file</option><option value="pngUnlimited">PNG Sequence ZIP · tanpa batas ukuran file</option></select><small class="target-hint" id="proresModeHint">ProRes 4444 + alpha melalui encoder web. Pilih PNG Sequence ZIP untuk ekspor frame transparan.</small></div>
    <div class="render render-with-progress"><button class="green" id="renderBtn">▶ Render</button></div>
   </div>
-  <div class="stagewrap"><div class="stage" id="stage">
+  <div class="stagewrap"><div class="stage" id="stage"><div class="stage-badge"><span>TROZAL MOTION</span><b>LIVE PREVIEW</b></div>
   <canvas id="previewFx" class="preview-fx"></canvas><div id="object"><div class="demo" id="demo"></div></div></div></div>
   <div class="stageinfo"><span>Resolusi: <b id="resolutionInfo">4K UHD (3840×2160)</b></span><span>Durasi: <b id="durationInfo">10.0s</b></span><span>FPS: <b id="fpsInfo">30</b></span><span>Total frame: <b id="frameInfo">300</b></span></div>
-  <div class="timeline"><div class="timelinehead"><strong>Timeline & Preview</strong><button id="playBtn">▶ Putar</button><button id="stopBtn">■ Stop</button><button id="prevFrame">◀ Frame</button><button id="nextFrame">Frame ▶</button><span class="muted" id="timeReadout">00:00.0</span></div><input type="range" id="scrubber" min="0" max="1000" value="0"><div class="track"><div class="trackfill" id="trackfill"></div></div><div class="parts"><div class="part active">01 · Masuk</div><div class="part">02 · Gerakan</div><div class="part">03 · Efek</div><div class="part">04 · Keluar</div><div class="part">05 · Loop</div><div class="part">06 · Ekspor</div></div><div class="status" id="status"></div></div>
+  <div class="timeline"><div class="timelinehead"><strong>Timeline & Preview</strong><button id="playBtn">▶ Putar</button><button id="stopBtn">■ Stop</button><button id="prevFrame">◀ Frame</button><button id="nextFrame">Frame ▶</button><span class="muted" id="timeReadout">00:00.0</span></div><input type="range" id="scrubber" min="0" max="1000" value="0"><div class="track"><div class="trackfill" id="trackfill"></div></div><div class="parts" id="timelineTabs" role="tablist" aria-label="Kontrol timeline"><button type="button" class="part active" data-editor-tab="masuk" role="tab" aria-selected="true">01 · Masuk</button><button type="button" class="part" data-editor-tab="gerakan" role="tab" aria-selected="false">02 · Gerakan</button><button type="button" class="part" data-editor-tab="efek" role="tab" aria-selected="false">03 · Efek</button><button type="button" class="part" data-editor-tab="keluar" role="tab" aria-selected="false">04 · Keluar</button><button type="button" class="part" data-editor-tab="loop" role="tab" aria-selected="false">05 · Loop</button><button type="button" class="part" data-editor-tab="ekspor" role="tab" aria-selected="false">06 · Ekspor</button></div><div class="timeline-tab-hint" id="timelineTabHint">Pilih bagian untuk melompat ke waktu preview dan membuka kontrol yang sesuai.</div><div class="status" id="status"></div></div>
  </main>
  <aside class="sidebar right">
-  <section class="panel"><h3><b>●</b> 4. ANIMASI</h3>
+  <section class="panel" id="animationPanel"><h3><b>●</b> 4. ANIMASI</h3>
    <label>Gaya pergerakan</label><select id="animation">
     <option value="none">1. Diam / Statis (fokus pada bagian bergerak)</option>
     <option value="spinBurst">2. Rotasi & Ledakan Cahaya</option>
@@ -278,7 +341,7 @@ select,input[type=text],input[type=number],.ai-tools textarea{background:#071d15
    <label><input type="checkbox" id="shadow" checked> Bayangan objek</label>
    <label><input type="checkbox" id="loop" checked> Loop animasi</label>
   </section>
-  <section class="panel"><h3><b>●</b> 5. EFEK VISUAL</h3>
+  <section class="panel" id="effectsPanel"><h3><b>●</b> 5. EFEK VISUAL</h3>
    <label>Preset efek</label><select id="effectPreset">
     <option value="none">Tanpa efek tambahan</option><option value="glow" selected>Glow / cahaya lembut</option><option value="outline">Outline / garis tepi</option><option value="particles">Partikel melayang</option><option value="confetti">Confetti / serpihan warna</option><option value="speedlines">Speed lines / garis gerak</option><option value="flash">Flash / kilatan cahaya</option><option value="glitch">Glitch / distorsi warna</option><option value="blur">Motion blur sederhana</option><option value="vignette">Vignette / sudut gelap</option><option value="snow">Salju turun</option><option value="rain">Hujan</option><option value="bubbles">Gelembung</option><option value="fireflies">Kunang-kunang</option><option value="dust">Debu atmosfer</option><option value="bokeh">Bokeh sinematik</option><option value="rays">Sinar cahaya</option><option value="scanlines">Scanline digital</option><option value="starfield">Starfield / bintang</option><option value="embers">Bara api</option><option value="smoke">Asap atmosfer</option><option value="aurora">Aurora bergerak</option>
    </select>
@@ -298,7 +361,7 @@ select,input[type=text],input[type=number],.ai-tools textarea{background:#071d15
    <label>Rotasi dasar <span class="value" id="rotVal">0°</span></label><input id="rotation" type="range" min="-180" max="180" value="0">
    <label>Opacity <span class="value" id="opacityVal">100%</span></label><input id="opacity" type="range" min="10" max="100" value="100">
   </section>
-  <section class="panel"><h3><b>●</b> 7. EKSPOR</h3>
+  <section class="panel" id="exportPanel"><h3><b>●</b> 7. EKSPOR</h3>
    <label>Format video</label><select id="format"><option value="webm">WebM (ekspor langsung dari browser)</option><option value="mp4">MP4 / H.264</option><option value="mov" selected>MOV / QuickTime · ProRes 4444 + Alpha</option><option value="pngseq">PNG Sequence ZIP (transparansi / alpha)</option></select>
    
    <label>Preset kualitas</label><select id="quality"><option value="standard">Standar · file lebih kecil</option><option value="high" selected>Tinggi · detail tajam</option><option value="max">Maksimal · kualitas tertinggi</option></select>
@@ -589,6 +652,39 @@ const loopOptions=['Diam (tidak loop)','Putar (Spin)','Berdenyut (Pulse)','Meman
 function optionsHTML(arr,selected=0){return arr.map((x,i)=>`<option value="${i}" ${i===selected?'selected':''}>${x}</option>`).join('')}
 function makeParts(){let holder=$('parts');holder.innerHTML='';for(let i=1;i<=6;i++){let div=document.createElement('div');div.className='group';div.innerHTML=`<div class="grouphead"><input type="checkbox" checked id="partOn${i}"><label for="partOn${i}">Bagian ${i}</label></div><div class="row"><div><label>MASUK</label><select id="partIn${i}">${optionsHTML(entranceOptions,i===1?1:0)}</select></div><div><label>KELUAR</label><select id="partOut${i}">${optionsHTML(exitOptions,i===1?4:0)}</select></div><div><label>LOOP</label><select id="partLoop${i}">${optionsHTML(loopOptions,0)}</select></div></div>`;holder.appendChild(div)}}
 $('addPart').onclick=()=>{const n=$('parts').children.length+1;if(n>12){setStatus('Maksimum 12 bagian animasi.');return}let d=document.createElement('div');d.className='group';d.innerHTML=`<div class="grouphead"><input type="checkbox" checked id="partOn${n}"><label for="partOn${n}">Bagian ${n}</label></div><div class="row"><div><label>MASUK</label><select id="partIn${n}">${optionsHTML(entranceOptions)}</select></div><div><label>KELUAR</label><select id="partOut${n}">${optionsHTML(exitOptions)}</select></div><div><label>LOOP</label><select id="partLoop${n}">${optionsHTML(loopOptions)}</select></div></div>`;$('parts').appendChild(d)};
+
+function wireTimelineEditor(){
+ const config={
+  masuk:{panel:'motionPartsPanel',target:'partIn1',time:0,hint:'MASUK · Atur cara objek muncul di awal video.'},
+  gerakan:{panel:'animationPanel',target:'animation',time:d=>Math.min(1.5,d*.25),hint:'GERAKAN · Pilih gaya gerak, kecepatan, dan intensitas.'},
+  efek:{panel:'effectsPanel',target:'effectPreset',time:d=>d*.5,hint:'EFEK · Atur glow, partikel, warna, dan efek visual.'},
+  keluar:{panel:'motionPartsPanel',target:'partOut1',time:d=>Math.max(0,d-Math.min(1.5,d*.2)),hint:'KELUAR · Atur cara objek menghilang di akhir video.'},
+  loop:{panel:'motionPartsPanel',target:'partLoop1',time:d=>d*.72,hint:'LOOP · Pilih gerakan berulang untuk objek utama.'},
+  ekspor:{panel:'exportPanel',target:'format',time:null,hint:'EKSPOR · Pilih format video dan kualitas, lalu gunakan tombol Render di atas.'}
+ };
+ document.querySelectorAll('[data-editor-tab]').forEach(button=>{
+  button.addEventListener('click',()=>{
+   const key=button.dataset.editorTab,info=config[key];if(!info)return;
+   if(['masuk','keluar','loop'].includes(key)&&!$('partIn1'))makeParts();
+   document.querySelectorAll('[data-editor-tab]').forEach(b=>{
+    const active=b===button;b.classList.toggle('active',active);b.setAttribute('aria-selected',active?'true':'false');
+   });
+   const hint=$('timelineTabHint');if(hint)hint.textContent=info.hint;
+   const panel=$(info.panel),target=$(info.target);
+   if(info.time!==null){
+    const duration=+$('duration').value||10;
+    const nextTime=typeof info.time==='function'?info.time(duration):info.time;
+    playing=false;cancelAnimationFrame(raf);$('playBtn').textContent='▶ Putar';
+    playhead=Math.max(0,Math.min(duration,nextTime));
+    $('scrubber').value=String(playhead/duration*1000);renderAt(playhead);
+   }
+   if(panel)panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+   if(target)setTimeout(()=>{try{target.focus({preventScroll:true})}catch(_){target.focus()}},180);
+   setStatus('Panel '+key.toUpperCase()+' aktif. Kontrol terkait siap digunakan.');
+  });
+ });
+}
+wireTimelineEditor();
 function partMotion(t){
  const duration=Math.max(.001,+$('duration').value),p=Math.max(0,Math.min(1,t/duration));
  const first=$('parts').querySelector('.group');
