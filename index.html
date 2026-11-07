@@ -195,6 +195,54 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
  .parts{gap:3px}
  button.part{font-size:9px;padding:6px 1px}
 }
+
+/* Phase 1 · Multi-track timeline */
+.multi-track-editor{
+ margin-top:9px;padding:9px;border:1px solid #65502c;border-radius:8px;
+ background:linear-gradient(180deg,rgba(34,29,20,.98),rgba(23,24,29,.98));
+ box-shadow:inset 0 1px 0 rgba(255,231,174,.08);
+}
+.mt-toolbar{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.mt-toolbar>div:first-child{display:flex;flex-direction:column;gap:1px}
+.mt-toolbar strong{color:#f2d58d;font-size:11px;letter-spacing:.5px}
+.mt-toolbar small{font-size:9px;color:#b9aa88}
+.mt-toolbar-actions{display:flex;gap:5px;flex-wrap:wrap}
+.mt-toolbar-actions button{padding:5px 7px;font-size:9px;border-color:#80632d}
+.mt-ruler-row,.mt-track-row{display:grid;grid-template-columns:155px minmax(0,1fr);gap:7px;align-items:center}
+.mt-track-name-head{font-size:8px;letter-spacing:.8px;font-weight:800;color:#bda36e;padding:5px 3px}
+.mt-ruler{height:23px;position:relative;border-bottom:1px solid #6c5732;background:linear-gradient(180deg,rgba(217,177,91,.08),transparent)}
+.mt-tick{position:absolute;top:0;bottom:0;border-left:1px solid rgba(223,190,123,.18);font-size:8px;color:#b8a77f;padding-left:3px}
+.mt-tick span{position:absolute;top:2px;left:3px;white-space:nowrap}
+.mt-track-list{max-height:205px;overflow:auto;overscroll-behavior:contain;scrollbar-color:#8d6d32 #211e18}
+.mt-track-row{min-height:34px;border-bottom:1px solid rgba(202,171,112,.11)}
+.mt-track-row.selected .mt-track-label{background:rgba(212,170,75,.12);border-color:#a88035}
+.mt-track-label{height:28px;min-width:0;display:flex;align-items:center;gap:3px;padding:2px 4px;border:1px solid transparent;border-radius:5px}
+.mt-track-label button{flex:0 0 auto;border:0;background:transparent;padding:3px 4px;font-size:10px;color:#cbb989}
+.mt-track-label .mt-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;flex:1;font-size:9px;color:#eee0ba}
+.mt-track-label button:hover{background:rgba(255,222,151,.13)}
+.mt-track-label .mt-lock.locked{color:#ffcf70}
+.mt-lane{height:27px;position:relative;overflow:hidden;border:1px solid rgba(166,139,88,.25);border-radius:4px;background-color:#191a1d;background-image:linear-gradient(90deg,rgba(220,185,116,.09) 1px,transparent 1px);background-size:10% 100%;touch-action:pan-y}
+.mt-lane:focus-visible{outline:1px solid #ffe0a0;outline-offset:1px}
+.mt-clip{position:absolute;top:3px;height:19px;min-width:5px;border:1px solid #f1d58d;border-radius:4px;
+ background:linear-gradient(180deg,#f2d68e 0%,#bd8e38 42%,#75501d 100%);
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 1px 3px #0008;
+ cursor:grab;touch-action:none;overflow:hidden;color:#211807;font-size:8px;font-weight:800;white-space:nowrap;text-overflow:ellipsis;padding:2px 9px}
+.mt-clip:active{cursor:grabbing}
+.mt-clip.static{cursor:default;opacity:.7;background:linear-gradient(90deg,#51452c,#75603a);color:#f3e2b7}
+.mt-clip-handle{position:absolute;top:0;bottom:0;width:7px;background:rgba(255,247,214,.78);cursor:ew-resize}
+.mt-clip-handle.start{left:0;border-radius:3px 0 0 3px}
+.mt-clip-handle.end{right:0;border-radius:0 3px 3px 0}
+.mt-marker-line{position:absolute;top:0;bottom:0;width:1px;background:#ffdc75;z-index:3;pointer-events:none;box-shadow:0 0 4px #ffc85c}
+.mt-marker-line:before{content:"";position:absolute;top:0;left:-3px;border-left:3px solid transparent;border-right:3px solid transparent;border-top:5px solid #ffe49a}
+.mt-empty{padding:11px 8px;color:#b9ae98;font-size:9px}
+.mt-marker-shelf{display:flex;align-items:center;gap:5px;flex-wrap:wrap;padding-top:7px}
+.mt-empty-marker{color:#938a78;font-size:9px}
+.mt-marker-chip{display:flex;align-items:center;gap:3px;padding:2px 4px;border:1px solid #806332;border-radius:5px;background:#2b2418}
+.mt-marker-chip button{border:0;background:transparent;padding:2px 4px;color:#f2d891;font-size:9px}
+.mt-marker-chip input{width:92px;padding:3px 4px;border:1px solid #584726;background:#171613;color:#f8e6b9;border-radius:3px;font-size:9px}
+.mt-marker-time{font-size:8px;color:#b8a47a;white-space:nowrap}
+.mt-footer{padding-top:6px;color:#9f967f;font-size:8px;line-height:1.4}
+@media(max-width:760px){.mt-ruler-row,.mt-track-row{grid-template-columns:116px minmax(0,1fr);gap:4px}.mt-track-list{max-height:170px}.mt-toolbar-actions button{font-size:8px;padding:4px 5px}}
 </style>
 </head>
 <body>
@@ -307,7 +355,18 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
   <div class="stagewrap"><div class="stage" id="stage"><div class="stage-badge"><span>TROZAL MOTION</span><b>LIVE PREVIEW</b></div>
   <canvas id="previewFx" class="preview-fx"></canvas><div id="object"><div class="demo" id="demo"></div></div></div></div>
   <div class="stageinfo"><span>Resolusi: <b id="resolutionInfo">4K UHD (3840×2160)</b></span><span>Durasi: <b id="durationInfo">10.0s</b></span><span>FPS: <b id="fpsInfo">30</b></span><span>Total frame: <b id="frameInfo">300</b></span></div>
-  <div class="timeline"><div class="timelinehead"><strong>Timeline & Preview</strong><button id="playBtn">▶ Putar</button><button id="stopBtn">■ Stop</button><button id="prevFrame">◀ Frame</button><button id="nextFrame">Frame ▶</button><span class="muted" id="timeReadout">00:00.0</span></div><input type="range" id="scrubber" min="0" max="1000" value="0"><div class="track"><div class="trackfill" id="trackfill"></div></div><div class="parts" id="timelineTabs" role="tablist" aria-label="Kontrol timeline"><button type="button" class="part active" data-editor-tab="masuk" role="tab" aria-selected="true">01 · Masuk</button><button type="button" class="part" data-editor-tab="gerakan" role="tab" aria-selected="false">02 · Gerakan</button><button type="button" class="part" data-editor-tab="efek" role="tab" aria-selected="false">03 · Efek</button><button type="button" class="part" data-editor-tab="keluar" role="tab" aria-selected="false">04 · Keluar</button><button type="button" class="part" data-editor-tab="loop" role="tab" aria-selected="false">05 · Loop</button><button type="button" class="part" data-editor-tab="ekspor" role="tab" aria-selected="false">06 · Ekspor</button></div><div class="timeline-tab-hint" id="timelineTabHint">Pilih bagian untuk melompat ke waktu preview dan membuka kontrol yang sesuai.</div><div class="status" id="status"></div></div>
+  <div class="timeline"><div class="timelinehead"><strong>Timeline & Preview</strong><button id="playBtn">▶ Putar</button><button id="stopBtn">■ Stop</button><button id="prevFrame">◀ Frame</button><button id="nextFrame">Frame ▶</button><span class="muted" id="timeReadout">00:00.0</span></div><input type="range" id="scrubber" min="0" max="1000" value="0"><div class="track"><div class="trackfill" id="trackfill"></div></div><div class="parts" id="timelineTabs" role="tablist" aria-label="Kontrol timeline"><button type="button" class="part active" data-editor-tab="masuk" role="tab" aria-selected="true">01 · Masuk</button><button type="button" class="part" data-editor-tab="gerakan" role="tab" aria-selected="false">02 · Gerakan</button><button type="button" class="part" data-editor-tab="efek" role="tab" aria-selected="false">03 · Efek</button><button type="button" class="part" data-editor-tab="keluar" role="tab" aria-selected="false">04 · Keluar</button><button type="button" class="part" data-editor-tab="loop" role="tab" aria-selected="false">05 · Loop</button><button type="button" class="part" data-editor-tab="ekspor" role="tab" aria-selected="false">06 · Ekspor</button></div><div class="timeline-tab-hint" id="timelineTabHint">Pilih bagian untuk melompat ke waktu preview dan membuka kontrol yang sesuai.</div>
+  <section class="multi-track-editor" id="multiTrackEditor" aria-label="Multi-track timeline editor">
+   <div class="mt-toolbar">
+    <div><strong>Multi-Track Timeline</strong><small id="mtTrackSummary">Komposisi utama · 1 track</small></div>
+    <div class="mt-toolbar-actions"><button type="button" id="mtBuildTracks" title="Pisahkan elemen SVG menjadi track yang dapat diedit">＋ Pecah SVG</button><button type="button" class="primary" id="mtAddMarker">＋ Marker</button><button type="button" id="mtClearMarkers">Hapus Marker</button></div>
+   </div>
+   <div class="mt-ruler-row"><div class="mt-track-name-head">TRACK / LAYER</div><div class="mt-ruler" id="mtRuler"></div></div>
+   <div class="mt-track-list" id="mtTrackList"><div class="mt-empty">Muat aset untuk membuat track timeline.</div></div>
+   <div class="mt-marker-shelf" id="mtMarkerShelf"><span class="mt-empty-marker">Belum ada marker. Posisikan playhead, lalu klik + Marker.</span></div>
+   <div class="mt-footer" id="mtFooter">Drag klip untuk memindahkan waktu. Tarik sisi kiri/kanan untuk trim. Track SVG dibuat dengan tombol Pecah SVG.</div>
+  </section>
+  <div class="status" id="status"></div></div>
  </main>
  <aside class="sidebar right">
   <section class="panel" id="animationPanel"><h3><b>●</b> 4. ANIMASI</h3>
@@ -398,6 +457,7 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
 <script>
 const $=id=>document.getElementById(id);
 let sourceSvg='', sourceUrl='', sourceType='', files=[], playing=false, raf=0, startAt=0, playhead=0, lastBlob=null, lastDownloadName='animove-render.webm', currentColor='#ffbd45', currentMode='single', svgPieces=[], svgWasSplit=false, svgLayerNames=[], svgLayerHints=[], preserveSvgColors=false, soloLayerIndex=-1, selectedLayerIndex=-1, layerKeyframes=[];
+let timelineMarkers=[], timelineTrackLocks={}, timelineDragState=null;
 // HTML-to-Motion uses an isolated same-origin document and DOM capture; it is not rasterized through SVG foreignObject.
 let htmlMotionSource='', htmlMotionIframe=null, htmlMotionFrame=null, htmlMotionCaptureBusy=false, htmlMotionAnimations=[], htmlMotionFontsReady=null, htmlMotionRenderer=null, htmlMotionLastTime=-1;
 let htmlMotionWidth=1920, htmlMotionHeight=1080, htmlMotionOutputName='', activeRenderBaseName='trozal-render';
@@ -567,7 +627,7 @@ function splitSvgIntoPieces(silent=false){
 }
 function buildAutoLayerControls(){
  const holder=$('autoLayerControls');if(!holder)return;holder.innerHTML='';
- if(!svgPieces.length){holder.innerHTML='<p class="help">Belum ada layer otomatis. Unggah SVG atau klik Pecah SVG.</p>';return}
+ if(!svgPieces.length){holder.innerHTML='<p class="help">Belum ada layer otomatis. Unggah SVG atau klik Pecah SVG.</p>';refreshTimelineEditor();return}
  svgPieces.forEach((piece,i)=>{
   const d=document.createElement('div');d.className='layer-control';d.dataset.layer=String(i);
   const hint=svgLayerHints[i]||{kind:'detail',entrance:0,loop:0,intensity:0,reason:'Gerakan belum dianalisis.'};
@@ -577,6 +637,7 @@ function buildAutoLayerControls(){
  holder.onchange=onAutoLayerChange;holder.oninput=onAutoLayerChange;
  holder.onclick=e=>{const pick=e.target.closest('[data-select-layer]');if(pick){const idx=Number(pick.dataset.selectLayer);selectedLayerIndex=idx;holder.querySelectorAll('.layer-control').forEach((card,j)=>card.classList.toggle('selected-layer',j===idx));renderAt(playhead);setStatus('Layer '+(idx+1)+' dipilih. Ubah Masuk, Keluar, Loop, Delay, Keyframe, skala, rotasi, dan posisi pada kontrol layer ini.');return}const solo=e.target.closest('[data-solo]');if(solo){const idx=Number(solo.dataset.solo);soloLayerIndex=soloLayerIndex===idx?-1:idx;selectedLayerIndex=idx;holder.querySelectorAll('.layer-control').forEach((card,j)=>{card.classList.toggle('selected-layer',j===selectedLayerIndex);const b=card.querySelector('[data-solo]');if(b)b.classList.toggle('active',soloLayerIndex===j)});renderAt(playhead);return}const add=e.target.closest('[data-kf-add]');if(add){addOrUpdateLayerKeyframe(Number(add.dataset.kfAdd));return}const del=e.target.closest('[data-kf-delete]');if(del){removeLastLayerKeyframe(Number(del.dataset.kfDelete));return}const card=e.target.closest('.layer-control');if(card&&!e.target.closest('input,select,button,label')){selectedLayerIndex=Number(card.dataset.layer);holder.querySelectorAll('.layer-control').forEach((x,j)=>x.classList.toggle('selected-layer',j===selectedLayerIndex))}};
  holder.querySelectorAll('[data-solo]').forEach(b=>b.classList.toggle('active',soloLayerIndex===Number(b.dataset.solo)));
+ refreshTimelineEditor();
 }
 function paintLayerKeyframes(i){
  const frames=(layerKeyframes[i]||[]).slice().sort((a,b)=>a.t-b.t),track=$('kfTrack'+i),count=$('keyCount'+i);
@@ -598,7 +659,7 @@ function getLayerKeyframeMotion(i,t){
  return {t,x:mix('x'),y:mix('y'),rot:mix('rot'),scale:mix('scale'),alpha:mix('alpha')};
 }
 function escapeLayerName(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function onAutoLayerChange(){renderAt(playhead);scheduleAutosave()}
+function onAutoLayerChange(){renderAt(playhead);refreshTimelineEditor();scheduleAutosave()}
 function getLayerMotion(i,t){
  const get=id=>document.getElementById(id),val=(suffix,def)=>{const el=get('autoLayer'+suffix+i);return el&&el.value!==''?Number(el.value):def};
  const enabled=get('autoLayerOn'+i);if(!enabled||!enabled.checked)return {x:0,y:0,rot:0,scale:1,alpha:1};
@@ -644,6 +705,7 @@ $('format')?.addEventListener('change',()=>{if($('format').value==='mov')$('pror
 proresModeHint();
 range('duration','durationVal',v=>(+v).toFixed(1)+' dtk');range('effectIntensity','effectIntensityVal',v=>v+'%');range('speed','speedVal',v=>(+v).toFixed(2)+'×');range('intensity','intensityVal',v=>v+'%');range('scale','scaleVal',v=>v+'%');range('posX','xVal',v=>v);range('posY','yVal',v=>v);range('rotation','rotVal',v=>v+'°');range('opacity','opacityVal',v=>v+'%');
 ['fps','resolution'].forEach(id=>$(id).onchange=updateInfo);
+$('duration').addEventListener('input',()=>{refreshTimelineEditor();});
 updateInfo();
 function updateInfo(){let [w,h]=$('resolution').value.split('x').map(Number),d=+$('duration').value,f=+$('fps').value;$('resolutionInfo').textContent=({ '3840x2160':'4K UHD (3840×2160)','7680x4320':'8K UHD (7680×4320)','2560x1440':'2K QHD (2560×1440)','1920x1080':'Full HD (1920×1080)','1280x720':'HD (1280×720)','1080x1920':'Vertical (1080×1920)','1080x1080':'Square (1080×1080)'})[$('resolution').value];$('durationInfo').textContent=d.toFixed(1)+'s';$('fpsInfo').textContent=f;$('frameInfo').textContent=Math.round(d*f);}
 const entranceOptions=['Tanpa animasi (langsung ada)','Fade (memudar masuk)','Perbesar (Scale Up)','Dari Atas','Dari Bawah','Dari Kiri','Dari Kanan','Putar Masuk','Bounce Masuk'];
@@ -685,6 +747,164 @@ function wireTimelineEditor(){
  });
 }
 wireTimelineEditor();
+
+function mtLayerTimes(index){
+ const duration=Math.max(.1,+$('duration').value||10);
+ const num=(id,fallback)=>{const el=$(id);const v=el&&el.value!==''?Number(el.value):fallback;return Number.isFinite(v)?v:fallback};
+ const delay=Math.max(0,num('autoLayerDelay'+index,0));
+ const rawStart=Math.max(0,num('autoLayerStart'+index,0));
+ const start=Math.min(duration-.05,rawStart+delay);
+ const rawEnd=num('autoLayerEnd'+index,duration);
+ const end=Math.max(start+.05,Math.min(duration,rawEnd));
+ return {duration,delay,start,end};
+}
+function mtSetPlayhead(time){
+ const duration=Math.max(.1,+$('duration').value||10);
+ playing=false;cancelAnimationFrame(raf);$('playBtn').textContent='▶ Putar';
+ playhead=Math.max(0,Math.min(duration,Number(time)||0));
+ $('scrubber').value=String(playhead/duration*1000);
+ renderAt(playhead);
+}
+function mtSelectLayer(index){
+ selectedLayerIndex=index;
+ document.querySelectorAll('.layer-control').forEach((card,i)=>card.classList.toggle('selected-layer',i===index));
+ document.querySelectorAll('.mt-track-row').forEach((row,i)=>row.classList.toggle('selected',i===index));
+}
+function refreshTimelineEditor(){
+ const editor=$('multiTrackEditor'),ruler=$('mtRuler'),list=$('mtTrackList'),shelf=$('mtMarkerShelf');
+ if(!editor||!ruler||!list||!shelf)return;
+ const duration=Math.max(.1,+$('duration').value||10),oldScroll=list.scrollTop;
+ const step=duration<=10?1:duration<=20?2:5;
+ let ticks='';
+ for(let t=0;t<=duration+.0001;t+=step){
+  const x=Math.min(100,t/duration*100);
+  ticks+='<div class="mt-tick" style="left:'+x+'%"><span>'+t.toFixed(0)+'s</span></div>';
+ }
+ if(Math.abs((Math.ceil(duration/step)*step)-duration)>.001)
+  ticks+='<div class="mt-tick" style="left:100%"><span>'+duration.toFixed(1)+'s</span></div>';
+ ruler.innerHTML=ticks;
+ const hasSplit=!!(svgWasSplit&&svgPieces.length);
+ if(hasSplit){
+  list.innerHTML=svgPieces.map((piece,i)=>{
+   const time=mtLayerTimes(i),left=time.start/duration*100,width=Math.max(.6,(time.end-time.start)/duration*100);
+   const visible=$('autoLayerVisible'+i)?.checked!==false,locked=!!timelineTrackLocks[i],name=escapeLayerName(svgLayerNames[i]||('Layer '+(i+1)));
+   const markers=timelineMarkers.map(m=>'<i class="mt-marker-line" style="left:'+Math.max(0,Math.min(100,Number(m.t)/duration*100))+'%"></i>').join('');
+   return '<div class="mt-track-row '+(selectedLayerIndex===i?'selected':'')+'" data-mt-row="'+i+'">'+
+    '<div class="mt-track-label">'+
+     '<button type="button" class="mt-eye" data-mt-eye="'+i+'" title="Tampilkan/sembunyikan layer">'+(visible?'◉':'○')+'</button>'+
+     '<button type="button" class="mt-lock '+(locked?'locked':'')+'" data-mt-lock="'+i+'" aria-pressed="'+locked+'" title="Kunci klip di timeline">'+(locked?'🔒':'↔')+'</button>'+
+     '<button type="button" class="mt-name" data-mt-select="'+i+'" title="'+name+'">'+name+'</button>'+
+    '</div>'+
+    '<div class="mt-lane" data-mt-lane="'+i+'" role="button" tabindex="0" aria-label="Track '+name+'">'+markers+
+     '<div class="mt-clip" data-mt-clip="'+i+'" style="left:'+left+'%;width:'+width+'%" title="Drag untuk geser; tarik sisi untuk trim">'+
+      '<i class="mt-clip-handle start" data-mt-edge="start"></i><span>'+name+'</span><i class="mt-clip-handle end" data-mt-edge="end"></i>'+
+     '</div>'+
+    '</div></div>';
+  }).join('');
+  $('mtTrackSummary').textContent=svgPieces.length+' layer · drag klip untuk mengatur waktu';
+  $('mtFooter').textContent='Drag bagian tengah klip untuk memindahkan waktu. Tarik handle kiri/kanan untuk trim. Ikon mata mengatur visibilitas; ikon kunci mencegah klip digeser. Perubahan waktu langsung memengaruhi preview dan render.';
+  $('mtBuildTracks').textContent='Track SVG aktif';
+  $('mtBuildTracks').disabled=true;
+ }else{
+  const hasAsset=!!(htmlMotionSource||sourceSvg||$('object')?.children.length);
+  const name=escapeLayerName($('objectName')?.value||'Komposisi utama');
+  const markers=timelineMarkers.map(m=>'<i class="mt-marker-line" style="left:'+Math.max(0,Math.min(100,Number(m.t)/duration*100))+'%"></i>').join('');
+  list.innerHTML=hasAsset?
+   '<div class="mt-track-row selected"><div class="mt-track-label"><button type="button" class="mt-name" disabled>'+name+'</button></div><div class="mt-lane" id="mtMainLane">'+markers+'<div class="mt-clip static" style="left:0;width:100%">Komposisi gabungan · '+duration.toFixed(1)+'s</div></div></div>':
+   '<div class="mt-empty">Belum ada aset. Impor HTML/SVG terlebih dahulu.</div>';
+  $('mtTrackSummary').textContent='1 komposisi · track gabungan';
+  $('mtFooter').textContent=sourceSvg?'Untuk mengedit waktu tiap elemen SVG, klik Pecah SVG. Untuk HTML yang diimpor, saat ini timeline menampilkan satu komposisi; pemisahan elemen HTML akan dikembangkan pada tahap berikutnya.':'Track gabungan ditampilkan sebagai satu komposisi. Impor SVG lalu klik Pecah SVG untuk mengedit klip setiap elemen.';
+  $('mtBuildTracks').disabled=!sourceSvg||svgWasSplit;
+  $('mtBuildTracks').textContent='＋ Pecah SVG';
+ }
+ if(timelineMarkers.length){
+  shelf.innerHTML=timelineMarkers.slice().sort((a,b)=>a.t-b.t).map((m,i)=>
+   '<div class="mt-marker-chip"><button type="button" data-mt-marker-go="'+escapeLayerName(m.id)+'" title="Pindah ke marker">◆</button>'+
+   '<input type="text" maxlength="36" data-mt-marker-label="'+escapeLayerName(m.id)+'" value="'+escapeLayerName(m.label||('Marker '+(i+1)))+'" aria-label="Nama marker">'+
+   '<span class="mt-marker-time">'+Number(m.t).toFixed(2)+'s</span><button type="button" data-mt-marker-delete="'+escapeLayerName(m.id)+'" title="Hapus marker">×</button></div>'
+  ).join('');
+ }else shelf.innerHTML='<span class="mt-empty-marker">Belum ada marker. Posisikan playhead, lalu klik + Marker.</span>';
+ list.scrollTop=oldScroll;
+}
+function wireMultiTrackEditor(){
+ const editor=$('multiTrackEditor');if(!editor)return;
+ $('mtBuildTracks').onclick=()=>{if(!sourceSvg){setStatus('Pecah SVG tersedia untuk aset SVG. Untuk HTML, gunakan komposisi gabungan terlebih dahulu.');return;}if(splitSvgIntoPieces())refreshTimelineEditor()};
+ $('mtAddMarker').onclick=()=>{
+  const marker={id:'marker-'+Date.now(),t:Number(playhead.toFixed(2)),label:'Marker '+String(timelineMarkers.length+1).padStart(2,'0')};
+  timelineMarkers.push(marker);refreshTimelineEditor();scheduleAutosave();setStatus('Marker ditambahkan pada '+marker.t.toFixed(2)+' detik.');
+ };
+ $('mtClearMarkers').onclick=()=>{
+  if(!timelineMarkers.length){setStatus('Belum ada marker untuk dihapus.');return;}
+  timelineMarkers=[];refreshTimelineEditor();scheduleAutosave();setStatus('Semua marker timeline dihapus.');
+ };
+ editor.addEventListener('click',e=>{
+  const eye=e.target.closest('[data-mt-eye]');
+  if(eye){const i=Number(eye.dataset.mtEye),el=$('autoLayerVisible'+i);if(el){el.checked=!el.checked;renderAt(playhead);refreshTimelineEditor();scheduleAutosave();}return;}
+  const lock=e.target.closest('[data-mt-lock]');
+  if(lock){const i=Number(lock.dataset.mtLock);timelineTrackLocks[i]=!timelineTrackLocks[i];refreshTimelineEditor();scheduleAutosave();return;}
+  const select=e.target.closest('[data-mt-select]');
+  if(select){mtSelectLayer(Number(select.dataset.mtSelect));return;}
+  const go=e.target.closest('[data-mt-marker-go]');
+  if(go){const m=timelineMarkers.find(x=>x.id===go.dataset.mtMarkerGo);if(m)mtSetPlayhead(m.t);return;}
+  const del=e.target.closest('[data-mt-marker-delete]');
+  if(del){timelineMarkers=timelineMarkers.filter(x=>x.id!==del.dataset.mtMarkerDelete);refreshTimelineEditor();scheduleAutosave();return;}
+  const lane=e.target.closest('.mt-lane');
+  if(lane&&!e.target.closest('.mt-clip')){
+   const rect=lane.getBoundingClientRect(),ratio=Math.max(0,Math.min(1,(e.clientX-rect.left)/Math.max(1,rect.width)));
+   mtSetPlayhead(ratio*(+$('duration').value||10));
+  }
+  const clip=e.target.closest('[data-mt-clip]');
+  if(clip)mtSelectLayer(Number(clip.dataset.mtClip));
+ });
+ editor.addEventListener('keydown',e=>{
+  const lane=e.target.closest('.mt-lane');if(!lane||!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;
+  e.preventDefault();const i=Number(lane.dataset.mtLane),step=1/(+$('fps').value||30);
+  const rect=lane.getBoundingClientRect(),current=playhead/(+$('duration').value||10);
+  mtSetPlayhead(e.key==='Home'?0:e.key==='End'?(+$('duration').value||10):Math.max(0,Math.min(+$('duration').value||10,(current*(+$('duration').value||10))+(e.key==='ArrowRight'?step:-step))));
+ });
+ editor.addEventListener('input',e=>{
+  const input=e.target.closest('[data-mt-marker-label]');if(!input)return;
+  const marker=timelineMarkers.find(x=>x.id===input.dataset.mtMarkerLabel);if(marker){marker.label=input.value;scheduleAutosave();}
+ });
+ editor.addEventListener('pointerdown',e=>{
+  const clip=e.target.closest('[data-mt-clip]');if(!clip)return;
+  const i=Number(clip.dataset.mtClip);mtSelectLayer(i);
+  if(timelineTrackLocks[i]){setStatus('Track terkunci. Buka kunci sebelum memindahkan atau trim klip.');e.preventDefault();return;}
+  const time=mtLayerTimes(i),edge=e.target.closest('[data-mt-edge]')?.dataset.mtEdge||'move';
+  const lane=clip.parentElement,rect=lane.getBoundingClientRect();
+  timelineDragState={index:i,edge,pointerX:e.clientX,laneWidth:Math.max(1,rect.width),duration:time.duration,start:time.start,end:time.end,delay:time.delay};
+  e.preventDefault();
+ });
+ window.addEventListener('pointermove',e=>{
+  const drag=timelineDragState;if(!drag)return;
+  const delta=(e.clientX-drag.pointerX)/drag.laneWidth*drag.duration;
+  let start=drag.start,end=drag.end;
+  if(drag.edge==='start'){start=Math.max(drag.delay,Math.min(drag.end-.05,drag.start+delta));}
+  else if(drag.edge==='end'){end=Math.max(drag.start+.05,Math.min(drag.duration,drag.end+delta));}
+  else{
+   const length=drag.end-drag.start;
+   start=Math.max(drag.delay,Math.min(drag.duration-length,drag.start+delta));
+   end=start+length;
+  }
+  const startInput=$('autoLayerStart'+drag.index),endInput=$('autoLayerEnd'+drag.index);
+  if(startInput)startInput.value=Math.max(0,start-drag.delay).toFixed(2);
+  if(endInput)endInput.value=end.toFixed(2);
+  const clip=document.querySelector('[data-mt-clip="'+drag.index+'"]');
+  if(clip){clip.style.left=(start/drag.duration*100)+'%';clip.style.width=(Math.max(.6,(end-start)/drag.duration*100))+'%';}
+  renderAt(playhead);
+ });
+ window.addEventListener('pointerup',()=>{
+  if(!timelineDragState)return;
+  const index=timelineDragState.index;timelineDragState=null;
+  refreshTimelineEditor();scheduleAutosave();
+  setStatus('Klip layer '+(index+1)+' diperbarui pada timeline.');
+ });
+ const objectObserver=typeof MutationObserver!=='undefined'?new MutationObserver(()=>refreshTimelineEditor()):null;
+ if(objectObserver&&$('object'))objectObserver.observe($('object'),{childList:true});
+ refreshTimelineEditor();
+}
+wireMultiTrackEditor();
+
 function partMotion(t){
  const duration=Math.max(.001,+$('duration').value),p=Math.max(0,Math.min(1,t/duration));
  const first=$('parts').querySelector('.group');
@@ -1214,7 +1434,7 @@ function getProject(){
  const controls={};ids.forEach(k=>{if($(k))controls[k]=$(k).value});
  checks.forEach(k=>{if($(k))controls[k]=$(k).checked});
  const layers=svgPieces.map((piece,i)=>{const l={svg:piece,name:svgLayerNames[i]||('Layer '+(i+1))};['Visible','On','In','Out','Loop','Delay','Start','End','Duration','Speed','Intensity','Scale','Rotation','Direction'].forEach(k=>{const el=$('autoLayer'+k+i);if(el)l[k.toLowerCase()]=el.type==='checkbox'?el.checked:el.value});return l});
- return {app:'ANIMOVE',version:4,stage:10,savedAt:new Date().toISOString(),controls,currentColor,playhead,sourceSvg,sourceType,sourceName:$('objectName').value,svgWasSplit,svgPieces:[...svgPieces],svgLayerNames:[...svgLayerNames],svgLayerHints:[...svgLayerHints],layerKeyframes:layerKeyframes.map(a=>(a||[]).map(k=>({...k}))),layers};
+ return {app:'ANIMOVE',version:5,stage:10,savedAt:new Date().toISOString(),controls,currentColor,playhead,sourceSvg,sourceType,sourceName:$('objectName').value,svgWasSplit,svgPieces:[...svgPieces],svgLayerNames:[...svgLayerNames],svgLayerHints:[...svgLayerHints],layerKeyframes:layerKeyframes.map(a=>(a||[]).map(k=>({...k}))),timelineMarkers:timelineMarkers.map(m=>({...m})),timelineTrackLocks:{...timelineTrackLocks},layers};
 }
 function applyProject(p){
  if(!p||p.app!=='ANIMOVE')throw new Error('File bukan proyek trozal_MOTION');
@@ -1227,6 +1447,8 @@ function applyProject(p){
  layerKeyframes=Array.isArray(p.layerKeyframes)?p.layerKeyframes.map(a=>Array.isArray(a)?a.map(k=>({...k})):[]):[];
  svgLayerHints=Array.isArray(p.svgLayerHints)?p.svgLayerHints.slice():svgPieces.map((piece,i)=>{try{const d=new DOMParser().parseFromString(piece,'image/svg+xml');const n=[...d.documentElement.children].find(x=>!['defs','style','title','desc','metadata'].includes(x.localName));return n?analyzeSvgLayer({node:n,ancestors:[]},i,svgPieces.length):{kind:'detail',entrance:0,loop:0,intensity:0,reason:'Layer dipulihkan; gerakan tetap statis.'}}catch(e){return {kind:'detail',entrance:0,loop:0,intensity:0,reason:'Layer dipulihkan; gerakan tetap statis.'}}});
  svgWasSplit=!!p.svgWasSplit&&svgPieces.length>0;
+ timelineMarkers=Array.isArray(p.timelineMarkers)?p.timelineMarkers.map(m=>({id:String(m.id||('marker-'+Date.now()),),t:Math.max(0,Number(m.t)||0),label:String(m.label||'Marker')})):[];
+ timelineTrackLocks=p.timelineTrackLocks&&typeof p.timelineTrackLocks==='object'?{...p.timelineTrackLocks}:{};
  if(svgWasSplit){
    buildAutoLayerControls();
    layerKeyframes.forEach((a,i)=>paintLayerKeyframes(i));
@@ -1234,8 +1456,8 @@ function applyProject(p){
    $('object').innerHTML=svgPieces.map((svg,i)=>`<div class="svg-piece" data-piece="${i}">${svg}</div>`).join('');
  }else if(sourceSvg){setObjectMarkup(sourceSvg)}else if(p.assetDataUrl){setObjectMarkup(`<img alt="Restored asset" src="${p.assetDataUrl}">`)}
  playhead=Math.max(0,Math.min(+$('duration').value||10,Number(p.playhead)||0));
- updateInfo();applyBackground();renderAt(playhead);
- setStatus('Proyek berhasil dipulihkan: aset SVG, layer, dan pengaturan animasi dimuat.');
+ updateInfo();applyBackground();renderAt(playhead);refreshTimelineEditor();
+ setStatus('Proyek berhasil dipulihkan: aset SVG, layer, marker timeline, dan pengaturan animasi dimuat.');
 }
 function saveProjectFile(){
  const blob=new Blob([JSON.stringify(getProject(),null,2)],{type:'application/json'});
