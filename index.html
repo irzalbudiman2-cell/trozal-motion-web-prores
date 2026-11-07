@@ -662,7 +662,7 @@ function buildAutoLayerControls(){
  });
  holder.onchange=e=>{
   onAutoLayerChange();
-  const id=e.target?.id||'',match=id.match(/^kf(?:X|Y|Rot|Scale|Alpha)(\d+)$/);
+  const id=e.target?.id||'',match=id.match(/^kf(?:X|Y|Rot|Scale|Alpha|Ease|Bx1|By1|Bx2|By2)(\d+)$/);
   if(match&&$('kfAuto'+match[1])?.checked)addOrUpdateLayerKeyframe(Number(match[1]),{atPlayhead:true});
   const graphMatch=id.match(/^kfGraphChannel(\d+)$/);
   if(graphMatch)drawLayerKeyframeGraph(Number(graphMatch[1]));
@@ -674,6 +674,7 @@ function buildAutoLayerControls(){
  };
  holder.onclick=e=>{const pick=e.target.closest('[data-select-layer]');if(pick){const idx=Number(pick.dataset.selectLayer);selectedLayerIndex=idx;holder.querySelectorAll('.layer-control').forEach((card,j)=>card.classList.toggle('selected-layer',j===idx));renderAt(playhead);setStatus('Layer '+(idx+1)+' dipilih. Ubah Masuk, Keluar, Loop, Delay, Keyframe, skala, rotasi, dan posisi pada kontrol layer ini.');return}const solo=e.target.closest('[data-solo]');if(solo){const idx=Number(solo.dataset.solo);soloLayerIndex=soloLayerIndex===idx?-1:idx;selectedLayerIndex=idx;holder.querySelectorAll('.layer-control').forEach((card,j)=>{card.classList.toggle('selected-layer',j===selectedLayerIndex);const b=card.querySelector('[data-solo]');if(b)b.classList.toggle('active',soloLayerIndex===j)});renderAt(playhead);return}const add=e.target.closest('[data-kf-add]');if(add){addOrUpdateLayerKeyframe(Number(add.dataset.kfAdd));return}const del=e.target.closest('[data-kf-delete]');if(del){removeLastLayerKeyframe(Number(del.dataset.kfDelete));return}const graphKey=e.target.closest('[data-graph-key]');if(graphKey){const gi=Number(graphKey.dataset.graphLayer),frames=(layerKeyframes[gi]||[]).slice().sort((a,b)=>a.t-b.t),frame=frames[Number(graphKey.dataset.graphKey)];if(frame)trozalSelectLayerKeyframe(gi,frame);return}const card=e.target.closest('.layer-control');if(card&&!e.target.closest('input,select,button,label')){selectedLayerIndex=Number(card.dataset.layer);holder.querySelectorAll('.layer-control').forEach((x,j)=>x.classList.toggle('selected-layer',j===selectedLayerIndex))}};
  holder.querySelectorAll('[data-solo]').forEach(b=>b.classList.toggle('active',soloLayerIndex===Number(b.dataset.solo)));
+ if(!holder.dataset.graphEditorWired){holder.dataset.graphEditorWired='1';
  holder.addEventListener('pointerdown',e=>{
   const dot=e.target.closest('[data-graph-key]');if(!dot)return;
   const i=Number(dot.dataset.graphLayer),frames=(layerKeyframes[i]||[]).slice().sort((a,b)=>a.t-b.t),frame=frames[Number(dot.dataset.graphKey)],svg=dot.closest('svg[data-graph-surface]');
@@ -722,6 +723,7 @@ function buildAutoLayerControls(){
   layerKeyframes[i].sort((a,b)=>a.t-b.t);paintLayerKeyframes(i);renderAt(playhead);scheduleAutosave();
   setStatus('Graph Editor: keyframe layer '+(i+1)+' diperbarui.');
  });
+ }
  refreshTimelineEditor();
 }
 
@@ -1654,7 +1656,7 @@ function applyProject(p){
 function saveProjectFile(){
  const blob=new Blob([JSON.stringify(getProject(),null,2)],{type:'application/json'});
  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='animove-project.json';a.click();
- setTimeout(()=>URL.revokeObjectURL(url),1500);setStatus('Proyek v4 tersimpan lengkap: SVG, layer, keyframe, dan seluruh pengaturan.');
+ setTimeout(()=>URL.revokeObjectURL(url),1500);setStatus('Proyek v6 tersimpan lengkap: SVG, layer, keyframe, easing, Bezier, marker, dan seluruh pengaturan.');
 }
 $('saveProject').onclick=saveProjectFile;
 $('loadProject').onclick=()=>$('projectInput').click();
