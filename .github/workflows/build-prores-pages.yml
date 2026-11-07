@@ -50,14 +50,14 @@ jobs:
           const path = require('path');
           const { spawnSync } = require('child_process');
           const html = fs.readFileSync('site/index.html', 'utf8');
-          const scripts = [...html.matchAll(/<script\\b[^>]*>([\\s\\S]*?)<\\/script\\s*>/gi)];
+          const scripts = [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script\s*>/gi)];
           if (!scripts.length) throw new Error('No script blocks found in site/index.html');
           scripts.forEach((match, index) => {
             const file = path.join('/tmp', 'trozal-inline-' + index + '.js');
             fs.writeFileSync(file, match[1], 'utf8');
             const result = spawnSync(process.execPath, ['--check', file], { encoding: 'utf8' });
             if (result.status !== 0) {
-              process.stderr.write('JavaScript syntax error in script block ' + (index + 1) + '\\n');
+              process.stderr.write('JavaScript syntax error in script block ' + (index + 1) + '\n');
               process.stderr.write(result.stderr || result.stdout || '');
               process.exit(1);
             }
