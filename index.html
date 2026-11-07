@@ -487,6 +487,11 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
   </section>
   <section class="panel" id="nativeTextPanel"><h3><b>✦</b>  TEXT ANIMATION STUDIO</h3>
    <p class="help">Buat judul dan teks native. Teks ikut playhead serta masuk ke hasil render.</p>
+   <div class="row" id="textLayerManager" style="gap:6px;flex-wrap:wrap">
+    <button type="button" id="textAddBtn">＋ Tambah teks</button><button type="button" id="textDuplicateBtn">Duplikat</button><button type="button" id="textDeleteBtn">Hapus layer</button>
+   </div>
+   <label>Daftar text layers</label><select id="textLayerSelect" style="width:100%"><option value="text-1">Text 1</option></select>
+   <p class="help">Pilih layer untuk mengedit. Setiap layer memiliki isi, font, posisi, waktu, dan animasi sendiri.</p>
    <label><input type="checkbox" id="textLayerEnabled"> Aktifkan text layer</label>
    <label>Isi teks</label><textarea id="textLayerContent" rows="3">TROZAL MOTION</textarea>
    <div class="row"><div><label>Font</label><select id="textLayerFont"><option>Arial</option><option>Inter</option><option>Georgia</option><option>Impact</option><option>Verdana</option><option>Times New Roman</option><option>Courier New</option></select></div><div><label>Ketebalan</label><select id="textLayerWeight"><option value="400">Regular</option><option value="600">Semi Bold</option><option value="700" selected>Bold</option><option value="800">Extra Bold</option><option value="900">Black</option></select></div></div>
@@ -1409,45 +1414,65 @@ function wireMotionPathOverlay(){
 }
 
 
+
+const TEXT_LAYER_FIELDS=['textLayerEnabled','textLayerContent','textLayerFont','textLayerWeight','textLayerSize','textLayerColor','textLayerAlign','textLayerTracking','textLayerX','textLayerY','textLayerStart','textLayerDuration','textLayerAnimation'];
+const TEXT_LAYER_DEFAULTS={textLayerEnabled:true,textLayerContent:'TROZAL MOTION',textLayerFont:'Arial',textLayerWeight:'700',textLayerSize:'6',textLayerColor:'#ffffff',textLayerAlign:'center',textLayerTracking:'0',textLayerX:'0',textLayerY:'28',textLayerStart:'0',textLayerDuration:'1.2',textLayerAnimation:'fade'};
+let nativeTextLayers=[{id:'text-1',name:'Text 1',...TEXT_LAYER_DEFAULTS}],selectedTextLayerId='text-1',textLayerIdCounter=1;
+function readTextLayerControls(){const o={};TEXT_LAYER_FIELDS.forEach(k=>{const el=$(k);if(el)o[k]=el.type==='checkbox'?el.checked:el.value});return o}
+function writeTextLayerControls(layer){TEXT_LAYER_FIELDS.forEach(k=>{const el=$(k);if(el&&layer[k]!==undefined){if(el.type==='checkbox')el.checked=!!layer[k];else el.value=layer[k]}})}
+function saveActiveTextLayer(){const layer=nativeTextLayers.find(x=>x.id===selectedTextLayerId);if(layer)Object.assign(layer,readTextLayerControls())}
+function refreshTextLayerManager(){
+ const sel=$('textLayerSelect');if(!sel)return;
+ sel.innerHTML='';nativeTextLayers.forEach((layer,i)=>{const op=document.createElement('option');op.value=layer.id;op.textContent=(i+1)+'. '+(layer.name||'Text '+(i+1));sel.appendChild(op)});
+ sel.value=selectedTextLayerId;
+ const active=nativeTextLayers.find(x=>x.id===selectedTextLayerId);
+ if($('textLayerStatus'))$('textLayerStatus').textContent=nativeTextLayers.length+' layer · '+(active?.name||'Text');
+}
+function selectTextLayer(id){saveActiveTextLayer();const layer=nativeTextLayers.find(x=>x.id===id);if(!layer)return;selectedTextLayerId=id;writeTextLayerControls(layer);refreshTextLayerManager();updateTextLayerPreview(playhead);scheduleAutosave()}
+function addTextLayer(copy=false){
+ saveActiveTextLayer();const source=nativeTextLayers.find(x=>x.id===selectedTextLayerId)||nativeTextLayers[0],n=nativeTextLayers.length+1;
+ const layer={...(copy?source:TEXT_LAYER_DEFAULTS),id:'text-'+(++textLayerIdCounter),name:'Text '+n};
+ if(!copy){layer.textLayerContent='Teks baru';layer.textLayerEnabled=true;layer.textLayerX='0';layer.textLayerY=String(Math.min(42,Number(source?.textLayerY||0)+12));layer.textLayerStart='0';}
+ nativeTextLayers.push(layer);selectedTextLayerId=layer.id;writeTextLayerControls(layer);refreshTextLayerManager();updateTextLayerPreview(playhead);scheduleAutosave();
+}
+function deleteTextLayer(){
+ if(nativeTextLayers.length<=1){setStatus('Minimal harus ada satu text layer.');return}
+ const idx=nativeTextLayers.findIndex(x=>x.id===selectedTextLayerId);nativeTextLayers.splice(Math.max(0,idx),1);
+ const next=nativeTextLayers[Math.max(0,idx-1)]||nativeTextLayers[0];selectedTextLayerId=next.id;writeTextLayerControls(next);refreshTextLayerManager();updateTextLayerPreview(playhead);scheduleAutosave();
+}
 function updateTextLayerPreview(t){
- const el=$('nativeTextPreview');if(!el)return;
- const content=$('textLayerContent')?.value||'',enabled=$('textLayerEnabled')?.checked;
- const start=Math.max(0,+$('textLayerStart').value||0),duration=Math.max(.1,+$('textLayerDuration').value||1.2);
- if(!enabled||!content||t<start){el.style.display='none';return}
- const p=Math.max(0,Math.min(1,(t-start)/duration)),mode=$('textLayerAnimation').value,chars=Array.from(content);
- el.textContent=mode==='typewriter'?chars.slice(0,Math.ceil(chars.length*p)).join(''):content;
- el.style.display='block';el.style.left=(50+(+$('textLayerX').value||0))+'%';el.style.top=(50+(+$('textLayerY').value||0))+'%';
- el.style.transform='translate(-50%,'+(mode==='rise'?-50+(1-p)*7:-50)+'%)';
- el.style.fontFamily='"'+$('textLayerFont').value+'"';el.style.fontWeight=$('textLayerWeight').value;
- el.style.fontSize=(Math.max(1,+$('textLayerSize').value||6)*$('stage').clientWidth/100)+'px';
- el.style.color=$('textLayerColor').value;el.style.textAlign=$('textLayerAlign').value;
- el.style.letterSpacing=(+$('textLayerTracking').value||0)+'px';
- el.style.opacity=mode==='fade'||mode==='rise'?p:1;
- $('textLayerStatus').textContent='Aktif · '+chars.length+' karakter';
+ const host=$('nativeTextPreview');if(!host)return;saveActiveTextLayer();host.innerHTML='';
+ const stageW=$('stage').clientWidth||640;
+ nativeTextLayers.forEach(layer=>{
+  const content=layer.textLayerContent||'',start=Math.max(0,+layer.textLayerStart||0),duration=Math.max(.1,+layer.textLayerDuration||1.2);
+  if(!layer.textLayerEnabled||!content||t<start)return;
+  const p=Math.max(0,Math.min(1,(t-start)/duration)),mode=layer.textLayerAnimation,chars=Array.from(content),el=document.createElement('div');
+  el.textContent=mode==='typewriter'?chars.slice(0,Math.ceil(chars.length*p)).join(''):content;
+  el.style.position='absolute';el.style.left=(50+(+layer.textLayerX||0))+'%';el.style.top=(50+(+layer.textLayerY||0))+'%';el.style.width='90%';el.style.padding='2%';el.style.boxSizing='border-box';el.style.whiteSpace='pre-wrap';el.style.wordBreak='break-word';el.style.lineHeight='1.12';el.style.transform='translate(-50%,'+(mode==='rise'?-50+(1-p)*7:-50)+'%)';
+  el.style.fontFamily='"'+layer.textLayerFont+'"';el.style.fontWeight=layer.textLayerWeight;el.style.fontSize=(Math.max(1,+layer.textLayerSize||6)*stageW/100)+'px';el.style.color=layer.textLayerColor;el.style.textAlign=layer.textLayerAlign;el.style.letterSpacing=(+layer.textLayerTracking||0)+'px';el.style.opacity=mode==='fade'||mode==='rise'?p:1;el.style.textShadow='0 2px 12px #0009';host.appendChild(el);
+ });
+ host.style.display=host.childElementCount?'block':'none';
 }
 function drawTextLayerToCanvas(ctx,w,h,t){
- if(!$('textLayerEnabled')?.checked)return;
- const content=$('textLayerContent')?.value||'';if(!content)return;
- const start=Math.max(0,+$('textLayerStart').value||0),duration=Math.max(.1,+$('textLayerDuration').value||1.2);
- if(t<start)return;
- const mode=$('textLayerAnimation').value,p=Math.max(0,Math.min(1,(t-start)/duration)),chars=Array.from(content);
- const value=mode==='typewriter'?chars.slice(0,Math.ceil(chars.length*p)).join(''):content;if(!value)return;
- const size=Math.max(1,+$('textLayerSize').value||6)*w/100,x=w/2+(+$('textLayerX').value||0)*w/100;
- const y=h/2+(+$('textLayerY').value||0)*h/100-(mode==='rise'?(1-p)*h*.07:0);
- ctx.save();ctx.globalAlpha*=mode==='fade'||mode==='rise'?p:1;
- ctx.font=$('textLayerWeight').value+' '+size+'px "'+$('textLayerFont').value+'"';
- ctx.textAlign=$('textLayerAlign').value;ctx.textBaseline='middle';ctx.fillStyle=$('textLayerColor').value;
- if('letterSpacing' in ctx)ctx.letterSpacing=(+$('textLayerTracking').value||0)+'px';
- const lines=value.split(/\r?\n/),lineH=size*1.15;
- lines.forEach((line,i)=>ctx.fillText(line,x,y+(i-(lines.length-1)/2)*lineH,w*.9));
- ctx.restore();
+ saveActiveTextLayer();
+ nativeTextLayers.forEach(layer=>{
+  if(!layer.textLayerEnabled)return;const content=layer.textLayerContent||'';if(!content)return;
+  const start=Math.max(0,+layer.textLayerStart||0),duration=Math.max(.1,+layer.textLayerDuration||1.2);if(t<start)return;
+  const mode=layer.textLayerAnimation,p=Math.max(0,Math.min(1,(t-start)/duration)),chars=Array.from(content),value=mode==='typewriter'?chars.slice(0,Math.ceil(chars.length*p)).join(''):content;if(!value)return;
+  const size=Math.max(1,+layer.textLayerSize||6)*w/100,x=w/2+(+layer.textLayerX||0)*w/100,y=h/2+(+layer.textLayerY||0)*h/100-(mode==='rise'?(1-p)*h*.07:0);
+  ctx.save();ctx.globalAlpha*=mode==='fade'||mode==='rise'?p:1;ctx.font=layer.textLayerWeight+' '+size+'px "'+layer.textLayerFont+'"';ctx.textAlign=layer.textLayerAlign;ctx.textBaseline='middle';ctx.fillStyle=layer.textLayerColor;if('letterSpacing' in ctx)ctx.letterSpacing=(+layer.textLayerTracking||0)+'px';
+  const lines=value.split(/\r?\n/),lineH=size*1.15;lines.forEach((line,i)=>ctx.fillText(line,x,y+(i-(lines.length-1)/2)*lineH,w*.9));ctx.restore();
+ });
 }
-['textLayerEnabled','textLayerContent','textLayerFont','textLayerWeight','textLayerSize','textLayerColor','textLayerAlign','textLayerTracking','textLayerX','textLayerY','textLayerStart','textLayerDuration','textLayerAnimation'].forEach(id=>{
- const el=$(id);if(el){el.addEventListener('input',()=>{updateTextLayerPreview(playhead);scheduleAutosave()});el.addEventListener('change',()=>{updateTextLayerPreview(playhead);scheduleAutosave()});}
-});
+TEXT_LAYER_FIELDS.forEach(id=>{const el=$(id);if(el){el.addEventListener('input',()=>{saveActiveTextLayer();updateTextLayerPreview(playhead);refreshTextLayerManager();scheduleAutosave()});el.addEventListener('change',()=>{saveActiveTextLayer();updateTextLayerPreview(playhead);refreshTextLayerManager();scheduleAutosave()})}});
+$('textLayerSelect')?.addEventListener('change',e=>selectTextLayer(e.target.value));
+$('textAddBtn')?.addEventListener('click',()=>addTextLayer(false));
+$('textDuplicateBtn')?.addEventListener('click',()=>addTextLayer(true));
+$('textDeleteBtn')?.addEventListener('click',deleteTextLayer);
 $('textLayerReset')?.addEventListener('click',()=>{
- $('textLayerEnabled').checked=false;$('textLayerContent').value='TROZAL MOTION';$('textLayerFont').value='Arial';$('textLayerWeight').value='700';$('textLayerSize').value='6';$('textLayerColor').value='#ffffff';$('textLayerAlign').value='center';$('textLayerTracking').value='0';$('textLayerX').value='0';$('textLayerY').value='28';$('textLayerStart').value='0';$('textLayerDuration').value='1.2';$('textLayerAnimation').value='fade';updateTextLayerPreview(playhead);scheduleAutosave();
+ writeTextLayerControls({ ...TEXT_LAYER_DEFAULTS,textLayerEnabled:false });saveActiveTextLayer();updateTextLayerPreview(playhead);scheduleAutosave();
 });
+refreshTextLayerManager();
 
 function renderAt(t){
  playhead=Math.max(0,Math.min(+$('duration').value,t));
@@ -1848,11 +1873,15 @@ function getProject(){
  const controls={};ids.forEach(k=>{if($(k))controls[k]=$(k).value});
  checks.forEach(k=>{if($(k))controls[k]=$(k).checked});
  const layers=svgPieces.map((piece,i)=>{const l={svg:piece,name:svgLayerNames[i]||('Layer '+(i+1))};['Visible','On','In','Out','Loop','Delay','Start','End','Duration','Speed','Intensity','Scale','Rotation','Direction'].forEach(k=>{const el=$('autoLayer'+k+i);if(el)l[k.toLowerCase()]=el.type==='checkbox'?el.checked:el.value});l.autoKey=!!$('kfAuto'+i)?.checked;return l});
- return {app:'ANIMOVE',version:8,stage:11,timelineSnapEnabled,savedAt:new Date().toISOString(),controls,currentColor,playhead,sourceSvg,sourceType,sourceName:$('objectName').value,svgWasSplit,svgPieces:[...svgPieces],svgLayerNames:[...svgLayerNames],svgLayerHints:[...svgLayerHints],layerKeyframes:layerKeyframes.map(a=>(a||[]).map(k=>({...k}))),timelineMarkers:timelineMarkers.map(m=>({...m})),timelineTrackLocks:{...timelineTrackLocks},layers};
+ saveActiveTextLayer();return {app:'ANIMOVE',version:9,stage:12,nativeTextLayers:nativeTextLayers.map(x=>({...x})),selectedTextLayerId,timelineSnapEnabled,savedAt:new Date().toISOString(),controls,currentColor,playhead,sourceSvg,sourceType,sourceName:$('objectName').value,svgWasSplit,svgPieces:[...svgPieces],svgLayerNames:[...svgLayerNames],svgLayerHints:[...svgLayerHints],layerKeyframes:layerKeyframes.map(a=>(a||[]).map(k=>({...k}))),timelineMarkers:timelineMarkers.map(m=>({...m})),timelineTrackLocks:{...timelineTrackLocks},layers};
 }
 function applyProject(p){
  if(!p||p.app!=='ANIMOVE')throw new Error('File bukan proyek trozal_MOTION');
  const c=p.controls||p;
+ nativeTextLayers=Array.isArray(p.nativeTextLayers)&&p.nativeTextLayers.length?p.nativeTextLayers.map((x,i)=>({...TEXT_LAYER_DEFAULTS,...x,id:String(x.id||('text-'+(i+1))),name:String(x.name||('Text '+(i+1)))})):[{id:'text-1',name:'Text 1',...TEXT_LAYER_DEFAULTS,...readTextLayerControls()}];
+ selectedTextLayerId=nativeTextLayers.some(x=>x.id===p.selectedTextLayerId)?p.selectedTextLayerId:nativeTextLayers[0].id;
+ textLayerIdCounter=Math.max(nativeTextLayers.length,...nativeTextLayers.map(x=>Number(String(x.id).replace(/\\D/g,''))||0));
+
  Object.entries(c).forEach(([k,v])=>{if($(k)){if(['transparentBg','sparkles','shadow','loop','effectOn'].includes(k))$(k).checked=!!v;else $(k).value=v}});
  if(p.currentColor)currentColor=p.currentColor;
  sourceSvg=p.sourceSvg||'';sourceType=p.sourceType||'image/svg+xml';
@@ -1869,7 +1898,7 @@ function applyProject(p){
    (p.layers||[]).forEach((l,i)=>{if(!$('autoLayerOn'+i))return;const legacy={Visible:l.visible,On:l.on,In:l.masuk,Out:l.keluar,Loop:l.loop};Object.entries(legacy).forEach(([k,v])=>{if(v!==undefined){const el=$('autoLayer'+k+i);if(el.type==='checkbox')el.checked=!!v;else el.value=v}});['Delay','Start','End','Duration','Speed','Intensity','Scale','Rotation','Direction'].forEach(k=>{const el=$('autoLayer'+k+i);if(el&&l[k.toLowerCase()]!==undefined)el.value=l[k.toLowerCase()]});if($('kfAuto'+i)&&typeof l.autoKey==='boolean')$('kfAuto'+i).checked=l.autoKey});
    $('object').innerHTML=svgPieces.map((svg,i)=>`<div class="svg-piece" data-piece="${i}">${svg}</div>`).join('');
  }else if(sourceSvg){setObjectMarkup(sourceSvg)}else if(p.assetDataUrl){setObjectMarkup(`<img alt="Restored asset" src="${p.assetDataUrl}">`)}
- playhead=Math.max(0,Math.min(+$('duration').value||10,Number(p.playhead)||0));
+ playhead=Math.max(0,Math.min(+$('duration').value||10,Number(p.playhead)||0));const selected=nativeTextLayers.find(x=>x.id===selectedTextLayerId);if(selected)writeTextLayerControls(selected);refreshTextLayerManager();
  updateInfo();applyBackground();renderAt(playhead);refreshTimelineEditor();
  setStatus('Proyek berhasil dipulihkan: aset SVG, layer, marker timeline, dan pengaturan animasi dimuat.');
 }
