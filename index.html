@@ -675,56 +675,57 @@ function buildAutoLayerControls(){
  };
  holder.onclick=e=>{const pick=e.target.closest('[data-select-layer]');if(pick){const idx=Number(pick.dataset.selectLayer);selectedLayerIndex=idx;holder.querySelectorAll('.layer-control').forEach((card,j)=>card.classList.toggle('selected-layer',j===idx));renderAt(playhead);setStatus('Layer '+(idx+1)+' dipilih. Ubah Masuk, Keluar, Loop, Delay, Keyframe, skala, rotasi, dan posisi pada kontrol layer ini.');return}const solo=e.target.closest('[data-solo]');if(solo){const idx=Number(solo.dataset.solo);soloLayerIndex=soloLayerIndex===idx?-1:idx;selectedLayerIndex=idx;holder.querySelectorAll('.layer-control').forEach((card,j)=>{card.classList.toggle('selected-layer',j===selectedLayerIndex);const b=card.querySelector('[data-solo]');if(b)b.classList.toggle('active',soloLayerIndex===j)});renderAt(playhead);return}const add=e.target.closest('[data-kf-add]');if(add){addOrUpdateLayerKeyframe(Number(add.dataset.kfAdd));return}const del=e.target.closest('[data-kf-delete]');if(del){removeLastLayerKeyframe(Number(del.dataset.kfDelete));return}const graphKey=e.target.closest('[data-graph-key]');if(graphKey){const gi=Number(graphKey.dataset.graphLayer),frames=(layerKeyframes[gi]||[]).slice().sort((a,b)=>a.t-b.t),frame=frames[Number(graphKey.dataset.graphKey)];if(frame)trozalSelectLayerKeyframe(gi,frame);return}const card=e.target.closest('.layer-control');if(card&&!e.target.closest('input,select,button,label')){selectedLayerIndex=Number(card.dataset.layer);holder.querySelectorAll('.layer-control').forEach((x,j)=>x.classList.toggle('selected-layer',j===selectedLayerIndex))}};
  holder.querySelectorAll('[data-solo]').forEach(b=>b.classList.toggle('active',soloLayerIndex===Number(b.dataset.solo)));
+
  if(!holder.dataset.graphEditorWired){holder.dataset.graphEditorWired='1';
  holder.addEventListener('pointerdown',e=>{
-  const dot=e.target.closest('[data-graph-key]');if(!dot)return;
-  const i=Number(dot.dataset.graphLayer),frames=(layerKeyframes[i]||[]).slice().sort((a,b)=>a.t-b.t),frame=frames[Number(dot.dataset.graphKey)],svg=dot.closest('svg[data-graph-surface]');
-  if(!frame||!svg)return;
-  const channel=$('kfGraphChannel'+i)?.value||'x',rect=svg.getBoundingClientRect();
-  const common={i,frame,channel,rect,duration:Math.max(.1,+$('duration').value||10),kind:svg.dataset.graphKind||'value'};
+  const handle=e.target.closest('[data-graph-handle]'),dot=e.target.closest('[data-graph-key]'),target=handle||dot;if(!target)return;
+  const i=Number(target.dataset.graphLayer),frames=(layerKeyframes[i]||[]).slice().sort((a,b)=>a.t-b.t),svg=target.closest('svg[data-graph-surface]');if(!svg)return;
+  const channel=$('kfGraphChannel'+i)?.value||'x';if(channel==='speed')return;
+  const rect=svg.getBoundingClientRect(),kind=svg.dataset.graphKind||'value';
+  if(handle){
+   const n=Number(handle.dataset.graphSegment),p=frames[n],q=frames[n+1];if(!p||!q)return;
+   const vals=frames.map(f=>trozalGraphStoredValue(f,channel));let min=Math.min(...vals),max=Math.max(...vals);
+   if(Math.abs(max-min)<.001){const pad=Math.max(10,Math.abs(max)*.2);min-=pad;max+=pad}else{const pad=(max-min)*.18;min-=pad;max+=pad}
+   trozalHistoryBegin();keyframeGraphDragState={i,frame:p,channel,rect,duration:Math.max(.1,+$('duration').value||10),kind:'bezier',segment:n,point:Number(handle.dataset.graphPoint),min,max};e.preventDefault();return;
+  }
+  const frame=frames[Number(dot.dataset.graphKey)];if(!frame)return;const common={i,frame,channel,rect,duration:Math.max(.1,+$('duration').value||10),kind};
+  trozalHistoryBegin();
   if(channel==='path'){
-   let minX=Math.min(...frames.map(f=>Number(f.x)||0)),maxX=Math.max(...frames.map(f=>Number(f.x)||0));
-   let minY=Math.min(...frames.map(f=>Number(f.y)||0)),maxY=Math.max(...frames.map(f=>Number(f.y)||0));
-   if(Math.abs(maxX-minX)<.001){minX-=10;maxX+=10;}else{const p=(maxX-minX)*.18;minX-=p;maxX+=p;}
-   if(Math.abs(maxY-minY)<.001){minY-=10;maxY+=10;}else{const p=(maxY-minY)*.18;minY-=p;maxY+=p;}
+   let minX=Math.min(...frames.map(f=>Number(f.x)||0)),maxX=Math.max(...frames.map(f=>Number(f.x)||0)),minY=Math.min(...frames.map(f=>Number(f.y)||0)),maxY=Math.max(...frames.map(f=>Number(f.y)||0));
+   if(Math.abs(maxX-minX)<.001){minX-=10;maxX+=10}else{const p=(maxX-minX)*.18;minX-=p;maxX+=p}
+   if(Math.abs(maxY-minY)<.001){minY-=10;maxY+=10}else{const p=(maxY-minY)*.18;minY-=p;maxY+=p}
    keyframeGraphDragState={...common,minX,maxX,minY,maxY};
   }else{
    const values=frames.map(f=>trozalGraphStoredValue(f,channel));let min=Math.min(...values),max=Math.max(...values);
-   if(Math.abs(max-min)<.001){const pad=Math.max(10,Math.abs(max)*.2);min-=pad;max+=pad;}else{const pad=(max-min)*.18;min-=pad;max+=pad;}
+   if(Math.abs(max-min)<.001){const pad=Math.max(10,Math.abs(max)*.2);min-=pad;max+=pad}else{const pad=(max-min)*.18;min-=pad;max+=pad}
    keyframeGraphDragState={...common,min,max};
   }
   e.preventDefault();
  });
  holder.addEventListener('click',e=>{
-  const svg=e.target.closest('svg[data-graph-surface]');if(!svg||e.target.closest('[data-graph-key]')||svg.dataset.graphKind==='path')return;
-  const rect=svg.getBoundingClientRect(),ratio=Math.max(0,Math.min(1,(e.clientX-rect.left)/Math.max(1,rect.width)));
-  mtSetPlayhead(ratio*(+$('duration').value||10));
+  const svg=e.target.closest('svg[data-graph-surface]');if(!svg||e.target.closest('[data-graph-key],[data-graph-handle]'))return;
+  const rect=svg.getBoundingClientRect(),ratio=Math.max(0,Math.min(1,(e.clientX-rect.left)/Math.max(1,rect.width)));mtSetPlayhead(ratio*(+$('duration').value||10));
  });
  window.addEventListener('pointermove',e=>{
   const drag=keyframeGraphDragState;if(!drag)return;
-  const {i,frame,channel,rect,duration}=drag;
-  const left=rect.left+rect.width*(24/360),top=rect.top+rect.height*(8/112);
-  const graphWidth=rect.width*(328/360),graphHeight=rect.height*(87/112);
-  const px=Math.max(0,Math.min(1,(e.clientX-left)/Math.max(1,graphWidth)));
-  const py=Math.max(0,Math.min(1,(e.clientY-top)/Math.max(1,graphHeight)));
-  if(channel==='path'){
-   frame.x=drag.minX+px*(drag.maxX-drag.minX);
-   frame.y=drag.maxY-py*(drag.maxY-drag.minY);
-  }else{
-   frame.t=Number((px*duration).toFixed(3));
-   trozalGraphSetStoredValue(frame,channel,drag.max-py*(drag.max-drag.min));
-  }
-  $('kfTime'+i).value=frame.t.toFixed(2);$('kfX'+i).value=Number(frame.x||0).toFixed(1);$('kfY'+i).value=Number(frame.y||0).toFixed(1);
-  $('kfRot'+i).value=Number(frame.rot||0).toFixed(1);$('kfScale'+i).value=(Number(frame.scale??1)*100).toFixed(1);$('kfAlpha'+i).value=(Number(frame.alpha??1)*100).toFixed(1);
+  const {i,frame,channel,rect,duration}=drag,left=rect.left+rect.width*(24/360),top=rect.top+rect.height*(8/112),graphWidth=rect.width*(328/360),graphHeight=rect.height*(87/112);
+  const px=Math.max(0,Math.min(1,(e.clientX-left)/Math.max(1,graphWidth))),py=Math.max(0,Math.min(1,(e.clientY-top)/Math.max(1,graphHeight)));
+  if(drag.kind==='bezier'){
+   const p=frame,q=(layerKeyframes[i]||[]).slice().sort((a,b)=>a.t-b.t)[drag.segment],b=p.bezier||(p.bezier={x1:.25,y1:.1,x2:.25,y2:1}),dt=Math.max(.001,q.t-p.t),value=drag.max-py*(drag.max-drag.min),v1=trozalGraphStoredValue(p,channel),v2=trozalGraphStoredValue(q,channel),den=Math.abs(v2-v1)<.001?1:v2-v1;
+   if(drag.point===1){b.x1=trozalClamp((px*duration-p.t)/dt,0,1);b.y1=trozalClamp((value-v1)/den,-2,2)}
+   else{b.x2=trozalClamp((px*duration-p.t)/dt,0,1);b.y2=trozalClamp((value-v1)/den,-2,2)}
+   p.ease='bezier';$('kfEase'+i).value='bezier';$('kfBx1'+i).value=b.x1.toFixed(3);$('kfBy1'+i).value=b.y1.toFixed(3);$('kfBx2'+i).value=b.x2.toFixed(3);$('kfBy2'+i).value=b.y2.toFixed(3);
+  }else if(channel==='path'){frame.x=drag.minX+px*(drag.maxX-drag.minX);frame.y=drag.maxY-py*(drag.maxY-drag.minY)}
+  else{frame.t=trozalSnapTime(px*duration,{layer:i,frame});trozalGraphSetStoredValue(frame,channel,drag.max-py*(drag.max-drag.min))}
+  $('kfTime'+i).value=frame.t.toFixed(2);$('kfX'+i).value=Number(frame.x||0).toFixed(1);$('kfY'+i).value=Number(frame.y||0).toFixed(1);$('kfRot'+i).value=Number(frame.rot||0).toFixed(1);$('kfScale'+i).value=(Number(frame.scale??1)*100).toFixed(1);$('kfAlpha'+i).value=(Number(frame.alpha??1)*100).toFixed(1);
   renderAt(playhead);drawLayerKeyframeGraph(i);
  });
  window.addEventListener('pointerup',()=>{
-  if(!keyframeGraphDragState)return;
-  const i=keyframeGraphDragState.i;keyframeGraphDragState=null;
-  layerKeyframes[i].sort((a,b)=>a.t-b.t);paintLayerKeyframes(i);renderAt(playhead);scheduleAutosave();
-  setStatus('Graph Editor: keyframe layer '+(i+1)+' diperbarui.');
+  if(!keyframeGraphDragState)return;const i=keyframeGraphDragState.i;keyframeGraphDragState=null;
+  layerKeyframes[i].sort((a,b)=>a.t-b.t);paintLayerKeyframes(i);renderAt(playhead);scheduleAutosave();trozalHistoryCommit('Edit Graph Editor layer '+(i+1));setStatus('Graph Editor: keyframe/Bezier layer '+(i+1)+' diperbarui.');
  });
  }
+
  refreshTimelineEditor();
 }
 
@@ -776,6 +777,11 @@ function trozalSelectLayerKeyframe(i,frame){
  $('kfBx2'+i).value=curve.x2??.25;$('kfBy2'+i).value=curve.y2??1;
  mtSetPlayhead(frame.t);
 }
+function trozalGraphSpeed(i,t){
+ const dt=Math.max(.001,1/(Math.max(1,+$('fps').value||30)));
+ const a=getLayerKeyframeMotion(i,Math.max(0,t-dt)),b=getLayerKeyframeMotion(i,Math.min(+$('duration').value||10,t+dt));
+ if(!a||!b)return 0;return Math.hypot((b.x-a.x)/Math.max(.001,2*dt),(b.y-a.y)/Math.max(.001,2*dt));
+}
 function drawLayerKeyframeGraph(i){
  const holder=$('kfGraph'+i);if(!holder)return;
  const frames=(layerKeyframes[i]||[]).slice().sort((a,b)=>a.t-b.t);
@@ -797,6 +803,18 @@ function drawLayerKeyframeGraph(i){
   holder.innerHTML='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Motion path X/Y" data-graph-surface="'+i+'" data-graph-kind="path">'+grid+'<path class="graph-axis" d="M'+L+' '+T+'V'+(T+gh)+'H'+(L+gw)+'"/>'+curve+dots+ticks+'</svg><div class="help">Motion Path · drag titik secara horizontal/vertikal untuk mengubah posisi. Waktu keyframe tetap.</div>';
   return;
  }
+
+ if(channel==='speed'){
+  const samples=Math.max(48,Math.min(240,Math.round(duration*16))),series=[];let max=0;
+  for(let n=0;n<=samples;n++){const t=duration*n/samples,v=trozalGraphSpeed(i,t);series.push({t,v});max=Math.max(max,v)}
+  max=Math.max(1,max*1.15);const X=t=>L+Math.max(0,Math.min(1,t/duration))*gw,Y=v=>T+(max-Math.max(0,Math.min(max,v)))/max*gh;
+  const grid=[0,.25,.5,.75,1].map(p=>'<path class="graph-grid" d="M'+L+' '+(T+gh*p)+'H'+(L+gw)+'"/>').join('');
+  const path=series.map((p,n)=>(n?'L':'M')+X(p.t).toFixed(2)+' '+Y(p.v).toFixed(2)).join(' ');
+  const ticks=[0,.5,1].map(p=>'<text class="graph-label" x="'+(L+gw*p)+'" y="'+(H-3)+'" text-anchor="middle">'+(duration*p).toFixed(p===1?1:0)+'s</text>').join('');
+  const play='<path class="graph-playhead" d="M'+X(playhead)+' '+T+'V'+(T+gh)+'"/>';
+  holder.innerHTML='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Speed graph" data-graph-surface="'+i+'" data-graph-kind="speed">'+grid+'<path class="graph-axis" d="M'+L+' '+T+'V'+(T+gh)+'H'+(L+gw)+'"/><path class="graph-speed" d="'+path+'"/>'+play+ticks+'</svg><div class="help">Speed Graph · kecepatan resultan jalur X/Y (%/detik), dihitung dari interpolasi keyframe. Ubah posisi atau waktu keyframe untuk membentuk kurva.</div>';
+  return;
+ }
  const values=frames.map(f=>trozalGraphStoredValue(f,channel)).filter(Number.isFinite);
  let min=Math.min(...values),max=Math.max(...values);
  if(Math.abs(max-min)<.001){const pad=Math.max(10,Math.abs(max)*.2);min-=pad;max+=pad;}
@@ -813,8 +831,16 @@ function drawLayerKeyframeGraph(i){
  const axis='<path class="graph-axis" d="M'+L+' '+T+'V'+(T+gh)+'H'+(L+gw)+'"/>';
  const current='<path class="graph-playhead" d="M'+X(playhead)+' '+T+'V'+(T+gh)+'"/>';
  const curve='<path class="graph-curve" d="'+points.join(' ')+'"/>';
+
+ const handles=frames.slice(0,-1).map((frame,n)=>{
+  if((frame.ease||'')!=='bezier')return '';
+  const next=frames[n+1],b=frame.bezier||{x1:.25,y1:.1,x2:.25,y2:1},v1=trozalGraphStoredValue(frame,channel),v2=trozalGraphStoredValue(next,channel),dt=next.t-frame.t;
+  const c1x=X(frame.t+(Number(b.x1)||0)*dt),c1y=Y(v1+(v2-v1)*(Number(b.y1)||0)),c2x=X(frame.t+(Number(b.x2)||0)*dt),c2y=Y(v1+(v2-v1)*(Number(b.y2)||0));
+  return '<path class="graph-handle-line" d="M'+X(frame.t)+' '+Y(v1)+'L'+c1x+' '+c1y+' M'+X(next.t)+' '+Y(v2)+'L'+c2x+' '+c2y+'"/><circle class="graph-handle" cx="'+c1x+'" cy="'+c1y+'" r="4" data-graph-handle="1" data-graph-segment="'+n+'" data-graph-point="1" data-graph-layer="'+i+'"><title>Bezier control 1 · drag</title></circle><circle class="graph-handle" cx="'+c2x+'" cy="'+c2y+'" r="4" data-graph-handle="1" data-graph-segment="'+n+'" data-graph-point="2" data-graph-layer="'+i+'"><title>Bezier control 2 · drag</title></circle>';
+ }).join('');
+
  const dots=frames.map((frame,n)=>'<circle class="graph-key" cx="'+X(frame.t)+'" cy="'+Y(trozalGraphStoredValue(frame,channel))+'" r="4.4" tabindex="0" role="button" aria-label="Keyframe '+(n+1)+' pada '+frame.t.toFixed(2)+' detik" data-graph-key="'+n+'" data-graph-layer="'+i+'"><title>'+frame.t.toFixed(2)+'s · '+trozalGraphStoredValue(frame,channel).toFixed(1)+'</title></circle>').join('');
- holder.innerHTML='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Grafik '+channel+' terhadap waktu" data-graph-surface="'+i+'" data-graph-kind="value">'+grid+axis+curve+current+dots+ticks+'</svg><div class="help">Rentang '+min.toFixed(1)+' hingga '+max.toFixed(1)+' · channel '+channel.toUpperCase()+'</div>';
+ holder.innerHTML='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Grafik '+channel+' terhadap waktu" data-graph-surface="'+i+'" data-graph-kind="value">'+grid+axis+curve+handles+current+dots+ticks+'</svg><div class="help">Rentang '+min.toFixed(1)+' hingga '+max.toFixed(1)+' · channel '+channel.toUpperCase()+(frames.some(f=>f.ease==='bezier')?' · drag handle hijau untuk mengubah kurva Bezier':'')+'</div>';
 }
 function paintLayerKeyframes(i){
  const frames=(layerKeyframes[i]||[]).slice().sort((a,b)=>a.t-b.t),track=$('kfTrack'+i),count=$('keyCount'+i);
