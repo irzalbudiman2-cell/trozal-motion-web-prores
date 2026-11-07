@@ -262,6 +262,72 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
 .kf-bezier-row label{font-size:8px}
 .kf-bezier-row input{font-size:10px;padding:5px 4px}
 .kf-graph-empty{padding:18px 8px;text-align:center;font-size:9px;color:#a89a82;border:1px dashed #625235;border-radius:4px}
+
+/* FIX33 · Resizable workspace, movable feature panels, Phase-2 overlays */
+.app{
+ --trozal-left:290px;--trozal-right:290px;
+ grid-template-columns:minmax(210px,var(--trozal-left)) 8px minmax(360px,1fr) 8px minmax(210px,var(--trozal-right));
+}
+.layout-resizer{position:relative;z-index:25;cursor:col-resize;touch-action:none;background:linear-gradient(90deg,transparent,rgba(125,224,169,.08),transparent)}
+.layout-resizer::after{content:"";position:absolute;top:35%;bottom:35%;left:3px;width:2px;border-radius:3px;background:#397b56;transition:background .15s,box-shadow .15s}
+.layout-resizer:hover::after,.layout-resizer.dragging::after{background:#8be4ad;box-shadow:0 0 8px #5fdb94}
+.sidebar{min-width:0}
+.panel h3{cursor:grab;user-select:none}
+.panel h3::after{content:"⠿  geser";float:right;color:#81c99a;font-size:8px;letter-spacing:.3px;opacity:.6}
+.panel.layout-drop-before{border-top:3px solid #8be4ad}
+.panel.layout-drop-after{border-bottom:3px solid #8be4ad}
+.panel[data-layout-dragging="1"],.control[data-layout-dragging="1"],.stagewrap[data-layout-dragging="1"],.stageinfo[data-layout-dragging="1"],.timeline[data-layout-dragging="1"]{opacity:.55;outline:1px dashed #8be4ad}
+.topcontrols .control{cursor:grab}
+.topcontrols .control label{cursor:grab}
+.topcontrols .control.layout-drop-before{border-left:2px solid #8be4ad}
+.topcontrols .control.layout-drop-after{border-right:2px solid #8be4ad}
+.stagewrap{
+ position:relative;flex:0 0 auto;height:var(--trozal-preview-height,48vh);
+ min-height:300px;max-height:76vh;overflow:hidden;padding:16px 28px 28px;
+}
+.stage{width:auto;height:100%;max-width:100%;max-height:100%;aspect-ratio:16/9;flex:0 1 auto}
+.stageinfo{position:relative;min-height:32px}
+.main{overflow-y:auto;overflow-x:hidden;scrollbar-color:#37654a #0a2017}
+.timeline{position:relative}
+.stage-resize-handle{
+ position:absolute;right:8px;bottom:7px;z-index:30;width:30px;height:22px;padding:0;
+ border:1px solid #6c985e;border-radius:5px;color:#d7f5df;background:#0b2b1e;
+ cursor:ns-resize;touch-action:none;font-size:13px;line-height:18px;
+}
+.stage-resize-handle:hover{background:#1c583a}
+.layout-drag-handle{
+ position:absolute;right:10px;top:8px;z-index:24;padding:2px 7px;
+ border:1px solid #967331;border-radius:5px;background:#2a2418;color:#f5d98c;
+ font-size:9px;cursor:grab;
+}
+.stageinfo .layout-drag-handle{position:static;margin-left:auto}
+.timeline>.layout-drag-handle{top:8px}
+.motion-path-overlay{
+ position:absolute;inset:0;width:100%;height:100%;z-index:12;overflow:visible;
+ pointer-events:none;display:none;
+}
+.motion-path-line{fill:none;stroke:#53e5a0;stroke-width:2.2;stroke-dasharray:7 5;filter:drop-shadow(0 0 3px #021b0f);pointer-events:none}
+.motion-path-key{fill:#f5d77e;stroke:#153d29;stroke-width:2.2;cursor:grab;pointer-events:auto;touch-action:none}
+.motion-path-key.current{fill:#7ef0ad;stroke:#fff4bd;stroke-width:3}
+.motion-path-key:hover{fill:#fff2b6}
+.kf-graph .graph-handle-line{stroke:#85d6a2;stroke-width:1.2;stroke-dasharray:3 2;fill:none}
+.kf-graph .graph-handle{fill:#82e5a8;stroke:#164b32;stroke-width:1.5;cursor:crosshair;touch-action:none}
+.kf-graph .graph-handle:hover{stroke:#fff;stroke-width:2.5}
+.kf-graph .graph-speed{stroke:#6de2bb;stroke-width:2;fill:none}
+.mt-toolbar-actions #mtUndo:disabled,.mt-toolbar-actions #mtRedo:disabled{opacity:.35;cursor:not-allowed}
+.mt-toolbar-actions #mtSnapToggle[aria-pressed="true"]{border-color:#73d99c;color:#aaf0c0;background:#153e2c}
+.mt-toolbar-actions #mtSnapToggle[aria-pressed="false"]{border-color:#5c5140;color:#b9ad93;background:#29251f}
+@media(max-width:1050px){.app{grid-template-columns:minmax(200px,var(--trozal-left)) 8px minmax(300px,1fr)}.right{display:none}}
+@media(max-width:720px){
+ .app{display:flex;flex-direction:column;height:auto;overflow:visible}
+ .layout-resizer{display:none}
+ .main{min-height:0;overflow:visible;order:-1}
+ .stagewrap{height:54vw;min-height:240px;max-height:60vh;padding:12px 12px 26px}
+ .stage{width:100%;height:auto;max-height:100%;aspect-ratio:16/9}
+ .panel h3::after{content:"⠿"}
+ .topcontrols .control{cursor:default}
+}
+
 </style>
 </head>
 <body>
@@ -2510,5 +2576,73 @@ $('metadataKeywords').addEventListener('input',updateMetadataCount);
 document.querySelectorAll('[data-copy-meta]').forEach(b=>b.addEventListener('click',async()=>{const el=$(b.dataset.copyMeta);try{await navigator.clipboard.writeText(el.value||el.textContent);$('metadataStatus').textContent=b.textContent+' berhasil disalin.'}catch(e){el.focus();el.select();$('metadataStatus').textContent='Pilih teks lalu tekan Ctrl+C.'}}));
 $('copyAllMetadataBtn').addEventListener('click',async()=>{const platform=$('metadataPlatform').value;const payload='Platform: '+(platform==='all'?'Adobe Stock, Dreamstime, Shutterstock':platform)+'\nTitle: '+$('metadataTitle').value+'\nDescription: '+$('metadataDescription').value+'\nCategory: '+$('metadataCategory').value+'\nKeywords: '+$('metadataKeywords').value;try{await navigator.clipboard.writeText(payload);$('metadataStatus').textContent='Semua metadata berhasil disalin.'}catch(e){$('metadataStatus').textContent='Clipboard tidak tersedia. Salin setiap kolom secara manual.'}});
 
+
+function wireStudioLayout(){
+ const app=document.querySelector('.app'),left=document.querySelector('.app>.sidebar:not(.right)'),main=document.querySelector('.app>.main'),right=document.querySelector('.app>.sidebar.right');
+ if(!app||!left||!main||!right)return;
+ const makeSplitter=(name,after,edge)=>{
+  const el=document.createElement('div');el.className='layout-resizer';el.dataset.edge=edge;el.title='Tarik untuk mengubah lebar panel';after.after(el);
+  let startX=0,startValue=0;
+  el.addEventListener('pointerdown',e=>{startX=e.clientX;startValue=parseFloat(getComputedStyle(app).getPropertyValue(name))||290;el.classList.add('dragging');el.setPointerCapture?.(e.pointerId);e.preventDefault()});
+  el.addEventListener('pointermove',e=>{if(!el.classList.contains('dragging'))return;const dx=e.clientX-startX;const next=trozalClamp(edge==='left'?startValue+dx:startValue-dx,210,520);app.style.setProperty(name,next+'px')});
+  const done=()=>{if(!el.classList.contains('dragging'))return;el.classList.remove('dragging');try{localStorage.setItem('trozal_layout_widths',JSON.stringify({left:parseFloat(getComputedStyle(app).getPropertyValue('--trozal-left'))||290,right:parseFloat(getComputedStyle(app).getPropertyValue('--trozal-right'))||290,preview:app.style.getPropertyValue('--trozal-preview-height')||'48vh'}))}catch(_){}};
+  el.addEventListener('pointerup',done);el.addEventListener('pointercancel',done);
+ };
+ const widths=(()=>{try{return JSON.parse(localStorage.getItem('trozal_layout_widths')||'{}')}catch(_){return {}}})();
+ if(widths.left)app.style.setProperty('--trozal-left',trozalClamp(+widths.left,210,520)+'px');
+ if(widths.right)app.style.setProperty('--trozal-right',trozalClamp(+widths.right,210,520)+'px');
+ if(widths.preview)app.style.setProperty('--trozal-preview-height',widths.preview);
+ makeSplitter('--trozal-left',left,'left');makeSplitter('--trozal-right',main,'right');
+ const addHandle=(el,text)=>{
+  if(el.querySelector(':scope>.layout-drag-handle'))return;
+  const b=document.createElement('button');b.type='button';b.className='layout-drag-handle';b.textContent=text||'⠿ Pindah panel';b.title='Tarik handle untuk memindahkan kotak fitur';b.draggable=true;el.appendChild(b);
+ };
+ const saveOrder=(container,key)=>{const ids=[...container.children].filter(x=>x.dataset.layoutId).map(x=>x.dataset.layoutId);try{localStorage.setItem('trozal_order_'+key,JSON.stringify(ids))}catch(_){}};
+ const restoreOrder=(container,key)=>{let ids=[];try{ids=JSON.parse(localStorage.getItem('trozal_order_'+key)||'[]')}catch(_){}ids.forEach(id=>{const el=[...container.children].find(x=>x.dataset.layoutId===id);if(el)container.appendChild(el)})};
+ const sortable=(container,items,key,handles)=>{
+  if(!container)return;const nodes=[...container.querySelectorAll(items)].filter(el=>el.parentElement===container);
+  nodes.forEach((el,i)=>{
+   el.dataset.layoutId=el.dataset.layoutId||key+'-'+(el.id||el.querySelector('h3,strong')?.textContent||i).toLowerCase().replace(/[^a-z0-9]+/g,'-').slice(0,50);
+   const grip=handles(el);if(grip){
+    grip.draggable=true;grip.title='Tarik untuk memindahkan kotak ini';
+    grip.addEventListener('dragstart',e=>{el.dataset.layoutDragging='1';e.dataTransfer?.setData('text/plain',el.dataset.layoutId);if(e.dataTransfer)e.dataTransfer.effectAllowed='move'});
+    grip.addEventListener('dragend',()=>{delete el.dataset.layoutDragging;container.querySelectorAll('.layout-drop-before,.layout-drop-after').forEach(n=>n.classList.remove('layout-drop-before','layout-drop-after'));saveOrder(container,key)});
+   }
+   el.addEventListener('dragover',e=>{
+    const source=container.querySelector('[data-layout-dragging="1"]');if(!source||source===el)return;e.preventDefault();
+    const r=el.getBoundingClientRect(),horizontal=key==='top-controls',after=horizontal?e.clientX>r.left+r.width/2:e.clientY>r.top+r.height/2;
+    el.classList.toggle('layout-drop-after',after);el.classList.toggle('layout-drop-before',!after);
+   });
+   el.addEventListener('dragleave',()=>el.classList.remove('layout-drop-before','layout-drop-after'));
+   el.addEventListener('drop',e=>{
+    const source=container.querySelector('[data-layout-dragging="1"]');if(!source||source===el)return;e.preventDefault();
+    const r=el.getBoundingClientRect(),horizontal=key==='top-controls',after=horizontal?e.clientX>r.left+r.width/2:e.clientY>r.top+r.height/2;
+    container.insertBefore(source,after?el.nextSibling:el);container.querySelectorAll('.layout-drop-before,.layout-drop-after').forEach(n=>n.classList.remove('layout-drop-before','layout-drop-after'));saveOrder(container,key);
+   });
+  });restoreOrder(container,key);
+ };
+ sortable(left,'.panel','left-panels',el=>el.querySelector('h3'));
+ sortable(right,'.panel','right-panels',el=>el.querySelector('h3'));
+ const top=document.querySelector('.topcontrols');if(top)sortable(top,'.control','top-controls',el=>el.querySelector('label'));
+ const stageWrap=document.querySelector('.stagewrap'),info=document.querySelector('.stageinfo'),timeline=document.querySelector('.timeline');
+ if(stageWrap){stageWrap.dataset.layoutId='preview';addHandle(stageWrap,'⠿ Preview')}
+ if(info){info.dataset.layoutId='stage-info';addHandle(info,'⠿ Info')}
+ if(timeline){timeline.dataset.layoutId='timeline';addHandle(timeline,'⠿ Timeline')}
+ sortable(main,'.stagewrap, .stageinfo, .timeline','main-panels',el=>el.querySelector('.layout-drag-handle'));
+ if(stageWrap&&!stageWrap.querySelector('.stage-resize-handle')){
+  const h=document.createElement('button');h.type='button';h.className='stage-resize-handle';h.textContent='↕';h.title='Tarik ke bawah/atas untuk mengubah tinggi Preview';stageWrap.appendChild(h);
+  let y=0,height=0;
+  h.addEventListener('pointerdown',e=>{y=e.clientY;height=stageWrap.getBoundingClientRect().height;h.setPointerCapture?.(e.pointerId);e.preventDefault()});
+  h.addEventListener('pointermove',e=>{if(!h.hasPointerCapture?.(e.pointerId))return;const next=trozalClamp(height+e.clientY-y,280,Math.max(380,window.innerHeight*.76));stageWrap.style.height=next+'px';app.style.setProperty('--trozal-preview-height',next+'px')});
+  const finish=()=>{try{localStorage.setItem('trozal_layout_widths',JSON.stringify({left:parseFloat(getComputedStyle(app).getPropertyValue('--trozal-left'))||290,right:parseFloat(getComputedStyle(app).getPropertyValue('--trozal-right'))||290,preview:app.style.getPropertyValue('--trozal-preview-height')||'48vh'}))}catch(_){}};
+  h.addEventListener('pointerup',finish);h.addEventListener('pointercancel',finish);
+ }
+ const reset=$('resetLayoutBtn');if(reset)reset.onclick=()=>{
+  try{['trozal_layout_widths','trozal_order_left-panels','trozal_order_right-panels','trozal_order_top-controls','trozal_order_main-panels'].forEach(k=>localStorage.removeItem(k))}catch(_){}
+  app.style.removeProperty('--trozal-left');app.style.removeProperty('--trozal-right');app.style.removeProperty('--trozal-preview-height');if(stageWrap)stageWrap.style.height='';location.reload();
+ };
+}
+
+wireStudioLayout();
 </script>
 </body></html>
