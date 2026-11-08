@@ -30,6 +30,19 @@ small,.muted{color:var(--muted)}.row{display:flex;gap:8px;align-items:center}.ro
 
 .ai-tools textarea{width:100%;min-height:100px;resize:vertical;background:#10131a;color:#e9edf5;border:1px solid #414959;border-radius:7px;padding:9px;font:11px/1.45 ui-monospace,SFMono-Regular,Consolas,monospace}.ai-tools .btnrow{display:flex;gap:6px;margin-top:7px}.ai-tools .btnrow button{flex:1;font-size:11px}.ai-tools .terminal{min-height:180px;border-color:#397c64}.ai-tools .terminal-label{color:#83e8b2}.ai-tools .notice{font-size:10px;color:#aebbd0;margin:6px 0}
 
+
+/* IMAGE TO HTML — distinct red feature panel */
+#imageToHtmlPanel{background:linear-gradient(145deg,#4a1018,#260b12 72%);border:1px solid #ff4657;box-shadow:0 8px 24px #25050b99,inset 0 1px #ffb4bc22}
+#imageToHtmlPanel h3,#imageToHtmlPanel h3 b{color:#ff7b86}
+#imageToHtmlPanel .help,#imageToHtmlPanel label{color:#ffd9dc}
+#imageToHtmlPanel .drop{border:1px dashed #ff6674;background:#390e17;color:#ffe3e5}
+#imageToHtmlPanel .drop.drag{border-color:#fff;background:#6a1723}
+#imageToHtmlPanel textarea{background:#19080c;border-color:#a92d3c;color:#fff0f1}
+#imageToHtmlPanel .image-to-html-preview{min-height:110px;max-height:220px;display:flex;align-items:center;justify-content:center;overflow:hidden;border:1px solid #a92d3c;border-radius:8px;background:#16070b;color:#e9aeb4;font-size:10px;margin-top:8px;padding:8px}
+#imageToHtmlPanel .image-to-html-preview img{display:block;max-width:100%;max-height:200px;object-fit:contain}
+#imageToHtmlPanel .btnrow button{border-color:#a92d3c}
+#imageToHtmlPanel button.primary{background:linear-gradient(135deg,#ff9ba4,#ed3448);color:#30070d}
+#imageToHtmlPanel button.green{background:linear-gradient(135deg,#ffb6bc,#ff6473);color:#35080e}
 /* FIX27: searchable AI theme catalog, prompt resolution and HTML diagnostics */
 .ai-tools input[type=text],.ai-tools select{background:#071d15;border:1px solid #32634a;color:#e8f5ee;border-radius:9px;padding:8px;width:100%}
 .ai-tools .theme-search-hint,.ai-tools .resolution-hint{font-size:10px;color:#9ec9ae;margin:4px 0 6px}
@@ -377,6 +390,21 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
    <div class="btnrow"><button class="green" id="pastePromptToAiBtn">📋 Copy / Paste Prompt to AI</button></div>
    <p class="notice">Tombol ini menyalin prompt ke clipboard. Buka AI yang Anda gunakan, tempel dengan Ctrl+V, lalu minta AI mengembalikan dokumen HTML lengkap sesuai prompt.</p>
    <div class="status" id="svgAiPromptStatus"></div>
+  </section>
+
+  <section class="panel ai-tools" id="imageToHtmlPanel">
+   <h3>🟥 GENERATE IMAGE TO HTML CODE</h3>
+   <p class="help">Unggah gambar JPEG/PNG. Trozal membuat dokumen HTML mandiri dengan gambar tertanam (Base64), sehingga tampilannya tetap sama tanpa file gambar eksternal.</p>
+   <label>Pilih gambar JPEG / PNG</label>
+   <div class="drop" id="imageToHtmlDrop">🖼️ Klik atau tarik gambar ke sini<br><small>JPG / JPEG / PNG · diproses lokal di browser</small></div>
+   <input id="imageToHtmlFile" type="file" accept="image/png,image/jpeg,.jpg,.jpeg,.png" class="hidden">
+   <div id="imageToHtmlInfo" class="notice">Belum ada gambar dipilih.</div>
+   <div class="image-to-html-preview" id="imageToHtmlPreview"><span>Preview gambar akan tampil di sini</span></div>
+   <div class="btnrow"><button type="button" class="primary" id="generateImageToHtmlBtn">⚡ Generate HTML Code</button><button type="button" id="clearImageToHtmlBtn">Hapus</button></div>
+   <label>Hasil kode HTML</label>
+   <textarea id="imageToHtmlOutput" spellcheck="false" placeholder="Kode HTML hasil generate akan tampil di sini..." style="min-height:180px"></textarea>
+   <div class="btnrow"><button type="button" id="copyImageToHtmlBtn">Salin Kode</button><button type="button" class="green" id="useImageToHtmlBtn">Kirim ke Terminal HTML</button></div>
+   <div class="status" id="imageToHtmlStatus">Siap menerima gambar.</div>
   </section>
 
   <section class="panel ai-tools" id="motionPresetLibrary"><h3><b>✦</b> 6. MOTION PRESET LIBRARY</h3>
@@ -2057,6 +2085,52 @@ document.addEventListener('change',e=>{if(e.target&&e.target.matches('input,sele
 document.addEventListener('input',e=>{if(e.target&&e.target.matches('input[type="range"],input[type="number"],textarea'))scheduleAutosave()});
 setTimeout(restoreAutosave,0);
 function setAiStatus(t){$('aiModeStatus').textContent=t}
+
+/* Generate a self-contained HTML document from a local JPEG/PNG image. */
+let imageToHtmlDataUrl='',imageToHtmlName='';
+function loadImageToHtmlFile(file){
+ if(!file)return;
+ if(file.type!=='image/png'&&file.type!=='image/jpeg'){$('imageToHtmlStatus').textContent='Format tidak didukung. Pilih gambar JPG/JPEG atau PNG.';return;}
+ if(file.size>25*1024*1024){$('imageToHtmlStatus').textContent='Ukuran gambar melebihi 25 MB. Pilih file yang lebih kecil.';return;}
+ const reader=new FileReader();
+ reader.onload=()=>{
+  imageToHtmlDataUrl=String(reader.result||'');imageToHtmlName=file.name||'image';
+  const preview=$('imageToHtmlPreview');preview.replaceChildren();
+  const img=document.createElement('img');img.src=imageToHtmlDataUrl;img.alt=imageToHtmlName;preview.appendChild(img);
+  img.onload=()=>{$('imageToHtmlInfo').textContent=imageToHtmlName+' · '+(file.size/1024/1024).toFixed(2)+' MB · '+img.naturalWidth+' × '+img.naturalHeight+' px';};
+  $('imageToHtmlInfo').textContent=imageToHtmlName+' · '+(file.size/1024/1024).toFixed(2)+' MB';
+  $('imageToHtmlStatus').textContent='Gambar siap. Tekan Generate HTML Code.';
+ };
+ reader.onerror=()=>{$('imageToHtmlStatus').textContent='Gagal membaca gambar dari perangkat.';};
+ reader.readAsDataURL(file);
+}
+$('imageToHtmlDrop').addEventListener('click',()=>$('imageToHtmlFile').click());
+$('imageToHtmlFile').addEventListener('change',e=>loadImageToHtmlFile(e.target.files?.[0]));
+['dragover','dragenter'].forEach(type=>$('imageToHtmlDrop').addEventListener(type,e=>{e.preventDefault();$('imageToHtmlDrop').classList.add('drag')}));
+['dragleave','drop'].forEach(type=>$('imageToHtmlDrop').addEventListener(type,e=>{e.preventDefault();$('imageToHtmlDrop').classList.remove('drag')}));
+$('imageToHtmlDrop').addEventListener('drop',e=>loadImageToHtmlFile(e.dataTransfer?.files?.[0]));
+$('generateImageToHtmlBtn').addEventListener('click',()=>{
+ if(!imageToHtmlDataUrl){$('imageToHtmlStatus').textContent='Pilih gambar JPEG atau PNG terlebih dahulu.';return;}
+ const safeName=imageToHtmlName.replace(/[&<>"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+ const code='<!DOCTYPE html>\n<html lang="id">\n<head>\n  <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <title>'+safeName+'</title>\n  <style>\n    *{box-sizing:border-box}\n    html,body{width:100%;height:100%;margin:0}\n    body{display:flex;align-items:center;justify-content:center;min-height:100vh;background:#08090d;overflow:hidden}\n    .image-stage{width:100vw;height:100vh;display:flex;align-items:center;justify-content:center;padding:2vw}\n    .image-stage img{display:block;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain}\n  </style>\n</head>\n<body>\n  <main class="image-stage"><img src="'+imageToHtmlDataUrl+'" alt="'+safeName+'"></main>\n</body>\n</html>';
+ $('imageToHtmlOutput').value=code;
+ $('imageToHtmlStatus').textContent='HTML berhasil dibuat · '+code.length.toLocaleString()+' karakter · gambar tertanam di dalam kode.';
+});
+$('copyImageToHtmlBtn').addEventListener('click',async()=>{
+ const code=$('imageToHtmlOutput').value;if(!code){$('imageToHtmlStatus').textContent='Generate kode HTML terlebih dahulu.';return;}
+ try{await navigator.clipboard.writeText(code);$('imageToHtmlStatus').textContent='Kode HTML berhasil disalin.';}
+ catch(e){$('imageToHtmlOutput').focus();$('imageToHtmlOutput').select();$('imageToHtmlStatus').textContent='Clipboard dibatasi browser. Kode sudah dipilih; tekan Ctrl+C.';}
+});
+$('useImageToHtmlBtn').addEventListener('click',()=>{
+ const code=$('imageToHtmlOutput').value;if(!code){$('imageToHtmlStatus').textContent='Generate kode HTML terlebih dahulu.';return;}
+ $('aiCodeTerminal').value=code;validateHtmlTerminal();$('aiCodeTerminal').focus();
+ $('imageToHtmlStatus').textContent='Kode dipindahkan ke Terminal Kode HTML. Tekan Terapkan HTML ke Preview.';
+});
+$('clearImageToHtmlBtn').addEventListener('click',()=>{
+ imageToHtmlDataUrl='';imageToHtmlName='';$('imageToHtmlFile').value='';$('imageToHtmlInfo').textContent='Belum ada gambar dipilih.';
+ $('imageToHtmlPreview').replaceChildren(document.createTextNode('Preview gambar akan tampil di sini'));$('imageToHtmlOutput').value='';$('imageToHtmlStatus').textContent='Panel dibersihkan.';
+});
+
 $('clearAiCodeBtn').addEventListener('click',()=>{$('aiCodeTerminal').value='';setAiStatus('Terminal dibersihkan.')});
 $('pasteCodeFromClipboardBtn').addEventListener('click',async()=>{try{const code=await navigator.clipboard.readText();if(!code.trim()){setAiStatus('Clipboard kosong. Salin kode HTML terlebih dahulu.');return}$('aiCodeTerminal').value=code;setAiStatus('Kode berhasil ditempel ('+code.length.toLocaleString()+' karakter). Klik Terapkan ke Preview.');$('aiCodeTerminal').focus()}catch(e){$('aiCodeTerminal').focus();setAiStatus('Clipboard tidak diizinkan browser. Klik terminal lalu tekan Ctrl+V.')}});
 
