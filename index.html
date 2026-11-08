@@ -1631,20 +1631,18 @@ function updateShapePathPreview(t=playhead){
  overlay.style.display=s.reveal?'block':'none';overlay.style.setProperty('--shape-path-color',s.color);overlay.style.setProperty('--shape-path-width',String(s.width));
  overlay.innerHTML='<path d="'+path+'" pathLength="1000" transform="'+shapeTransform(s)+'" stroke-dasharray="1000" stroke-dashoffset="'+(1000*(1-s.progress))+'"/>';
 }
-function drawShapeMaskOnCanvas(ctx,w,h,baseW,baseH,s){
- if(s.enabled){
-  const p=new Path2D(SHAPE_PATHS[s.type]||SHAPE_PATHS.rect),outer=new Path2D('M -500 -500 H 500 V 500 H -500 Z');
-  ctx.save();ctx.translate(s.x*baseW/100,s.y*baseH/100);ctx.rotate(s.rotation*Math.PI/180);ctx.scale(baseW*s.size/1000,baseH*s.size/1000);
-  if(s.mode==='subtract'||s.mode==='difference'){outer.addPath(p);ctx.clip(outer,'evenodd')}else ctx.clip(p);
-  ctx.restore();
- }
- if(s.reveal){
-  ctx.save();ctx.translate(s.x*baseW/100,s.y*baseH/100);ctx.rotate(s.rotation*Math.PI/180);ctx.scale(baseW*s.size/1000,baseH*s.size/1000);
-  ctx.beginPath();ctx.moveTo(-500,-500);ctx.lineTo(500,-500);ctx.lineTo(500,500);ctx.lineTo(-500,500);ctx.closePath();
-  // Use SVG path data through Path2D so the same geometry drives preview and export.
-  const p=new Path2D(SHAPE_PATHS[s.type]||SHAPE_PATHS.rect);
-  ctx.strokeStyle=s.color;ctx.lineWidth=s.width*2;ctx.lineCap='round';ctx.lineJoin='round';ctx.setLineDash([1000,1000]);ctx.lineDashOffset=1000*(1-s.progress);ctx.stroke(p);ctx.restore();
- }
+function applyShapeMaskToCanvas(ctx,baseW,baseH,s){
+ if(!s.enabled)return;
+ const p=new Path2D(SHAPE_PATHS[s.type]||SHAPE_PATHS.rect),outer=new Path2D('M -500 -500 H 500 V 500 H -500 Z');
+ const matrix=new DOMMatrix().translate(s.x*baseW/100,s.y*baseH/100).rotate(s.rotation).scale(baseW*s.size/1000,baseH*s.size/1000);
+ const inner=new Path2D();inner.addPath(p,matrix);
+ if(s.mode==='subtract'||s.mode==='difference'){const full=new Path2D();full.addPath(outer,matrix);full.addPath(p,matrix);ctx.clip(full,'evenodd')}
+ else ctx.clip(inner);
+}
+function drawShapePathOnCanvas(ctx,baseW,baseH,s){
+ if(!s.reveal)return;
+ const p=new Path2D(SHAPE_PATHS[s.type]||SHAPE_PATHS.rect),matrix=new DOMMatrix().translate(s.x*baseW/100,s.y*baseH/100).rotate(s.rotation).scale(baseW*s.size/1000,baseH*s.size/1000),mapped=new Path2D();mapped.addPath(p,matrix);
+ ctx.save();ctx.strokeStyle=s.color;ctx.lineWidth=s.width*2;ctx.lineCap='round';ctx.lineJoin='round';ctx.setLineDash([1000,1000]);ctx.lineDashOffset=1000*(1-s.progress);ctx.stroke(mapped);ctx.restore();
 }
 ['shapeMaskType','shapeMaskMode','shapeMaskSize','shapeMaskRotation','shapeMaskX','shapeMaskY','shapeMaskEnabled','shapePathColor','shapePathWidth','shapePathReveal'].forEach(id=>$(id)?.addEventListener('input',()=>{if(id==='shapeMaskSize'&&$('shapeMaskSizeVal'))$('shapeMaskSizeVal').textContent=$('shapeMaskSize').value+'%';renderAt(playhead);scheduleAutosave()}));
 
@@ -1977,13 +1975,14 @@ const cx=w/2+((+$('posX').value+motion.x)/100*baseW),cy=h/2+((+$('posY').value+m
 const ow=baseW*motion.scaleX,oh=baseH*motion.scaleY;
 ctx.save();ctx.translate(cx,cy);ctx.rotate((+$('rotation').value+motion.rotate)*Math.PI/180);ctx.transform(1,Math.tan(motion.skew*Math.PI/180),0,1,0,0);ctx.globalAlpha=(+$('opacity').value/100)*motion.alpha;
 ctx.beginPath();ctx.rect(-baseW/2,-baseH/2,baseW*motion.revealX,baseH*motion.revealY);ctx.clip();
+const shapeState=shapeMaskState();applyShapeMaskToCanvas(ctx,baseW,baseH,shapeState);
 try{
  const p=Math.max(0,Math.min(1,elapsed/Math.max(.001,d))),ph=elapsed*2*Math.PI*+$('speed').value;
  const drawContained=(source,dx=0,dy=0,rot=0,layerScale=1)=>{const sw=source.naturalWidth||source.width||1,sh=source.naturalHeight||source.height||1,fit=Math.min(ow/sw,oh/sh)*layerScale,dw=sw*fit,dh=sh*fit;ctx.save();ctx.translate(dx,dy);ctx.rotate(rot*Math.PI/180);if($('shadow').checked){ctx.shadowColor='rgba(0,0,0,.22)';ctx.shadowBlur=Math.max(1,w/(turboMode?360:180));ctx.shadowOffsetY=Math.max(1,h/180)}ctx.drawImage(source,-dw/2,-dh/2,dw,dh);ctx.restore()};
  if(htmlMotionSource){const htmlCanvas=await captureHtmlMotionAt(elapsed);drawContained(htmlCanvas)}
  else if(svgPieceImgs.length){svgPieceImgs.forEach((pi,i)=>{const visible=document.getElementById('autoLayerVisible'+i)?.checked!==false,solo=soloLayerIndex<0||soloLayerIndex===i;if(!visible||!solo)return;const lm=getLayerMotion(i,elapsed);ctx.save();ctx.globalAlpha=lm.alpha;drawContained(pi,lm.x*w/100,lm.y*h/100,lm.rot,lm.scale);ctx.restore()})}
  else if(svgImg)drawContained(svgImg);else if(img)drawContained(img);else{ctx.fillStyle=currentColor;ctx.beginPath();ctx.arc(0,0,Math.min(ow,oh)/3,0,Math.PI*2);ctx.fill()}
- drawShapeMaskOnCanvas(ctx,w,h,baseW,baseH,shapeMaskState());
+ drawShapePathOnCanvas(ctx,baseW,baseH,shapeState);
 }catch(e){ctx.restore();throw new Error('Gagal menggambar aset pada frame '+frame+' ('+elapsed.toFixed(3)+'s): '+(e?.message||e))}ctx.restore();drawTextLayerToCanvas(ctx,w,h,elapsed);drawExportVisualEffects(ctx,w,h,elapsed,motion,baseW,baseH,cx,cy,turboMode);const renderPercent=Math.max(1,Math.min(100,Math.round(((frame+1)/totalFrames)*100)));setExportStatus('Rendering… '+renderPercent+'%');setRenderProgress(renderPercent,'Merender frame '+(frame+1)+'/'+totalFrames,'running');if(frameSequenceMode){let png;try{png=await new Promise((resolve,reject)=>{try{canvas.toBlob(resolve,'image/png')}catch(e){reject(e)}})}catch(blobError){throw new Error('Canvas tidak dapat diekspor pada frame '+frame+' ('+elapsed.toFixed(3)+'s). Penyebab belum dapat dipastikan (misalnya SVG/foreignObject atau aset eksternal yang tidak mengizinkan CORS): '+(blobError?.message||blobError))}if(!png)throw new Error('Browser mengembalikan PNG kosong pada frame '+frame+' ('+elapsed.toFixed(3)+'s).');pngZip.file('frame_'+String(frame).padStart(6,'0')+'.png',png,{compression:'STORE'});frame++;setTimeout(draw,0)}else{frame++;setTimeout(draw,step)}}
 
 async function draw(){
