@@ -315,7 +315,7 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
 }
 .stageinfo .layout-drag-handle{position:static;margin-left:auto}
 .timeline>.layout-drag-handle{top:8px}
-.shape-mask-tools{margin-top:10px;padding:10px;border:1px solid #315c47;border-radius:9px;background:#0a1c14}.shape-mask-tools h4{margin:0 0 8px;color:#a8edc2;font-size:11px;letter-spacing:.08em}.shape-mask-tools .row>div{min-width:0;flex:1}.shape-mask-tools input[type=range]{width:100%;accent-color:#69d89a}.shape-mask-tools input[type=number],.shape-mask-tools select{width:100%;min-width:0}.shape-mask-tools .inline-check{display:flex;align-items:center;gap:7px;margin:8px 0;color:#d9e9df;font-size:11px}.shape-mask-tools .inline-check input{width:auto}.shape-path-overlay{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:18}.shape-path-overlay path{fill:none;stroke:var(--shape-path-color,#75f0b0);stroke-width:var(--shape-path-width,5);stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 4px #0009}
+.shape-mask-tools{margin-top:10px;padding:10px;border:1px solid #315c47;border-radius:9px;background:#0a1c14}.shape-mask-tools h4{margin:0 0 8px;color:#a8edc2;font-size:11px;letter-spacing:.08em}.shape-mask-tools .row>div{min-width:0;flex:1}.shape-mask-tools input[type=range]{width:100%;accent-color:#69d89a}.shape-mask-tools input[type=number],.shape-mask-tools select,.shape-mask-tools textarea{width:100%;min-width:0}.shape-mask-tools textarea{resize:vertical;min-height:76px;background:#071d15;border:1px solid #32634a;color:#e8f5ee;border-radius:8px;padding:8px;font:10px/1.4 ui-monospace,Consolas,monospace}.shape-mask-tools .inline-check{display:flex;align-items:center;gap:7px;margin:8px 0;color:#d9e9df;font-size:11px}.shape-mask-tools .inline-check input{width:auto}.shape-path-overlay{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:18}.shape-path-overlay path{fill:none;stroke:var(--shape-path-color,#75f0b0);stroke-width:var(--shape-path-width,5);stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 4px #0009);}
 .motion-path-overlay{
  position:absolute;inset:0;width:100%;height:100%;z-index:12;overflow:visible;
  pointer-events:none;display:none;
@@ -359,28 +359,6 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
    <div class="row" style="margin-top:8px"><button id="demoBtn">Pakai contoh</button><button id="clearBtn">Hapus objek</button></div>
    <div class="row" style="margin-top:7px"><button id="splitSvgBtn">✂ Pecah SVG</button><button id="assembleSvgBtn">▣ Satukan SVG</button></div>
    <p class="help">Pecah SVG memisahkan elemen grafis tingkat atas menjadi layer terpisah untuk animasi pecah-satukan. Struktur SVG kompleks yang memakai mask/clipPath/filter mungkin perlu dicek ulang.</p>
-   <div class="shape-mask-tools" id="shapeMaskTools">
-    <h4>MASK · SHAPE · PATH</h4>
-    <div class="row">
-     <div><label>BENTUK MASK</label><select id="shapeMaskType"><option value="rect">Rectangle</option><option value="ellipse">Ellipse</option><option value="diamond">Diamond</option><option value="hexagon">Hexagon</option><option value="star">Star</option></select></div>
-     <div><label>MODE MASK</label><select id="shapeMaskMode"><option value="add">Add</option><option value="subtract">Subtract</option><option value="intersect">Intersect</option><option value="difference">Difference</option></select></div>
-    </div>
-    <div class="row">
-     <div><label>UKURAN MASK (%)</label><input id="shapeMaskSize" type="range" min="10" max="150" value="86"><span class="help" id="shapeMaskSizeVal">86%</span></div>
-     <div><label>ROTASI MASK (°)</label><input id="shapeMaskRotation" type="number" min="-180" max="180" value="0"></div>
-    </div>
-    <div class="row">
-     <div><label>POSISI X (%)</label><input id="shapeMaskX" type="number" min="-100" max="100" value="0"></div>
-     <div><label>POSISI Y (%)</label><input id="shapeMaskY" type="number" min="-100" max="100" value="0"></div>
-    </div>
-    <label class="inline-check"><input id="shapeMaskEnabled" type="checkbox"> Aktifkan mask pada objek</label>
-    <div class="row">
-     <div><label>PATH STROKE</label><input id="shapePathColor" type="color" value="#75f0b0"></div>
-     <div><label>TEBAL GARIS</label><input id="shapePathWidth" type="number" min="1" max="40" value="5"></div>
-    </div>
-    <label class="inline-check"><input id="shapePathReveal" type="checkbox"> Aktifkan Trim Path / Stroke Reveal</label>
-    <p class="help">Mask bentuk diterapkan konsisten pada preview dan frame render. Trim Path menggambar garis bentuk secara progresif mengikuti playhead. Add/Intersect dan Subtract/Difference setara untuk satu mask; operasi gabungan multi-mask akan ditambahkan pada iterasi berikutnya.</p>
-   </div>
    <label>Nama objek</label><input type="text" id="objectName" value="Sunrise Emblem">
    <p class="help">Untuk Multi Object, unggah beberapa file sekaligus. Batch Folder membantu memilih banyak aset untuk ekspor satu per satu.</p>
    <input id="multiInput" type="file" accept=".svg,image/png,image/jpeg,image/webp" multiple class="hidden">
@@ -536,6 +514,33 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
    <label><input type="checkbox" id="shadow" checked> Bayangan objek</label>
    <label><input type="checkbox" id="loop" checked> Loop animasi</label>
   </section>
+   <div class="shape-mask-tools" id="shapeMaskTools">
+    <h4>MASK · SHAPE · PATH EDITOR</h4>
+    <div class="row">
+     <div><label>BENTUK MASK</label><select id="shapeMaskType"><option value="rect">Rectangle</option><option value="ellipse">Ellipse</option><option value="diamond">Diamond</option><option value="hexagon">Hexagon</option><option value="star">Star</option><option value="custom">Editable Bezier Path</option></select></div>
+     <div><label>MODE MASK</label><select id="shapeMaskMode"><option value="add">Add</option><option value="subtract">Subtract</option><option value="intersect">Intersect</option><option value="difference">Difference</option></select></div>
+    </div>
+    <div class="row">
+     <div><label>UKURAN MASK (%)</label><input id="shapeMaskSize" type="range" min="10" max="150" value="86"><span class="help" id="shapeMaskSizeVal">86%</span></div>
+     <div><label>ROTASI MASK (°)</label><input id="shapeMaskRotation" type="number" min="-180" max="180" value="0"></div>
+    </div>
+    <div id="customBezierPathWrap" style="display:none;margin-top:8px">
+     <label>EDITABLE BEZIER PATH · SVG d</label>
+     <textarea id="shapePathData" rows="4" spellcheck="false" placeholder="M -400 0 C -400 -300 0 -300 0 0 C 0 300 400 300 400 0"></textarea>
+     <p class="help">Koordinat path memakai viewBox -500 sampai 500. Gunakan perintah M, L, C, Q, A, Z. Perubahan langsung diterapkan pada preview dan frame render.</p>
+    </div>
+    <div class="row">
+     <div><label>POSISI X (%)</label><input id="shapeMaskX" type="number" min="-100" max="100" value="0"></div>
+     <div><label>POSISI Y (%)</label><input id="shapeMaskY" type="number" min="-100" max="100" value="0"></div>
+    </div>
+    <label class="inline-check"><input id="shapeMaskEnabled" type="checkbox"> Aktifkan mask pada objek</label>
+    <div class="row">
+     <div><label>PATH STROKE</label><input id="shapePathColor" type="color" value="#75f0b0"></div>
+     <div><label>TEBAL GARIS</label><input id="shapePathWidth" type="number" min="1" max="40" value="5"></div>
+    </div>
+    <label class="inline-check"><input id="shapePathReveal" type="checkbox"> Aktifkan Trim Path / Stroke Reveal</label>
+    <p class="help">Mask bentuk diterapkan konsisten pada preview dan frame render. Path Stroke menggambar outline secara progresif mengikuti playhead. Editable Bezier Path menerima SVG path data. Multi-mask berlapis akan menjadi iterasi selanjutnya.</p>
+   </div>
   <section class="panel" id="nativeTextPanel"><h3><b>✦</b>  TEXT ANIMATION STUDIO</h3>
    <p class="help">Buat judul dan teks native. Teks ikut playhead serta masuk ke hasil render.</p>
    <div class="row" id="textLayerManager" style="gap:6px;flex-wrap:wrap">
@@ -1610,15 +1615,18 @@ const SHAPE_PATHS={
  ellipse:'M 0 -500 A 500 500 0 1 1 0 500 A 500 500 0 1 1 0 -500 Z',
  diamond:'M 0 -500 L 500 0 L 0 500 L -500 0 Z',
  hexagon:'M -250 -433 L 250 -433 L 500 0 L 250 433 L -250 433 L -500 0 Z',
- star:'M 0 -500 L 118 -162 L 476 -155 L 191 66 L 294 405 L 0 205 L -294 405 L -191 66 L -476 -155 L -118 -162 Z'
+ star:'M 0 -500 L 118 -162 L 476 -155 L 191 66 L 294 405 L 0 205 L -294 405 L -191 66 L -476 -155 L -118 -162 Z',
+ custom:'M -400 0 C -400 -300 0 -300 0 0 C 0 300 400 300 400 0'
 };
+function shapePathFor(s){const d=s.type==='custom'?(s.pathData||SHAPE_PATHS.custom):(SHAPE_PATHS[s.type]||SHAPE_PATHS.rect);try{new Path2D(d);return d}catch(_){return SHAPE_PATHS.rect}}
+function escapeSvgAttr(s){return String(s).replace(/&/g,'&amp;').replace(/\"/g,'&quot;').replace(/</g,'&lt;')}
 function shapeMaskState(){
  const val=(id,def)=>{const e=$(id);return e?e.value:def};
- return {enabled:!!$('shapeMaskEnabled')?.checked,type:val('shapeMaskType','rect'),mode:val('shapeMaskMode','add'),size:Math.max(10,Math.min(150,Number(val('shapeMaskSize',86))||86))/100,rotation:Number(val('shapeMaskRotation',0))||0,x:Number(val('shapeMaskX',0))||0,y:Number(val('shapeMaskY',0))||0,reveal:!!$('shapePathReveal')?.checked,color:val('shapePathColor','#75f0b0'),width:Math.max(1,Math.min(40,Number(val('shapePathWidth',5))||5)),progress:Math.max(0,Math.min(1,playhead/Math.max(.001,+$('duration').value)))};
+ return {enabled:!!$('shapeMaskEnabled')?.checked,type:val('shapeMaskType','rect'),mode:val('shapeMaskMode','add'),size:Math.max(10,Math.min(150,Number(val('shapeMaskSize',86))||86))/100,rotation:Number(val('shapeMaskRotation',0))||0,x:Number(val('shapeMaskX',0))||0,y:Number(val('shapeMaskY',0))||0,reveal:!!$('shapePathReveal')?.checked,color:val('shapePathColor','#75f0b0'),width:Math.max(1,Math.min(40,Number(val('shapePathWidth',5))||5)),progress:Math.max(0,Math.min(1,playhead/Math.max(.001,+$('duration').value))),pathData:$('shapePathData')?.value||SHAPE_PATHS.custom};
 }
 function shapeTransform(s){return 'translate('+s.x*10+' '+s.y*10+') rotate('+s.rotation+') scale('+s.size+')'}
 function shapeMaskSvg(s){
- const path=SHAPE_PATHS[s.type]||SHAPE_PATHS.rect,inv=s.mode==='subtract'||s.mode==='difference';
+ const path=shapePathFor(s),inv=s.mode==='subtract'||s.mode==='difference';
  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-500 -500 1000 1000"><defs><mask id="m"><rect x="-500" y="-500" width="1000" height="1000" fill="'+(inv?'white':'black')+'"/><path d="'+path+'" transform="'+shapeTransform(s)+'" fill="'+(inv?'black':'white')+'"/></mask></defs><rect x="-500" y="-500" width="1000" height="1000" fill="white" mask="url(#m)"/></svg>';
 }
 function updateShapePathPreview(t=playhead){
@@ -1627,13 +1635,14 @@ function updateShapePathPreview(t=playhead){
  else{obj.style.maskImage='none';obj.style.webkitMaskImage='none'}
  let overlay=obj.querySelector(':scope > .shape-path-overlay');
  if(!overlay){overlay=document.createElementNS('http://www.w3.org/2000/svg','svg');overlay.setAttribute('class','shape-path-overlay');overlay.setAttribute('viewBox','-500 -500 1000 1000');overlay.setAttribute('preserveAspectRatio','none');obj.appendChild(overlay)}
- const path=SHAPE_PATHS[s.type]||SHAPE_PATHS.rect;
+ const path=shapePathFor(s);
+ const customWrap=$('customBezierPathWrap');if(customWrap)customWrap.style.display=s.type==='custom'?'block':'none';
  overlay.style.display=s.reveal?'block':'none';overlay.style.setProperty('--shape-path-color',s.color);overlay.style.setProperty('--shape-path-width',String(s.width));
- overlay.innerHTML='<path d="'+path+'" pathLength="1000" transform="'+shapeTransform(s)+'" stroke-dasharray="1000" stroke-dashoffset="'+(1000*(1-s.progress))+'"/>';
+ overlay.innerHTML='<path d="'+escapeSvgAttr(path)+'" pathLength="1000" transform="'+shapeTransform(s)+'" stroke-dasharray="1000" stroke-dashoffset="'+(1000*(1-s.progress))+'"/>';
 }
 function applyShapeMaskToCanvas(ctx,baseW,baseH,s){
  if(!s.enabled)return;
- const p=new Path2D(SHAPE_PATHS[s.type]||SHAPE_PATHS.rect);
+ const p=new Path2D(shapePathFor(s));
  const matrix=new DOMMatrix().translate(s.x*baseW/100,s.y*baseH/100).rotate(s.rotation).scale(baseW*s.size/1000,baseH*s.size/1000);
  const inner=new Path2D();inner.addPath(p,matrix);
  if(s.mode==='subtract'||s.mode==='difference'){const full=new Path2D('M '+(-baseW/2)+' '+(-baseH/2)+' H '+(baseW/2)+' V '+(baseH/2)+' H '+(-baseW/2)+' Z');full.addPath(p,matrix);ctx.clip(full,'evenodd')}
@@ -1641,10 +1650,10 @@ function applyShapeMaskToCanvas(ctx,baseW,baseH,s){
 }
 function drawShapePathOnCanvas(ctx,baseW,baseH,s){
  if(!s.reveal)return;
- const p=new Path2D(SHAPE_PATHS[s.type]||SHAPE_PATHS.rect),matrix=new DOMMatrix().translate(s.x*baseW/100,s.y*baseH/100).rotate(s.rotation).scale(baseW*s.size/1000,baseH*s.size/1000),mapped=new Path2D();mapped.addPath(p,matrix);
+ const p=new Path2D(shapePathFor(s)),matrix=new DOMMatrix().translate(s.x*baseW/100,s.y*baseH/100).rotate(s.rotation).scale(baseW*s.size/1000,baseH*s.size/1000),mapped=new Path2D();mapped.addPath(p,matrix);
  ctx.save();ctx.strokeStyle=s.color;ctx.lineWidth=s.width*2;ctx.lineCap='round';ctx.lineJoin='round';ctx.setLineDash([1000,1000]);ctx.lineDashOffset=1000*(1-s.progress);ctx.stroke(mapped);ctx.restore();
 }
-['shapeMaskType','shapeMaskMode','shapeMaskSize','shapeMaskRotation','shapeMaskX','shapeMaskY','shapeMaskEnabled','shapePathColor','shapePathWidth','shapePathReveal'].forEach(id=>$(id)?.addEventListener('input',()=>{if(id==='shapeMaskSize'&&$('shapeMaskSizeVal'))$('shapeMaskSizeVal').textContent=$('shapeMaskSize').value+'%';renderAt(playhead);scheduleAutosave()}));
+['shapeMaskType','shapeMaskMode','shapeMaskSize','shapeMaskRotation','shapeMaskX','shapeMaskY','shapeMaskEnabled','shapePathColor','shapePathWidth','shapePathReveal','shapePathData'].forEach(id=>$(id)?.addEventListener('input',()=>{if(id==='shapeMaskSize'&&$('shapeMaskSizeVal'))$('shapeMaskSizeVal').textContent=$('shapeMaskSize').value+'%';renderAt(playhead);scheduleAutosave()}));
 
 function renderAt(t){
  playhead=Math.max(0,Math.min(+$('duration').value,t));
@@ -2042,7 +2051,7 @@ $('exportFrames').onclick=exportCurrentFramePng;
  }
 })();
 function getProject(){
- const ids=['shapeMaskType','shapeMaskMode','shapeMaskSize','shapeMaskRotation','shapeMaskX','shapeMaskY','shapePathColor','shapePathWidth','objectName','duration','fps','resolution','proresMode','animation','speed','intensity','scale','posX','posY','rotation','opacity','bgMode','customBg','effectPreset','effectIntensity','effectColor','particleCount','particleSpeed','format','quality','mp4Crf','renderSpeedMode','textLayerContent','textLayerFont','textLayerWeight','textLayerSize','textLayerColor','textLayerAlign','textLayerTracking','textLayerX','textLayerY','textLayerStart','textLayerDuration','textLayerAnimation'];
+ const ids=['shapeMaskType','shapeMaskMode','shapeMaskSize','shapeMaskRotation','shapeMaskX','shapeMaskY','shapePathColor','shapePathWidth','shapePathData','objectName','duration','fps','resolution','proresMode','animation','speed','intensity','scale','posX','posY','rotation','opacity','bgMode','customBg','effectPreset','effectIntensity','effectColor','particleCount','particleSpeed','format','quality','mp4Crf','renderSpeedMode','textLayerContent','textLayerFont','textLayerWeight','textLayerSize','textLayerColor','textLayerAlign','textLayerTracking','textLayerX','textLayerY','textLayerStart','textLayerDuration','textLayerAnimation'];
  const checks=['shapeMaskEnabled','shapePathReveal','transparentBg','sparkles','shadow','loop','effectOn','textLayerEnabled'];
  const controls={};ids.forEach(k=>{if($(k))controls[k]=$(k).value});
  checks.forEach(k=>{if($(k))controls[k]=$(k).checked});
