@@ -1531,7 +1531,8 @@ function drawTextLayerToCanvas(ctx,w,h,t){
 }
 
 TEXT_LAYER_FIELDS.forEach(id=>{const el=$(id);if(el){el.addEventListener('input',()=>{saveActiveTextLayer();updateTextLayerPreview(playhead);refreshTextLayerManager();scheduleAutosave()});el.addEventListener('change',()=>{saveActiveTextLayer();updateTextLayerPreview(playhead);refreshTextLayerManager();scheduleAutosave()})}});
-$('textLayerSelect')?.addEventListener('change',e=>{selectTextLayer(e.target.value);refreshTextLayerKeyStatus()});\n$('textLayerAddKey')?.addEventListener('click',addTextLayerKeyframe);$('textLayerClearKeys')?.addEventListener('click',clearTextLayerKeyframes);
+$('textLayerSelect')?.addEventListener('change',e=>{selectTextLayer(e.target.value);refreshTextLayerKeyStatus()});
+$('textLayerAddKey')?.addEventListener('click',addTextLayerKeyframe);$('textLayerClearKeys')?.addEventListener('click',clearTextLayerKeyframes);
 $('textLayerPreset')?.addEventListener('change',e=>{if(e.target.value!=='custom')textLayerPresetApply(e.target.value)});
 $('textLayerUpBtn')?.addEventListener('click',()=>moveTextLayer(-1));
 $('textLayerDownBtn')?.addEventListener('click',()=>moveTextLayer(1));
