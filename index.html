@@ -315,6 +315,7 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
 }
 .stageinfo .layout-drag-handle{position:static;margin-left:auto}
 .timeline>.layout-drag-handle{top:8px}
+.shape-mask-tools{margin-top:10px;padding:10px;border:1px solid #315c47;border-radius:9px;background:#0a1c14}.shape-mask-tools h4{margin:0 0 8px;color:#a8edc2;font-size:11px;letter-spacing:.08em}.shape-mask-tools .row>div{min-width:0;flex:1}.shape-mask-tools input[type=range]{width:100%;accent-color:#69d89a}.shape-mask-tools input[type=number],.shape-mask-tools select{width:100%;min-width:0}.shape-mask-tools .inline-check{display:flex;align-items:center;gap:7px;margin:8px 0;color:#d9e9df;font-size:11px}.shape-mask-tools .inline-check input{width:auto}.shape-path-overlay{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:18}.shape-path-overlay path{fill:none;stroke:var(--shape-path-color,#75f0b0);stroke-width:var(--shape-path-width,5);stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 4px #0009}
 .motion-path-overlay{
  position:absolute;inset:0;width:100%;height:100%;z-index:12;overflow:visible;
  pointer-events:none;display:none;
@@ -358,6 +359,28 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
    <div class="row" style="margin-top:8px"><button id="demoBtn">Pakai contoh</button><button id="clearBtn">Hapus objek</button></div>
    <div class="row" style="margin-top:7px"><button id="splitSvgBtn">✂ Pecah SVG</button><button id="assembleSvgBtn">▣ Satukan SVG</button></div>
    <p class="help">Pecah SVG memisahkan elemen grafis tingkat atas menjadi layer terpisah untuk animasi pecah-satukan. Struktur SVG kompleks yang memakai mask/clipPath/filter mungkin perlu dicek ulang.</p>
+   <div class="shape-mask-tools" id="shapeMaskTools">
+    <h4>MASK · SHAPE · PATH</h4>
+    <div class="row">
+     <div><label>BENTUK MASK</label><select id="shapeMaskType"><option value="rect">Rectangle</option><option value="ellipse">Ellipse</option><option value="diamond">Diamond</option><option value="hexagon">Hexagon</option><option value="star">Star</option></select></div>
+     <div><label>MODE MASK</label><select id="shapeMaskMode"><option value="add">Add</option><option value="subtract">Subtract</option><option value="intersect">Intersect</option><option value="difference">Difference</option></select></div>
+    </div>
+    <div class="row">
+     <div><label>UKURAN MASK (%)</label><input id="shapeMaskSize" type="range" min="10" max="150" value="86"><span class="help" id="shapeMaskSizeVal">86%</span></div>
+     <div><label>ROTASI MASK (°)</label><input id="shapeMaskRotation" type="number" min="-180" max="180" value="0"></div>
+    </div>
+    <div class="row">
+     <div><label>POSISI X (%)</label><input id="shapeMaskX" type="number" min="-100" max="100" value="0"></div>
+     <div><label>POSISI Y (%)</label><input id="shapeMaskY" type="number" min="-100" max="100" value="0"></div>
+    </div>
+    <label class="inline-check"><input id="shapeMaskEnabled" type="checkbox"> Aktifkan mask pada objek</label>
+    <div class="row">
+     <div><label>PATH STROKE</label><input id="shapePathColor" type="color" value="#75f0b0"></div>
+     <div><label>TEBAL GARIS</label><input id="shapePathWidth" type="number" min="1" max="40" value="5"></div>
+    </div>
+    <label class="inline-check"><input id="shapePathReveal" type="checkbox"> Aktifkan Trim Path / Stroke Reveal</label>
+    <p class="help">Mask bentuk diterapkan konsisten pada preview dan frame render. Trim Path menggambar garis bentuk secara progresif mengikuti playhead. Add/Intersect dan Subtract/Difference setara untuk satu mask; operasi gabungan multi-mask akan ditambahkan pada iterasi berikutnya.</p>
+   </div>
    <label>Nama objek</label><input type="text" id="objectName" value="Sunrise Emblem">
    <p class="help">Untuk Multi Object, unggah beberapa file sekaligus. Batch Folder membantu memilih banyak aset untuk ekspor satu per satu.</p>
    <input id="multiInput" type="file" accept=".svg,image/png,image/jpeg,image/webp" multiple class="hidden">
@@ -1581,13 +1604,57 @@ $('textLayerReset')?.addEventListener('click',()=>{
 });
 refreshTextLayerManager();
 
+
+const SHAPE_PATHS={
+ rect:'M -500 -500 H 500 V 500 H -500 Z',
+ ellipse:'M 0 -500 A 500 500 0 1 1 0 500 A 500 500 0 1 1 0 -500 Z',
+ diamond:'M 0 -500 L 500 0 L 0 500 L -500 0 Z',
+ hexagon:'M -250 -433 L 250 -433 L 500 0 L 250 433 L -250 433 L -500 0 Z',
+ star:'M 0 -500 L 118 -162 L 476 -155 L 191 66 L 294 405 L 0 205 L -294 405 L -191 66 L -476 -155 L -118 -162 Z'
+};
+function shapeMaskState(){
+ const val=(id,def)=>{const e=$(id);return e?e.value:def};
+ return {enabled:!!$('shapeMaskEnabled')?.checked,type:val('shapeMaskType','rect'),mode:val('shapeMaskMode','add'),size:Math.max(10,Math.min(150,Number(val('shapeMaskSize',86))||86))/100,rotation:Number(val('shapeMaskRotation',0))||0,x:Number(val('shapeMaskX',0))||0,y:Number(val('shapeMaskY',0))||0,reveal:!!$('shapePathReveal')?.checked,color:val('shapePathColor','#75f0b0'),width:Math.max(1,Math.min(40,Number(val('shapePathWidth',5))||5)),progress:Math.max(0,Math.min(1,playhead/Math.max(.001,+$('duration').value)))};
+}
+function shapeTransform(s){return 'translate('+s.x*10+' '+s.y*10+') rotate('+s.rotation+') scale('+s.size+')'}
+function shapeMaskSvg(s){
+ const path=SHAPE_PATHS[s.type]||SHAPE_PATHS.rect,inv=s.mode==='subtract'||s.mode==='difference';
+ return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-500 -500 1000 1000"><defs><mask id="m"><rect x="-500" y="-500" width="1000" height="1000" fill="'+(inv?'white':'black')+'"/><path d="'+path+'" transform="'+shapeTransform(s)+'" fill="'+(inv?'black':'white')+'"/></mask></defs><rect x="-500" y="-500" width="1000" height="1000" fill="white" mask="url(#m)"/></svg>';
+}
+function updateShapePathPreview(t=playhead){
+ const obj=$('object');if(!obj)return;const s=shapeMaskState();
+ if(s.enabled){const uri='url("data:image/svg+xml;charset=utf-8,'+encodeURIComponent(shapeMaskSvg(s))+'")';obj.style.maskImage=uri;obj.style.webkitMaskImage=uri;obj.style.maskSize='100% 100%';obj.style.webkitMaskSize='100% 100%';}
+ else{obj.style.maskImage='none';obj.style.webkitMaskImage='none'}
+ let overlay=obj.querySelector(':scope > .shape-path-overlay');
+ if(!overlay){overlay=document.createElementNS('http://www.w3.org/2000/svg','svg');overlay.setAttribute('class','shape-path-overlay');overlay.setAttribute('viewBox','-500 -500 1000 1000');overlay.setAttribute('preserveAspectRatio','none');obj.appendChild(overlay)}
+ const path=SHAPE_PATHS[s.type]||SHAPE_PATHS.rect;
+ overlay.style.display=s.reveal?'block':'none';overlay.style.setProperty('--shape-path-color',s.color);overlay.style.setProperty('--shape-path-width',String(s.width));
+ overlay.innerHTML='<path d="'+path+'" pathLength="1000" transform="'+shapeTransform(s)+'" stroke-dasharray="1000" stroke-dashoffset="'+(1000*(1-s.progress))+'"/>';
+}
+function drawShapeMaskOnCanvas(ctx,w,h,baseW,baseH,s){
+ if(s.enabled){
+  const p=new Path2D(SHAPE_PATHS[s.type]||SHAPE_PATHS.rect),outer=new Path2D('M -500 -500 H 500 V 500 H -500 Z');
+  ctx.save();ctx.translate(s.x*baseW/100,s.y*baseH/100);ctx.rotate(s.rotation*Math.PI/180);ctx.scale(baseW*s.size/1000,baseH*s.size/1000);
+  if(s.mode==='subtract'||s.mode==='difference'){outer.addPath(p);ctx.clip(outer,'evenodd')}else ctx.clip(p);
+  ctx.restore();
+ }
+ if(s.reveal){
+  ctx.save();ctx.translate(s.x*baseW/100,s.y*baseH/100);ctx.rotate(s.rotation*Math.PI/180);ctx.scale(baseW*s.size/1000,baseH*s.size/1000);
+  ctx.beginPath();ctx.moveTo(-500,-500);ctx.lineTo(500,-500);ctx.lineTo(500,500);ctx.lineTo(-500,500);ctx.closePath();
+  // Use SVG path data through Path2D so the same geometry drives preview and export.
+  const p=new Path2D(SHAPE_PATHS[s.type]||SHAPE_PATHS.rect);
+  ctx.strokeStyle=s.color;ctx.lineWidth=s.width*2;ctx.lineCap='round';ctx.lineJoin='round';ctx.setLineDash([1000,1000]);ctx.lineDashOffset=1000*(1-s.progress);ctx.stroke(p);ctx.restore();
+ }
+}
+['shapeMaskType','shapeMaskMode','shapeMaskSize','shapeMaskRotation','shapeMaskX','shapeMaskY','shapeMaskEnabled','shapePathColor','shapePathWidth','shapePathReveal'].forEach(id=>$(id)?.addEventListener('input',()=>{if(id==='shapeMaskSize'&&$('shapeMaskSizeVal'))$('shapeMaskSizeVal').textContent=$('shapeMaskSize').value+'%';renderAt(playhead);scheduleAutosave()}));
+
 function renderAt(t){
  playhead=Math.max(0,Math.min(+$('duration').value,t));
  updateTextLayerPreview(playhead);
  // Seek imported CSS/Web Animations with the same playhead used by the stage controls.
  if(htmlMotionIframe?.contentDocument){try{const htmlSpeed=Math.max(.05,+$('speed').value||1),ms=playhead*1000*htmlSpeed;if(Math.abs(ms-htmlMotionLastTime)>.01){htmlMotionAnimations.forEach(a=>{try{a.pause();a.currentTime=ms;}catch(_){}});htmlMotionLastTime=ms;}}catch(_){}}
  const dur=Math.max(.001,+$('duration').value),p=playhead/dur,tx=+$('posX').value,ty=+$('posY').value,ang=+$('rotation').value,opacity=+$('opacity').value/100,m=getMotionState(playhead);
- if(svgWasSplit)renderSplitPieces(playhead);drawMotionPathOverlay();
+ if(svgWasSplit)renderSplitPieces(playhead);updateShapePathPreview(playhead);drawMotionPathOverlay();
  $('object').classList.toggle('anim-shine',m.shine>0);$('object').style.setProperty('--shine-x',(-140+m.shine*280)+'%');$('object').classList.toggle('anim-radar',m.radar>0);$('object').style.setProperty('--radar-size',(10+m.radar*85)+'%');$('object').style.setProperty('--radar-alpha',String((1-m.radar)*.55));$('object').style.setProperty('--radar-color',$('effectColor').value);
  if(htmlMotionIframe){
    $('object').style.width='100%';$('object').style.height='100%';$('object').style.transformOrigin='center center';
@@ -1916,6 +1983,7 @@ try{
  if(htmlMotionSource){const htmlCanvas=await captureHtmlMotionAt(elapsed);drawContained(htmlCanvas)}
  else if(svgPieceImgs.length){svgPieceImgs.forEach((pi,i)=>{const visible=document.getElementById('autoLayerVisible'+i)?.checked!==false,solo=soloLayerIndex<0||soloLayerIndex===i;if(!visible||!solo)return;const lm=getLayerMotion(i,elapsed);ctx.save();ctx.globalAlpha=lm.alpha;drawContained(pi,lm.x*w/100,lm.y*h/100,lm.rot,lm.scale);ctx.restore()})}
  else if(svgImg)drawContained(svgImg);else if(img)drawContained(img);else{ctx.fillStyle=currentColor;ctx.beginPath();ctx.arc(0,0,Math.min(ow,oh)/3,0,Math.PI*2);ctx.fill()}
+ drawShapeMaskOnCanvas(ctx,w,h,baseW,baseH,shapeMaskState());
 }catch(e){ctx.restore();throw new Error('Gagal menggambar aset pada frame '+frame+' ('+elapsed.toFixed(3)+'s): '+(e?.message||e))}ctx.restore();drawTextLayerToCanvas(ctx,w,h,elapsed);drawExportVisualEffects(ctx,w,h,elapsed,motion,baseW,baseH,cx,cy,turboMode);const renderPercent=Math.max(1,Math.min(100,Math.round(((frame+1)/totalFrames)*100)));setExportStatus('Rendering… '+renderPercent+'%');setRenderProgress(renderPercent,'Merender frame '+(frame+1)+'/'+totalFrames,'running');if(frameSequenceMode){let png;try{png=await new Promise((resolve,reject)=>{try{canvas.toBlob(resolve,'image/png')}catch(e){reject(e)}})}catch(blobError){throw new Error('Canvas tidak dapat diekspor pada frame '+frame+' ('+elapsed.toFixed(3)+'s). Penyebab belum dapat dipastikan (misalnya SVG/foreignObject atau aset eksternal yang tidak mengizinkan CORS): '+(blobError?.message||blobError))}if(!png)throw new Error('Browser mengembalikan PNG kosong pada frame '+frame+' ('+elapsed.toFixed(3)+'s).');pngZip.file('frame_'+String(frame).padStart(6,'0')+'.png',png,{compression:'STORE'});frame++;setTimeout(draw,0)}else{frame++;setTimeout(draw,step)}}
 
 async function draw(){
@@ -1975,8 +2043,8 @@ $('exportFrames').onclick=exportCurrentFramePng;
  }
 })();
 function getProject(){
- const ids=['objectName','duration','fps','resolution','proresMode','animation','speed','intensity','scale','posX','posY','rotation','opacity','bgMode','customBg','effectPreset','effectIntensity','effectColor','particleCount','particleSpeed','format','quality','mp4Crf','renderSpeedMode','textLayerContent','textLayerFont','textLayerWeight','textLayerSize','textLayerColor','textLayerAlign','textLayerTracking','textLayerX','textLayerY','textLayerStart','textLayerDuration','textLayerAnimation'];
- const checks=['transparentBg','sparkles','shadow','loop','effectOn','textLayerEnabled'];
+ const ids=['shapeMaskType','shapeMaskMode','shapeMaskSize','shapeMaskRotation','shapeMaskX','shapeMaskY','shapePathColor','shapePathWidth','objectName','duration','fps','resolution','proresMode','animation','speed','intensity','scale','posX','posY','rotation','opacity','bgMode','customBg','effectPreset','effectIntensity','effectColor','particleCount','particleSpeed','format','quality','mp4Crf','renderSpeedMode','textLayerContent','textLayerFont','textLayerWeight','textLayerSize','textLayerColor','textLayerAlign','textLayerTracking','textLayerX','textLayerY','textLayerStart','textLayerDuration','textLayerAnimation'];
+ const checks=['shapeMaskEnabled','shapePathReveal','transparentBg','sparkles','shadow','loop','effectOn','textLayerEnabled'];
  const controls={};ids.forEach(k=>{if($(k))controls[k]=$(k).value});
  checks.forEach(k=>{if($(k))controls[k]=$(k).checked});
  const layers=svgPieces.map((piece,i)=>{const l={svg:piece,name:svgLayerNames[i]||('Layer '+(i+1))};['Visible','On','In','Out','Loop','Delay','Start','End','Duration','Speed','Intensity','Scale','Rotation','Direction'].forEach(k=>{const el=$('autoLayer'+k+i);if(el)l[k.toLowerCase()]=el.type==='checkbox'?el.checked:el.value});l.autoKey=!!$('kfAuto'+i)?.checked;return l});
@@ -1989,7 +2057,7 @@ function applyProject(p){
  selectedTextLayerId=nativeTextLayers.some(x=>x.id===p.selectedTextLayerId)?p.selectedTextLayerId:nativeTextLayers[0].id;
  textLayerIdCounter=Math.max(nativeTextLayers.length,...nativeTextLayers.map(x=>Number(String(x.id).replace(/\\D/g,''))||0));
 
- Object.entries(c).forEach(([k,v])=>{if($(k)){if(['transparentBg','sparkles','shadow','loop','effectOn'].includes(k))$(k).checked=!!v;else $(k).value=v}});
+ Object.entries(c).forEach(([k,v])=>{if($(k)){if(['shapeMaskEnabled','shapePathReveal','transparentBg','sparkles','shadow','loop','effectOn'].includes(k))$(k).checked=!!v;else $(k).value=v}});
  if(p.currentColor)currentColor=p.currentColor;
  sourceSvg=p.sourceSvg||'';sourceType=p.sourceType||'image/svg+xml';
  svgPieces=Array.isArray(p.svgPieces)?p.svgPieces.slice():[];
