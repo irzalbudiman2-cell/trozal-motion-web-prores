@@ -764,10 +764,10 @@ function splitSvgIntoPieces(silent=false){
    const r=doc.createElementNS(ns,'svg');r.setAttribute('xmlns',ns);r.setAttribute('viewBox',vb);r.setAttribute('width','100%');r.setAttribute('height','100%');
    ['preserveAspectRatio','width','height'].forEach(a=>{if(root.hasAttribute(a)&&a==='preserveAspectRatio')r.setAttribute(a,root.getAttribute(a))});
    defs.forEach(d=>r.appendChild(d.cloneNode(true)));
-   let parent=r;item.ancestors.forEach(a=>{const g=doc.createElementNS(ns,'g');[...a.attributes].forEach(at=>g.setAttribute(at.name,at.value));parent.appendChild(g);parent=g});parent.appendChild(item.node.cloneNode(true));
+   let parent=r;item.ancestors.forEach(a=>{const g=doc.createElementNS(ns,'g');[...a.attributes].forEach(at=>g.setAttribute(at.name,at.value));parent.appendChild(g);parent=g});if(item.base)[...root.children].forEach(child=>parent.appendChild(child.cloneNode(true)));else parent.appendChild(item.node.cloneNode(true));
    return new XMLSerializer().serializeToString(r);
   });
-  svgLayerNames=leaves.slice(0,60).map((it,i)=>it.base?'Base · diam':it.node.getAttribute('id')||it.node.getAttribute('aria-label')||it.node.getAttribute('data-part')?'Region '+(it.node.getAttribute('data-part')||i):it.node.tagName+' '+(i+1));
+  svgLayerNames=leaves.slice(0,60).map((it,i)=>it.base?'Base · diam':(it.node.getAttribute('id')||it.node.getAttribute('aria-label')||('Region '+(it.node.getAttribute('data-part')||i))));
   svgLayerHints=leaves.slice(0,60).map((it,i)=>it.base?{kind:'background',entrance:0,loop:0,intensity:0,reason:'Layer dasar utuh menjaga gambar tetap tersambung saat region bergerak.'}:analyzeSvgLayer(it,i,Math.min(60,leaves.length)));
   svgWasSplit=true;buildAutoLayerControls();renderSplitPieces(playhead);applyColor();
   if(!silent)setStatus('Analisis AI lokal selesai: '+svgPieces.length+' layer diklasifikasikan. Latar/dekorasi dijaga statis; objek dan teks diberi gerakan selektif.');scheduleAutosave?.();return true;
