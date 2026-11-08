@@ -394,16 +394,16 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
 
   <section class="panel ai-tools" id="imageToHtmlPanel">
    <h3>🟥 GENERATE IMAGE TO HTML CODE</h3>
-   <p class="help">Unggah gambar JPEG/PNG. Trozal membuat dokumen HTML mandiri dengan gambar tertanam (Base64), sehingga tampilannya tetap sama tanpa file gambar eksternal.</p>
+   <p class="help">Unggah JPEG/PNG lalu ubah menjadi komposisi SVG vektor berbasis sel warna dengan animasi CSS. Output HTML berisi bentuk vektor bergerak, bukan file gambar JPEG/PNG tertanam. Detail tinggi mempertahankan lebih banyak warna dan bentuk.</p>
    <label>Pilih gambar JPEG / PNG</label>
    <div class="drop" id="imageToHtmlDrop">🖼️ Klik atau tarik gambar ke sini<br><small>JPG / JPEG / PNG · diproses lokal di browser</small></div>
    <input id="imageToHtmlFile" type="file" accept="image/png,image/jpeg,.jpg,.jpeg,.png" class="hidden">
    <div id="imageToHtmlInfo" class="notice">Belum ada gambar dipilih.</div>
    <div class="image-to-html-preview" id="imageToHtmlPreview"><span>Preview gambar akan tampil di sini</span></div>
-   <div class="btnrow"><button type="button" class="primary" id="generateImageToHtmlBtn">⚡ Generate HTML Code</button><button type="button" id="clearImageToHtmlBtn">Hapus</button></div>
-   <label>Hasil kode HTML</label>
+   <div class="btnrow"><button type="button" class="primary" id="generateImageToHtmlBtn">⚡ Generate Vector Motion HTML</button><button type="button" id="clearImageToHtmlBtn">Hapus</button></div>
+   <label>Detail konversi vektor</label><select id="imageToHtmlDetail"><option value="64">Ringan · 64 sel</option><option value="96" selected>Seimbang · 96 sel</option><option value="128">Tinggi · 128 sel</option><option value="144">Maksimum · 144 sel</option></select><p class="notice">Catatan: foto diubah menjadi mozaik vektor SVG. Ini bukan salinan foto piksel demi piksel; semakin tinggi detail, semakin mirip gambar asal dan semakin besar kode HTML.</p>\n   <label>Hasil kode HTML</label>
    <textarea id="imageToHtmlOutput" spellcheck="false" placeholder="Kode HTML hasil generate akan tampil di sini..." style="min-height:180px"></textarea>
-   <div class="btnrow"><button type="button" id="copyImageToHtmlBtn">Salin Kode</button><button type="button" class="green" id="useImageToHtmlBtn">Kirim ke Terminal HTML</button></div>
+   <div class="btnrow"><button type="button" id="copyImageToHtmlBtn">Salin Kode</button><button type="button" class="green" id="useImageToHtmlBtn">▶ Kirim & Putar Motion</button></div>
    <div class="status" id="imageToHtmlStatus">Siap menerima gambar.</div>
   </section>
 
@@ -2086,20 +2086,20 @@ document.addEventListener('input',e=>{if(e.target&&e.target.matches('input[type=
 setTimeout(restoreAutosave,0);
 function setAiStatus(t){$('aiModeStatus').textContent=t}
 
-/* Generate a self-contained HTML document from a local JPEG/PNG image. */
-let imageToHtmlDataUrl='',imageToHtmlName='';
+/* IMAGE TO MOTION: convert local pixels into animated vector SVG cells (no embedded JPEG/PNG). */
+let imageToHtmlDataUrl='',imageToHtmlName='',imageToHtmlFileSize=0;
 function loadImageToHtmlFile(file){
  if(!file)return;
  if(file.type!=='image/png'&&file.type!=='image/jpeg'){$('imageToHtmlStatus').textContent='Format tidak didukung. Pilih gambar JPG/JPEG atau PNG.';return;}
  if(file.size>25*1024*1024){$('imageToHtmlStatus').textContent='Ukuran gambar melebihi 25 MB. Pilih file yang lebih kecil.';return;}
  const reader=new FileReader();
  reader.onload=()=>{
-  imageToHtmlDataUrl=String(reader.result||'');imageToHtmlName=file.name||'image';
+  imageToHtmlDataUrl=String(reader.result||'');imageToHtmlName=file.name||'image';imageToHtmlFileSize=file.size;
   const preview=$('imageToHtmlPreview');preview.replaceChildren();
   const img=document.createElement('img');img.src=imageToHtmlDataUrl;img.alt=imageToHtmlName;preview.appendChild(img);
   img.onload=()=>{$('imageToHtmlInfo').textContent=imageToHtmlName+' · '+(file.size/1024/1024).toFixed(2)+' MB · '+img.naturalWidth+' × '+img.naturalHeight+' px';};
   $('imageToHtmlInfo').textContent=imageToHtmlName+' · '+(file.size/1024/1024).toFixed(2)+' MB';
-  $('imageToHtmlStatus').textContent='Gambar siap. Tekan Generate HTML Code.';
+  $('imageToHtmlStatus').textContent='Gambar siap dikonversi menjadi objek vektor SVG bergerak.';
  };
  reader.onerror=()=>{$('imageToHtmlStatus').textContent='Gagal membaca gambar dari perangkat.';};
  reader.readAsDataURL(file);
@@ -2109,25 +2109,58 @@ $('imageToHtmlFile').addEventListener('change',e=>loadImageToHtmlFile(e.target.f
 ['dragover','dragenter'].forEach(type=>$('imageToHtmlDrop').addEventListener(type,e=>{e.preventDefault();$('imageToHtmlDrop').classList.add('drag')}));
 ['dragleave','drop'].forEach(type=>$('imageToHtmlDrop').addEventListener(type,e=>{e.preventDefault();$('imageToHtmlDrop').classList.remove('drag')}));
 $('imageToHtmlDrop').addEventListener('drop',e=>loadImageToHtmlFile(e.dataTransfer?.files?.[0]));
-$('generateImageToHtmlBtn').addEventListener('click',()=>{
- if(!imageToHtmlDataUrl){$('imageToHtmlStatus').textContent='Pilih gambar JPEG atau PNG terlebih dahulu.';return;}
- const safeName=imageToHtmlName.replace(/[&<>"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
- const code='<!DOCTYPE html>\n<html lang="id">\n<head>\n  <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <title>'+safeName+'</title>\n  <style>\n    *{box-sizing:border-box}\n    html,body{width:100%;height:100%;margin:0}\n    body{display:flex;align-items:center;justify-content:center;min-height:100vh;background:#08090d;overflow:hidden}\n    .image-stage{width:100vw;height:100vh;display:flex;align-items:center;justify-content:center;padding:2vw}\n    .image-stage img{display:block;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain}\n  </style>\n</head>\n<body>\n  <main class="image-stage"><img src="'+imageToHtmlDataUrl+'" alt="'+safeName+'"></main>\n</body>\n</html>';
- $('imageToHtmlOutput').value=code;
- $('imageToHtmlStatus').textContent='HTML berhasil dibuat · '+code.length.toLocaleString()+' karakter · gambar tertanam di dalam kode.';
+function escapeImageHtmlText(value){return String(value||'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
+async function createAnimatedVectorHtml(){
+ if(!imageToHtmlDataUrl)throw new Error('Pilih gambar JPEG atau PNG terlebih dahulu.');
+ const image=new Image();
+ await new Promise((resolve,reject)=>{image.onload=resolve;image.onerror=()=>reject(new Error('Gambar tidak dapat dibaca untuk konversi vektor.'));image.src=imageToHtmlDataUrl;});
+ const maxSide=Math.max(32,Math.min(144,parseInt($('imageToHtmlDetail')?.value||'96',10)||96));
+ const aspect=image.naturalWidth/image.naturalHeight;
+ const cols=aspect>=1?maxSide:Math.max(16,Math.round(maxSide*aspect));
+ const rows=aspect>=1?Math.max(16,Math.round(maxSide/aspect)):maxSide;
+ const canvas=document.createElement('canvas');canvas.width=cols;canvas.height=rows;
+ const ctx=canvas.getContext('2d',{willReadFrequently:true});
+ if(!ctx)throw new Error('Canvas browser tidak tersedia.');
+ ctx.clearRect(0,0,cols,rows);ctx.drawImage(image,0,0,cols,rows);
+ const pixels=ctx.getImageData(0,0,cols,rows).data;
+ const rects=[];
+ for(let y=0;y<rows;y++){
+  let row='';
+  for(let x=0;x<cols;x++){
+   const p=(y*cols+x)*4,a=pixels[p+3];if(a<12)continue;
+   const hex='#'+[pixels[p],pixels[p+1],pixels[p+2]].map(v=>v.toString(16).padStart(2,'0')).join('');
+   row+='<rect x="'+x+'" y="'+y+'" width="1.015" height="1.015" fill="'+hex+'"'+(a<250?' opacity="'+(a/255).toFixed(3)+'"':'')+'/>';
+  }
+  if(row)rects.push('<g class="pixel-row" style="--row:'+y+'">'+row+'</g>');
+ }
+ if(!rects.length)throw new Error('Gambar tampak transparan atau kosong.');
+ const title=escapeImageHtmlText(imageToHtmlName.replace(/\.[^.]+$/,'')||'Image Motion');
+ const svg='<svg class="art-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+cols+' '+rows+'" role="img" aria-label="'+title+'">'+rects.join('')+'</svg>';
+ const code='<!DOCTYPE html>\n<html lang="id">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<title>'+title+' — Trozal Vector Motion</title>\n<style>\n*{box-sizing:border-box}html,body{width:100%;height:100%;margin:0}body{display:grid;place-items:center;overflow:hidden;background:radial-gradient(ellipse at 50% 45%,#263044 0%,#101522 55%,#070a10 100%)}.motion-stage{width:100vw;height:100vh;display:grid;place-items:center;overflow:hidden;padding:5vw}.art-svg{display:block;width:min(90vw,90vh * '+(cols/rows).toFixed(5)+');height:auto;max-width:100%;max-height:90vh;overflow:visible;filter:drop-shadow(0 24px 32px #0008);animation:artFloat 6s ease-in-out 1.2s infinite alternate;transform-origin:50% 50%}.pixel-row{opacity:0;transform-box:fill-box;transform-origin:center;animation:pixelReveal 1.15s cubic-bezier(.2,.75,.2,1) both;animation-delay:calc(var(--row)*8ms)}@keyframes pixelReveal{0%{opacity:0;transform:translateY(12px) scale(.82)}65%{opacity:1}100%{opacity:1;transform:translateY(0) scale(1)}}@keyframes artFloat{0%{transform:translateY(0) rotate(-1deg) scale(1)}100%{transform:translateY(-1.6vh) rotate(1deg) scale(1.025)}}@media(prefers-reduced-motion:reduce){.pixel-row,.art-svg{animation:none;opacity:1;transform:none}}</style>\n</head>\n<body><main class="motion-stage">'+svg+'</main></body>\n</html>';
+ return {code,cols,rows,cells:rects.length,title};
+}
+$('generateImageToHtmlBtn').addEventListener('click',async()=>{
+ const btn=$('generateImageToHtmlBtn');btn.disabled=true;$('imageToHtmlStatus').textContent='Konversi gambar menjadi SVG vektor dan animasi CSS…';
+ try{
+  const result=await createAnimatedVectorHtml();$('imageToHtmlOutput').value=result.code;
+  $('imageToHtmlStatus').textContent='Motion HTML siap · '+result.cells.toLocaleString()+' grup vektor · grid '+result.cols+' × '+result.rows+' · tanpa JPEG/PNG tertanam. Klik “Kirim & Putar Motion”.';
+ }catch(e){$('imageToHtmlStatus').textContent='Generate gagal: '+(e?.message||String(e));}
+ finally{btn.disabled=false;}
 });
 $('copyImageToHtmlBtn').addEventListener('click',async()=>{
- const code=$('imageToHtmlOutput').value;if(!code){$('imageToHtmlStatus').textContent='Generate kode HTML terlebih dahulu.';return;}
- try{await navigator.clipboard.writeText(code);$('imageToHtmlStatus').textContent='Kode HTML berhasil disalin.';}
+ const code=$('imageToHtmlOutput').value;if(!code){$('imageToHtmlStatus').textContent='Generate motion HTML terlebih dahulu.';return;}
+ try{await navigator.clipboard.writeText(code);$('imageToHtmlStatus').textContent='Kode motion HTML berhasil disalin.';}
  catch(e){$('imageToHtmlOutput').focus();$('imageToHtmlOutput').select();$('imageToHtmlStatus').textContent='Clipboard dibatasi browser. Kode sudah dipilih; tekan Ctrl+C.';}
 });
-$('useImageToHtmlBtn').addEventListener('click',()=>{
- const code=$('imageToHtmlOutput').value;if(!code){$('imageToHtmlStatus').textContent='Generate kode HTML terlebih dahulu.';return;}
+$('useImageToHtmlBtn').addEventListener('click',async()=>{
+ const code=$('imageToHtmlOutput').value;if(!code){$('imageToHtmlStatus').textContent='Generate motion HTML terlebih dahulu.';return;}
  $('aiCodeTerminal').value=code;validateHtmlTerminal();$('aiCodeTerminal').focus();
- $('imageToHtmlStatus').textContent='Kode dipindahkan ke Terminal Kode HTML. Tekan Terapkan HTML ke Preview.';
+ $('imageToHtmlStatus').textContent='Memuat SVG motion ke engine preview…';
+ await generateMotionSvgLocally();
+ $('imageToHtmlStatus').textContent='Motion HTML dikirim ke engine. Preview sudah dimuat; tekan Play untuk melihat gerakan dan Render untuk membuat video.';
 });
 $('clearImageToHtmlBtn').addEventListener('click',()=>{
- imageToHtmlDataUrl='';imageToHtmlName='';$('imageToHtmlFile').value='';$('imageToHtmlInfo').textContent='Belum ada gambar dipilih.';
+ imageToHtmlDataUrl='';imageToHtmlName='';imageToHtmlFileSize=0;$('imageToHtmlFile').value='';$('imageToHtmlInfo').textContent='Belum ada gambar dipilih.';
  $('imageToHtmlPreview').replaceChildren(document.createTextNode('Preview gambar akan tampil di sini'));$('imageToHtmlOutput').value='';$('imageToHtmlStatus').textContent='Panel dibersihkan.';
 });
 
