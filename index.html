@@ -401,7 +401,7 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
    <div id="imageToHtmlInfo" class="notice">Belum ada gambar dipilih.</div>
    <div class="image-to-html-preview" id="imageToHtmlPreview"><span>Preview gambar akan tampil di sini</span></div>
    <div class="btnrow"><button type="button" class="primary" id="generateImageToHtmlBtn">⚡ Generate Vector Motion HTML</button><button type="button" id="clearImageToHtmlBtn">Hapus</button></div>
-   <label>Detail konversi vektor</label><select id="imageToHtmlDetail"><option value="128">Standar · 128 sel</option><option value="192" selected>Detail tinggi · 192 sel</option><option value="224">Sangat tinggi · 224 sel</option><option value="256">Maksimum · 256 sel</option></select><p class="notice">Catatan: foto diubah menjadi mozaik vektor SVG. Ini bukan salinan foto piksel demi piksel; semakin tinggi detail, semakin mirip gambar asal dan semakin besar kode HTML.</p>\n   <label>Hasil kode HTML</label>
+   <label>Detail konversi vektor</label><select id="imageToHtmlDetail"><option value="128">Standar · grid 128</option><option value="192" selected>Detail tinggi · grid 192</option><option value="224">Sangat tinggi · grid 224</option><option value="256">Detail maksimum · grid 256</option><option value="320">Ultra detail · grid 320</option><option value="384">Ultra detail+ · grid 384</option><option value="512">Ekstrem · grid 512 (berat)</option></select><p class="notice">Foto diubah menjadi mozaik vektor SVG. Grid 320–512 menghasilkan detail lebih rapat, tetapi kode HTML dan proses render jauh lebih berat. Uji 320 terlebih dahulu; gunakan 512 hanya untuk gambar sederhana dan perangkat yang kuat.</p>\n   <label>Hasil kode HTML</label>
    <textarea id="imageToHtmlOutput" spellcheck="false" placeholder="Kode HTML hasil generate akan tampil di sini..." style="min-height:180px"></textarea>
    <div class="btnrow"><button type="button" id="copyImageToHtmlBtn">Salin Kode</button><button type="button" class="green" id="useImageToHtmlBtn">▶ Kirim & Putar Motion</button></div>
    <div class="status" id="imageToHtmlStatus">Siap menerima gambar.</div>
@@ -2115,7 +2115,7 @@ async function createAnimatedVectorHtml(){
  if(!imageToHtmlDataUrl)throw new Error('Pilih gambar JPEG atau PNG terlebih dahulu.');
  const image=new Image();
  await new Promise((resolve,reject)=>{image.onload=resolve;image.onerror=()=>reject(new Error('Gambar tidak dapat dibaca untuk konversi vektor.'));image.src=imageToHtmlDataUrl;});
- const maxSide=Math.max(64,Math.min(256,parseInt($('imageToHtmlDetail')?.value||'192',10)||192));
+ const maxSide=Math.max(64,Math.min(512,parseInt($('imageToHtmlDetail')?.value||'192',10)||192));
  const aspect=image.naturalWidth/image.naturalHeight;
  const cols=aspect>=1?maxSide:Math.max(24,Math.round(maxSide*aspect));
  const rows=aspect>=1?Math.max(24,Math.round(maxSide/aspect)):maxSide;
