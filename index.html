@@ -1633,10 +1633,10 @@ function updateShapePathPreview(t=playhead){
 }
 function applyShapeMaskToCanvas(ctx,baseW,baseH,s){
  if(!s.enabled)return;
- const p=new Path2D(SHAPE_PATHS[s.type]||SHAPE_PATHS.rect),outer=new Path2D('M -500 -500 H 500 V 500 H -500 Z');
+ const p=new Path2D(SHAPE_PATHS[s.type]||SHAPE_PATHS.rect);
  const matrix=new DOMMatrix().translate(s.x*baseW/100,s.y*baseH/100).rotate(s.rotation).scale(baseW*s.size/1000,baseH*s.size/1000);
  const inner=new Path2D();inner.addPath(p,matrix);
- if(s.mode==='subtract'||s.mode==='difference'){const full=new Path2D();full.addPath(outer,matrix);full.addPath(p,matrix);ctx.clip(full,'evenodd')}
+ if(s.mode==='subtract'||s.mode==='difference'){const full=new Path2D('M '+(-baseW/2)+' '+(-baseH/2)+' H '+(baseW/2)+' V '+(baseH/2)+' H '+(-baseW/2)+' Z');full.addPath(p,matrix);ctx.clip(full,'evenodd')}
  else ctx.clip(inner);
 }
 function drawShapePathOnCanvas(ctx,baseW,baseH,s){
