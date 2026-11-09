@@ -3365,7 +3365,8 @@ function generateStockMetadata(){
  const raw=evidence.text;
  const sceneTexts=Array.isArray(visualSceneSequence)?visualSceneSequence.map(x=>String(x.text||'').trim()).filter(Boolean):[];
  const subject=String($('metadataSubject')?.value||'').trim();
- const sourceParts=[subject,...sceneTexts].map(x=>String(x||'').replace(/\s+/g,' ').trim()).filter(Boolean);const sourceSeen=new Set();const sourceText=sourceParts.filter(x=>{const k=x.toLowerCase();if(sourceSeen.has(k))return false;sourceSeen.add(k);return true;}).join('. ')||raw;
+ const promptText=String($('visualMotionPrompt')?.value||'').trim();
+ const sourceParts=[subject,promptText,...sceneTexts].map(x=>String(x||'').replace(/\s+/g,' ').trim()).filter(Boolean);const sourceSeen=new Set();const sourceText=sourceParts.filter(x=>{const k=x.toLowerCase();if(sourceSeen.has(k))return false;sourceSeen.add(k);return true;}).join('. ')||raw;
  const translated=trozalTranslateMetadataText(sourceText);
  const firstSentence=(translated.split(/(?<=[.!?])\s+/)[0]||translated).replace(/[|]+/g,' ').replace(/\s+/g,' ').replace(/\s+([,.;:!?])/g,'$1').replace(/^[,.;:]+|[,.;:]+$/g,'').trim();
  const title=trozalMetadataTitleFromEvidence(sourceText,translated,firstSentence);
@@ -3397,19 +3398,20 @@ function generateStockMetadata(){
  const ranked=Object.entries(categoryScores).sort((a,b)=>b[1]-a[1]);
  const category=ranked.length&&ranked[0][1]>ranked[1]?.[1]?ranked[0][0]:(ranked.length===1?ranked[0][0]:'Graphic Resources');
  const hasVisualEvidence=!!(subject||sceneTexts.length||htmlMotionSource||sourceSvg||svgPieces.length);
- const hasDescriptiveEvidence=!!(subject||sceneTexts.length||evidence.entries.some(x=>x.kind==='visible-text'||x.kind==='label'));
+ const hasDescriptiveEvidence=!!(subject||promptText||sceneTexts.length||evidence.entries.some(x=>x.kind==='visible-text'||x.kind==='label'));
  const safeTitle=hasDescriptiveEvidence?title:'';
  const description=hasDescriptiveEvidence&&translated
   ? 'Animated video showing '+safeTitle+'.'
   :'';
+ if(!hasDescriptiveEvidence)keywords.length=0;
  $('metadataTitle').value=safeTitle;
  $('metadataDescription').value=description;
- $('metadataCategory').value=category;
+ $('metadataCategory').value=hasDescriptiveEvidence?category:'Graphic Resources';
  $('metadataKeywords').value=keywords.slice(0,47).join(', ');
  updateMetadataCount();
  const sourceLabels=[...new Set(evidence.entries.map(x=>x.label.split(' · ')[0]))];
  let evidenceLevel='INSUFFICIENT';
- if(sceneTexts.length||subject.length>=30)evidenceLevel='STRONG TEXT EVIDENCE';
+ if(sceneTexts.length||subject.length>=30||promptText.length>=30)evidenceLevel='STRONG TEXT EVIDENCE';
  else if(hasDescriptiveEvidence)evidenceLevel='LIMITED TEXT EVIDENCE';
  else if(hasVisualEvidence)evidenceLevel='FILENAME / STRUCTURE ONLY';
  const evidenceEl=$('metadataEvidence');
