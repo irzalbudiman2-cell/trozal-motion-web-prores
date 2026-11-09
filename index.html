@@ -3351,6 +3351,7 @@ function trozalMetadataEvidence(){
   if(text)entries.push({label,text,kind});
  };
  add('Deskripsi visual yang diperiksa pengguna',$('metadataSubject')?.value||'','verified-description');
+ if(trozalLocalVisionLastAnalysis){const a=trozalLocalVisionLastAnalysis;add('Analisis piksel AI lokal · '+(a.model||'model lokal'),[a.title,a.description,a.visualSummary,(a.visibleObjects||[]).join(', ')].filter(Boolean).join('. '),'ai-visual-analysis');}
  add('Prompt-to-Visual (niat pembuatan, belum diverifikasi)',$('visualMotionPrompt')?.value||'','prompt-intent');
  add('Nama aset/proyek (bukan bukti visual)',$('objectName')?.value||'','filename');
  if(Array.isArray(visualSceneSequence)&&visualSceneSequence.length){
@@ -3530,8 +3531,10 @@ function generateStockMetadata(){
  const sceneTexts=Array.isArray(visualSceneSequence)?visualSceneSequence.map(x=>String(x.text||'').replace(/\s+/g,' ').trim()).filter(Boolean):[];
  const readable=evidence.entries.filter(x=>x.kind==='visible-text'||x.kind==='label').map(x=>x.text).filter(Boolean);
  // Strict source priority: reviewed visual description > scene plan > generation prompt > readable labels.
- const sourceKind=subject?'verified-description':sceneTexts.length?'scene-plan':promptText?'prompt-intent':readable.length?'readable-labels':'none';
- const sourceText=subject||sceneTexts.join('. ')||promptText||readable.join('. ');
+ const aiAnalysis=trozalLocalVisionLastAnalysis;
+ const aiText=aiAnalysis?[aiAnalysis.title,aiAnalysis.description,aiAnalysis.visualSummary,(aiAnalysis.visibleObjects||[]).join(', ')].filter(Boolean).join('. '):'';
+ const sourceKind=subject?'verified-description':aiText?'ai-visual-analysis':sceneTexts.length?'scene-plan':promptText?'prompt-intent':readable.length?'readable-labels':'none';
+ const sourceText=subject||aiText||sceneTexts.join('. ')||promptText||readable.join('. ');
  const translated=trozalTranslateMetadataText(sourceText);
  const cleanTranslated=translated.replace(/[|]+/g,' ').replace(/\s+/g,' ').replace(/\s+([,.;:!?])/g,'$1').replace(/^[,.;:]+|[,.;:]+$/g,'').trim();
  const firstSentence=(cleanTranslated.split(/(?<=[.!?])\s+/)[0]||cleanTranslated).trim();
@@ -3576,11 +3579,11 @@ function generateStockMetadata(){
  const counts={verified:subject?1:0,planned:sceneTexts.length+(promptText?1:0),readable:readable.length};
  const evidenceEl=$('metadataEvidence');
  if(evidenceEl){
-  const level=sourceKind==='verified-description'?'DESKRIPSI DIPERIKSA PENGGUNA':sourceKind==='scene-plan'?'RENCANA SCENE — BELUM TERVERIFIKASI':sourceKind==='prompt-intent'?'PROMPT — NIAT PEMBUATAN SAJA':sourceKind==='readable-labels'?'LABEL/Teks SVG — BUKAN PEMERIKSAAN PIXEL':'TIDAK ADA BUKTI';
+  const level=sourceKind==='verified-description'?'DESKRIPSI DIPERIKSA PENGGUNA':sourceKind==='ai-visual-analysis'?'ANALISIS FRAME OLEH AI LOKAL — WAJIB DITINJAU':sourceKind==='scene-plan'?'RENCANA SCENE — BELUM TERVERIFIKASI':sourceKind==='prompt-intent'?'PROMPT — NIAT PEMBUATAN SAJA':sourceKind==='readable-labels'?'LABEL/Teks SVG — BUKAN PEMERIKSAAN PIXEL':'TIDAK ADA BUKTI';
   evidenceEl.textContent='SUMBER UTAMA: '+level+'. Deskripsi diperiksa: '+counts.verified+' · Prompt/rencana: '+counts.planned+' · Label terbaca: '+counts.readable+'. Keyword yang lolos bukti teks: '+keywords.length+'. '+(sourceKind==='verified-description'?'Tetap cocokkan setiap kata dengan gambar aktual.':'Untuk metadata yang lebih akurat, periksa preview lalu tulis deskripsi visual pada kolom di atas dan generate ulang.');
  }
  $('metadataStatus').textContent=hasEvidence
-  ?(sourceKind==='verified-description'?'Metadata dibuat dari deskripsi visual yang Anda nyatakan sudah diperiksa.':'Metadata ini masih DRAF dari '+(sourceKind==='scene-plan'?'rencana scene':sourceKind==='prompt-intent'?'prompt':'label SVG/HTML')+'; belum membuktikan isi frame. Periksa hasil visual, isi deskripsi terverifikasi, lalu generate ulang.')+' '+keywords.length+' keyword didukung teks; tidak ditambah sinonim yang tidak ada pada sumber.'
+  ?(sourceKind==='verified-description'?'Metadata dibuat dari deskripsi visual yang Anda nyatakan sudah diperiksa.':'Metadata ini masih DRAF dari '+(sourceKind==='scene-plan'?'rencana scene':sourceKind==='ai-visual-analysis'?'analisis frame AI lokal':sourceKind==='prompt-intent'?'prompt':'label SVG/HTML')+'; tetap tinjau kecocokannya dengan frame aktual. Periksa hasil visual, isi deskripsi terverifikasi bila perlu, lalu generate ulang.')+' '+keywords.length+' keyword didukung teks; tidak ditambah sinonim yang tidak ada pada sumber.'
   :'Belum ada deskripsi atau teks yang cukup. Isi deskripsi visual setelah memeriksa hasil render. Sistem tidak membuat metadata dari nama file saja.';
  trozalUpdateMetadataPlatformValidation();
 }
@@ -3955,7 +3958,9 @@ async function trozalVisionAnalyze(){
   if(!title||!description)throw new Error('AI tidak mengembalikan judul dan deskripsi yang valid. Coba lagi dengan gambar yang lebih jelas.');
   const categoryOptions=[...$('metadataCategory').options].map(o=>o.text);
   const category=categoryOptions.find(x=>x.toLowerCase()===String(parsed.category||'').trim().toLowerCase())||'Graphic Resources';
-  const keywords=[...new Set((Array.isArray(parsed.keywords)?parsed.keywords:[]).map(x=>String(x).trim().toLowerCase()).filter(x=>x&&x.length<60))].slice(0,47);
+  const groundedText=[title,description,String(parsed.visual_summary||''),...(Array.isArray(parsed.visible_objects)?parsed.visible_objects:[])].join(' ').toLowerCase();
+  const groundedTokens=new Set((groundedText.match(/[a-z0-9]+/g)||[]));
+  const keywords=[...new Set((Array.isArray(parsed.keywords)?parsed.keywords:[]).map(x=>String(x).trim().toLowerCase()).filter(x=>{if(!x||x.length>=60)return false;const tokens=x.match(/[a-z0-9]+/g)||[];return tokens.length>0&&tokens.every(t=>groundedTokens.has(t));}))].slice(0,25);
   $('metadataTitle').value=title.slice(0,150);$('metadataTitle').dataset.baseTitle=title.slice(0,150);
   $('metadataDescription').value=description;$('metadataCategory').value=category;$('metadataKeywords').value=keywords.join(', ');
   trozalLocalVisionLastAnalysis={model,createdAt:new Date().toISOString(),imageCount:images.length,title,description,category,keywords,visualSummary:String(parsed.visual_summary||''),visibleObjects:Array.isArray(parsed.visible_objects)?parsed.visible_objects:[],confidenceNotes:String(parsed.confidence_notes||'')};
