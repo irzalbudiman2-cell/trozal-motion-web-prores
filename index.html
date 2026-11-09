@@ -489,7 +489,7 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
    <label>HTML VISUAL MOTION · SIAP DIIMPOR KE TROZAL</label>
    <textarea id="visualMotionOutput" spellcheck="false" placeholder="Dokumen HTML berisi komposisi SVG dan animasi visual akan tampil di sini…" style="min-height:220px"></textarea>
    <div class="btnrow"><button type="button" id="copyVisualMotionBtn">Salin HTML</button><button type="button" class="green" id="previewVisualMotionBtn">▶ Kirim ke Preview TROZAL</button></div>
-   <p class="notice">AI Scene Composer menggunakan Ollama di komputer Anda. Kode hasil AI divalidasi agar tidak memuat JavaScript, iframe, atau resource eksternal sebelum preview. Untuk revisi, ubah brief visual lalu generate ulang.</p>
+   <p class="notice">AI Scene Composer menggunakan Ollama di komputer Anda melalui konektor lokal TROZAL. Jalankan TROZAL_OLLAMA_BRIDGE_START.bat terlebih dahulu dan biarkan jendelanya terbuka. Kode hasil AI divalidasi agar tidak memuat JavaScript, iframe, atau resource eksternal sebelum preview. Untuk revisi, ubah brief visual lalu generate ulang.</p>
   </section>
 
 
@@ -728,7 +728,7 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
      <button type="button" id="trozalVisionCheckBtn">↻ Cek Ollama</button>
      <select id="trozalVisionModel" aria-label="Model AI Vision" style="flex:1;min-width:150px"><option value="qwen3-vl:2b">Qwen3-VL 2B · disarankan</option><option value="qwen3-vl:4b">Qwen3-VL 4B · lebih berat</option></select>
     </div>
-    <div id="trozalVisionConnection" class="help" aria-live="polite">Belum terhubung · Ollama lokal: http://localhost:11434</div>
+    <div id="trozalVisionConnection" class="help" aria-live="polite">Belum terhubung · Ollama lokal: http://127.0.0.1:11435</div>
     <label style="margin-top:8px">Gambar bukti (opsional)</label>
     <input type="file" id="trozalVisionImages" accept="image/png,image/jpeg,image/webp" multiple>
     <small class="help">Pilih hingga 4 screenshot PNG/JPG/WebP. Jika tidak memilih gambar, TROZAL akan mencoba menangkap 3 frame langsung dari Preview pada waktu 0%, 50%, dan 85%.</small>
@@ -3863,7 +3863,7 @@ trozalMetadataRenderReview();trozalMetadataRenderScenes();trozalMetadataRenderBa
 
 /* TROZAL LOCAL VISION — visual-first metadata through Ollama on the user's PC */
 let trozalLocalVisionLastAnalysis=null;
-const TROZAL_VISION_BASE='http://localhost:11434';
+const TROZAL_VISION_BASE='http://127.0.0.1:11435';
 const TROZAL_VISION_ORIGIN='https://irzalbudiman2-cell.github.io';
 function trozalVisionSetStatus(message,isError=false){
  const el=$('trozalVisionStatus');if(el){el.textContent=message;el.style.color=isError?'#ff8b8b':'';}
@@ -3983,7 +3983,7 @@ function visualMotionAiStatus(message,isError=false){
 async function visualMotionAiCheck(){
  visualMotionAiStatus('Memeriksa Ollama lokal…');
  try{
-  const r=await fetch('http://localhost:11434/api/tags',{cache:'no-store',targetAddressSpace:'loopback'});
+  const r=await fetch('http://127.0.0.1:11435/api/tags',{cache:'no-store',targetAddressSpace:'loopback'});
   if(!r.ok)throw new Error('HTTP '+r.status);
   const data=await r.json(),models=(data.models||[]).map(x=>x.name||[]);
   const chosen=$('visualMotionAiModel').value,found=models.some(n=>n===chosen||n.startsWith(chosen+':'));
@@ -4023,7 +4023,7 @@ async function generateVisualMotionWithLocalAi(){
   const system='You are a senior SVG motion-graphics scene designer. Return ONLY a complete standalone HTML5 document. Build a visually rich, polished, coherent animated vector scene from the user brief. Use inline SVG shapes, gradients, filters and CSS keyframe animation. No JavaScript, no external images, no network URLs, no external fonts, no iframe, no canvas. Use separate semantic SVG groups for independently moving objects, with descriptive ids and aria-labels. Keep the entire composition inside the viewBox; create clear foreground, midground and background depth; make the main subject recognizable and detailed, not generic icons. Animate relevant objects independently with natural motion and include subtle atmospheric movement. Ensure all objects remain visible within the frame and avoid unwanted zoom/cropping. Include a responsive full-viewport stage and preserve the requested aspect ratio. Use no text overlay unless text is an actual physical sign in the scene. Use CSS only for animation. Keep code compact but complete, valid HTML/SVG, and output no markdown fences or explanations.';
   const user='VISUAL BRIEF: '+brief+'\\nAspect ratio: '+ratio+'. Target duration: '+duration+' seconds. Visual style: '+style+'. Accent: '+accent+'. Camera direction: '+camera+'. Scene transition preference: '+transition+'. Produce a single coherent scene with distinct SVG groups/layers and CSS motion. Set animation duration to match '+duration+' seconds and make the animation loop smoothly when appropriate.';
   visualMotionAiStatus('Mengirim brief ke '+model+' pada komputer lokal. Proses dapat memerlukan beberapa menit…');
-  const response=await fetch('http://localhost:11434/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},targetAddressSpace:'loopback',body:JSON.stringify({model,messages:[{role:'system',content:system},{role:'user',content:user}],stream:false,options:{temperature:.35,num_ctx:8192},keep_alive:'5m'})});
+  const response=await fetch('http://127.0.0.1:11435/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},targetAddressSpace:'loopback',body:JSON.stringify({model,messages:[{role:'system',content:system},{role:'user',content:user}],stream:false,options:{temperature:.35,num_ctx:8192},keep_alive:'5m'})});
   if(!response.ok){let detail='HTTP '+response.status;try{detail=(await response.json()).error||detail}catch(_){}throw new Error(detail);}
   const data=await response.json(),code=visualMotionAiExtractCode(data.message?.content||'');
   $('visualMotionOutput').value=code;$('visualMotionPreview').srcdoc=code;
