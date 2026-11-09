@@ -721,6 +721,32 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
    <label>Deskripsi visual yang benar-benar terlihat (prioritas utama)</label><textarea id="metadataSubject" rows="3" placeholder="Contoh: Sebuah cincin berlian berputar perlahan di atas kain beludru hitam. Tuliskan hanya yang benar-benar tampak pada hasil akhir."></textarea>
    <p class="help">Isi kolom ini setelah memeriksa preview atau hasil render. Prompt AI dan rencana scene hanya menunjukkan niat pembuatan, bukan bukti bahwa objek benar-benar muncul.</p>
    <div id="metadataEvidence" class="metadata-evidence">Belum dianalisis. Sistem akan memisahkan deskripsi terverifikasi, prompt/rencana, dan teks SVG/HTML.</div>
+   <section class="metadata-evidence" id="trozalLocalVisionPanel" style="margin-top:12px;border:1px solid #269b75;background:rgba(20,150,105,.07)">
+    <div style="font-weight:800;color:#38c995;margin-bottom:6px">✦ TROZAL LOCAL VISION · AI BERDASARKAN GAMBAR</div>
+    <p class="help">Analisis dilakukan oleh model lokal di PC Anda. Gambar preview tidak dikirim ke OpenAI atau layanan cloud.</p>
+    <div class="row" style="align-items:center;gap:8px;flex-wrap:wrap">
+     <button type="button" id="trozalVisionCheckBtn">↻ Cek Ollama</button>
+     <select id="trozalVisionModel" aria-label="Model AI Vision" style="flex:1;min-width:150px"><option value="qwen3-vl:2b">Qwen3-VL 2B · disarankan</option><option value="qwen3-vl:4b">Qwen3-VL 4B · lebih berat</option></select>
+    </div>
+    <div id="trozalVisionConnection" class="help" aria-live="polite">Belum terhubung · Ollama lokal: http://localhost:11434</div>
+    <label style="margin-top:8px">Gambar bukti (opsional)</label>
+    <input type="file" id="trozalVisionImages" accept="image/png,image/jpeg,image/webp" multiple>
+    <small class="help">Pilih hingga 4 screenshot PNG/JPG/WebP. Jika tidak memilih gambar, TROZAL akan mencoba menangkap 3 frame langsung dari Preview pada waktu 0%, 50%, dan 85%.</small>
+    <div class="row" style="margin-top:8px;flex-wrap:wrap">
+     <button type="button" class="primary" id="trozalVisionAnalyzeBtn">✦ ANALISIS VISUAL SEBENARNYA</button>
+     <button type="button" id="trozalVisionClearImagesBtn">Hapus gambar pilihan</button>
+    </div>
+    <div id="trozalVisionStatus" class="help" aria-live="polite">Siap menunggu Ollama dan model lokal.</div>
+    <details style="margin-top:8px"><summary style="cursor:pointer;font-weight:700">Panduan instalasi satu kali</summary>
+     <ol class="help">
+      <li>Pasang Ollama untuk Windows.</li>
+      <li>Jalankan <code>ollama pull qwen3-vl:2b</code> di PowerShell.</li>
+      <li>Tambahkan environment variable Windows <code>OLLAMA_ORIGINS</code> dengan nilai <code>https://irzalbudiman2-cell.github.io</code>, lalu tutup Ollama dari system tray dan jalankan kembali.</li>
+      <li>Kembali ke sini dan tekan Cek Ollama.</li>
+     </ol>
+     <p class="help"><a href="https://ollama.com/download/windows" target="_blank" rel="noopener">Unduh Ollama Windows</a> · <a href="https://ollama.com/library/qwen3-vl" target="_blank" rel="noopener">Info model Qwen3-VL</a></p>
+    </details>
+   </section>
    <div id="metadataPlatformValidation" class="metadata-evidence">Pilih platform untuk melihat pemeriksaan judul dan keyword.</div>
    <div class="row" style="margin-top:8px"><button class="primary" id="generateMetadataBtn" type="button">✦ ANALISIS & GENERATE METADATA</button><button id="clearMetadataBtn" type="button">Bersihkan</button></div>
    <label>Judul (English)</label><input id="metadataTitle" type="text" placeholder="English title — review against the actual visual">
@@ -3796,7 +3822,7 @@ function trozalMetadataRenderBatch(){
 function trozalMetadataAddCurrent(){
  const q=trozalRefreshMetadataQuality(),keywords=String($('metadataKeywords').value||'').split(/[,;\n]+/).map(x=>x.trim()).filter(Boolean);
  const title=$('metadataTitle').value.trim();if(!title){$('metadataBatchSummary').textContent='Judul masih kosong. Buat metadata sebelum menambahkan aset.';return}
- trozalMetadataAddBatch({platform:$('metadataPlatform').value,title,description:$('metadataDescription').value.trim(),category:$('metadataCategory').value,keywords,editorialScore:q.score,evidenceLevel:q.verifiedSourceAvailable?'user-reviewed-visual-description':q.sourceAvailable?'prompt-or-scene-plan-unverified':'insufficient',evidenceSources:[...new Set(q.analysis.evidence.entries.map(x=>x.label.split(' · ')[0]))],scene:'',createdAt:new Date().toISOString()});
+ trozalMetadataAddBatch({platform:$('metadataPlatform').value,title,description:$('metadataDescription').value.trim(),category:$('metadataCategory').value,keywords,editorialScore:q.score,evidenceLevel:trozalLocalVisionLastAnalysis?'local-ai-vision-pixel-analysis':q.verifiedSourceAvailable?'user-reviewed-visual-description':q.sourceAvailable?'prompt-or-scene-plan-unverified':'insufficient',evidenceSources:trozalLocalVisionLastAnalysis?['TROZAL LOCAL VISION · actual preview/image frames']: [...new Set(q.analysis.evidence.entries.map(x=>x.label.split(' · ')[0]))],scene:'',createdAt:new Date().toISOString()});
 }
 function trozalMetadataAddScene(){
  const scenes=Array.isArray(visualSceneSequence)?visualSceneSequence:[],idx=Number($('metadataSceneSelect')?.value);
@@ -3833,6 +3859,120 @@ $('metadataExportBatchCsvBtn')?.addEventListener('click',trozalMetadataExportBat
 $('metadataExportSidecarBtn')?.addEventListener('click',trozalMetadataExportSidecar);
 $('metadataClearBatchBtn')?.addEventListener('click',()=>{trozalMetadataBatch=[];trozalMetadataSaveBatch();trozalMetadataRenderBatch()});
 trozalMetadataRenderReview();trozalMetadataRenderScenes();trozalMetadataRenderBatch();
+
+
+/* TROZAL LOCAL VISION — visual-first metadata through Ollama on the user's PC */
+let trozalLocalVisionLastAnalysis=null;
+const TROZAL_VISION_BASE='http://localhost:11434';
+const TROZAL_VISION_ORIGIN='https://irzalbudiman2-cell.github.io';
+function trozalVisionSetStatus(message,isError=false){
+ const el=$('trozalVisionStatus');if(el){el.textContent=message;el.style.color=isError?'#ff8b8b':'';}
+}
+function trozalVisionSetConnection(message,isReady=false){
+ const el=$('trozalVisionConnection');if(el){el.textContent=message;el.style.color=isReady?'#38c995':'#e3b66c';}
+}
+async function trozalVisionCheck(){
+ trozalVisionSetConnection('Menghubungi Ollama lokal…');
+ try{
+  const response=await fetch(TROZAL_VISION_BASE+'/api/tags',{method:'GET',cache:'no-store'});
+  if(!response.ok)throw new Error('HTTP '+response.status);
+  const data=await response.json(),models=Array.isArray(data.models)?data.models:[];
+  const select=$('trozalVisionModel'),available=models.map(m=>m.name||'');
+  [...select.options].forEach(option=>{option.dataset.installed=available.some(name=>name===option.value||name.startsWith(option.value+':'))?'1':'0'});
+  const preferred=available.find(name=>name==='qwen3-vl:2b')||available.find(name=>name.startsWith('qwen3-vl:2b'));
+  if(preferred){select.value='qwen3-vl:2b';}
+  const vision=available.filter(name=>/qwen3-vl|llava|gemma.*vision/i.test(name));
+  trozalVisionSetConnection('Terhubung · '+models.length+' model terpasang'+(vision.length?' · Vision: '+vision.join(', '):' · Qwen3-VL belum terpasang'),true);
+  trozalVisionSetStatus(available.length?'Ollama siap. Pastikan model yang dipilih sudah diunduh.':'Ollama aktif tetapi belum ada model terpasang.');
+  return {models:available};
+ }catch(error){
+  const reason=error?.message||String(error);
+  trozalVisionSetConnection('Belum terhubung. Jalankan Ollama dan izinkan origin GitHub Pages melalui OLLAMA_ORIGINS.',false);
+  trozalVisionSetStatus(reason.includes('Failed to fetch')?'Koneksi ditolak atau CORS belum diizinkan. Set OLLAMA_ORIGINS='+TROZAL_VISION_ORIGIN+' lalu restart Ollama.':'Ollama tidak dapat diakses: '+reason,true);
+  return null;
+ }
+}
+function trozalVisionReadFile(file){
+ return new Promise((resolve,reject)=>{
+  const reader=new FileReader();reader.onload=()=>resolve(String(reader.result||'').split(',')[1]||'');reader.onerror=()=>reject(new Error('Gagal membaca '+file.name));reader.readAsDataURL(file);
+ });
+}
+async function trozalVisionResizeImage(dataUrl,maxSide=1280){
+ const imgEl=new Image();imgEl.src=dataUrl;await imgEl.decode();
+ const scale=Math.min(1,maxSide/Math.max(imgEl.naturalWidth,imgEl.naturalHeight));
+ const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(imgEl.naturalWidth*scale));canvas.height=Math.max(1,Math.round(imgEl.naturalHeight*scale));
+ const ctx=canvas.getContext('2d');ctx.drawImage(imgEl,0,0,canvas.width,canvas.height);
+ return canvas.toDataURL('image/jpeg',.84).split(',')[1];
+}
+async function trozalVisionCapturePreviewFrames(){
+ if(playing)throw new Error('Hentikan Putar terlebih dahulu agar frame yang dianalisis stabil.');
+ const stage=$('stage');if(!stage)throw new Error('Area Preview tidak ditemukan.');
+ const original=playhead,duration=Math.max(.1,+$('duration').value||10),times=[0,duration*.5,duration*.85],images=[];
+ try{
+  const renderer=await ensureHtmlToImage();
+  for(let i=0;i<times.length;i++){
+   renderAt(times[i]);
+   await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+   const canvas=await renderer.toCanvas(stage,{pixelRatio:1,cacheBust:true,skipAutoScale:true});
+   const scale=Math.min(1,1280/Math.max(canvas.width,canvas.height));
+   let finalCanvas=canvas;
+   if(scale<1){finalCanvas=document.createElement('canvas');finalCanvas.width=Math.max(1,Math.round(canvas.width*scale));finalCanvas.height=Math.max(1,Math.round(canvas.height*scale));finalCanvas.getContext('2d').drawImage(canvas,0,0,finalCanvas.width,finalCanvas.height);}
+   images.push(finalCanvas.toDataURL('image/jpeg',.84).split(',')[1]);
+   trozalVisionSetStatus('Mengambil frame Preview '+(i+1)+' dari 3…');
+  }
+ }finally{renderAt(original);}
+ return images;
+}
+function trozalVisionCleanJson(text){
+ let raw=String(text||'').trim().replace(/^\uFEFF/,'');
+ raw=raw.replace(/^\s*```(?:json)?/i,'').replace(/```\s*$/,'').trim();
+ const start=raw.indexOf('{'),end=raw.lastIndexOf('}');
+ if(start>=0&&end>start)raw=raw.slice(start,end+1);
+ return JSON.parse(raw);
+}
+async function trozalVisionAnalyze(){
+ const button=$('trozalVisionAnalyzeBtn');if(button.disabled)return;
+ button.disabled=true;button.textContent='Menganalisis…';
+ try{
+  const model=$('trozalVisionModel').value;
+  const selected=[...($('trozalVisionImages').files||[])].slice(0,4);
+  let images=[];
+  if(selected.length){
+   for(const file of selected){if(file.size>12*1024*1024)throw new Error('Gambar '+file.name+' lebih dari 12 MB. Kecilkan gambar terlebih dahulu.');images.push(await trozalVisionResizeImage(await trozalVisionReadFile(file)));}
+   trozalVisionSetStatus('Menggunakan '+images.length+' gambar yang Anda pilih…');
+  }else{
+   trozalVisionSetStatus('Menangkap tiga frame dari Preview…');
+   images=await trozalVisionCapturePreviewFrames();
+  }
+  if(!images.length)throw new Error('Tidak ada gambar untuk dianalisis.');
+  trozalVisionSetStatus('Mengirim '+images.length+' frame ke '+model+' pada komputer lokal. Tunggu proses model…');
+  const categories=[...$('metadataCategory').options].map(o=>o.text);
+  const prompt='You are a visual metadata analyst for stock motion graphics. Analyze ONLY what is visibly supported by the attached image frames. The images are frames from one animation or screenshots of one asset. Do not use, infer, or repeat any text prompt, filename, scene plan, or prior metadata. Describe visible subject(s), their visible action, background, colors, composition, and visual style. Do not invent hidden details, brand names, locations, identities, or unsupported motion. If something is uncertain, omit it. Return valid JSON only with this schema: {"title":"concise English title, max 100 characters","description":"accurate English description, 1-2 sentences","category":"one exact value from the allowed list","keywords":["up to 25 specific English keywords"],"visual_summary":"short evidence-based summary","visible_objects":["objects clearly visible"],"confidence_notes":"brief uncertainty note or empty string"}. Allowed categories: '+categories.join(' | ')+'. Keywords must be grounded in visible content; avoid generic filler. If the images do not show enough detail, say so and keep metadata conservative.';
+  const response=await fetch(TROZAL_VISION_BASE+'/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model,messages:[{role:'user',content:prompt,images}],format:'json',stream:false,options:{temperature:.15,num_ctx:4096},keep_alive:'5m'})});
+  if(!response.ok){let detail='HTTP '+response.status;try{detail=(await response.json()).error||detail}catch(_){}throw new Error(detail);}
+  const data=await response.json(),parsed=trozalVisionCleanJson(data.message?.content||'');
+  const title=String(parsed.title||'').trim(),description=String(parsed.description||'').trim();
+  if(!title||!description)throw new Error('AI tidak mengembalikan judul dan deskripsi yang valid. Coba lagi dengan gambar yang lebih jelas.');
+  const categoryOptions=[...$('metadataCategory').options].map(o=>o.text);
+  const category=categoryOptions.find(x=>x.toLowerCase()===String(parsed.category||'').trim().toLowerCase())||'Graphic Resources';
+  const keywords=[...new Set((Array.isArray(parsed.keywords)?parsed.keywords:[]).map(x=>String(x).trim().toLowerCase()).filter(x=>x&&x.length<60))].slice(0,47);
+  $('metadataTitle').value=title.slice(0,150);$('metadataTitle').dataset.baseTitle=title.slice(0,150);
+  $('metadataDescription').value=description;$('metadataCategory').value=category;$('metadataKeywords').value=keywords.join(', ');
+  trozalLocalVisionLastAnalysis={model,createdAt:new Date().toISOString(),imageCount:images.length,title,description,category,keywords,visualSummary:String(parsed.visual_summary||''),visibleObjects:Array.isArray(parsed.visible_objects)?parsed.visible_objects:[],confidenceNotes:String(parsed.confidence_notes||'')};
+  if($('metadataEvidence'))$('metadataEvidence').textContent='BUKTI VISUAL AI LOKAL · '+images.length+' gambar dianalisis oleh '+model+'. '+(trozalLocalVisionLastAnalysis.visualSummary||'Metadata diturunkan dari isi piksel gambar, bukan prompt teks.')+(trozalLocalVisionLastAnalysis.confidenceNotes?' Catatan: '+trozalLocalVisionLastAnalysis.confidenceNotes:'')+' · Tetap periksa hasil sebelum ekspor.';
+  updateMetadataCount();trozalRefreshMetadataQuality();trozalUpdateMetadataPlatformValidation();
+  if(typeof trozalMetadataRenderReview==='function'){trozalMetadataApproved?.clear?.();trozalMetadataRenderReview();}
+  scheduleAutosave();
+  trozalVisionSetStatus('Selesai · '+images.length+' gambar dianalisis. Metadata diperbarui berdasarkan visual. Periksa kembali sebelum digunakan.');
+ }catch(error){
+  const msg=error?.message||String(error);
+  trozalVisionSetStatus('Analisis gagal: '+msg+(msg.includes('Failed to fetch')?' · Periksa Ollama/CORS.':msg.toLowerCase().includes('model')?' · Unduh model dengan: ollama pull qwen3-vl:2b':''),true);
+ }finally{button.disabled=false;button.textContent='✦ ANALISIS VISUAL SEBENARNYA';}
+}
+$('trozalVisionCheckBtn')?.addEventListener('click',trozalVisionCheck);
+$('trozalVisionAnalyzeBtn')?.addEventListener('click',trozalVisionAnalyze);
+$('trozalVisionClearImagesBtn')?.addEventListener('click',()=>{$('trozalVisionImages').value='';trozalVisionSetStatus('Gambar pilihan dibersihkan. Analisis berikutnya akan mengambil frame dari Preview.')});
+trozalVisionCheck();
 
 </script>
 </body></html>
