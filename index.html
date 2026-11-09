@@ -2165,12 +2165,12 @@ $('exportFrames').onclick=exportCurrentFramePng;
  }
 })();
 function getProject(){
- const ids=['shapeMaskType','shapeMaskMode','shapeMaskSize','shapeMaskRotation','shapeMaskX','shapeMaskY','shapePathColor','shapePathWidth','shapePathData','objectName','duration','fps','resolution','proresMode','animation','speed','intensity','scale','posX','posY','rotation','opacity','bgMode','customBg','effectPreset','effectIntensity','effectColor','particleCount','particleSpeed','format','quality','mp4Crf','renderSpeedMode','textLayerContent','textLayerFont','textLayerWeight','textLayerSize','textLayerColor','textLayerAlign','textLayerTracking','textLayerX','textLayerY','textLayerStart','textLayerDuration','textLayerAnimation'];
- const checks=['shapeMaskEnabled','shapePathReveal','transparentBg','sparkles','shadow','loop','effectOn','textLayerEnabled'];
+ const ids=['shapeMaskType','shapeMaskMode','shapeMaskSize','shapeMaskRotation','shapeMaskX','shapeMaskY','shapePathColor','shapePathWidth','shapePathData','objectName','duration','fps','resolution','proresMode','animation','speed','intensity','scale','posX','posY','rotation','opacity','bgMode','customBg','effectPreset','effectIntensity','effectColor','particleCount','particleSpeed','format','quality','mp4Crf','renderSpeedMode','textLayerContent','textLayerFont','textLayerWeight','textLayerSize','textLayerColor','textLayerAlign','textLayerTracking','textLayerX','textLayerY','textLayerStart','textLayerDuration','textLayerAnimation','visualMotionPrompt','visualMotionRatio','visualMotionDuration','visualMotionStyle','visualMotionCamera','visualMotionTransition','visualMotionAccent'];
+ const checks=['shapeMaskEnabled','shapePathReveal','transparentBg','sparkles','shadow','loop','effectOn','textLayerEnabled','visualMotionParticles','visualMotionDepth'];
  const controls={};ids.forEach(k=>{if($(k))controls[k]=$(k).value});
  checks.forEach(k=>{if($(k))controls[k]=$(k).checked});
  const layers=svgPieces.map((piece,i)=>{const l={svg:piece,name:svgLayerNames[i]||('Layer '+(i+1))};['Visible','On','In','Out','Loop','Delay','Start','End','Duration','Speed','Intensity','Scale','Rotation','Direction'].forEach(k=>{const el=$('autoLayer'+k+i);if(el)l[k.toLowerCase()]=el.type==='checkbox'?el.checked:el.value});l.autoKey=!!$('kfAuto'+i)?.checked;return l});
- saveActiveTextLayer();syncActiveMaskFromControls();return {app:'ANIMOVE',version:11,stage:14,shapeMaskLayers:shapeMaskLayers.map(x=>({...x})),activeShapeMask,nativeTextLayers:nativeTextLayers.map(x=>({...x})),selectedTextLayerId,timelineSnapEnabled,savedAt:new Date().toISOString(),controls,currentColor,playhead,sourceSvg,sourceType,sourceName:$('objectName').value,svgWasSplit,svgPieces:[...svgPieces],svgLayerNames:[...svgLayerNames],svgLayerHints:[...svgLayerHints],layerKeyframes:layerKeyframes.map(a=>(a||[]).map(k=>({...k}))),timelineMarkers:timelineMarkers.map(m=>({...m})),timelineTrackLocks:{...timelineTrackLocks},layers};
+ saveActiveTextLayer();syncActiveMaskFromControls();return {app:'ANIMOVE',version:12,stage:15,visualSceneSequence:Array.isArray(visualSceneSequence)?visualSceneSequence.map(x=>({...x})):[],shapeMaskLayers:shapeMaskLayers.map(x=>({...x})),activeShapeMask,nativeTextLayers:nativeTextLayers.map(x=>({...x})),selectedTextLayerId,timelineSnapEnabled,savedAt:new Date().toISOString(),controls,currentColor,playhead,sourceSvg,sourceType,sourceName:$('objectName').value,svgWasSplit,svgPieces:[...svgPieces],svgLayerNames:[...svgLayerNames],svgLayerHints:[...svgLayerHints],layerKeyframes:layerKeyframes.map(a=>(a||[]).map(k=>({...k}))),timelineMarkers:timelineMarkers.map(m=>({...m})),timelineTrackLocks:{...timelineTrackLocks},layers};
 }
 function applyProject(p){
  if(!p||p.app!=='ANIMOVE')throw new Error('File bukan proyek trozal_MOTION');
@@ -2180,7 +2180,9 @@ function applyProject(p){
  selectedTextLayerId=nativeTextLayers.some(x=>x.id===p.selectedTextLayerId)?p.selectedTextLayerId:nativeTextLayers[0].id;
  textLayerIdCounter=Math.max(nativeTextLayers.length,...nativeTextLayers.map(x=>Number(String(x.id).replace(/\\D/g,''))||0));
 
- Object.entries(c).forEach(([k,v])=>{if($(k)){if(['shapeMaskEnabled','shapePathReveal','transparentBg','sparkles','shadow','loop','effectOn'].includes(k))$(k).checked=!!v;else $(k).value=v}});
+ Object.entries(c).forEach(([k,v])=>{if($(k)){if(['shapeMaskEnabled','shapePathReveal','transparentBg','sparkles','shadow','loop','effectOn','visualMotionParticles','visualMotionDepth'].includes(k))$(k).checked=!!v;else $(k).value=v}});
+ visualSceneSequence=Array.isArray(p.visualSceneSequence)?p.visualSceneSequence.slice(0,12).map((x,i)=>({id:String(x.id||('scene-restored-'+i)),text:String(x.text||''),duration:Math.max(.5,Math.min(60,Number(x.duration)||1)),transition:String(x.transition||'crossfade'),camera:String(x.camera||'parallax'),style:String(x.style||'cinematic')})):[];
+ if(typeof renderVisualSceneSequence==='function')renderVisualSceneSequence();
  if(p.currentColor)currentColor=p.currentColor;
  if(shapeMaskLayers.length){loadActiveMaskControls();refreshMaskManager()}else{shapeMaskLayers=[{...shapeMaskState(),name:'Mask 1'}];activeShapeMask=0;refreshMaskManager()}
  sourceSvg=p.sourceSvg||'';sourceType=p.sourceType||'image/svg+xml';
@@ -2199,12 +2201,12 @@ function applyProject(p){
  }else if(sourceSvg){setObjectMarkup(sourceSvg)}else if(p.assetDataUrl){setObjectMarkup(`<img alt="Restored asset" src="${p.assetDataUrl}">`)}
  playhead=Math.max(0,Math.min(+$('duration').value||10,Number(p.playhead)||0));const selected=nativeTextLayers.find(x=>x.id===selectedTextLayerId);if(selected)writeTextLayerControls(selected);refreshTextLayerManager();
  updateInfo();applyBackground();renderAt(playhead);refreshTimelineEditor();
- setStatus('Proyek berhasil dipulihkan: aset SVG, layer, marker timeline, dan pengaturan animasi dimuat.');
+ setStatus('Proyek dipulihkan: aset, layer, keyframe, mask, marker, dan Visual Scene Timeline dimuat.');
 }
 function saveProjectFile(){
  const blob=new Blob([JSON.stringify(getProject(),null,2)],{type:'application/json'});
  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='animove-project.json';a.click();
- setTimeout(()=>URL.revokeObjectURL(url),1500);setStatus('Proyek v7 tersimpan lengkap: SVG, layer, keyframe, easing, Bezier, marker, dan seluruh pengaturan.');
+ setTimeout(()=>URL.revokeObjectURL(url),1500);setStatus('Proyek tersimpan lengkap: SVG, layer, keyframe, mask, marker, dan Visual Scene Timeline.');
 }
 $('saveProject').onclick=saveProjectFile;
 $('loadProject').onclick=()=>$('projectInput').click();
@@ -2241,6 +2243,7 @@ function validateProject(p){
  }
  if(p.svgPieces!==undefined&&!Array.isArray(p.svgPieces))throw new Error('Data SVG layer tidak valid');
  if(p.layerKeyframes!==undefined&&!Array.isArray(p.layerKeyframes))throw new Error('Data keyframe tidak valid');
+ if(p.visualSceneSequence!==undefined&&!Array.isArray(p.visualSceneSequence))throw new Error('Data visual scene timeline tidak valid');
  if(p.controls!==undefined&&(typeof p.controls!=='object'||Array.isArray(p.controls)))throw new Error('Pengaturan proyek tidak valid');
  return p;
 }
@@ -2360,6 +2363,7 @@ function renderVisualSceneSequence(){
   host.appendChild(card);
  });
  updateVisualSceneSequenceSummary();
+ if(typeof scheduleAutosave==='function')scheduleAutosave();
 }
 function moveVisualScene(from,to){
  if(from<0||to<0||from>=visualSceneSequence.length||to>=visualSceneSequence.length||from===to)return;
