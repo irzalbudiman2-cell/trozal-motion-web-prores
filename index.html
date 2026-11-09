@@ -33,6 +33,10 @@ small,.muted{color:var(--muted)}.row{display:flex;gap:8px;align-items:center}.ro
 
 
 
+#stockMetadataPanel .metadata-evidence{white-space:normal;overflow-wrap:anywhere}
+#stockMetadataPanel .metadata-evidence strong{color:#ffe0a0}
+#stockMetadataPanel .metadata-evidence .meta-warn{color:#ffc36a}
+#stockMetadataPanel .metadata-evidence .meta-ok{color:#8ee6ae}
 /* EVIDENCE-BASED STOCK METADATA — DISTINCT AMBER FEATURE THEME */
 #stockMetadataPanel{background:linear-gradient(145deg,#4a3510 0%,#291d0b 58%,#46300c 100%);border:1px solid #c18b36;box-shadow:0 8px 24px #160d02aa,inset 0 1px #ffe6b322}
 #stockMetadataPanel h3{color:#ffe0a0;letter-spacing:.05em}
@@ -686,6 +690,7 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
    <select id="metadataPlatform"><option value="all">Semua platform (Adobe Stock, Dreamstime, Shutterstock)</option><option value="adobe">Adobe Stock</option><option value="dreamstime">Dreamstime</option><option value="shutterstock">Shutterstock</option></select>
    <label>Deskripsi visual yang sudah diperiksa (Bahasa Indonesia atau Inggris)</label><textarea id="metadataSubject" rows="3" placeholder="Jelaskan objek utama, aksi, lokasi, suasana, dan elemen yang benar-benar terlihat. Prompt Visual Scene Sequencer juga dibaca otomatis."></textarea>
    <div id="metadataEvidence" class="metadata-evidence">Sumber bukti akan ditampilkan setelah metadata dianalisis.</div>
+   <div id="metadataPlatformValidation" class="metadata-evidence">Pilih platform untuk melihat pemeriksaan judul dan keyword.</div>
    <div class="row" style="margin-top:8px"><button class="primary" id="generateMetadataBtn" type="button">✦ ANALISIS & GENERATE METADATA</button><button id="clearMetadataBtn" type="button">Bersihkan</button></div>
    <label>Title (English)</label><input id="metadataTitle" type="text" placeholder="Video title for stock marketplace">
    <label>Description (English)</label><textarea id="metadataDescription" rows="3" placeholder="Describe the visual content and motion..."></textarea>
@@ -3360,6 +3365,46 @@ function trozalMetadataTitleFromEvidence(source,translated,fallback){
  }
  return trozalTitleCase(fallback||translated).replace(/\s+/g,' ').slice(0,135);
 }
+function trozalFormatMetadataTitleForPlatform(title,platform){
+ const original=String(title||'').replace(/\s+/g,' ').trim();
+ if(!original||platform!=='shutterstock')return original;
+ if(/^this animated video shows\b/i.test(original))return /[.!?]$/.test(original)?original:original+'.';
+ let subject=original.replace(/[.!?]+$/,'').toLowerCase();
+ subject=subject.replace(/\bsanta claus\b/g,'Santa Claus')
+  .replace(/\bramadan\b/g,'Ramadan')
+  .replace(/\beid al-fitr\b/g,'Eid al-Fitr')
+  .replace(/\beid\b/g,'Eid')
+  .replace(/\bai\b/g,'AI');
+ return 'This animated video shows '+subject+'.';
+}
+function trozalUpdateMetadataPlatformValidation(){
+ const platform=$('metadataPlatform')?.value||'all';
+ const title=$('metadataTitle')?.value.trim()||'';
+ const keywords=$('metadataKeywords')?.value.split(',').map(x=>x.trim()).filter(Boolean)||[];
+ const box=$('metadataPlatformValidation');if(!box)return;
+ if(!title&&!keywords.length){box.textContent='Belum ada metadata untuk divalidasi. Generate metadata dari deskripsi visual terlebih dahulu.';return;}
+ const words=title.split(/\s+/).filter(Boolean).length;
+ const notices=[];
+ if(platform==='adobe'){
+  notices.push(title.length<=70?'✓ Judul '+title.length+'/70 karakter.':'⚠ Judul '+title.length+' karakter; Adobe menyarankan judul idealnya di bawah 70 karakter.');
+  notices.push(keywords.length<=49?'✓ Keyword '+keywords.length+'/49.':'⚠ Keyword '+keywords.length+'; batas Adobe Stock 49.');
+  notices.push('Prioritaskan 10 keyword pertama. Periksa merek, nama artis, orang nyata, karakter fiksi, dan informasi pribadi sebelum unggah.');
+  const sensitive=['santa claus','mickey mouse','minnie mouse','disney','marvel','spider-man','batman','superman','barbie','nike','adidas','coca-cola'];
+  const found=sensitive.filter(term=>(title+' '+keywords.join(' ')).toLowerCase().includes(term));
+  if(found.length)notices.push('⚠ Istilah yang perlu diperiksa secara manual: '+found.join(', ')+'. Pemeriksaan kata ini tidak lengkap dan bukan pemeriksaan legal.');
+ }else if(platform==='shutterstock'){
+  notices.push(words>=5?'✓ Judul '+words+' kata; minimum 5 kata.':'⚠ Judul baru '+words+' kata; Shutterstock meminta kalimat deskriptif bahasa Inggris minimal 5 kata.');
+  notices.push(/[.!?]$/.test(title)?'✓ Judul berbentuk kalimat.':'⚠ Periksa tanda baca dan tata bahasa judul.');
+  notices.push('Pastikan judul menjelaskan seluruh isi klip secara akurat dan bukan daftar kata yang dipisahkan koma.');
+ }else if(platform==='dreamstime'){
+  notices.push('Utamakan judul dan keyword yang akurat serta relevan dengan isi klip.');
+  notices.push('TROZAL tidak memaksakan batas numerik Dreamstime yang belum dikonfirmasi; ikuti batas dan kategori pada formulir unggah Dreamstime.');
+ }else{
+  notices.push('Format umum untuk beberapa marketplace. Periksa batas judul, keyword, bahasa dan kategori pada portal tujuan.');
+  notices.push('Keyword saat ini '+keywords.length+'; maksimum generator 47 dan jumlah boleh lebih sedikit bila bukti tidak cukup.');
+ }
+ box.textContent=notices.join(' ');
+}
 function generateStockMetadata(){
  const evidence=trozalMetadataEvidence();
  const raw=evidence.text;
@@ -3400,11 +3445,13 @@ function generateStockMetadata(){
  const hasVisualEvidence=!!(subject||sceneTexts.length||htmlMotionSource||sourceSvg||svgPieces.length);
  const hasDescriptiveEvidence=!!(subject||promptText||sceneTexts.length||evidence.entries.some(x=>x.kind==='visible-text'||x.kind==='label'));
  const safeTitle=hasDescriptiveEvidence?title:'';
+ const platform=$('metadataPlatform')?.value||'all';
  const description=hasDescriptiveEvidence&&translated
   ? 'Animated video showing '+safeTitle+'.'
   :'';
  if(!hasDescriptiveEvidence)keywords.length=0;
- $('metadataTitle').value=safeTitle;
+ $('metadataTitle').dataset.baseTitle=safeTitle;
+ $('metadataTitle').value=trozalFormatMetadataTitleForPlatform(safeTitle,platform);
  $('metadataDescription').value=description;
  $('metadataCategory').value=hasDescriptiveEvidence?category:'Graphic Resources';
  $('metadataKeywords').value=keywords.slice(0,47).join(', ');
@@ -3419,9 +3466,18 @@ function generateStockMetadata(){
  $('metadataStatus').textContent=hasDescriptiveEvidence
   ?'Metadata dibuat dari prompt dan teks/label yang dapat dibaca. '+keywords.length+' keyword relevan ditemukan; maksimum 47. Terjemahan judul memakai kamus lokal terbatas—periksa tata bahasa dan pastikan semua istilah sesuai visual sebelum upload.'
   :'Belum ada deskripsi visual yang cukup. Isi topik atau susun deskripsi tiap scene terlebih dahulu. Sistem tidak akan mengarang judul, deskripsi, atau keyword dari nama file saja.';
+ trozalUpdateMetadataPlatformValidation();
 }
 function updateMetadataCount(){const count=$('metadataKeywords').value.split(',').map(x=>x.trim()).filter(Boolean).length;$('metadataKeywordCount').textContent=count+' / 47';$('metadataKeywordCount').style.color=count===47?'#72e6a7':'#ffc36a'}
 $('generateMetadataBtn').addEventListener('click',generateStockMetadata);
+$('metadataPlatform').addEventListener('change',()=>{
+ const title=$('metadataTitle'),base=title.dataset.baseTitle||title.value;
+ if(base)title.value=trozalFormatMetadataTitleForPlatform(base,$('metadataPlatform').value);
+ trozalUpdateMetadataPlatformValidation();scheduleAutosave();
+});
+$('metadataTitle').addEventListener('input',()=>{ $('metadataTitle').dataset.baseTitle='';trozalUpdateMetadataPlatformValidation(); });
+$('metadataKeywords').addEventListener('input',trozalUpdateMetadataPlatformValidation);
+
 $('clearMetadataBtn').addEventListener('click',()=>{['metadataSubject','metadataTitle','metadataDescription','metadataKeywords'].forEach(id=>$(id).value='');$('metadataCategory').selectedIndex=0;updateMetadataCount();$('metadataStatus').textContent='Metadata dikosongkan.'});
 $('metadataKeywords').addEventListener('input',updateMetadataCount);
 document.querySelectorAll('[data-copy-meta]').forEach(b=>b.addEventListener('click',async()=>{const el=$(b.dataset.copyMeta);try{await navigator.clipboard.writeText(el.value||el.textContent);$('metadataStatus').textContent=b.textContent+' berhasil disalin.'}catch(e){el.focus();el.select();$('metadataStatus').textContent='Pilih teks lalu tekan Ctrl+C.'}}));
