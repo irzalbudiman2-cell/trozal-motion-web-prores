@@ -3367,7 +3367,20 @@ function trozalMetadataTitleFromEvidence(source,translated,fallback){
 }
 function trozalFormatMetadataTitleForPlatform(title,platform){
  const original=String(title||'').replace(/\s+/g,' ').trim();
- if(!original||platform!=='shutterstock')return original;
+ if(!original)return original;
+ if(platform==='adobe'){
+  let adobeTitle=original.replace(/\bsanta claus\b/gi,'Festive Character').replace(/\bsanta\b/gi,'Festive Character');
+  if(/festive character/i.test(adobeTitle)&&/sleigh/i.test(adobeTitle)){
+   adobeTitle='Festive Character Flying a Sleigh Over City Buildings at Night';
+  }
+  if(adobeTitle.length>70){
+   const words=adobeTitle.split(/\s+/),kept=[];
+   for(const word of words){const candidate=[...kept,word].join(' ');if(candidate.length>70)break;kept.push(word);}
+   adobeTitle=kept.join(' ').replace(/[\s,;:.-]+$/,'');
+  }
+  return adobeTitle;
+ }
+ if(platform!=='shutterstock')return original;
  if(/^this animated video shows\b/i.test(original))return /[.!?]$/.test(original)?original:original+'.';
  let subject=original.replace(/[.!?]+$/,'').toLowerCase();
  subject=subject.replace(/\bsanta claus\b/g,'Santa Claus')
@@ -3440,6 +3453,10 @@ function generateStockMetadata(){
  TROZAL_METADATA_EXTRA_TERMS.forEach(rule=>{if(rule.re.test(analysisText))rule.terms.forEach(addKeyword)});
  // Only a medium/type keyword is added when the project is genuinely an animated scene.
  if(sceneTexts.length||htmlMotionSource||sourceType.includes('svg'))['animated video','motion graphic'].forEach(addKeyword);
+ if(platform==='adobe'&&/santa claus|santa|sinterklas/i.test(analysisText)){
+  const allowed=keywords.filter(word=>!(/santa|claus|sinterklas/i.test(word)));
+  keywords.splice(0,keywords.length,...allowed);
+ }
  const ranked=Object.entries(categoryScores).sort((a,b)=>b[1]-a[1]);
  const category=ranked.length&&ranked[0][1]>ranked[1]?.[1]?ranked[0][0]:(ranked.length===1?ranked[0][0]:'Graphic Resources');
  const hasVisualEvidence=!!(subject||sceneTexts.length||htmlMotionSource||sourceSvg||svgPieces.length);
