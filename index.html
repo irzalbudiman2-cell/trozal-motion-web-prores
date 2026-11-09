@@ -2439,6 +2439,7 @@ function importVisualScenesToNativeTracks(){
   $('objectName').value='Prompt Visual Scene Timeline';
   const duration=$('duration');
   duration.max=String(Math.max(30,Math.ceil(total)));
+  duration.step='0.01';
   duration.value=total.toFixed(2);
   $('durationVal').textContent=total.toFixed(1)+' dtk';
   updateInfo();
@@ -2450,7 +2451,7 @@ function importVisualScenesToNativeTracks(){
   const loopFor={locked:0,pan:11,parallax:23,orbit:17,follow:23};
   items.forEach((item,index)=>{
    const d=Math.max(.5,Math.min(60,Number(item.duration)||1)),end=start+d;
-   const set=(id,value)=>{const el=$(id+index);if(el)el.value=String(value)};
+   const set=(id,value)=>{const el=$(id+index);if(!el)return;if(el.type==='checkbox')el.checked=!!value;else el.value=String(value)};
    set('Delay',0);set('Start',start.toFixed(2));set('End',end.toFixed(2));
    set('In',1);set('Out',1);set('Duration',Math.min(.55,Math.max(.12,d*.16)).toFixed(2));
    set('Loop',loopFor[item.camera]??23);set('Intensity',45);set('Scale',100);set('Rotation',0);
@@ -3292,11 +3293,11 @@ function trozalTranslateMetadataText(value){
  return text.replace(/\s+/g,' ').trim();
 }
 const TROZAL_METADATA_CONCEPTS=[
- {re:/ramadan|ramadhan|islamic|islam|muslim|crescent moon|mosque|quran|eid|prayer|religious/ig,category:'Culture and Religion',terms:['ramadan','islamic','religion','muslim','spiritual']},
- {re:/santa claus|sinterklas|christmas|reindeer|sleigh|xmas|snowman/ig,category:'Celebration',terms:['christmas','santa claus','holiday','seasonal','festive']},
+ {re:/ramadan|ramadhan|islamic|islam|muslim|crescent moon|mosque|quran|eid|prayer|religious/ig,category:'Culture and Religion',priority:5,terms:['ramadan','islamic','religion','muslim','spiritual']},
+ {re:/santa claus|sinterklas|christmas|reindeer|sleigh|xmas|snowman/ig,category:'Celebration',priority:4,terms:['christmas','santa claus','holiday','seasonal','festive']},
  {re:/new year|countdown|firework|fireworks/ig,category:'Celebration',terms:['new year','countdown','fireworks','celebration']},
- {re:/city|cityscape|skyline|urban|building|buildings|skyscraper|architecture/ig,category:'Buildings and Architecture',terms:['city','cityscape','urban skyline','architecture','building','skyscraper']},
- {re:/car|automobile|vehicle|motorcycle|truck|bus|sleigh|aircraft|airplane|helicopter|rocket|ship|submarine/ig,category:'Transportation',terms:['vehicle','transportation','travel','motion','transport']},
+ {re:/city|cityscape|skyline|urban|building|buildings|skyscraper|architecture/ig,category:'Buildings and Architecture',priority:3,terms:['city','cityscape','urban skyline','architecture','building','skyscraper']},
+ {re:/car|automobile|vehicle|motorcycle|truck|bus|sleigh|aircraft|airplane|helicopter|rocket|ship|submarine/ig,category:'Transportation',priority:2,terms:['vehicle','transportation','travel','motion','transport']},
  {re:/ocean|sea|underwater|whale|fish|marine|submarine/ig,category:'Nature',terms:['ocean','sea','underwater','marine life','aquatic','wildlife']},
  {re:/forest|tree|trees|mountain|mountains|jungle|waterfall|flower|flowers|plant|plants|wildlife|animal/ig,category:'Nature',terms:['nature','landscape','environment','wildlife','outdoors']},
  {re:/desert|dune|pyramid|sand/ig,category:'Travel',terms:['desert','sand dunes','arid landscape','landscape','travel']},
@@ -3309,24 +3310,24 @@ const TROZAL_METADATA_CONCEPTS=[
  {re:/person|people|woman|man|child|children|portrait|human/ig,category:'People',terms:['people','human','portrait','person']}
 ];
 const TROZAL_METADATA_EXTRA_TERMS=[
- {re:/\bnight\b|nighttime|malam/ig,terms:['night','nighttime']},
- {re:/moon|crescent/ig,terms:['moon','moonlight']},
- {re:/snow|snowfall|winter/ig,terms:['snow','winter']},
- {re:/lantern|lamp|light|glow|glowing/ig,terms:['light','illumination']},
- {re:/fly|flying|flight|airborne/ig,terms:['flying','flight','aerial']},
- {re:/rotate|rotating|rotation|spin/ig,terms:['rotation','rotating']},
- {re:/gold|golden/ig,terms:['gold','golden']},
- {re:/glitter|sparkle|shimmer/ig,terms:['glitter','sparkling','shimmer']},
- {re:/abstract|geometric|shape|shapes/ig,terms:['abstract','geometric','geometry']},
- {re:/background|backdrop/ig,terms:['background','backdrop']},
- {re:/animation|animated|motion graphic|motion design/ig,terms:['animation','animated video','motion graphic','motion design']}
+ {re:/\bnight\b|nighttime|malam/i,terms:['night','nighttime']},
+ {re:/moon|crescent/i,terms:['moon','moonlight']},
+ {re:/snow|snowfall|winter/i,terms:['snow','winter']},
+ {re:/lantern|lamp|light|glow|glowing/i,terms:['light','illumination']},
+ {re:/fly|flying|flight|airborne/i,terms:['flying','flight','aerial']},
+ {re:/rotate|rotating|rotation|spin/i,terms:['rotation','rotating']},
+ {re:/gold|golden/i,terms:['gold','golden']},
+ {re:/glitter|sparkle|shimmer/i,terms:['glitter','sparkling','shimmer']},
+ {re:/abstract|geometric|shape|shapes/i,terms:['abstract','geometric','geometry']},
+ {re:/background|backdrop/i,terms:['background','backdrop']},
+ {re:/animation|animated|motion graphic|motion design/i,terms:['animation','animated video','motion graphic','motion design']}
 ];
 function generateStockMetadata(){
  const evidence=trozalMetadataEvidence();
  const raw=evidence.text;
  const sceneTexts=Array.isArray(visualSceneSequence)?visualSceneSequence.map(x=>String(x.text||'').trim()).filter(Boolean):[];
  const subject=String($('metadataSubject')?.value||'').trim();
- const sourceText=sceneTexts.length?sceneTexts.join('. '):subject||raw;
+ const sourceText=[subject,...sceneTexts].filter(Boolean).join('. ')||raw;
  const translated=trozalTranslateMetadataText(sourceText);
  const firstSentence=(translated.split(/(?<=[.!?])\s+/)[0]||translated).replace(/[|]+/g,' ').replace(/\s+/g,' ').trim();
  const title=trozalTitleCase(firstSentence).replace(/\s+/g,' ').slice(0,135);
@@ -3343,7 +3344,7 @@ function generateStockMetadata(){
  TROZAL_METADATA_CONCEPTS.forEach(rule=>{
   const matches=[...analysisText.matchAll(rule.re)];
   if(matches.length){
-   categoryScores[rule.category]=(categoryScores[rule.category]||0)+matches.length;
+   categoryScores[rule.category]=(categoryScores[rule.category]||0)+matches.length*(rule.priority||1);
    conceptHits.push({category:rule.category,matchCount:matches.length});
    rule.terms.forEach(addKeyword);
   }
