@@ -89,9 +89,38 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           import re
+
           p = Path("Dockerfile")
           text = p.read_text()
+
+          # Upstream emsdk Dockerfile uses Ubuntu apt repositories over HTTP.
+          # Force HTTPS so Docker build does not hang on archive.ubuntu.com:80.
+          apt_pattern = r"(?m)^(?P<indent>[ ]*)RUN apt-get update && \\\n(?P=indent)      apt-get install -y pkg-config autoconf automake libtool ragel\s*$"
+          apt_lines = [
+              "RUN find /etc/apt -type f \\( -name '*.list' -o -name '*.sources' \\) -exec sed -i \\",
+              "      -e 's|http://archive.ubuntu.com/ubuntu|https://archive.ubuntu.com/ubuntu|g' \\",
+              "      -e 's|http://security.ubuntu.com/ubuntu|https://security.ubuntu.com/ubuntu|g' {} + && \\",
+              "      apt-get -o Acquire::Retries=5 -o Acquire::https::Timeout=60 update && \\",
+              "      apt-get install -y --no-install-recommends pkg-config autoconf automake libtool ragel",
+          ]
+          patched, apt_count = re.subn(
+              apt_pattern,
+              lambda m: "\n".join(m.group("indent") + line for line in apt_lines),
+              text,
+              count=1,
+          )
+          if apt_count != 1:
+              raise SystemExit("Could not locate emsdk apt dependency block; no build performed.")
+
+          # Keep retries on later apt-get layers as well (zimg-builder).
+          patched = patched.replace(
+              "RUN apt-get update && apt-get install -y git",
+              "RUN apt-get -o Acquire::Retries=5 -o Acquire::https::Timeout=60 update && apt-get install -y --no-install-recommends git",
+          )
+
+          # Enable the ProRes encoder and MOV/PNG input-output support.
           pattern = r"(?m)^(?P<indent>[ ]*)RUN bash -x /src/build\.sh \\\n(?P=indent)      --enable-gpl \\\n"
+
           def patch(match):
               indent = match.group("indent")
               lines = [
@@ -104,10 +133,12 @@ jobs:
                   "      --enable-gpl \\",
               ]
               return "\n".join(indent + line for line in lines) + "\n"
-          patched, count = re.subn(pattern, patch, text, count=1)
+
+          patched, count = re.subn(pattern, patch, patched, count=1)
           if count != 1:
               raise SystemExit("Could not locate FFmpeg configure block with indentation; no build performed.")
           p.write_text(patched)
+
           PY
           make prd
           mkdir -p "$GITHUB_WORKSPACE/site/vendor/prores-core"
