@@ -48,7 +48,7 @@ small,.muted{color:var(--muted)}.row{display:flex;gap:8px;align-items:center}.ro
 .visual-scene-number{font-size:10px;font-weight:800;color:#b9fff0;letter-spacing:.08em}
 .visual-scene-head .visual-scene-spacer{flex:1}
 .visual-scene-card button{font-size:10px;padding:5px 7px}
-.visual-scene-card textarea{width:100%;min-height:56px;resize:vertical;background:#071c23;color:#effffb;border:1px solid #286c68;border-radius:6px;padding:7px;font:11px/1.45 inherit}
+.visual-scene-card textarea{width:100%;min-height:56px;resize:vertical;background:#071c23;color:#effffb;border:1px solid #286c68;border-radius:6px;padding:7px;font:inherit;font-size:11px;line-height:1.45}
 .visual-scene-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:7px}
 .visual-scene-fields label{display:block;font-size:9px;color:#a7e8dc;margin-bottom:3px}
 .visual-scene-fields input,.visual-scene-fields select{width:100%;min-width:0;background:#071c23;color:#eafffa;border:1px solid #286c68;border-radius:6px;padding:6px;font-size:10px}
@@ -2313,7 +2313,7 @@ function updateVisualSceneSequenceSummary(){
  el.textContent=count?count+' adegan · '+total.toFixed(1)+' detik total · '+visualSceneSequence.map((x,i)=>(i+1)+': '+(Number(x.duration)||0).toFixed(1)+'s').join('  /  '):'Belum ada adegan. Klik “Susun Adegan dari Prompt” untuk membuat timeline.';
 }
 function visualSceneField(label,type,value,options){
- const wrap=document.createElement('div'),lab=document.createElement('label'),field=document.createElement(type==='textarea'?'textarea':type);
+ const wrap=document.createElement('div'),lab=document.createElement('label'),field=document.createElement(type==='textarea'?'textarea':type==='select'?'select':'input');
  lab.textContent=label;wrap.appendChild(lab);
  if(type==='select'){
   (options||[]).forEach(opt=>{const o=document.createElement('option');o.value=opt[0];o.textContent=opt[1];field.appendChild(o);});
