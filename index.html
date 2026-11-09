@@ -748,6 +748,7 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
     <label for="metadataSceneSelect">Pilih scene untuk pratinjau sumber</label>
     <select id="metadataSceneSelect"><option value="">Belum ada scene</option></select>
     <div id="metadataSceneEvidence" class="metadata-scene-evidence">Deskripsi scene akan tampil di sini. Ini adalah bukti teks, bukan analisis piksel.</div>
+    <button type="button" id="metadataRefreshScenesBtn">Refresh daftar scene</button>
     <div class="row"><button type="button" id="metadataAddSceneBatchBtn">Tambah scene ke batch</button><button type="button" id="metadataAddCurrentBatchBtn">Tambah metadata saat ini</button></div>
     <div id="metadataBatchSummary" class="metadata-batch-summary">Batch kosong · 0 aset</div>
     <div id="metadataBatchList" class="metadata-batch-list"></div>
@@ -3738,7 +3739,7 @@ function trozalMetadataRenderReview(){
   const label=document.createElement('span');label.textContent=entry.term+' · '+(entry.exact?'cocok penuh':entry.ratio>0?'cocok sebagian':'belum cocok');chip.appendChild(label);
   const approve=document.createElement('button');approve.type='button';approve.textContent=trozalMetadataApproved.has(entry.key)?'✓':'Setujui';approve.title='Setujui keyword ini berdasarkan tinjauan manual';
   approve.addEventListener('click',()=>{if(trozalMetadataApproved.has(entry.key))trozalMetadataApproved.delete(entry.key);else trozalMetadataApproved.add(entry.key);trozalMetadataRenderReview()});chip.appendChild(approve);
-  const remove=document.createElement('button');remove.type='button';remove.textContent='×';remove.title='Hapus keyword dari daftar';remove.addEventListener('click',()=>{const kept=String($('metadataKeywords').value||'').split(/[,;\\n]+/).map(x=>x.trim()).filter(x=>x&&trozalMetadataWordKey(x)!==entry.key);$('metadataKeywords').value=kept.join(', ');trozalMetadataApproved.delete(entry.key);updateMetadataCount();trozalRefreshMetadataQuality();trozalMetadataRenderReview()});chip.appendChild(remove);
+  const remove=document.createElement('button');remove.type='button';remove.textContent='×';remove.title='Hapus keyword dari daftar';remove.addEventListener('click',()=>{const kept=String($('metadataKeywords').value||'').split(/[,;\n]+/).map(x=>x.trim()).filter(x=>x&&x.toLowerCase().match(/[a-z0-9]+/g).map(trozalMetadataWordKey).filter(Boolean).join(' ')!==entry.key);$('metadataKeywords').value=kept.join(', ');trozalMetadataApproved.delete(entry.key);updateMetadataCount();trozalRefreshMetadataQuality();trozalMetadataRenderReview()});chip.appendChild(remove);
   host.appendChild(chip);
  });
 }
@@ -3752,7 +3753,7 @@ function trozalMetadataRenderScenes(){
  if(!scenes.length){const option=document.createElement('option');option.value='';option.textContent='Belum ada scene';select.appendChild(option);select.disabled=true;preview.textContent='Tambahkan scene di Visual Scene Sequencer. Sistem hanya membaca deskripsi teks yang tersedia.';return}
  select.disabled=false;const idx=Math.max(0,Math.min(scenes.length-1,Number(prior)||0));select.value=String(idx);trozalMetadataSelectedScene=idx;
  const scene=scenes[idx],txt=trozalMetadataSceneText(scene);
- preview.textContent='Scene '+(idx+1)+' · '+(txt||'Deskripsi kosong')+'\\nSumber: deskripsi scene yang dimasukkan pengguna/generator. Status: bukti teks, belum diverifikasi dari piksel.';
+ preview.textContent='Scene '+(idx+1)+' · '+(txt||'Deskripsi kosong')+'\nSumber: deskripsi scene yang dimasukkan pengguna/generator. Status: bukti teks, belum diverifikasi dari piksel.';
 }
 function trozalMetadataMakeKeywords(text){
  const stop=new Set('a an the and or but with without from into onto over under between beside near at by on in of to is are was were be being been this that these those it its their his her they them he she as than then very more most some any all one two three four five six seven eight nine ten'.split(' '));
@@ -3772,14 +3773,14 @@ function trozalMetadataRenderBatch(){
  trozalMetadataBatch.forEach((record,i)=>{const row=document.createElement('div');row.className='metadata-batch-item';const name=document.createElement('span');name.textContent=(record.scene?record.scene+' · ':'')+record.title;row.appendChild(name);const del=document.createElement('button');del.type='button';del.textContent='Hapus';del.addEventListener('click',()=>{trozalMetadataBatch.splice(i,1);trozalMetadataSaveBatch();trozalMetadataRenderBatch()});row.appendChild(del);list.appendChild(row)});
 }
 function trozalMetadataAddCurrent(){
- const q=trozalRefreshMetadataQuality(),keywords=String($('metadataKeywords').value||'').split(/[,;\\n]+/).map(x=>x.trim()).filter(Boolean);
+ const q=trozalRefreshMetadataQuality(),keywords=String($('metadataKeywords').value||'').split(/[,;\n]+/).map(x=>x.trim()).filter(Boolean);
  const title=$('metadataTitle').value.trim();if(!title){$('metadataBatchSummary').textContent='Judul masih kosong. Buat metadata sebelum menambahkan aset.';return}
  trozalMetadataAddBatch({platform:$('metadataPlatform').value,title,description:$('metadataDescription').value.trim(),category:$('metadataCategory').value,keywords,editorialScore:q.score,evidenceLevel:q.sourceAvailable?'descriptive-text':'insufficient',evidenceSources:[...new Set(q.analysis.evidence.entries.map(x=>x.label.split(' · ')[0]))],scene:'',createdAt:new Date().toISOString()});
 }
 function trozalMetadataAddScene(){
  const scenes=Array.isArray(visualSceneSequence)?visualSceneSequence:[],idx=Number($('metadataSceneSelect')?.value);
  const scene=scenes[idx],source=trozalMetadataSceneText(scene);if(!scene||!source){$('metadataBatchSummary').textContent='Scene tidak memiliki deskripsi teks. Tidak ada metadata yang dibuat.';return}
- const words=trozalMetadataMakeKeywords(source),title=source.replace(/\\s+/g,' ').trim().slice(0,120).replace(/[.!?]+$/,'');
+ const words=trozalMetadataMakeKeywords(source),title=source.replace(/\s+/g,' ').trim().slice(0,120).replace(/[.!?]+$/,'');
  const description='Animated video showing '+title+'.';
  trozalMetadataAddBatch({platform:$('metadataPlatform').value,title,description,category:$('metadataCategory').value,keywords:words,editorialScore:null,evidenceLevel:'scene-description-only',evidenceSources:['Visual Scene Sequencer · scene '+(idx+1)],scene:'Scene '+(idx+1),createdAt:new Date().toISOString()});
 }
@@ -3791,7 +3792,7 @@ function trozalMetadataExportBatchCsv(){
  const headers=['Platform','Scene','Title','Description','Category','Keywords','Keyword Count','Editorial Score','Evidence Level','Evidence Sources'];
  const cell=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
  const rows=[headers,...trozalMetadataBatch.map(x=>[x.platform,x.scene,x.title,x.description,x.category,(x.keywords||[]).join('|'),(x.keywords||[]).length,x.editorialScore,x.evidenceLevel,(x.evidenceSources||[]).join('; ')])];
- const csv='\\uFEFF'+rows.map(row=>row.map(cell).join(',')).join('\\r\\n');
+ const csv='\uFEFF'+rows.map(row=>row.map(cell).join(',')).join('\r\n');
  trozalMetadataDownload('trozal_metadata_batch.csv',csv,'text/csv;charset=utf-8;');$('metadataBatchSummary').textContent='CSV batch diekspor · '+trozalMetadataBatch.length+' aset · UTF-8 BOM.';
 }
 function trozalMetadataExportSidecar(){
@@ -3804,7 +3805,8 @@ $('optimizeMetadataBtn')?.addEventListener('click',trozalMetadataRenderReview);
 $('metadataSceneSelect')?.addEventListener('change',()=>{trozalMetadataSelectedScene=Number($('metadataSceneSelect').value)||0;trozalMetadataRenderScenes()});
 $('metadataApplyApprovedBtn')?.addEventListener('click',()=>{const entries=trozalMetadataKeywordAnalysis().entries.filter(x=>trozalMetadataApproved.has(x.key));$('metadataKeywords').value=entries.map(x=>x.term).join(', ');trozalMetadataApproved.clear();updateMetadataCount();trozalRefreshMetadataQuality();trozalMetadataRenderReview();$('metadataOptimizerStatus').textContent=entries.length+' keyword yang disetujui diterapkan.'});
 $('metadataResetReviewBtn')?.addEventListener('click',()=>{trozalMetadataApproved.clear();trozalMetadataRenderReview()});
-$('metadataAddSceneBatchBtn')?.addEventListener('click',trozalMetadataAddScene);
+$('metadataRefreshScenesBtn')?.addEventListener('click',trozalMetadataRenderScenes);
+$('metadataAddSceneBatchBtn')?.addEventListener('click',()=>{trozalMetadataRenderScenes();trozalMetadataAddScene()});
 $('metadataAddCurrentBatchBtn')?.addEventListener('click',trozalMetadataAddCurrent);
 $('metadataExportBatchCsvBtn')?.addEventListener('click',trozalMetadataExportBatchCsv);
 $('metadataExportSidecarBtn')?.addEventListener('click',trozalMetadataExportSidecar);
