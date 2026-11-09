@@ -4003,7 +4003,7 @@ function visualMotionAiExtractCode(raw){
  const check=code.toLowerCase();
  if(!check.includes('<svg'))throw new Error('Model tidak menghasilkan SVG. Coba prompt lebih spesifik atau gunakan model 4B.');
  if(check.includes('<script')||check.includes('<iframe')||check.includes('<object')||check.includes('<embed'))throw new Error('Output AI memuat elemen aktif/eksternal yang diblokir demi keamanan. Ulangi dengan instruksi SVG dan CSS saja.');
- if(check.includes('http://')||check.includes('https://')||check.includes('//fonts.'))throw new Error('Output mengandung URL eksternal. Generator hanya menerima aset SVG/CSS lokal tanpa resource luar.');
+ if(check.includes('href="http')||check.includes("href='http")||check.includes('src="http')||check.includes("src='http")||check.includes('url(http')||check.includes('url(https')||check.includes('@import')||check.includes('//fonts.'))throw new Error('Output mengandung resource eksternal. Generator hanya menerima aset SVG/CSS lokal tanpa resource luar.');
  const parsed=new DOMParser().parseFromString(code,'text/html');
  if(!parsed.querySelector('svg'))throw new Error('Struktur SVG tidak valid.');
  return code;
