@@ -104,6 +104,7 @@ small,.muted{color:var(--muted)}.row{display:flex;gap:8px;align-items:center}.ro
 .html-diagnostic-panel .btnrow button{font-size:10px}
 .layer-control{border:1px solid #3b4557;border-radius:7px;padding:7px;margin:6px 0;background:#191d26}.layer-control .layer-title{display:flex;align-items:center;gap:7px}.layer-control .layer-title label{margin:0;flex:1;font-size:11px}.layer-control.selected-layer{border-color:#f2b84b;box-shadow:0 0 0 1px #f2b84b55}.layer-solo{padding:3px 7px;font-size:9px;min-width:38px}.layer-solo.active{background:#f2b84b;color:#17191f;border-color:#f2b84b}.layer-eye-label{flex:0 0 auto!important;color:#9eabc0;cursor:pointer;font-size:13px!important}.layer-control .row{gap:5px}.layer-control select{font-size:10px;padding:5px}.layer-control .row label{font-size:9px;color:var(--muted)}.layer-control .layer-timing{margin-top:2px}.layer-control .layer-timing input,.layer-control .layer-timing select{font-size:10px;padding:5px;min-width:0}.layer-control .layer-timing>div{flex:1;min-width:0}
 
+ .scene-object-mode{display:flex;align-items:center;gap:7px;margin:9px 0 4px;padding:8px;border:1px solid #a77be0;border-radius:7px;background:#211438;color:#e9d9ff;font-size:11px}.scene-object-mode input{width:auto;accent-color:#b98af4}.scene-object-help{color:#cbb7e7!important}
  .motion-kind{margin-left:auto;font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:#ffd16b;border:1px solid #6b5632;border-radius:10px;padding:2px 6px}.motion-reason{font-size:10px;color:#aebbd0;margin:3px 0 6px}
 .preset-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}.preset-grid button{font-size:11px;min-height:34px;border:1px solid var(--line);border-radius:7px;background:#202735;color:var(--text);padding:7px}.preset-grid button:hover{border-color:#f2b84b;color:#ffd16b}.preset-grid button.active{background:#59451f;border-color:#f2b84b;color:#ffe1a0}
 
@@ -499,6 +500,8 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
  <div class="visual-sequence-summary" id="visualSceneTimelineSummary">Belum ada adegan. Masukkan prompt pada panel ungu lalu susun adegan di sini.</div>
  <div id="visualSceneList" class="visual-scene-list"></div>
  <div class="btnrow"><button type="button" class="primary" id="generateVisualSequenceBtn">▶ GENERATE DARI TIMELINE</button><button type="button" id="importVisualScenesBtn">▣ IMPOR SCENE KE MULTI-TRACK</button></div>
+ <label class="scene-object-mode"><input type="checkbox" id="splitSceneObjectsToggle"> Pecah objek di dalam setiap scene menjadi track terpisah</label>
+ <p class="help scene-object-help">Mode aktif mencoba memisahkan grup, bentuk, dan elemen SVG. Elemen yang saling bergantung (misalnya bagian tubuh/produk yang tersusun dari banyak path) dapat ikut terpisah; gunakan mode satu grup jika komposisi menjadi tidak utuh.</p>
  <div class="btnrow"><button type="button" id="clearVisualSequenceBtn">Kosongkan Timeline</button></div>
  <p class="notice">Pengaturan pada timeline ini akan dipakai saat membuat HTML visual. Total durasi hasil mengikuti jumlah durasi seluruh adegan, bukan lagi durasi default generator.</p>
 </section>
@@ -761,7 +764,7 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
 </div>
 <script>
 const $=id=>document.getElementById(id);
-let sourceSvg='', sourceUrl='', sourceType='', files=[], playing=false, raf=0, startAt=0, playhead=0, lastBlob=null, lastDownloadName='animove-render.webm', currentColor='#ffbd45', currentMode='single', svgPieces=[], svgWasSplit=false, svgLayerNames=[], svgLayerHints=[], preserveSvgColors=false, soloLayerIndex=-1, selectedLayerIndex=-1, layerKeyframes=[];
+let sourceSvg='', sourceUrl='', sourceType='', files=[], playing=false, raf=0, startAt=0, playhead=0, lastBlob=null, lastDownloadName='animove-render.webm', currentColor='#ffbd45', currentMode='single', svgPieces=[], svgWasSplit=false, svgLayerNames=[], svgLayerHints=[], svgLayerSceneIndices=[], trozalSceneObjectSplitMode=false, preserveSvgColors=false, soloLayerIndex=-1, selectedLayerIndex=-1, layerKeyframes=[];
 let timelineMarkers=[], timelineTrackLocks={}, timelineDragState=null, keyframeGraphDragState=null;
 let timelineSnapEnabled=true, motionPathDragState=null, trozalUndoStack=[], trozalUndoIndex=-1, trozalHistoryBusy=false;
 // HTML-to-Motion uses an isolated same-origin document and DOM capture; it is not rasterized through SVG foreignObject.
@@ -908,8 +911,10 @@ function splitSvgIntoPieces(silent=false){
    [...node.children].forEach(child=>{
     if(['defs','style','title','desc','metadata','linearGradient','radialGradient','clipPath','mask','filter','symbol'].includes(child.tagName))return;
     if(child.tagName==='g' && child.hasAttribute('data-scene-track')){
-      // Preserve each generated visual scene as one editable native track.
-      leaves.push({node:child,ancestors});return;
+      // Default: one grouped track per scene. Object mode descends into its SVG children.
+      if(trozalSceneObjectSplitMode)walk(child,ancestors.concat(child));
+      else leaves.push({node:child,ancestors});
+      return;
     }
     if(child.tagName==='g' && [...child.children].some(c=>graphicTags.has(c.tagName))){
       const drawable=[...child.children].filter(c=>graphicTags.has(c.tagName));
@@ -929,15 +934,22 @@ function splitSvgIntoPieces(silent=false){
   }else walk(root,[]);
   if(!leaves.length)throw new Error('Tidak ditemukan elemen vektor yang dapat dipisah.');
   const vb=root.getAttribute('viewBox')||`0 0 ${parseFloat(root.getAttribute('width'))||100} ${parseFloat(root.getAttribute('height'))||100}`;
-  svgPieces=leaves.slice(0,60).map((item,i)=>{
+  const selectedLeaves=leaves.slice(0,60);
+  svgLayerSceneIndices=selectedLeaves.map(item=>{const chain=[...(item.ancestors||[]),item.node];const scene=[...chain].reverse().find(el=>el.hasAttribute?.('data-scene-index'));return scene?Math.max(0,Number(scene.getAttribute('data-scene-index'))||0):-1;});
+  svgPieces=selectedLeaves.map((item,i)=>{
    const r=doc.createElementNS(ns,'svg');r.setAttribute('xmlns',ns);r.setAttribute('viewBox',vb);r.setAttribute('width','100%');r.setAttribute('height','100%');
    ['preserveAspectRatio','width','height'].forEach(a=>{if(root.hasAttribute(a)&&a==='preserveAspectRatio')r.setAttribute(a,root.getAttribute(a))});
    defs.forEach(d=>r.appendChild(d.cloneNode(true)));
    let parent=r;item.ancestors.forEach(a=>{const g=doc.createElementNS(ns,'g');[...a.attributes].forEach(at=>g.setAttribute(at.name,at.value));parent.appendChild(g);parent=g});if(item.base)[...root.children].forEach(child=>parent.appendChild(child.cloneNode(true)));else parent.appendChild(item.node.cloneNode(true));
    return new XMLSerializer().serializeToString(r);
   });
-  svgLayerNames=leaves.slice(0,60).map((it,i)=>it.base?'Base · diam':(it.node.getAttribute('id')||it.node.getAttribute('aria-label')||('Region '+(it.node.getAttribute('data-part')||i))));
-  svgLayerHints=leaves.slice(0,60).map((it,i)=>it.base?{kind:'background',entrance:0,loop:0,intensity:0,reason:'Layer dasar utuh menjaga gambar tetap tersambung saat region bergerak.'}:analyzeSvgLayer(it,i,Math.min(60,leaves.length)));
+  svgLayerNames=selectedLeaves.map((it,i)=>{
+   if(it.base)return 'Base · diam';
+   const sceneIndex=svgLayerSceneIndices[i],sceneLabel=sceneIndex>=0?'Scene '+String(sceneIndex+1).padStart(2,'0')+' · ':'';
+   const nodeName=it.node.getAttribute('aria-label')||it.node.getAttribute('data-name')||it.node.getAttribute('id')||('Objek '+(i+1));
+   return sceneLabel+nodeName;
+  });
+  svgLayerHints=selectedLeaves.map((it,i)=>it.base?{kind:'background',entrance:0,loop:0,intensity:0,reason:'Layer dasar utuh menjaga gambar tetap tersambung saat region bergerak.'}:analyzeSvgLayer(it,i,Math.min(60,selectedLeaves.length)));
   svgWasSplit=true;buildAutoLayerControls();renderSplitPieces(playhead);applyColor();
   if(!silent)setStatus('Analisis AI lokal selesai: '+svgPieces.length+' layer diklasifikasikan. Latar/dekorasi dijaga statis; objek dan teks diberi gerakan selektif.');scheduleAutosave?.();return true;
  }catch(e){svgWasSplit=false;svgPieces=[];if(!silent)setStatus('Gagal memisahkan SVG: '+e.message);return false}
@@ -2474,6 +2486,7 @@ function importVisualScenesToNativeTracks(){
  if(total>300){$('visualMotionStatus').textContent='Total durasi native timeline dibatasi 300 detik. Kurangi durasi adegan sebelum impor.';return;}
  try{
   const ns='http://www.w3.org/2000/svg',parser=new DOMParser(),serializer=new XMLSerializer();
+  trozalSceneObjectSplitMode=$('splitSceneObjectsToggle')?.checked===true;
   const master=parser.parseFromString('<svg xmlns="'+ns+'" viewBox="0 0 1600 900" width="1600" height="900"></svg>','image/svg+xml');
   const root=master.documentElement,defs=master.createElementNS(ns,'defs'),wrapper=master.createElementNS(ns,'g');
   wrapper.setAttribute('id','visual-scene-sequence');
@@ -2510,26 +2523,30 @@ function importVisualScenesToNativeTracks(){
    return;
   }
   // Start the imported scene composition with a clean set of per-track keyframes/markers.
-  layerKeyframes=items.map(()=>[]);
+  layerKeyframes=svgPieces.map(()=>[]);
   timelineMarkers=[];
   timelineTrackLocks={};
   selectedLayerIndex=0;soloLayerIndex=-1;
-  svgLayerNames=items.map((item,index)=>'Scene '+String(index+1).padStart(2,'0')+' · '+String(item.text||'').replace(/\s+/g,' ').slice(0,52));
-  svgLayerHints=items.map((item,index)=>({kind:'scene',entrance:1,loop:0,intensity:45,reason:'Scene '+(index+1)+' dipertahankan sebagai satu grup SVG native; waktu dan geraknya dapat diedit pada Multi-Track Timeline.'}));
-  buildAutoLayerControls();
-  let start=0;
+  const sceneStarts=[],sceneEnds=[];let sceneCursor=0;
+  items.forEach(item=>{const d=Math.max(.5,Math.min(60,Number(item.duration)||1));sceneStarts.push(sceneCursor);sceneCursor+=d;sceneEnds.push(sceneCursor)});
   const loopFor={locked:0,pan:11,parallax:23,orbit:17,follow:23};
-  items.forEach((item,index)=>{
-   const d=Math.max(.5,Math.min(60,Number(item.duration)||1)),end=start+d;
+  svgLayerHints=svgPieces.map((piece,index)=>{
+   const si=svgLayerSceneIndices[index]??-1,item=items[si];
+   if(si<0||!item)return svgLayerHints[index]||{kind:'object',entrance:0,loop:0,intensity:35,reason:'Objek SVG independen; atur gerakan sesuai kebutuhan.'};
+   return {kind:'scene-object',entrance:1,loop:loopFor[item.camera]??23,intensity:35,reason:'Objek dari Scene '+(si+1)+' · '+String(item.text||'').replace(/\s+/g,' ').slice(0,90)+' · waktu mengikuti durasi scene.'};
+  });
+  buildAutoLayerControls();
+  svgPieces.forEach((piece,index)=>{
+   const si=svgLayerSceneIndices[index]??index,item=items[si]||items[0];
+   const start=sceneStarts[si>=0?si:0]??0,end=sceneEnds[si>=0?si:0]??total,d=Math.max(.5,end-start);
    const set=(id,value)=>{const el=$(id+index);if(!el)return;if(el.type==='checkbox')el.checked=!!value;else el.value=String(value)};
    set('Delay',0);set('Start',start.toFixed(2));set('End',end.toFixed(2));
    set('In',1);set('Out',1);set('Duration',Math.min(.55,Math.max(.12,d*.16)).toFixed(2));
-   set('Loop',loopFor[item.camera]??23);set('Intensity',45);set('Scale',100);set('Rotation',0);
+   set('Loop',loopFor[item.camera]??23);set('Intensity',35);set('Scale',100);set('Rotation',0);
    set('On',true);set('Visible',true);set('Direction','normal');
-   start=end;
   });
   refreshTimelineEditor();renderAt(0);scheduleAutosave();
-  $('visualMotionStatus').textContent='Berhasil mengimpor '+items.length+' adegan menjadi '+svgPieces.length+' track SVG native. Setiap klip memiliki waktu mulai/selesai, fade masuk/keluar, dan gerakan sesuai kamera. Gunakan Multi-Track Timeline dan Keyframe Editor untuk penyuntingan lanjutan.';
+  $('visualMotionStatus').textContent='Berhasil mengimpor '+items.length+' adegan menjadi '+svgPieces.length+' track SVG native'+(trozalSceneObjectSplitMode?' berbasis objek':' (satu grup per scene)')+'. Waktu klip mengikuti durasi adegan; tiap track dapat diedit pada Multi-Track Timeline dan Keyframe Editor.';
   setStatus('Visual Scene Sequencer diimpor ke Multi-Track Editor: '+items.length+' scene · '+total.toFixed(1)+' detik.');
  }catch(e){
   $('visualMotionStatus').textContent='Impor ke Multi-Track gagal: '+(e?.message||String(e));
@@ -2537,6 +2554,7 @@ function importVisualScenesToNativeTracks(){
  }
 }
 $('importVisualScenesBtn').addEventListener('click',importVisualScenesToNativeTracks);
+$('splitSceneObjectsToggle')?.addEventListener('change',()=>{const mode=$('splitSceneObjectsToggle').checked?'PECAH OBJEK':'SATU GRUP PER SCENE';$('visualMotionStatus').textContent='Mode impor berikutnya: '+mode+'. Pilihan ini tidak mengubah proyek yang sudah diimpor.'});
 
 
 function visualMotionScenes(){
