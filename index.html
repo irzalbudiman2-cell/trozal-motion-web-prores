@@ -949,8 +949,10 @@ function splitSvgIntoPieces(silent=false){
   svgLayerNames=selectedLeaves.map((it,i)=>{
    if(it.base)return 'Base · diam';
    const sceneIndex=svgLayerSceneIndices[i],sceneLabel=sceneIndex>=0?'Scene '+String(sceneIndex+1).padStart(2,'0')+' · ':'';
-   const nodeName=it.node.getAttribute('aria-label')||it.node.getAttribute('data-name')||it.node.getAttribute('id')||('Objek '+(i+1));
-   return sceneLabel+nodeName;
+   const nodeName=it.node.getAttribute('aria-label')||it.node.getAttribute('data-part')||it.node.getAttribute('data-name')||it.node.getAttribute('id')||('Objek '+(i+1));
+   const semanticParent=[...(it.ancestors||[])].reverse().find(el=>el.getAttribute('data-object')||el.getAttribute('data-name')||el.getAttribute('aria-label')||el.getAttribute('inkscape:label'));
+   const groupName=semanticParent?(semanticParent.getAttribute('data-object')||semanticParent.getAttribute('data-name')||semanticParent.getAttribute('aria-label')||semanticParent.getAttribute('inkscape:label')):'';
+   return sceneLabel+(groupName&&groupName!==nodeName?groupName+' › ':'')+nodeName;
   });
   svgLayerHints=selectedLeaves.map((it,i)=>it.base?{kind:'background',entrance:0,loop:0,intensity:0,reason:'Layer dasar utuh menjaga gambar tetap tersambung saat region bergerak.'}:analyzeSvgLayer(it,i,Math.min(60,selectedLeaves.length)));
   svgWasSplit=true;buildAutoLayerControls();renderSplitPieces(playhead);applyColor();
@@ -3604,26 +3606,27 @@ function trozalRefreshMetadataQuality(){
  const sourceAvailable=!!($('metadataSubject')?.value.trim()||$('visualMotionPrompt')?.value.trim()||
   (Array.isArray(visualSceneSequence)&&visualSceneSequence.some(x=>String(x.text||'').trim()))||
   analysis.evidence.entries.some(x=>x.kind==='visible-text'||x.kind==='label'));
+ const verifiedSourceAvailable=!!$('metadataSubject')?.value.trim();
  const verified=count?(analysis.exactCount+analysis.partialCount*.45)/count:0;
  const titleOk=!!title&&title.length>=15&&(platform!=='adobe'||title.length<70)&&
   (platform!=='shutterstock'||title.split(/\s+/).filter(Boolean).length>=5);
  const descOk=description.length>=45;
  const titlePts=titleOk?20:(title?10:0),descPts=descOk?20:(description?10:0);
- const categoryPts=category==='Graphic Resources'?5:(sourceAvailable?10:5),evidencePts=sourceAvailable?10:0;
+ const categoryPts=category==='Graphic Resources'?5:(verifiedSourceAvailable?10:5),evidencePts=verifiedSourceAvailable?10:0;
  const keywordPts=count?((count>=5?10:5)+Math.round(verified*20)+(analysis.duplicates===0?5:0)+(count<=47?5:0)):0;
  const score=Math.max(0,Math.min(100,titlePts+descPts+categoryPts+evidencePts+keywordPts));
  const summary=$('metadataQualitySummary');
- if(summary)summary.textContent='Kesiapan editorial: '+score+'/100 · '+(score>=85?'Baik — tetap tinjau akurasi visual.':score>=65?'Cukup — periksa bagian yang ditandai.':'Perlu dilengkapi sebelum unggah.');
+ if(summary)summary.textContent='Kelengkapan metadata: '+score+'/100 · '+(verifiedSourceAvailable?'Ada deskripsi yang diperiksa pengguna.':sourceAvailable?'DRAF: sumber utama belum diverifikasi secara visual.':'Belum ada bukti deskriptif.')+' Skor ini bukan penilaian akurasi visual atau jaminan diterima marketplace.';
  const bar=$('metadataQualityBar');if(bar)bar.style.width=score+'%';
  const meter=$('metadataQualityMeter');if(meter)meter.setAttribute('aria-valuenow',String(score));
  const titleNote=!title?'Judul kosong':title.length<15?'Judul sangat pendek':(platform==='adobe'&&title.length>=70)?'Periksa batas judul Adobe':(platform==='shutterstock'&&title.split(/\s+/).filter(Boolean).length<5)?'Perlu minimal 5 kata':'Judul terisi';
  const descNote=!description?'Deskripsi kosong':descOk?'Deskripsi terisi':'Deskripsi terlalu singkat';
  const keywordNote=count+' keyword · '+analysis.exactCount+' cocok penuh · '+analysis.partialCount+' cocok sebagian · '+analysis.unmatchedCount+' belum cocok · '+analysis.duplicates+' duplikat';
- const evidenceNote=sourceAvailable?'Teks deskriptif tersedia':'Belum ada bukti deskriptif yang kuat';
+ const evidenceNote=verifiedSourceAvailable?'Deskripsi visual diperiksa pengguna':sourceAvailable?'Hanya prompt/rencana/label — belum diverifikasi':'Belum ada bukti deskriptif';
  const details=$('metadataQualityDetails');
  if(details)details.innerHTML=[['Judul',titleNote],['Deskripsi',descNote],['Keyword',keywordNote],['Bukti sumber',evidenceNote]]
   .map(item=>'<div class="metadata-quality-item"><b>'+item[0]+'</b><span>'+item[1].replace(/[&<>"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]))+'</span></div>').join('');
- return {score,analysis,sourceAvailable};
+ return {score,analysis,sourceAvailable,verifiedSourceAvailable};
 }
 function trozalOptimizeMetadataKeywords(silent=false){
  const analysis=trozalMetadataKeywordAnalysis(),ranked=analysis.entries.slice(0,47);
