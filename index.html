@@ -3878,23 +3878,30 @@ function trozalVisionSetConnection(message,isReady=false){
  const el=$('trozalVisionConnection');if(el){el.textContent=message;el.style.color=isReady?'#38c995':'#e3b66c';}
 }
 async function trozalVisionCheck(){
- trozalVisionSetConnection('Menghubungi Ollama lokal…');
+ trozalVisionSetConnection('Menghubungi Ollama lokal melalui TROZAL Bridge…');
  try{
-  const response=await fetch(TROZAL_VISION_BASE+'/api/tags',{method:'GET',cache:'no-store',targetAddressSpace:'loopback'});
-  if(!response.ok)throw new Error('HTTP '+response.status);
-  const data=await response.json(),models=Array.isArray(data.models)?data.models:[];
-  const select=$('trozalVisionModel'),available=models.map(m=>m.name||'');
-  [...select.options].forEach(option=>{option.dataset.installed=available.some(name=>name===option.value||name.startsWith(option.value+':'))?'1':'0'});
+  // Keep the first loopback request directly inside this click handler's call chain.
+  const response=await fetch(TROZAL_VISION_BASE+'/api/tags',{
+   method:'GET',mode:'cors',credentials:'omit',cache:'no-store',targetAddressSpace:'loopback'
+  });
+  if(!response.ok)throw new Error('Bridge merespons HTTP '+response.status);
+  const data=await response.json();
+  if(!Array.isArray(data.models))throw new Error('Respons Bridge tidak berisi daftar model Ollama.');
+  const models=data.models,select=$('trozalVisionModel'),available=models.map(m=>String(m.name||'')).filter(Boolean);
+  if(select)[...select.options].forEach(option=>{option.dataset.installed=available.some(name=>name===option.value||name.startsWith(option.value+':'))?'1':'0'});
   const preferred=available.find(name=>name==='qwen3-vl:2b')||available.find(name=>name.startsWith('qwen3-vl:2b'));
-  if(preferred){select.value='qwen3-vl:2b';}
+  if(preferred&&select)select.value='qwen3-vl:2b';
   const vision=available.filter(name=>/qwen3-vl|llava|gemma.*vision/i.test(name));
-  trozalVisionSetConnection('Terhubung · '+models.length+' model terpasang'+(vision.length?' · Vision: '+vision.join(', '):' · Qwen3-VL belum terpasang'),true);
-  trozalVisionSetStatus(available.length?'Ollama siap. Pastikan model yang dipilih sudah diunduh.':'Ollama aktif tetapi belum ada model terpasang.');
+  trozalVisionSetConnection('TERHUBUNG · '+models.length+' model terpasang'+(vision.length?' · Vision: '+vision.join(', '):' · Model Vision belum terpasang'),true);
+  trozalVisionSetStatus(vision.length?'Bridge dan Ollama siap. Model Vision tersedia: '+vision.join(', '):'Bridge aktif, tetapi belum ada model Vision yang cocok. Model terpasang: '+available.join(', '));
   return {models:available};
  }catch(error){
-  const reason=error?.message||String(error);
-  trozalVisionSetConnection('Belum terhubung. Jalankan Ollama dan izinkan origin GitHub Pages melalui OLLAMA_ORIGINS.',false);
-  trozalVisionSetStatus(reason.includes('Failed to fetch')?'Koneksi ditolak atau CORS belum diizinkan. Set OLLAMA_ORIGINS='+TROZAL_VISION_ORIGIN+' lalu restart Ollama.':'Ollama tidak dapat diakses: '+reason,true);
+  const reason=(error?.name?error.name+': ':'')+(error?.message||String(error));
+  trozalVisionSetConnection('GAGAL TERHUBUNG · '+reason,false);
+  const hint=/failed to fetch|networkerror|load failed/i.test(reason)
+   ?'Chrome gagal mengizinkan fetch Loopback. Pastikan izin Loopback Network untuk situs TROZAL = Allow, lalu reload.'
+   :'Pastikan jendela TROZAL Ollama Bridge tetap terbuka.';
+  trozalVisionSetStatus(hint+' Endpoint: '+TROZAL_VISION_BASE+'/api/tags',true);
   return null;
  }
 }
