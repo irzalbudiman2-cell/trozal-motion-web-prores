@@ -153,7 +153,7 @@ Current limitations:
 - Browser preview and frame-render parity for all generated CSS transitions and camera effects still require visual testing.
 
 Next development:
-- Add semantic object grouping/selection so related SVG paths (for example, a character's body parts or a jewelry product) can be selected and animated as one logical object without losing sub-part editability.
+- Add logical object grouping/selection so related SVG paths can be selected and transformed as one object while retaining per-part editability. Current increment adds semantic parent labels to layer names when SVG groups provide `data-object`, `data-name`, `aria-label`, or `inkscape:label`; synchronized group transforms and group-level keyframes are still pending.
 - Add scene thumbnails and playhead synchronization in the sequencer.
 - Add scene-specific native keyframe tracks for objects and camera movement.
 - Integrate a server-side AI image/video provider only after provider selection, secure key handling and usage controls are designed.
@@ -170,19 +170,19 @@ Acceptance checks:
 **Status: Evidence-grounded generator, marketplace preflight, keyword prioritization, editorial quality audit and single-asset CSV export implemented; visual-AI analysis and batch platform templates remain planned.**
 
 Implemented:
-- Metadata evidence is sourced from user-entered visual description, Prompt-to-Visual prompt, Visual Scene Sequencer scene descriptions, readable HTML/SVG text and labels, and asset/project name.
+- Metadata evidence is separated by provenance: user-reviewed visual description, Prompt-to-Visual intent, Visual Scene Sequencer plans, readable HTML/SVG text and labels, and asset/project name. Prompt/scene plans and filenames are not treated as proof that an object appears in the rendered frame.
 - Evidence sources are displayed to the user with qualitative coverage labels.
 - Filename-only input cannot produce a fabricated title or keyword set.
-- Title and description are based on descriptive text instead of a generic filler template.
+- Title and description use a strict source priority: user-reviewed visual description first, then scene plan, prompt intent, and readable labels as lower-confidence drafts. Generated descriptions no longer add a generic 'Animated video showing' claim.
 - Category selection uses matched subject-topic rules and weighted categories.
-- Keywords are derived from matched topics and meaningful source terms, capped at 47. The generator does not pad unused slots with unrelated generic terms.
+- Keywords are derived from meaningful source terms and topic terms only when every meaningful word is supported by the selected source text; no unsupported synonym, broad generic term, or filler is added. The list is capped at 47 and may be shorter.
 - Limited Indonesian-to-English phrase handling is included; generated wording is explicitly marked for human review.
 - Adobe Stock profile checks the recommended title length, keyword ceiling and first-ten keyword priority; it flags a small set of possible brand/character terms for manual review.
 - Shutterstock profile converts generated titles to a complete English descriptive sentence and checks the minimum five-word requirement.
 - Dreamstime profile emphasizes relevance and leaves numeric limits to the current upload form rather than guessing.
 - Metadata fields are persisted in project JSON and autosave.
 - Keyword ranking prioritizes exact phrase matches, then partial matches against supplied text; duplicates are normalized and removed without adding ungrounded terms.
-- A local editorial readiness score checks title, description, category, keyword relevance/duplicates and evidence coverage; it is explicitly not a marketplace acceptance score.
+- A local metadata-completeness score checks title, description, category, keyword relevance/duplicates and whether the user supplied a reviewed visual description. Prompt-only and scene-plan-only sources are explicitly identified as drafts; the score is not a visual-accuracy check or marketplace acceptance score.
 - CSV export provides a UTF-8 BOM single-asset metadata record with evidence provenance and keyword count.
 - Manual keyword review renders per-keyword text-evidence matches and lets the user approve or remove terms individually; applying approved terms is an explicit action.
 - Scene evidence preview displays the selected Visual Scene Sequencer description and labels it as text evidence, not pixel-level recognition.
@@ -192,8 +192,8 @@ Implemented:
 - Metadata and metadata-quality panels have distinct amber and violet feature colors.
 
 Current limitations:
-- This is a local rule-based text/evidence generator, not a connected AI vision model. It does not inspect raster/video pixels or verify that a prompted object actually appears in the rendered frame.
-- Indonesian-to-English phrase handling is limited and needs human proofreading, especially for unfamiliar terms and complex grammar.
+- This is a local rule-based text/evidence generator, not a connected AI vision model. It does not inspect raster/video pixels or verify that a prompted object actually appears in the rendered frame. Only the user-reviewed visual-description field is classified as user-verified evidence; other sources remain plans, prompts or readable labels.
+- Indonesian-to-English phrase handling remains dictionary-based and limited; unfamiliar terms, complex grammar, word order, singular/plural forms and marketplace wording require human proofreading. A generated English sentence is not guaranteed to be idiomatic.
 - The quality score is a heuristic editorial aid, not an official marketplace score or acceptance guarantee.
 - Scene-specific batch records use supplied scene descriptions and conservative local keyword extraction; they are not independently verified against rendered pixels.
 - Batch staging is stored in browser-local storage and may be lost if site data is cleared; users should export CSV/JSON to retain a delivery copy.
