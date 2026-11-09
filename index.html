@@ -3499,16 +3499,16 @@ function trozalUpdateMetadataPlatformValidation(){
 }
 function generateStockMetadata(){
  const evidence=trozalMetadataEvidence();
- const subject=String($('metadataSubject')?.value||'').replace(/\\s+/g,' ').trim();
- const promptText=String($('visualMotionPrompt')?.value||'').replace(/\\s+/g,' ').trim();
- const sceneTexts=Array.isArray(visualSceneSequence)?visualSceneSequence.map(x=>String(x.text||'').replace(/\\s+/g,' ').trim()).filter(Boolean):[];
+ const subject=String($('metadataSubject')?.value||'').replace(/\s+/g,' ').trim();
+ const promptText=String($('visualMotionPrompt')?.value||'').replace(/\s+/g,' ').trim();
+ const sceneTexts=Array.isArray(visualSceneSequence)?visualSceneSequence.map(x=>String(x.text||'').replace(/\s+/g,' ').trim()).filter(Boolean):[];
  const readable=evidence.entries.filter(x=>x.kind==='visible-text'||x.kind==='label').map(x=>x.text).filter(Boolean);
  // Strict source priority: reviewed visual description > scene plan > generation prompt > readable labels.
  const sourceKind=subject?'verified-description':sceneTexts.length?'scene-plan':promptText?'prompt-intent':readable.length?'readable-labels':'none';
  const sourceText=subject||sceneTexts.join('. ')||promptText||readable.join('. ');
  const translated=trozalTranslateMetadataText(sourceText);
- const cleanTranslated=translated.replace(/[|]+/g,' ').replace(/\\s+/g,' ').replace(/\\s+([,.;:!?])/g,'$1').replace(/^[,.;:]+|[,.;:]+$/g,'').trim();
- const firstSentence=(cleanTranslated.split(/(?<=[.!?])\\s+/)[0]||cleanTranslated).trim();
+ const cleanTranslated=translated.replace(/[|]+/g,' ').replace(/\s+/g,' ').replace(/\s+([,.;:!?])/g,'$1').replace(/^[,.;:]+|[,.;:]+$/g,'').trim();
+ const firstSentence=(cleanTranslated.split(/(?<=[.!?])\s+/)[0]||cleanTranslated).trim();
  const title=trozalMetadataTitleFromEvidence(sourceText,cleanTranslated,firstSentence);
  const categoryScores={};
  const keywords=[],seen=new Set();
@@ -3516,7 +3516,7 @@ function generateStockMetadata(){
  const sourceSet=new Set(sourceWords);
  const stop=new Set('a an the and or but with without from into onto over under between beside near at by on in of to is are was were be being been this that these those it its their his her they them he she as than then very more most some any all one two three four five six seven eight nine ten scene scenes featuring feature image video visual motion graphic design animation animated artwork illustration render rendered object objects style shows showing'.split(' '));
  const addKeyword=value=>{
-  const word=String(value||'').toLowerCase().replace(/[_-]+/g,' ').replace(/\\s+/g,' ').replace(/^[,.;:]+|[,.;:]+$/g,'').trim();
+  const word=String(value||'').toLowerCase().replace(/[_-]+/g,' ').replace(/\s+/g,' ').replace(/^[,.;:]+|[,.;:]+$/g,'').trim();
   if(!word||word.length<3||word.length>45||seen.has(word))return;
   const tokens=(word.match(/[a-z0-9]+/g)||[]).map(trozalMetadataWordKey).filter(x=>x&&!stop.has(x));
   // Every meaningful word must be supported by the chosen source text. No broad inferred synonyms.
