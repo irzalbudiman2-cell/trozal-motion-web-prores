@@ -2447,6 +2447,14 @@ function importVisualScenesToNativeTracks(){
    $('visualMotionStatus').textContent='SVG scene berhasil disusun, tetapi pemisahan track gagal. Periksa objek SVG dan coba impor kembali.';
    return;
   }
+  // Start the imported scene composition with a clean set of per-track keyframes/markers.
+  layerKeyframes=items.map(()=>[]);
+  timelineMarkers=[];
+  timelineTrackLocks={};
+  selectedLayerIndex=0;soloLayerIndex=-1;
+  svgLayerNames=items.map((item,index)=>'Scene '+String(index+1).padStart(2,'0')+' · '+String(item.text||'').replace(/\s+/g,' ').slice(0,52));
+  svgLayerHints=items.map((item,index)=>({kind:'scene',entrance:1,loop:0,intensity:45,reason:'Scene '+(index+1)+' dipertahankan sebagai satu grup SVG native; waktu dan geraknya dapat diedit pada Multi-Track Timeline.'}));
+  buildAutoLayerControls();
   let start=0;
   const loopFor={locked:0,pan:11,parallax:23,orbit:17,follow:23};
   items.forEach((item,index)=>{
