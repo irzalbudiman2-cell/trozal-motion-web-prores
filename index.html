@@ -3989,16 +3989,30 @@ function visualMotionAiStatus(message,isError=false){
  const el=$('visualMotionAiStatus');if(el){el.textContent=message;el.style.color=isError?'#ff9292':'#c9b6e8';}
 }
 async function visualMotionAiCheck(){
- visualMotionAiStatus('Memeriksa Ollama lokal…');
+ visualMotionAiStatus('Memeriksa izin Loopback Network dan Ollama…');
+ const endpoint='http://127.0.0.1:11435/api/tags';
  try{
-  const r=await fetch('http://127.0.0.1:11435/api/tags',{cache:'no-store',targetAddressSpace:'loopback'});
-  if(!r.ok)throw new Error('HTTP '+r.status);
-  const data=await r.json(),models=(data.models||[]).map(x=>x.name||[]);
-  const chosen=$('visualMotionAiModel').value,found=models.some(n=>n===chosen||n.startsWith(chosen+':'));
-  visualMotionAiStatus('Ollama terhubung · '+models.length+' model terpasang · '+(found?'Model '+chosen+' tersedia.':'Model '+chosen+' belum diunduh.'));
-  return {models,found};
+  let permissionState='unknown';
+  if(navigator.permissions?.query){
+   try{const p=await navigator.permissions.query({name:'loopback-network'});permissionState=p.state;}
+   catch(_){permissionState='unsupported';}
+  }
+  if(permissionState==='denied'){
+   throw new Error('Chrome memblokir izin Loopback Network. Buka pengaturan situs TROZAL, cari Loopback network, lalu pilih Allow. Local network saja belum cukup.');
+  }
+  const response=await fetch(endpoint,{method:'GET',mode:'cors',cache:'no-store',targetAddressSpace:'loopback'});
+  if(!response.ok)throw new Error('Bridge merespons HTTP '+response.status);
+  const data=await response.json();
+  if(!Array.isArray(data.models))throw new Error('Respons bridge bukan daftar model Ollama yang valid.');
+  const models=data.models.map(x=>x.name||'').filter(Boolean);
+  const chosen=$('visualMotionAiModel').value;
+  const found=models.some(n=>n===chosen||n.startsWith(chosen+':'));
+  visualMotionAiStatus('Ollama terhubung · '+models.length+' model terpasang · '+(found?'Model '+chosen+' tersedia.':'Model '+chosen+' belum diunduh.')+(permissionState==='prompt'?' · Izin Loopback telah diminta melalui Chrome.':''));
+  return {models,found,permissionState};
  }catch(e){
-  visualMotionAiStatus('Ollama belum terhubung: '+(e?.message||e)+'. Pastikan Ollama aktif dan OLLAMA_ORIGINS mengizinkan origin TROZAL.',true);return null;
+  const reason=(e?.name?e.name+': ':'')+(e?.message||String(e));
+  visualMotionAiStatus('Gagal mengakses Bridge ('+reason+'). Periksa izin Loopback Network Chrome dan pastikan jendela TROZAL Ollama Bridge tetap terbuka.',true);
+  return null;
  }
 }
 function visualMotionAiExtractCode(raw){
