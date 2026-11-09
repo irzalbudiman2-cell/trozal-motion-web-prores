@@ -129,7 +129,7 @@ Acceptance checks:
 
 ## Phase 6 — Prompt-to-Visual & Visual Scene Sequencer
 
-**Status: Initial procedural generator and editable scene sequencer committed; visual QA and deeper native-timeline integration remain planned.**
+**Status: Procedural generator, editable sequencer and initial native-track import committed; browser QA and object-level scene editing remain in development.**
 
 Implemented:
 - Prompt-to-Visual panel with its own purple feature color, separate from other editor panels.
@@ -141,26 +141,59 @@ Implemented:
 - Drag-and-drop scene ordering, move-up/move-down controls, add and delete scene operations.
 - Generated standalone HTML with one SVG composition per scene and a summed timeline duration.
 - Generated visual HTML can be sent through the existing HTML import/preview path.
+- **Import to Multi-Track:** each sequencer scene can be imported as one grouped native SVG layer/track, with its own start/end time, fade entrance/exit and camera-style motion mapped to existing layer controls.
 - Prompt, visual settings and scene sequence are persisted in project JSON and autosave.
 
 Current limitations:
 - Scene artwork is procedural SVG selected from keyword-driven visual templates. This is not an external generative image/video model and does not produce photorealistic AI footage.
 - Prompt understanding is keyword/template based; unsupported subjects may fall back to a generic illustration.
-- Scene objects are not yet exposed as independent native editor tracks after import.
+- Each imported scene currently becomes one grouped SVG track. The objects and characters inside a scene are not yet individual native tracks.
+- Native track motion is applied at scene/group level; generated HTML's full internal CSS effects are not all converted to native keyframes.
 - Browser preview and frame-render parity for all generated CSS transitions and camera effects still require visual testing.
 
 Next development:
-- Import each generated scene as an editable native multi-track composition.
-- Add scene thumbnails and playhead scrubbing in the sequencer.
-- Add object-level selection and independent motion controls within generated scenes.
+- Add scene thumbnails and playhead synchronization in the sequencer.
+- Add object-level selection and independent motion controls within each generated scene.
+- Add scene-specific native keyframe tracks for objects and camera movement.
 - Integrate a server-side AI image/video provider only after provider selection, secure key handling and usage controls are designed.
 
 Acceptance checks:
 - Scene order, durations and per-scene settings survive project save/reopen.
-- The generated HTML contains only visual SVG compositions and no title/text overlay.
-- Summed scene duration matches the generated output duration.
-- Each scene's transition and camera settings are reflected in the generated HTML.
+- Each imported visual scene appears as one independently selectable native SVG track.
+- Track start/end times match the scene duration sequence.
+- The generated HTML contains visual SVG compositions and no title/text overlay.
 - Existing HTML/SVG import and MP4, ProRes 4444 alpha and PNG Sequence ZIP export paths remain intact.
+
+## Phase 7 — Evidence-Based Stock Metadata
+
+**Status: Initial evidence-grounded metadata generator committed; platform-specific validation and real visual-AI integration remain planned.**
+
+Implemented:
+- Metadata evidence is sourced from user-entered visual description, Prompt-to-Visual prompt, Visual Scene Sequencer scene descriptions, readable HTML/SVG text and labels, and asset/project name.
+- Evidence sources are displayed to the user with a qualitative evidence-coverage label.
+- Title and description are based on descriptive text instead of a generic fabricated template.
+- Category selection uses matched subject-topic rules and category weighting.
+- Keywords are derived from matched topics and meaningful source terms, capped at 47. The generator no longer fills unused slots with unrelated generic terms.
+- A limited Indonesian-to-English phrase dictionary supports common scene terms; generated English wording is explicitly marked for human review.
+- Metadata panel has its own amber feature color.
+
+Current limitations:
+- This is a local rule-based text/evidence generator, not a connected AI vision model. It does not inspect raster/video pixels or verify that a prompted object actually appears in the rendered frame.
+- Unknown Indonesian phrases and complex grammar may not translate accurately.
+- Keyword relevance is limited by the quality and completeness of the supplied prompt, labels and text evidence.
+
+Next development:
+- Add metadata preview by scene and allow users to approve/remove individual keywords.
+- Add per-platform title, description and keyword limits based on current marketplace guidance.
+- Add optional frame contact-sheet analysis through a securely configured vision-AI provider, with visible provenance and user review.
+- Add an exportable metadata CSV/sidecar file linked to render output.
+
+Acceptance checks:
+- Every generated title, category and keyword can be traced to supplied text or a clearly disclosed rule.
+- The generator never claims to have visually recognized pixels when no vision model was used.
+- The keyword count can be below 47 when there is insufficient relevant evidence.
+- Repeated generation from identical evidence produces identical metadata.
+- Manual edits are preserved until the user explicitly generates again.
 
 ## Release validation matrix
 
