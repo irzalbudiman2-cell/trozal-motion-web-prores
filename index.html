@@ -461,9 +461,9 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
   </section>
 
   <section class="panel ai-tools" id="textToAnimationPanel">
-   <h3>◈ PROMPT-TO-VISUAL · MOTION GENERATOR</h3>
-   <p class="help">Ubah instruksi teks menjadi rangkaian adegan visual bergerak. Hasilnya adalah gambar ilustrasi SVG—lingkungan, objek, kendaraan, karakter sederhana, dan atmosfer—bukan animasi tulisan.</p>
-   <label>1 · TEXT PROMPT / INSTRUKSI VISUAL</label>
+   <h3>✦ TROZAL AI SCENE COMPOSER · LOCAL GENERATIVE</h3>
+   <p class="help">Buat adegan motion graphic dari instruksi teks menggunakan model AI lokal Ollama. AI menyusun SVG/HTML visual yang dapat dipreview, diperiksa, lalu dikirim ke mesin TROZAL. Model lokal menghasilkan ilustrasi vektor, bukan foto/video fotorealistis.</p>
+   <label>1 · BRIEF VISUAL / CERITA ADEGAN</label>
    <textarea id="visualMotionPrompt" rows="6" placeholder="Contoh: Santa Claus mengendarai kereta luncur terbang di antara gedung-gedung kota pada malam hari. Bulan bersinar, salju turun, kendaraan bergerak di jalan, kamera mengikuti kereta dari samping. Akhiri dengan pemandangan kota dari kejauhan."></textarea>
    <p class="help">Tulis satu cerita utuh atau pisahkan beberapa adegan dengan baris baru. Generator akan membaca kata kunci visual dan membangun gambar vektor berbeda untuk setiap adegan. Tidak perlu menulis judul atau teks layar.</p>
    <div class="row">
@@ -482,14 +482,14 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
     <label class="inline-check"><input type="checkbox" id="visualMotionParticles" checked> Partikel / atmosfer</label>
     <label class="inline-check"><input type="checkbox" id="visualMotionDepth" checked> Layer kedalaman</label>
    </div>
-   <div class="btnrow"><button type="button" class="primary" id="generateVisualMotionBtn">◈ GENERATE VISUAL MOTION</button><button type="button" id="resetVisualMotionBtn">Reset</button></div>
+   <div class="metadata-evidence" style="margin:10px 0;border-color:#9262ca;background:#1a1030"><b style="color:#d8b7ff">AI GENERATOR LOKAL</b><div class="row" style="gap:8px;align-items:center;margin-top:7px"><select id="visualMotionAiModel" aria-label="Model AI pembuat adegan" style="flex:1"><option value="qwen3-vl:2b">Qwen3-VL 2B · lebih ringan</option><option value="qwen3-vl:4b">Qwen3-VL 4B · lebih detail</option></select><button type="button" id="visualMotionAiCheckBtn">Cek Ollama</button></div><div id="visualMotionAiStatus" class="help" aria-live="polite">AI lokal belum diperiksa. Pastikan Ollama dan model sudah terpasang.</div><button type="button" class="primary" id="generateVisualMotionAiBtn" style="width:100%;margin-top:8px">✦ GENERATE DENGAN AI LOKAL</button><p class="help">AI akan membuat komposisi SVG multi-objek dan animasi CSS. Tidak memakai API berbayar. Hasil perlu diperiksa; kualitas bergantung pada kemampuan model lokal.</p></div><details style="margin:8px 0"><summary style="cursor:pointer">Mode cadangan: generator SVG prosedural lama</summary><p class="help">Mode ini memakai template dan kata kunci, bukan AI generatif. Gunakan jika Ollama sedang tidak tersedia.</p><button type="button" id="generateVisualMotionBtn">◈ GENERATE SVG PROSEDURAL</button></details><button type="button" id="resetVisualMotionBtn">Reset Prompt & Hasil</button>
    <div class="status" id="visualMotionStatus">Masukkan prompt visual untuk membuat adegan gambar bergerak.</div>
    <label>LIVE VISUAL PREVIEW · TANPA TEKS</label>
    <iframe id="visualMotionPreview" title="Prompt to visual motion preview" sandbox="" style="display:block;width:100%;height:300px;border:1px solid #8452c7;border-radius:9px;background:#090615"></iframe>
    <label>HTML VISUAL MOTION · SIAP DIIMPOR KE TROZAL</label>
    <textarea id="visualMotionOutput" spellcheck="false" placeholder="Dokumen HTML berisi komposisi SVG dan animasi visual akan tampil di sini…" style="min-height:220px"></textarea>
    <div class="btnrow"><button type="button" id="copyVisualMotionBtn">Salin HTML</button><button type="button" class="green" id="previewVisualMotionBtn">▶ Kirim ke Preview TROZAL</button></div>
-   <p class="notice">Generator lokal ini membuat ilustrasi vektor SVG prosedural berdasarkan kata kunci prompt lalu menganimasikannya dengan CSS. Ini belum memakai model AI eksternal untuk membuat foto/video fotorealistis; hasil visual dapat diedit dan dirender oleh mesin ekspor TROZAL.</p>
+   <p class="notice">AI Scene Composer menggunakan Ollama di komputer Anda. Kode hasil AI divalidasi agar tidak memuat JavaScript, iframe, atau resource eksternal sebelum preview. Untuk revisi, ubah brief visual lalu generate ulang.</p>
   </section>
 
 
@@ -3973,6 +3973,66 @@ $('trozalVisionCheckBtn')?.addEventListener('click',trozalVisionCheck);
 $('trozalVisionAnalyzeBtn')?.addEventListener('click',trozalVisionAnalyze);
 $('trozalVisionClearImagesBtn')?.addEventListener('click',()=>{$('trozalVisionImages').value='';trozalVisionSetStatus('Gambar pilihan dibersihkan. Analisis berikutnya akan mengambil frame dari Preview.')});
 trozalVisionCheck();
+
+
+/* TROZAL AI SCENE COMPOSER — local text-to-SVG generation through Ollama */
+function visualMotionAiStatus(message,isError=false){
+ const el=$('visualMotionAiStatus');if(el){el.textContent=message;el.style.color=isError?'#ff9292':'#c9b6e8';}
+}
+async function visualMotionAiCheck(){
+ visualMotionAiStatus('Memeriksa Ollama lokal…');
+ try{
+  const r=await fetch('http://localhost:11434/api/tags',{cache:'no-store'});
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  const data=await r.json(),models=(data.models||[]).map(x=>x.name||[]);
+  const chosen=$('visualMotionAiModel').value,found=models.some(n=>n===chosen||n.startsWith(chosen+':'));
+  visualMotionAiStatus('Ollama terhubung · '+models.length+' model terpasang · '+(found?'Model '+chosen+' tersedia.':'Model '+chosen+' belum diunduh.'));
+  return {models,found};
+ }catch(e){
+  visualMotionAiStatus('Ollama belum terhubung: '+(e?.message||e)+'. Pastikan Ollama aktif dan OLLAMA_ORIGINS mengizinkan origin TROZAL.',true);return null;
+ }
+}
+function visualMotionAiExtractCode(raw){
+ let code=String(raw||'').trim();
+ const fence=String.fromCharCode(96).repeat(3);
+ if(code.startsWith(fence)){code=code.slice(fence.length);const line=code.indexOf('\\n');if(line>=0)code=code.slice(line+1);const last=code.lastIndexOf(fence);if(last>=0)code=code.slice(0,last);}
+ const low=code.toLowerCase();
+ const startHtml=low.indexOf('<!doctype html'),startDoc=low.indexOf('<html'),startSvg=low.indexOf('<svg');
+ const starts=[startHtml,startDoc,startSvg].filter(n=>n>=0);
+ if(starts.length){const start=Math.min(...starts);code=code.slice(start);}
+ const check=code.toLowerCase();
+ if(!check.includes('<svg'))throw new Error('Model tidak menghasilkan SVG. Coba prompt lebih spesifik atau gunakan model 4B.');
+ if(check.includes('<script')||check.includes('<iframe')||check.includes('<object')||check.includes('<embed'))throw new Error('Output AI memuat elemen aktif/eksternal yang diblokir demi keamanan. Ulangi dengan instruksi SVG dan CSS saja.');
+ if(check.includes('http://')||check.includes('https://')||check.includes('//fonts.'))throw new Error('Output mengandung URL eksternal. Generator hanya menerima aset SVG/CSS lokal tanpa resource luar.');
+ const parsed=new DOMParser().parseFromString(code,'text/html');
+ if(!parsed.querySelector('svg'))throw new Error('Struktur SVG tidak valid.');
+ return code;
+}
+async function generateVisualMotionWithLocalAi(){
+ const btn=$('generateVisualMotionAiBtn');if(btn.disabled)return;
+ const brief=$('visualMotionPrompt').value.trim();
+ if(!brief){visualMotionAiStatus('Tulis brief visual terlebih dahulu.');return;}
+ btn.disabled=true;btn.textContent='AI SEDANG MENYUSUN ADEGAN…';
+ try{
+  const model=$('visualMotionAiModel').value,check=await visualMotionAiCheck();
+  if(!check)throw new Error('Ollama tidak dapat dihubungi.');
+  if(!check.found)throw new Error('Model '+model+' belum terpasang. Jalankan: ollama pull '+model);
+  const ratio=$('visualMotionRatio').value,duration=Math.max(3,Math.min(60,+$('visualMotionDuration').value||15));
+  const style=$('visualMotionStyle').value,accent=$('visualMotionAccent').value,camera=$('visualMotionCamera').value,transition=$('visualMotionTransition').value;
+  const system='You are a senior SVG motion-graphics scene designer. Return ONLY a complete standalone HTML5 document. Build a visually rich, polished, coherent animated vector scene from the user brief. Use inline SVG shapes, gradients, filters and CSS keyframe animation. No JavaScript, no external images, no network URLs, no external fonts, no iframe, no canvas. Use separate semantic SVG groups for independently moving objects, with descriptive ids and aria-labels. Keep the entire composition inside the viewBox; create clear foreground, midground and background depth; make the main subject recognizable and detailed, not generic icons. Animate relevant objects independently with natural motion and include subtle atmospheric movement. Ensure all objects remain visible within the frame and avoid unwanted zoom/cropping. Include a responsive full-viewport stage and preserve the requested aspect ratio. Use no text overlay unless text is an actual physical sign in the scene. Use CSS only for animation. Keep code compact but complete, valid HTML/SVG, and output no markdown fences or explanations.';
+  const user='VISUAL BRIEF: '+brief+'\\nAspect ratio: '+ratio+'. Target duration: '+duration+' seconds. Visual style: '+style+'. Accent: '+accent+'. Camera direction: '+camera+'. Scene transition preference: '+transition+'. Produce a single coherent scene with distinct SVG groups/layers and CSS motion. Set animation duration to match '+duration+' seconds and make the animation loop smoothly when appropriate.';
+  visualMotionAiStatus('Mengirim brief ke '+model+' pada komputer lokal. Proses dapat memerlukan beberapa menit…');
+  const response=await fetch('http://localhost:11434/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model,messages:[{role:'system',content:system},{role:'user',content:user}],stream:false,options:{temperature:.35,num_ctx:8192},keep_alive:'5m'})});
+  if(!response.ok){let detail='HTTP '+response.status;try{detail=(await response.json()).error||detail}catch(_){}throw new Error(detail);}
+  const data=await response.json(),code=visualMotionAiExtractCode(data.message?.content||'');
+  $('visualMotionOutput').value=code;$('visualMotionPreview').srcdoc=code;
+  visualMotionAiStatus('Berhasil · HTML/SVG AI dibuat ('+code.length.toLocaleString()+' karakter). Periksa Preview, lalu kirim ke Preview TROZAL. Hasil AI tetap perlu pemeriksaan visual.');
+  $('visualMotionStatus').textContent='AI Scene Composer selesai. Preview dibuat dari kode SVG/HTML hasil model lokal.';
+ }catch(e){visualMotionAiStatus('Gagal membuat adegan: '+(e?.message||String(e)),true);}
+ finally{btn.disabled=false;btn.textContent='✦ GENERATE DENGAN AI LOKAL';}
+}
+$('visualMotionAiCheckBtn')?.addEventListener('click',visualMotionAiCheck);
+$('generateVisualMotionAiBtn')?.addEventListener('click',generateVisualMotionWithLocalAi);
 
 </script>
 </body></html>
