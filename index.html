@@ -3570,8 +3570,11 @@ function trozalMetadataWordKey(value){
 }
 function trozalMetadataKeywordAnalysis(){
  const evidence=trozalMetadataEvidence();
- const source=[evidence.text,$('metadataSubject')?.value||'',$('visualMotionPrompt')?.value||'',
-  ...(Array.isArray(visualSceneSequence)?visualSceneSequence.map(x=>x.text||[]):[])].join(' ');
+ const reviewed=String($('metadataSubject')?.value||'').trim();
+ const scenes=Array.isArray(visualSceneSequence)?visualSceneSequence.map(x=>String(x.text||'').trim()).filter(Boolean):[];
+ const prompt=String($('visualMotionPrompt')?.value||'').trim();
+ const readable=evidence.entries.filter(x=>x.kind==='visible-text'||x.kind==='label').map(x=>x.text).filter(Boolean);
+ const source=reviewed||scenes.join(' ')||prompt||readable.join(' ');
  const stop=new Set('a an the and or but with without from into onto over under between beside near at by on in of to is are was were be being been this that these those it its their his her they them he she as than then very more most some any all one two three four five six seven eight nine ten'.split(' '));
  const sourceWords=(trozalTranslateMetadataText(source).toLowerCase().match(/[a-z0-9]+/g)||[]).map(trozalMetadataWordKey).filter(x=>x&&!stop.has(x));
  const sourceSet=new Set(sourceWords);
