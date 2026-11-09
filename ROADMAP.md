@@ -183,20 +183,26 @@ Implemented:
 - Keyword ranking prioritizes exact phrase matches, then partial matches against supplied text; duplicates are normalized and removed without adding ungrounded terms.
 - A local editorial readiness score checks title, description, category, keyword relevance/duplicates and evidence coverage; it is explicitly not a marketplace acceptance score.
 - CSV export provides a UTF-8 BOM single-asset metadata record with evidence provenance and keyword count.
+- Manual keyword review renders per-keyword text-evidence matches and lets the user approve or remove terms individually; applying approved terms is an explicit action.
+- Scene evidence preview displays the selected Visual Scene Sequencer description and labels it as text evidence, not pixel-level recognition.
+- Local batch staging supports adding the current metadata record or an individual scene description, with duplicate-entry checks.
+- Batch CSV export produces multiple asset rows with keyword counts, editorial score where available, evidence level and provenance.
+- JSON sidecar export records the batch schema, per-asset metadata, evidence provenance and an explicit non-visual-verification notice.
 - Metadata and metadata-quality panels have distinct amber and violet feature colors.
 
 Current limitations:
 - This is a local rule-based text/evidence generator, not a connected AI vision model. It does not inspect raster/video pixels or verify that a prompted object actually appears in the rendered frame.
 - Indonesian-to-English phrase handling is limited and needs human proofreading, especially for unfamiliar terms and complex grammar.
 - The quality score is a heuristic editorial aid, not an official marketplace score or acceptance guarantee.
-- CSV currently exports one asset per file; bulk multi-asset templates and sidecar JSON remain planned.
+- Scene-specific batch records use supplied scene descriptions and conservative local keyword extraction; they are not independently verified against rendered pixels.
+- Batch staging is stored in browser-local storage and may be lost if site data is cleared; users should export CSV/JSON to retain a delivery copy.
 - Platform checks are preflight guidance, not official marketplace certification. Category taxonomies and submission rules may change and must be checked again before release.
 - The possible-IP term list is deliberately incomplete and does not replace legal/editorial review.
 
 Next development:
-- Add metadata preview by scene and allow users to approve/remove individual keywords.
-- Add platform-specific category mapping, multiple-row batch metadata export and sidecar JSON.
-- Add scene-by-scene keyword provenance and manual approve/remove controls.
+- Add platform-specific category mapping and platform-specific batch CSV templates.
+- Add scene-by-scene rendered-frame contact sheets so users can compare text-derived suggestions with actual frames.
+- Add optional visual-AI analysis only after secure provider configuration, explicit cost/usage controls and per-suggestion confidence/provenance are available.
 - Add optional rendered-frame contact-sheet analysis through a securely configured vision-AI provider, with visible provenance, confidence and user review.
 - Add a clear difference between facts extracted from the scene, terms inferred from prompts, and optional AI-vision suggestions.
 
