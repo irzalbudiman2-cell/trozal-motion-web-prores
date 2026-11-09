@@ -60,34 +60,54 @@ Acceptance checks:
 
 ## Phase 3 — Text Animation Studio
 
-Planned:
-- Native text layers with editable content, font family, weight, size, alignment, tracking, leading and fill/stroke.
-- Per-character, per-word and per-line reveal.
-- Typewriter, kinetic typography, tracking reveal, text scramble, 3D-style flip and title-card presets.
-- Lower-third builder with name, role, logo/label and entrance/exit timing.
-- Text-on-path and safe-area guides where the browser renderer supports them.
-- Use local/system fonts by default; make font dependencies visible before export.
+**Status: Initial implementation committed; browser interaction and preview/export parity still require validation.**
+
+Implemented:
+- Multiple native text layers with add, duplicate, delete, select and reorder operations.
+- Presets including Custom, Cinematic Title, Lower Third, Subtitle, Neon Headline, Minimal Caption and Impact Headline.
+- Per-character and per-word motion with direction controls and stagger timing.
+- Text fill, outline and shadow styling.
+- Native text preview and frame-render integration.
+- Text-layer persistence in project JSON and autosave.
+
+Still planned:
+- Per-line reveal and more advanced text-on-path controls.
+- Complete typography controls for line height, baseline and safe-area guides.
+- More advanced variable-font and local-font dependency reporting.
+- Full browser and render parity checks for every preset.
 
 Acceptance checks:
 - Text remains editable after project save/reopen.
-- Preview and export render text with consistent layout and timing.
+- Preview and exported frames render text with consistent layout and timing.
 - Missing fonts are reported before render rather than silently substituted without notice.
+- Older project JSON files without text-layer data continue to load with safe defaults.
 
 ## Phase 4 — Mask, Shape & Path Animation
 
-Planned:
-- Shape layers: rectangle, ellipse, polygon, free path and editable bezier path.
-- Mask modes: Add, Subtract, Intersect and Difference.
-- Alpha Matte and Luma Matte where supported by the renderer.
-- Feather, expansion and animated mask/path points.
-- Shape morphing with normalized path points and compatible path topology checks.
-- Trim Paths / Stroke Reveal for supported SVG path geometry.
-- Explicit capability warnings for unsupported filters or blend/matte combinations.
+**Status: Multi-mask initial implementation committed; advanced vector-path behavior and export parity remain in development.**
+
+Implemented:
+- Shape mask manager with add, duplicate, delete and select operations.
+- Multiple masks with Add, Subtract, Intersect and Difference composition modes.
+- Independent mask shape, size, rotation, position and enabled state.
+- Per-mask keyframes for position, size, rotation and enabled state, with interpolation and Bezier easing data.
+- Editable path controls for the supported mask path workflow.
+- Project JSON persistence for mask layers and keyframes.
+- Preview mask compositing and canvas-based export masking.
+
+Still planned:
+- Alpha Matte and Luma Matte workflows.
+- Feather and expansion controls.
+- Shape morphing with topology compatibility checks.
+- Native Trim Paths for arbitrary imported SVG paths; current stroke reveal is limited to supported mask geometry.
+- Stronger capability warnings for unsupported filters and blend/matte combinations.
+- Browser testing of mask ordering, subtract/intersect results and preview/export parity.
 
 Acceptance checks:
 - Masks and path animation are deterministic at arbitrary playhead times.
 - Alpha is preserved in PNG and ProRes output.
 - Unsupported geometry is reported and never silently exported as a different result.
+- Multiple masks survive project save/reopen and evaluate consistently at the same frame.
 
 ## Phase 5 — Smart Render & Memory Manager
 
@@ -106,6 +126,41 @@ Acceptance checks:
 - Resume never skips or duplicates frames.
 - MOV success requires verified ProRes 4444 profile and alpha-capable pixel format; PNG sequence success requires every expected frame.
 - Render queue failures are isolated per job and do not corrupt the active project.
+
+## Phase 6 — Prompt-to-Visual & Visual Scene Sequencer
+
+**Status: Initial procedural generator and editable scene sequencer committed; visual QA and deeper native-timeline integration remain planned.**
+
+Implemented:
+- Prompt-to-Visual panel with its own purple feature color, separate from other editor panels.
+- Prompt parsing into a sequence of visual scene descriptions.
+- Procedural SVG scene generation for categories such as city, space, ocean, nature, desert, winter, Santa, vehicles, aircraft, animals and jewelry.
+- CSS camera motion, atmosphere/particles and scene transitions without animated text overlays.
+- Dedicated teal Visual Scene Sequencer panel.
+- Per-scene description, duration, entrance transition, camera movement and visual style.
+- Drag-and-drop scene ordering, move-up/move-down controls, add and delete scene operations.
+- Generated standalone HTML with one SVG composition per scene and a summed timeline duration.
+- Generated visual HTML can be sent through the existing HTML import/preview path.
+- Prompt, visual settings and scene sequence are persisted in project JSON and autosave.
+
+Current limitations:
+- Scene artwork is procedural SVG selected from keyword-driven visual templates. This is not an external generative image/video model and does not produce photorealistic AI footage.
+- Prompt understanding is keyword/template based; unsupported subjects may fall back to a generic illustration.
+- Scene objects are not yet exposed as independent native editor tracks after import.
+- Browser preview and frame-render parity for all generated CSS transitions and camera effects still require visual testing.
+
+Next development:
+- Import each generated scene as an editable native multi-track composition.
+- Add scene thumbnails and playhead scrubbing in the sequencer.
+- Add object-level selection and independent motion controls within generated scenes.
+- Integrate a server-side AI image/video provider only after provider selection, secure key handling and usage controls are designed.
+
+Acceptance checks:
+- Scene order, durations and per-scene settings survive project save/reopen.
+- The generated HTML contains only visual SVG compositions and no title/text overlay.
+- Summed scene duration matches the generated output duration.
+- Each scene's transition and camera settings are reflected in the generated HTML.
+- Existing HTML/SVG import and MP4, ProRes 4444 alpha and PNG Sequence ZIP export paths remain intact.
 
 ## Release validation matrix
 
