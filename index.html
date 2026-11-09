@@ -2289,7 +2289,7 @@ document.addEventListener('input',e=>{if(e.target&&e.target.matches('input[type=
 setTimeout(restoreAutosave,0);
 function setAiStatus(t){$('aiModeStatus').textContent=t}
 
-/* TEXT TO ANIMATION: imagination-driven multi-scene kinetic typography generator. */
+/* PROMPT-TO-VISUAL: procedural SVG scene generation and editable motion sequencing. */
 function textMotionEscape(v){return String(v||'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
 function textMotionWords(text){return String(text||'').trim().split(/\s+/).filter(Boolean).map((w,i)=>'<span class="word" style="--wi:'+i+'">'+textMotionEscape(w)+'</span>').join(' ');}
 let visualSceneSequence=[];
@@ -2322,7 +2322,7 @@ function visualSceneField(label,type,value,options){
   (options||[]).forEach(opt=>{const o=document.createElement('option');o.value=opt[0];o.textContent=opt[1];field.appendChild(o);});
   field.value=value;
  }else if(type==='textarea'){field.value=value||'';field.rows=2;}
- else{field.type=type;field.value=value; if(type==='number'){field.min='.5';field.max='60';field.step='.5';}}
+ else{field.type=type;field.value=value; if(type==='number'){field.min='.5';field.max='60';field.step='.1';}}
  wrap.appendChild(field);return {wrap,field};
 }
 function renderVisualSceneSequence(){
@@ -2470,14 +2470,14 @@ function buildVisualMotionHtml(){
  const ratio=$('visualMotionRatio').value,parts=ratio.split(':').map(Number),aspect=(parts[0]||16)/(parts[1]||9);
  const globalStyle=$('visualMotionStyle').value,globalCamera=$('visualMotionCamera').value,globalTransition=$('visualMotionTransition').value;
  const accent=$('visualMotionAccent').value,particles=$('visualMotionParticles').checked,depth=$('visualMotionDepth').checked;
- const items=visualSceneSequence.length?visualSceneSequence.map(x=>({...x})):fallback.map((text,i)=>({text,duration:Math.max(1,(+$('visualMotionDuration').value||15)/fallback.length),transition:globalTransition,camera:globalCamera,style:globalStyle}));
+ const items=visualSceneSequence.length?visualSceneSequence.map(x=>({...x})):fallback.map((text,i)=>({text,duration:Math.max(.5,Math.round(((+$('visualMotionDuration').value||15)/fallback.length)*10)/10),transition:globalTransition,camera:globalCamera,style:globalStyle}));
  const total=items.reduce((sum,x)=>sum+Math.max(.5,Math.min(60,Number(x.duration)||1)),0);
  let elapsed=0;
  const sceneMarkup=items.map((item,i)=>{
   const d=Math.max(.5,Math.min(60,Number(item.duration)||1)),start=elapsed;elapsed+=d;
   const camera=item.camera||globalCamera,style=item.style||globalStyle,transition=item.transition||globalTransition;
   const cameraName=camera==='locked'?'none':camera==='pan'?'cameraPan':camera==='orbit'?'cameraOrbit':camera==='follow'?'cameraFollow':'cameraParallax';
-  const safeDuration=d.toFixed(2)+'s',safeDelay=(-start).toFixed(2)+'s';
+  const safeDuration=d.toFixed(2)+'s',safeDelay=start.toFixed(2)+'s';
   const svg=visualMotionSvg(item.text||'',i,style,accent,depth);
   const particleLayer=particles?Array.from({length:18},(_,n)=>'<i class="ambient" style="--x:'+((n*41+5)%100)+'%;--y:'+((n*57+13)%100)+'%;--d:'+(2+n%4)+'px;--delay:'+(n%6*.33)+'s"></i>').join(''):'';
   return '<article class="scene scene-'+i+'" style="animation-name:scene-'+i+'"><div class="art '+(style==='papercut'?'paper':'')+'" style="animation-name:'+cameraName+';animation-duration:'+safeDuration+';animation-delay:'+safeDelay+';filter:'+(style==='neon'?'saturate(1.35) drop-shadow(0 0 9px '+accent+'55)':style==='illustration'?'saturate(1.2)':'saturate(1.02)')+'">'+svg+'</div>'+(particles?'<div class="atmosphere">'+particleLayer+'</div>':'')+'</article>';
@@ -2523,7 +2523,7 @@ $('previewVisualMotionBtn').addEventListener('click',()=>{
  $('visualMotionStatus').textContent='HTML adegan visual dikirim ke terminal TROZAL. Periksa status terminal dan preview.';
 });
 $('resetVisualMotionBtn').addEventListener('click',()=>{
- $('visualMotionPrompt').value='';$('visualMotionOutput').value='';$('visualMotionPreview').srcdoc='';$('visualMotionStatus').textContent='Prompt visual direset.';
+ $('visualMotionPrompt').value='';$('visualMotionOutput').value='';$('visualMotionPreview').srcdoc='';visualSceneSequence=[];renderVisualSceneSequence();$('visualMotionStatus').textContent='Prompt dan timeline visual direset.';
 });
 $('clearAiCodeBtn').addEventListener('click',()=>{$('aiCodeTerminal').value='';setAiStatus('Terminal dibersihkan.')});
 $('pasteCodeFromClipboardBtn').addEventListener('click',async()=>{try{const code=await navigator.clipboard.readText();if(!code.trim()){setAiStatus('Clipboard kosong. Salin kode HTML terlebih dahulu.');return}$('aiCodeTerminal').value=code;setAiStatus('Kode berhasil ditempel ('+code.length.toLocaleString()+' karakter). Klik Terapkan ke Preview.');$('aiCodeTerminal').focus()}catch(e){$('aiCodeTerminal').focus();setAiStatus('Clipboard tidak diizinkan browser. Klik terminal lalu tekan Ctrl+V.')}});
