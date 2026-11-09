@@ -3600,10 +3600,12 @@ function trozalMetadataWordKey(value){
 function trozalMetadataKeywordAnalysis(){
  const evidence=trozalMetadataEvidence();
  const reviewed=String($('metadataSubject')?.value||'').trim();
+ const ai=trozalLocalVisionLastAnalysis;
+ const aiText=ai?[ai.title,ai.description,ai.visualSummary,(ai.visibleObjects||[]).join(' ')].filter(Boolean).join(' '):'';
  const scenes=Array.isArray(visualSceneSequence)?visualSceneSequence.map(x=>String(x.text||'').trim()).filter(Boolean):[];
  const prompt=String($('visualMotionPrompt')?.value||'').trim();
  const readable=evidence.entries.filter(x=>x.kind==='visible-text'||x.kind==='label').map(x=>x.text).filter(Boolean);
- const source=reviewed||scenes.join(' ')||prompt||readable.join(' ');
+ const source=reviewed||aiText||scenes.join(' ')||prompt||readable.join(' ');
  const stop=new Set('a an the and or but with without from into onto over under between beside near at by on in of to is are was were be being been this that these those it its their his her they them he she as than then very more most some any all one two three four five six seven eight nine ten'.split(' '));
  const sourceWords=(trozalTranslateMetadataText(source).toLowerCase().match(/[a-z0-9]+/g)||[]).map(trozalMetadataWordKey).filter(x=>x&&!stop.has(x));
  const sourceSet=new Set(sourceWords);
@@ -3635,7 +3637,8 @@ function trozalRefreshMetadataQuality(){
  const title=$('metadataTitle')?.value.trim()||'',description=$('metadataDescription')?.value.trim()||'';
  const category=$('metadataCategory')?.value||'Graphic Resources',platform=$('metadataPlatform')?.value||'all';
  const analysis=trozalMetadataKeywordAnalysis(),count=analysis.entries.length;
- const sourceAvailable=!!($('metadataSubject')?.value.trim()||$('visualMotionPrompt')?.value.trim()||
+ const aiVisualAvailable=!!trozalLocalVisionLastAnalysis;
+ const sourceAvailable=!!($('metadataSubject')?.value.trim()||aiVisualAvailable||$('visualMotionPrompt')?.value.trim()||
   (Array.isArray(visualSceneSequence)&&visualSceneSequence.some(x=>String(x.text||'').trim()))||
   analysis.evidence.entries.some(x=>x.kind==='visible-text'||x.kind==='label'));
  const verifiedSourceAvailable=!!$('metadataSubject')?.value.trim();
@@ -3644,7 +3647,7 @@ function trozalRefreshMetadataQuality(){
   (platform!=='shutterstock'||title.split(/\s+/).filter(Boolean).length>=5);
  const descOk=description.length>=45;
  const titlePts=titleOk?20:(title?10:0),descPts=descOk?20:(description?10:0);
- const categoryPts=category==='Graphic Resources'?5:(verifiedSourceAvailable?10:5),evidencePts=verifiedSourceAvailable?10:0;
+ const categoryPts=category==='Graphic Resources'?5:(verifiedSourceAvailable||aiVisualAvailable?10:5),evidencePts=verifiedSourceAvailable?10:(aiVisualAvailable?8:0);
  const keywordPts=count?((count>=5?10:5)+Math.round(verified*20)+(analysis.duplicates===0?5:0)+(count<=47?5:0)):0;
  const score=Math.max(0,Math.min(100,titlePts+descPts+categoryPts+evidencePts+keywordPts));
  const summary=$('metadataQualitySummary');
@@ -3654,7 +3657,7 @@ function trozalRefreshMetadataQuality(){
  const titleNote=!title?'Judul kosong':title.length<15?'Judul sangat pendek':(platform==='adobe'&&title.length>=70)?'Periksa batas judul Adobe':(platform==='shutterstock'&&title.split(/\s+/).filter(Boolean).length<5)?'Perlu minimal 5 kata':'Judul terisi';
  const descNote=!description?'Deskripsi kosong':descOk?'Deskripsi terisi':'Deskripsi terlalu singkat';
  const keywordNote=count+' keyword · '+analysis.exactCount+' cocok penuh · '+analysis.partialCount+' cocok sebagian · '+analysis.unmatchedCount+' belum cocok · '+analysis.duplicates+' duplikat';
- const evidenceNote=verifiedSourceAvailable?'Deskripsi visual diperiksa pengguna':sourceAvailable?'Hanya prompt/rencana/label — belum diverifikasi':'Belum ada bukti deskriptif';
+ const evidenceNote=verifiedSourceAvailable?'Deskripsi visual diperiksa pengguna':aiVisualAvailable?'Frame dianalisis AI lokal — perlu tinjauan pengguna':sourceAvailable?'Hanya prompt/rencana/label — belum diverifikasi':'Belum ada bukti deskriptif';
  const details=$('metadataQualityDetails');
  if(details)details.innerHTML=[['Judul',titleNote],['Deskripsi',descNote],['Keyword',keywordNote],['Bukti sumber',evidenceNote]]
   .map(item=>'<div class="metadata-quality-item"><b>'+item[0]+'</b><span>'+item[1].replace(/[&<>"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]))+'</span></div>').join('');
