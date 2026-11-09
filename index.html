@@ -31,7 +31,18 @@ small,.muted{color:var(--muted)}.row{display:flex;gap:8px;align-items:center}.ro
 .ai-tools textarea{width:100%;min-height:100px;resize:vertical;background:#10131a;color:#e9edf5;border:1px solid #414959;border-radius:7px;padding:9px;font:11px/1.45 ui-monospace,SFMono-Regular,Consolas,monospace}.ai-tools .btnrow{display:flex;gap:6px;margin-top:7px}.ai-tools .btnrow button{flex:1;font-size:11px}.ai-tools .terminal{min-height:180px;border-color:#397c64}.ai-tools .terminal-label{color:#83e8b2}.ai-tools .notice{font-size:10px;color:#aebbd0;margin:6px 0}
 
 
-/* TEXT TO ANIMATION — generator panel */\n#textToAnimationPanel{background:linear-gradient(145deg,#102c25,#0a1b20 75%);border:1px solid #3d9877;box-shadow:0 8px 24px #03150f99,inset 0 1px #b2ffe522}\n#textToAnimationPanel h3{color:#9ce8c4}\n#textToAnimationPanel .help,#textToAnimationPanel label{color:#c5e8d7}\n#textToAnimationPanel textarea{background:#071711;border-color:#326b55;color:#edfff5}\n#textToAnimationPanel input,#textToAnimationPanel select{background:#081c16;border:1px solid #326b55;color:#edfff5;border-radius:7px;padding:7px;width:100%}\n#textToAnimationPanel input[type=color]{height:34px;padding:2px}\n#textToAnimationPanel .btnrow button{border-color:#397b60}\n#textToAnimationPanel button.primary{background:linear-gradient(135deg,#a6f2ca,#43bd87);color:#062016}\n#textToAnimationPanel button.green{background:linear-gradient(135deg,#b7f5d3,#5acb97);color:#062016}\n.mask-keyframe-box input,.mask-keyframe-box select{width:100%;min-width:0;background:#071b14;color:#e8f5ee;border:1px solid #376b55;border-radius:5px;padding:5px}.mask-keyframe-box label{font-size:9px}.mask-keyframe-box .row>div{flex:1;min-width:0}.mask-keyframe-box button{font-size:10px}\n/* FIX27: searchable AI theme catalog, prompt resolution and HTML diagnostics */
+/* TEXT TO ANIMATION — BLUE IMAGINATION STUDIO */
+#textToAnimationPanel{background:linear-gradient(145deg,#102b50 0%,#0b1b35 58%,#102b4c 100%);border:1px solid #347fc4;box-shadow:0 8px 24px #020d20aa,inset 0 1px #b9dcff22}
+#textToAnimationPanel h3{color:#a9d8ff;letter-spacing:.07em}
+#textToAnimationPanel .help,#textToAnimationPanel label{color:#c8e3ff}
+#textToAnimationPanel textarea{background:#07162c;border:1px solid #285b91;color:#eff7ff}
+#textToAnimationPanel input,#textToAnimationPanel select{background:#091d38;border:1px solid #326fa9;color:#eff7ff;border-radius:7px;padding:7px;width:100%}
+#textToAnimationPanel input[type=color]{height:34px;padding:2px}
+#textToAnimationPanel .btnrow button{border-color:#397db9}
+#textToAnimationPanel button.primary{background:linear-gradient(135deg,#9bd6ff,#398ee0);color:#06172c}
+#textToAnimationPanel button.green{background:linear-gradient(135deg,#b9e3ff,#65aeea);color:#06172c}
+#textToAnimationPanel #textMotionPreview{box-shadow:0 4px 18px #0005}
+.mask-keyframe-box input,.mask-keyframe-box select{width:100%;min-width:0;background:#071b14;color:#e8f5ee;border:1px solid #376b55;border-radius:5px;padding:5px}.mask-keyframe-box label{font-size:9px}.mask-keyframe-box .row>div{flex:1;min-width:0}.mask-keyframe-box button{font-size:10px}\n/* FIX27: searchable AI theme catalog, prompt resolution and HTML diagnostics */
 .ai-tools input[type=text],.ai-tools select{background:#071d15;border:1px solid #32634a;color:#e8f5ee;border-radius:9px;padding:8px;width:100%}
 .ai-tools .theme-search-hint,.ai-tools .resolution-hint{font-size:10px;color:#9ec9ae;margin:4px 0 6px}
 .html-diagnostic-panel{margin-top:10px;padding:9px;border:1px solid #7c3b40;border-radius:8px;background:#211316}
@@ -382,51 +393,47 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
   </section>
 
   <section class="panel ai-tools" id="textToAnimationPanel">
-   <h3>✦ UBAH TEKS KE ANIMASI</h3>
-   <p class="help">Ubah ide, judul, slogan, atau naskah menjadi motion graphic HTML/CSS siap preview dan render. Semua proses pembuatan kode berjalan lokal di browser; hasilnya dapat diedit sebelum dikirim ke terminal HTML TROZAL MOTION.</p>
-   <label>IDE / DESKRIPSI ANIMASI</label>
-   <textarea id="textMotionPrompt" rows="3" placeholder="Contoh: Peluncuran parfum mewah dengan suasana hitam-emas, partikel debu emas, judul muncul dramatis lalu tagline menyusul."></textarea>
+   <h3>▰ TEXT-TO-MOTION · IMAGINATION STUDIO</h3>
+   <p class="help">Tuliskan imajinasi Anda. Generator akan mengubah naskah menjadi rangkaian adegan motion typography, dengan komposisi kata, gerakan, transisi, dan grafis abstrak berbasis CSS. Tanpa foto atau gambar stok.</p>
+   <label>1 · CERITAKAN IMAJINASI / KONSEP VIDEO</label>
+   <textarea id="textMotionPrompt" rows="3" placeholder="Contoh: Sebuah perjalanan dari kota gelap menuju dunia masa depan. Suasana misterius, tulisan besar muncul dari kabut, kata-kata berlari dan pecah menjadi cahaya. Akhiri dengan pesan tentang harapan."></textarea>
+   <label>2 · STORYBOARD / KUMPULAN TEKS PER ADEGAN</label>
+   <textarea id="textMotionScript" rows="7" placeholder="THE LAST NIGHT | Semuanya dimulai dalam kegelapan&#10;A CITY WITHOUT LIMITS | Di mana mimpi bergerak lebih cepat&#10;THE FUTURE IS NOW | Masa depan ada di tangan kita&#10;CREATE YOUR WORLD | Mulai dari imajinasimu"></textarea>
+   <p class="help">Satu baris = satu adegan. Format opsional: JUDUL UTAMA | kalimat pendukung. Jika kolom ini kosong, generator akan menyusun adegan dari kalimat-kalimat pada konsep di atas.</p>
    <div class="row">
-    <div><label>JUDUL UTAMA</label><input id="textMotionTitle" type="text" value="YOUR STORY STARTS HERE" maxlength="90"></div>
-    <div><label>SUBJUDUL</label><input id="textMotionSubtitle" type="text" value="A NEW EXPERIENCE" maxlength="140"></div>
-   </div>
-   <label>TEKS TAMBAHAN / CTA</label><input id="textMotionCta" type="text" value="DISCOVER MORE" maxlength="80">
-   <div class="row">
-    <div><label>GAYA VISUAL</label><select id="textMotionStyle">
-     <option value="cinematic">Cinematic Title</option><option value="luxury">Luxury Gold</option><option value="neon">Neon Cyberpunk</option><option value="minimal">Minimal Swiss</option><option value="kinetic">Kinetic Typography</option><option value="editorial">Editorial Magazine</option><option value="retro">Retro Pop</option><option value="tech">Futuristic Technology</option><option value="social">Social Media Promo</option><option value="explainer">Explainer / Presentation</option>
-    </select></div>
-    <div><label>JENIS GERAKAN</label><select id="textMotionEffect">
-     <option value="rise">Rise & Fade</option><option value="type">Typewriter</option><option value="split">Split Reveal</option><option value="zoom">Cinematic Zoom</option><option value="rotate">3D Flip Entrance</option><option value="float">Floating Motion</option><option value="pulse">Pulse / Beat</option><option value="wipe">Mask Wipe</option><option value="cascade">Cascade Stagger</option>
-    </select></div>
+    <div><label>RASIO VIDEO</label><select id="textMotionRatio"><option value="16:9">16:9 · Landscape</option><option value="9:16">9:16 · Vertical</option><option value="1:1">1:1 · Square</option><option value="4:5">4:5 · Portrait</option><option value="21:9">21:9 · Cinematic</option></select></div>
+    <div><label>DURASI TOTAL</label><select id="textMotionDuration"><option value="8">8 detik</option><option value="10">10 detik</option><option value="15" selected>15 detik</option><option value="20">20 detik</option><option value="30">30 detik</option><option value="45">45 detik</option><option value="60">60 detik</option></select></div>
    </div>
    <div class="row">
-    <div><label>RASIO KOMPOSISI</label><select id="textMotionRatio"><option value="16:9">16:9 · Landscape</option><option value="9:16">9:16 · Vertical</option><option value="1:1">1:1 · Square</option><option value="4:5">4:5 · Portrait Feed</option><option value="21:9">21:9 · Cinematic</option></select></div>
-    <div><label>DURASI</label><select id="textMotionDuration"><option value="5">5 detik</option><option value="8" selected>8 detik</option><option value="10">10 detik</option><option value="15">15 detik</option><option value="20">20 detik</option></select></div>
+    <div><label>GAYA TIPOGRAFI</label><select id="textMotionStyle"><option value="cinematic">Cinematic / Dramatic</option><option value="kinetic">Kinetic Typography</option><option value="luxury">Luxury Editorial</option><option value="neon">Neon / Cyberpunk</option><option value="minimal">Minimal / Swiss</option><option value="retro">Retro / Pop</option><option value="tech">Futuristic / Tech</option><option value="poetry">Poetry / Emotional</option></select></div>
+    <div><label>GERAKAN UTAMA</label><select id="textMotionEffect"><option value="auto">Auto Mix · Variasi per adegan</option><option value="rise">Rise & Fade</option><option value="type">Typewriter</option><option value="split">Split / Word Stagger</option><option value="zoom">Cinematic Zoom</option><option value="rotate">3D Flip</option><option value="float">Floating</option><option value="wipe">Mask Wipe</option><option value="glitch">Glitch / Digital</option></select></div>
    </div>
    <div class="row">
-    <div><label>TIPOGRAFI</label><select id="textMotionFont"><option value="modern">Modern Sans</option><option value="editorial">Editorial Serif</option><option value="condensed">Condensed Bold</option><option value="mono">Technical Mono</option><option value="rounded">Rounded Friendly</option></select></div>
-    <div><label>INTENSITAS GERAK</label><select id="textMotionIntensity"><option value="soft">Halus</option><option value="balanced" selected>Seimbang</option><option value="strong">Dramatis</option></select></div>
+    <div><label>FONT</label><select id="textMotionFont"><option value="modern">Modern Sans</option><option value="editorial">Editorial Serif</option><option value="condensed">Condensed Display</option><option value="mono">Monospace</option><option value="rounded">Rounded</option></select></div>
+    <div><label>INTENSITAS</label><select id="textMotionIntensity"><option value="soft">Halus</option><option value="balanced" selected>Seimbang</option><option value="strong">Dramatis</option></select></div>
    </div>
    <div class="row">
-    <div><label>WARNA UTAMA</label><input id="textMotionColor" type="color" value="#f5f1e8"></div>
-    <div><label>WARNA AKSEN</label><input id="textMotionAccent" type="color" value="#d7ad62"></div>
-    <div><label>WARNA LATAR</label><input id="textMotionBackground" type="color" value="#090b12"></div>
+    <div><label>WARNA TEKS</label><input id="textMotionColor" type="color" value="#f5f7ff"></div>
+    <div><label>WARNA AKSEN</label><input id="textMotionAccent" type="color" value="#56c8ff"></div>
+    <div><label>WARNA LATAR</label><input id="textMotionBackground" type="color" value="#050b1c"></div>
    </div>
-   <label>GAYA LATAR</label><select id="textMotionBackdrop"><option value="gradient">Gradient Cinematic</option><option value="solid">Solid Color</option><option value="radial">Radial Glow</option><option value="grid">Technical Grid</option><option value="spotlight">Spotlight</option><option value="light">Bright Studio</option></select>
+   <label>ATMOSFER LATAR</label><select id="textMotionBackdrop"><option value="cinema">Cinematic Gradient</option><option value="void">Deep Space / Void</option><option value="grid">Digital Grid</option><option value="spotlight">Spotlight</option><option value="paper">Bright / Paper</option><option value="solid">Solid Color</option></select>
    <div class="row" style="flex-wrap:wrap">
-    <label class="inline-check"><input type="checkbox" id="textMotionParticles" checked> Partikel dekoratif</label>
-    <label class="inline-check"><input type="checkbox" id="textMotionGlow" checked> Glow / shadow</label>
-    <label class="inline-check"><input type="checkbox" id="textMotionUnderline" checked> Accent line</label>
+    <label class="inline-check"><input type="checkbox" id="textMotionParticles" checked> Partikel / titik cahaya</label>
+    <label class="inline-check"><input type="checkbox" id="textMotionShapes" checked> Bentuk grafis abstrak</label>
+    <label class="inline-check"><input type="checkbox" id="textMotionSound" checked> Marker beat visual</label>
    </div>
-   <div class="btnrow"><button type="button" class="primary" id="generateTextMotionBtn">✦ BUAT ANIMASI DARI TEKS</button><button type="button" id="resetTextMotionBtn">Reset</button></div>
-   <div class="status" id="textMotionStatus">Masukkan ide dan teks, lalu buat animasi.</div>
-   <label>HASIL HTML MOTION GRAPHIC</label>
-   <textarea id="textMotionOutput" spellcheck="false" placeholder="Kode HTML/CSS animasi akan tampil di sini…" style="min-height:220px"></textarea>
-   <div class="btnrow"><button type="button" id="copyTextMotionBtn">Salin HTML</button><button type="button" class="green" id="previewTextMotionBtn">▶ Kirim ke Preview TROZAL</button></div>
-   <p class="notice">Catatan: generator ini menyusun HTML/CSS berdasarkan pilihan gaya dan gerakan secara lokal, bukan memanggil layanan AI eksternal. Kode dapat diedit, disalin, disimpan, dan dirender melalui pipeline HTML motion yang sudah ada.</p>
+   <div class="btnrow"><button type="button" class="primary" id="generateTextMotionBtn">✦ GENERATE VIDEO DARI TEKS</button><button type="button" id="resetTextMotionBtn">Reset</button></div>
+   <div class="status" id="textMotionStatus">Tulis konsep dan susunan teks adegan untuk mulai membuat animasi.</div>
+   <label>LIVE STORYBOARD PREVIEW</label>
+   <iframe id="textMotionPreview" title="Text motion storyboard preview" sandbox="" style="display:block;width:100%;height:280px;border:1px solid #3977bd;border-radius:9px;background:#050b1c"></iframe>
+   <label>HTML VIDEO / MOTION GRAPHIC</label>
+   <textarea id="textMotionOutput" spellcheck="false" placeholder="Kode HTML motion graphic multi-adegan akan tampil di sini…" style="min-height:220px"></textarea>
+   <div class="btnrow"><button type="button" id="copyTextMotionBtn">Salin HTML</button><button type="button" class="green" id="previewTextMotionBtn">▶ Buka di Preview TROZAL</button></div>
+   <p class="notice">Generator menghasilkan video tipografi multi-adegan berbasis HTML/CSS. Hasil dapat diputar di preview, diedit, lalu dirender menggunakan mesin ekspor TROZAL. Tidak menggunakan gambar, foto, atau aset visual eksternal.</p>
   </section>
 
-  <section class="panel ai-tools" id="motionPresetLibrary"><h3><b>✦</b> 6. MOTION PRESET LIBRARY</h3>
+<section class="panel ai-tools" id="motionPresetLibrary"><h3><b>✦</b> 6. MOTION PRESET LIBRARY</h3>
    <p class="help">Pilih preset untuk menerapkan gerakan yang sesuai dengan jenis objek. Background dan dekorasi tetap diam; teks dan objek utama mendapat gerakan berbeda.</p>
    <div class="preset-grid">
     <button type="button" data-motion-preset="logo">Logo Reveal</button><button type="button" data-motion-preset="text">Kinetic Typography</button>
@@ -2253,74 +2260,69 @@ document.addEventListener('input',e=>{if(e.target&&e.target.matches('input[type=
 setTimeout(restoreAutosave,0);
 function setAiStatus(t){$('aiModeStatus').textContent=t}
 
-/* TEXT TO ANIMATION: local prompt-to-motion HTML/CSS generator. */
+/* TEXT TO ANIMATION: imagination-driven multi-scene kinetic typography generator. */
 function textMotionEscape(v){return String(v||'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
+function textMotionWords(text){return String(text||'').trim().split(/\s+/).filter(Boolean).map((w,i)=>'<span class="word" style="--wi:'+i+'">'+textMotionEscape(w)+'</span>').join(' ');}
+function textMotionScenes(){
+ const raw=$('textMotionScript').value.trim(),prompt=$('textMotionPrompt').value.trim();
+ let lines=raw?raw.split(/\n+/).map(x=>x.trim()).filter(Boolean):prompt.split(/(?<=[.!?])\s+|\n+/).map(x=>x.trim()).filter(Boolean);
+ if(!lines.length&&prompt)lines=[prompt];
+ if(!lines.length)lines=['IMAGINE THE IMPOSSIBLE','LET YOUR IDEAS MOVE','CREATE A NEW WORLD'];
+ return lines.slice(0,14).map((line,i)=>{const parts=line.split('|');let title=(parts.shift()||'').trim(),sub=parts.join('|').trim();if(!sub){const words=title.split(/\s+/);if(words.length>5){sub=words.slice(Math.max(2,Math.floor(words.length*.48))).join(' ');title=words.slice(0,Math.max(2,Math.floor(words.length*.48))).join(' ');}}return {title:title||'UNTITLED',sub,idx:i};});
+}
 function buildTextMotionHtml(){
- const prompt=$('textMotionPrompt').value.trim(),title=$('textMotionTitle').value.trim()||prompt.split(/[.!?]/)[0]||'YOUR STORY STARTS HERE';
- const subtitle=$('textMotionSubtitle').value.trim(),cta=$('textMotionCta').value.trim();
- const style=$('textMotionStyle').value,effect=$('textMotionEffect').value,ratio=$('textMotionRatio').value,duration=Math.max(3,Math.min(30,+$('textMotionDuration').value||8));
- const font=$('textMotionFont').value,intensity=$('textMotionIntensity').value,bg=$('textMotionBackground').value,color=$('textMotionColor').value,accent=$('textMotionAccent').value,backdrop=$('textMotionBackdrop').value;
- const particles=$('textMotionParticles').checked,glow=$('textMotionGlow').checked,underline=$('textMotionUnderline').checked;
+ const prompt=$('textMotionPrompt').value.trim(),scenes=textMotionScenes();
+ const ratio=$('textMotionRatio').value,total=Math.max(5,Math.min(60,+$('textMotionDuration').value||15));
+ const style=$('textMotionStyle').value,effect=$('textMotionEffect').value,font=$('textMotionFont').value,intensity=$('textMotionIntensity').value;
+ const fg=$('textMotionColor').value,accent=$('textMotionAccent').value,bg=$('textMotionBackground').value,backdrop=$('textMotionBackdrop').value;
+ const particles=$('textMotionParticles').checked,shapes=$('textMotionShapes').checked,beats=$('textMotionSound').checked;
  const fonts={modern:"Inter,Arial,sans-serif",editorial:"Georgia,'Times New Roman',serif",condensed:"'Arial Narrow',Impact,sans-serif",mono:"'Courier New',monospace",rounded:"'Trebuchet MS',Arial,sans-serif"};
- const styleMap={
-  cinematic:{weight:800,spacing:'.015em',transform:'uppercase',title:'clamp(34px,8vw,112px)',sub:'clamp(12px,2vw,22px)',accent:'0 16px 60px'},
-  luxury:{weight:500,spacing:'.11em',transform:'uppercase',title:'clamp(30px,7vw,96px)',sub:'clamp(11px,1.7vw,19px)',accent:'0 12px 55px'},
-  neon:{weight:900,spacing:'.045em',transform:'uppercase',title:'clamp(34px,8vw,108px)',sub:'clamp(12px,2vw,22px)',accent:'0 0 38px'},
-  minimal:{weight:650,spacing:'-.045em',transform:'none',title:'clamp(38px,8vw,116px)',sub:'clamp(12px,1.7vw,20px)',accent:'0 8px 35px'},
-  kinetic:{weight:950,spacing:'-.055em',transform:'uppercase',title:'clamp(42px,10vw,138px)',sub:'clamp(12px,2vw,22px)',accent:'0 12px 44px'},
-  editorial:{weight:500,spacing:'-.035em',transform:'none',title:'clamp(38px,8vw,116px)',sub:'clamp(12px,1.8vw,21px)',accent:'0 10px 40px'},
-  retro:{weight:950,spacing:'.025em',transform:'uppercase',title:'clamp(38px,9vw,124px)',sub:'clamp(12px,2vw,22px)',accent:'0 10px 38px'},
-  tech:{weight:800,spacing:'.075em',transform:'uppercase',title:'clamp(32px,7vw,100px)',sub:'clamp(11px,1.8vw,20px)',accent:'0 0 36px'},
-  social:{weight:900,spacing:'-.025em',transform:'uppercase',title:'clamp(34px,8vw,110px)',sub:'clamp(12px,2vw,22px)',accent:'0 12px 38px'},
-  explainer:{weight:750,spacing:'-.025em',transform:'none',title:'clamp(32px,7vw,94px)',sub:'clamp(13px,2vw,23px)',accent:'0 10px 34px'}
- };
- const s=styleMap[style]||styleMap.cinematic;
- const durationCss=duration+'s',ease=intensity==='soft'?'cubic-bezier(.2,.7,.25,1)':intensity==='strong'?'cubic-bezier(.12,.9,.18,1)':'cubic-bezier(.16,1,.3,1)';
- const anim={
-  rise:'@keyframes titleIn{0%{opacity:0;transform:translateY(1.1em) scale(.96);filter:blur(14px)}100%{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}',
-  type:'@keyframes titleIn{0%{clip-path:inset(0 100% 0 0);opacity:1}100%{clip-path:inset(0 0 0 0);opacity:1}}',
-  split:'@keyframes titleIn{0%{opacity:0;transform:translateY(.6em) rotateX(-65deg);filter:blur(9px)}100%{opacity:1;transform:translateY(0) rotateX(0);filter:blur(0)}}',
-  zoom:'@keyframes titleIn{0%{opacity:0;transform:scale(1.45);filter:blur(18px)}100%{opacity:1;transform:scale(1);filter:blur(0)}}',
-  rotate:'@keyframes titleIn{0%{opacity:0;transform:perspective(900px) rotateX(80deg) translateY(.5em)}100%{opacity:1;transform:perspective(900px) rotateX(0) translateY(0)}}',
-  float:'@keyframes titleIn{0%{opacity:0;transform:translateY(30px)}100%{opacity:1;transform:translateY(0)}}@keyframes floatLoop{0%,100%{transform:translateY(0)}50%{transform:translateY(-.12em)}}',
-  pulse:'@keyframes titleIn{0%{opacity:0;transform:scale(.7)}70%{opacity:1;transform:scale(1.06)}100%{opacity:1;transform:scale(1)}}@keyframes pulseLoop{0%,100%{transform:scale(1)}50%{transform:scale(1.025)}}',
-  wipe:'@keyframes titleIn{0%{clip-path:inset(0 0 0 100%);opacity:0}100%{clip-path:inset(0);opacity:1}}',
-  cascade:'@keyframes titleIn{0%{opacity:0;transform:translateY(.8em) rotate(2deg);filter:blur(10px)}100%{opacity:1;transform:translateY(0) rotate(0);filter:blur(0)}}'
- };
- const bgCss=backdrop==='solid'?bg:backdrop==='radial'?'radial-gradient(circle at 50% 45%, '+accent+'55 0%, '+bg+' 62%)':backdrop==='grid'?'linear-gradient('+bg+'ee,'+bg+'ee),linear-gradient(90deg,'+accent+'22 1px,transparent 1px),linear-gradient('+accent+'22 1px,transparent 1px)':backdrop==='spotlight'?'radial-gradient(ellipse at 50% 30%,#ffffff22,transparent 46%),'+bg:backdrop==='light'?'radial-gradient(circle at 50% 40%,#fff,'+bg+' 80%)':'radial-gradient(ellipse at 50% 42%,'+accent+'33 0%,'+bg+' 68%)';
- const fg=backdrop==='light'?'#17202a':color;
- const shadow=glow?(style==='neon'?'0 0 12px '+accent+',0 0 42px '+accent+'99':'0 14px 50px #0008'):'none';
- const partMarkup=particles?Array.from({length:22},(_,i)=>'<i class="particle p'+i+'" style="--i:'+i+'"></i>').join(''):'';
- const grid=backdrop==='grid'?'background-size:44px 44px;':'';
- const titleDelay=effect==='cascade'?'.18s':'.25s';
- const titleLoop=effect==='float'?'animation:titleIn '+durationCss+' '+ease+' both, floatLoop 4.8s ease-in-out 2.5s infinite':effect==='pulse'?'animation:titleIn '+durationCss+' '+ease+' both, pulseLoop 3s ease-in-out 2.5s infinite':'animation:titleIn '+durationCss+' '+ease+' both';
- const html='<!DOCTYPE html>\n<html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+textMotionEscape(title)+'</title><style>'+
- '*{box-sizing:border-box}html,body{width:100%;height:100%;margin:0}body{overflow:hidden;background:'+bgCss+';color:'+fg+';font-family:'+fonts[font]+'}.scene{position:relative;width:100vw;height:100vh;min-height:240px;display:grid;place-items:center;overflow:hidden;padding:7vw;text-align:center;isolation:isolate}.scene:before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.4;'+grid+'background-image:'+(backdrop==='grid'?'linear-gradient('+accent+'22 1px,transparent 1px),linear-gradient(90deg,'+accent+'22 1px,transparent 1px)':'radial-gradient(ellipse at center,transparent 25%,#0005 100%)')+';z-index:-1}.content{width:min(100%,1200px);position:relative;z-index:2}.eyebrow{font-size:clamp(9px,1.2vw,14px);letter-spacing:.28em;text-transform:uppercase;color:'+accent+';margin-bottom:clamp(14px,3vh,34px);opacity:0;animation:fadeIn 1s '+ease+' .05s both}.title{font-size:'+s.title+';line-height:.98;font-weight:'+s.weight+';letter-spacing:'+s.spacing+';text-transform:'+s.transform+';margin:0 auto;max-width:13ch;text-wrap:balance;text-shadow:'+shadow+';transform-style:preserve-3d;'+titleLoop+'}.subtitle{font-size:'+s.sub+';line-height:1.5;letter-spacing:.12em;text-transform:uppercase;color:'+accent+';margin:clamp(16px,3vh,30px) auto 0;max-width:60ch;opacity:0;animation:fadeIn 1.1s '+ease+' .9s both}.accent-line{height:2px;width:clamp(48px,10vw,120px);background:'+accent+';margin:clamp(20px,4vh,38px) auto;transform-origin:center;animation:lineIn 1.1s '+ease+' .65s both;'+(underline?'':'display:none')+'}.cta{display:inline-flex;align-items:center;gap:12px;border:1px solid '+accent+'88;border-radius:999px;padding:12px 22px;color:'+fg+';font-size:clamp(9px,1.1vw,13px);letter-spacing:.16em;text-transform:uppercase;margin-top:clamp(8px,2vh,20px);opacity:0;animation:fadeIn 1s '+ease+' 1.35s both}.cta:after{content:"↗";color:'+accent+'}.particles{position:absolute;inset:0;pointer-events:none;z-index:1}.particle{position:absolute;left:calc((var(--i) + 1)*4%);top:calc((var(--i)*37%));width:3px;height:3px;border-radius:50%;background:'+accent+';opacity:.0;box-shadow:0 0 12px '+accent+';animation:particleFloat 6s ease-in-out infinite}.particle:nth-child(3n){width:5px;height:5px}.particle:nth-child(4n){animation-delay:-2s}.particle:nth-child(5n){animation-delay:-4s}'+anim[effect]+'@keyframes fadeIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}@keyframes lineIn{from{transform:scaleX(0);opacity:0}to{transform:scaleX(1);opacity:1}}@keyframes particleFloat{0%,100%{transform:translate3d(0,15px,0);opacity:0}50%{transform:translate3d(12px,-25px,0);opacity:.65}}@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;opacity:1!important;transform:none!important;filter:none!important}}'+
- '</style></head><body><main class="scene"><div class="particles">'+partMarkup+'</div><section class="content"><div class="eyebrow">'+textMotionEscape(prompt||style.replace(/^./,x=>x.toUpperCase()))+'</div><h1 class="title">'+textMotionEscape(title)+'</h1><div class="accent-line"></div><p class="subtitle">'+textMotionEscape(subtitle)+'</p><div class="cta">'+textMotionEscape(cta)+'</div></section></main></body></html>';
- return {html,title,duration,ratio,effect,style};
+ const styles={cinematic:{weight:850,spacing:'.015em',size:'clamp(38px,9vw,132px)',align:'center'},kinetic:{weight:950,spacing:'-.065em',size:'clamp(44px,11vw,154px)',align:'center'},luxury:{weight:500,spacing:'.13em',size:'clamp(32px,7vw,100px)',align:'center'},neon:{weight:950,spacing:'.04em',size:'clamp(38px,9vw,128px)',align:'center'},minimal:{weight:650,spacing:'-.045em',size:'clamp(38px,8vw,116px)',align:'left'},retro:{weight:950,spacing:'-.025em',size:'clamp(42px,10vw,140px)',align:'center'},tech:{weight:800,spacing:'.08em',size:'clamp(32px,7vw,104px)',align:'left'},poetry:{weight:500,spacing:'-.025em',size:'clamp(34px,7vw,102px)',align:'center'}};
+ const st=styles[style]||styles.cinematic,sceneDur=total/scenes.length;
+ const ease=intensity==='soft'?'cubic-bezier(.2,.7,.25,1)':intensity==='strong'?'cubic-bezier(.12,.95,.18,1)':'cubic-bezier(.16,1,.3,1)';
+ const bgBase=backdrop==='solid'?bg:backdrop==='paper'?'radial-gradient(circle at 50% 40%,#fff,'+bg+' 78%)':backdrop==='grid'?'linear-gradient('+bg+'f2,'+bg+'f2),linear-gradient(90deg,'+accent+'22 1px,transparent 1px),linear-gradient('+accent+'22 1px,transparent 1px)':backdrop==='void'?'radial-gradient(ellipse at center,'+accent+'20,'+bg+' 70%)':backdrop==='spotlight'?'radial-gradient(ellipse at 50% 35%,#ffffff22,transparent 52%),'+bg:'radial-gradient(ellipse at 50% 42%,'+accent+'30,'+bg+' 72%)';
+ const textColor=backdrop==='paper'?'#101a2b':fg;
+ const sceneHtml=scenes.map((s,i)=>{
+  const start=i*sceneDur,delay=start.toFixed(3)+'s',sub=s.sub||prompt.split(/[.!?]/).filter(Boolean)[i%Math.max(1,prompt.split(/[.!?]/).filter(Boolean).length)]||'';
+  const mode=effect==='auto'?['rise','split','zoom','type','wipe','glitch','rotate','float'][i%8]:effect;
+  const align=style==='minimal'||style==='tech'?(i%2?'right':'left'):'center';
+  const pos=style==='minimal'||style==='tech'?(i%2?'justify-content:flex-end':'justify-content:flex-start'):'justify-content:center';
+  const wordDelay=mode==='type'?'.06':' .045';
+  const titleMarkup=textMotionWords(s.title);
+  const decor=shapes?'<div class="orb orb-a"></div><div class="orb orb-b"></div><div class="orbit"></div><div class="slash"></div>':'';
+  const particleMarkup=particles?Array.from({length:18},(_,n)=>'<i class="particle" style="--p:'+n+'"></i>').join(''):'';
+  return '<article class="scene scene-'+i+'" style="--start:'+delay+';--sceneDur:'+sceneDur.toFixed(3)+'s;--sceneIndex:'+i+'"><div class="scene-bg"></div>'+decor+'<div class="particles">'+particleMarkup+'</div><div class="scene-content" style="'+pos+';text-align:'+align+'"><div class="scene-index">0'+(i+1)+' / 0'+scenes.length+'</div><h1 class="headline effect-'+mode+'">'+titleMarkup+'</h1>'+(sub?'<p class="support">'+textMotionEscape(sub)+'</p>':'')+'<div class="rule"></div></div><div class="corner-mark">TROZAL / TYPE MOTION</div></article>';
+ }).join('');
+ const beatHtml=beats?'<div class="beatline">'+scenes.map((s,i)=>'<i style="--beat:'+i+'"></i>').join('')+'</div>':'';
+ const sceneDuration=sceneDur.toFixed(3)+'s';
+ const html='<!doctype html>\n<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+textMotionEscape(prompt.slice(0,70)||'Text Motion Story')+'</title><style>'+
+ '*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:'+bg+';color:'+textColor+';font-family:'+fonts[font]+'}.stage{position:relative;width:100vw;height:100vh;overflow:hidden;isolation:isolate;background:'+bgBase+'}.stage:after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 35%,#0005 100%);z-index:5}.scene{position:absolute;inset:0;overflow:hidden;display:flex;align-items:center;padding:8vw;opacity:0;animation:sceneLife '+sceneDuration+' linear var(--start) both}.scene-bg{position:absolute;inset:-15%;background:radial-gradient(circle at calc(25% + var(--sceneIndex)*7%) 50%,'+accent+'22,transparent 38%);animation:bgDrift '+sceneDuration+' ease-in-out var(--start) both}.scene-content{position:relative;z-index:3;width:min(100%,1300px);display:flex;flex-direction:column;align-items:inherit}.scene-index{font:600 clamp(9px,1vw,13px) monospace;letter-spacing:.24em;color:'+accent+';margin-bottom:clamp(16px,3vh,38px);opacity:0;animation:smallIn .8s '+ease+' calc(var(--start) + .08s) both}.headline{font-size:'+st.size+';font-weight:'+st.weight+';letter-spacing:'+st.spacing+';line-height:.94;text-transform:'+(style==='poetry'?'none':'uppercase')+';max-width:14ch;margin:0;text-wrap:balance;overflow:visible;text-shadow:'+(style==='neon'?'0 0 12px '+accent+',0 0 42px '+accent+'99':'0 12px 50px #0008')+'}.word{display:inline-block;opacity:0;animation:wordIn .9s '+ease+' calc(var(--start) + .18s + var(--wi)*'+wordDelay+'s) both}.support{font-size:clamp(12px,2vw,25px);line-height:1.5;letter-spacing:.08em;max-width:55ch;color:'+accent+';margin:clamp(18px,3vh,34px) 0 0;opacity:0;animation:smallIn .9s '+ease+' calc(var(--start) + .8s) both}.rule{height:2px;width:clamp(45px,9vw,120px);background:'+accent+';margin-top:clamp(22px,4vh,42px);transform-origin:left;animation:ruleIn .8s '+ease+' calc(var(--start) + .65s) both}.corner-mark{position:absolute;right:4vw;bottom:3vh;font:9px monospace;letter-spacing:.2em;opacity:.48;z-index:3}.orb{position:absolute;border:1px solid '+accent+'55;border-radius:50%;pointer-events:none}.orb-a{width:48vw;height:48vw;right:-12vw;top:-18vw;box-shadow:inset 0 0 90px '+accent+'12;animation:orbSpin '+sceneDuration+' linear var(--start) both}.orb-b{width:28vw;height:28vw;left:-10vw;bottom:-16vw;animation:orbSpin '+sceneDuration+' reverse linear var(--start) both}.orbit{position:absolute;width:75vw;height:25vw;border:1px solid '+accent+'35;border-radius:50%;transform:rotate(-25deg);left:15%;top:35%;animation:orbitMove '+sceneDuration+' ease var(--start) both}.slash{position:absolute;width:1px;height:150%;left:72%;top:-20%;background:linear-gradient(transparent,'+accent+'55,transparent);transform:rotate(28deg)}.particles{position:absolute;inset:0;z-index:1;pointer-events:none}.particle{position:absolute;left:calc(var(--p)*5.4%);top:calc((var(--p)*31%));width:3px;height:3px;border-radius:50%;background:'+accent+';box-shadow:0 0 14px '+accent+';animation:particleDrift '+sceneDuration+' ease-in-out calc(var(--start) + .1s) both}.particle:nth-child(3n){width:5px;height:5px}.beatline{position:absolute;z-index:7;bottom:0;left:0;right:0;height:3px;display:flex}.beatline i{flex:1;background:'+accent+';opacity:.65;transform:scaleY(.35);transform-origin:bottom;animation:beatPulse .5s ease-in-out calc(var(--beat)*'+sceneDuration+') infinite alternate}'+
+ '@keyframes sceneLife{0%{opacity:0}8%{opacity:1}82%{opacity:1}100%{opacity:0}}@keyframes wordIn{0%{opacity:0;transform:translate3d(0,.8em,0) scale(.94);filter:blur(12px)}100%{opacity:1;transform:translate3d(0,0,0) scale(1);filter:blur(0)}}@keyframes smallIn{from{opacity:0;transform:translateY(18px)}to{opacity:.9;transform:translateY(0)}}@keyframes ruleIn{from{transform:scaleX(0)}to{transform:scaleX(1)}}@keyframes bgDrift{from{transform:scale(1.12) translateX(-3%)}to{transform:scale(1) translateX(3%)}}@keyframes orbSpin{from{transform:rotate(0) scale(.75);opacity:0}to{transform:rotate(120deg) scale(1.15);opacity:.8}}@keyframes orbitMove{from{transform:rotate(-40deg) scale(.8);opacity:0}to{transform:rotate(-15deg) scale(1.1);opacity:.7}}@keyframes particleDrift{0%{transform:translateY(40px);opacity:0}50%{opacity:.75}100%{transform:translateY(-70px);opacity:0}}@keyframes beatPulse{to{transform:scaleY(1)}}'+
+ '.effect-type .word{animation-name:typeWord;animation-duration:.5s}.effect-zoom .word{animation-name:zoomWord}.effect-rotate .word{animation-name:flipWord}.effect-wipe .word{animation-name:wipeWord}.effect-glitch .word{animation-name:glitchWord}.effect-float .word{animation-name:floatWord}.effect-split .word{animation-name:splitWord}@keyframes typeWord{from{opacity:0;clip-path:inset(0 100% 0 0)}to{opacity:1;clip-path:inset(0)}}@keyframes zoomWord{from{opacity:0;transform:scale(2);filter:blur(15px)}to{opacity:1;transform:scale(1);filter:blur(0)}}@keyframes flipWord{from{opacity:0;transform:perspective(500px) rotateX(90deg)}to{opacity:1;transform:perspective(500px) rotateX(0)}}@keyframes wipeWord{from{opacity:0;clip-path:inset(0 0 0 100%)}to{opacity:1;clip-path:inset(0)}}@keyframes glitchWord{0%{opacity:0;transform:translateX(-20px);text-shadow:4px 0 '+accent+'}40%{opacity:1;transform:translateX(4px)}100%{opacity:1;transform:translateX(0);text-shadow:none}}@keyframes floatWord{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}@keyframes splitWord{from{opacity:0;transform:translateY(1em) rotate(4deg);filter:blur(8px)}to{opacity:1;transform:translateY(0) rotate(0);filter:blur(0)}}@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-delay:0ms!important}}'+
+ '</style></head><body><main class="stage">'+sceneHtml+beatHtml+'</main></body></html>';
+ return {html,scenes,duration:total,ratio};
 }
 $('generateTextMotionBtn').addEventListener('click',()=>{
  const btn=$('generateTextMotionBtn');btn.disabled=true;
- try{const r=buildTextMotionHtml();$('textMotionOutput').value=r.html;$('textMotionStatus').textContent='Berhasil membuat animasi "'+r.title+'" · '+r.style+' · '+r.effect+' · '+r.duration+' detik · rasio '+r.ratio+'. Klik Kirim ke Preview untuk memuat ke engine.';}
- catch(e){$('textMotionStatus').textContent='Gagal membuat animasi: '+(e?.message||String(e));}
+ try{const r=buildTextMotionHtml();$('textMotionOutput').value=r.html;$('textMotionPreview').srcdoc=r.html;$('textMotionStatus').textContent='Storyboard berhasil dibuat: '+r.scenes.length+' adegan · '+r.duration+' detik · '+r.ratio+'. Seluruh adegan menggunakan animasi teks dan grafis CSS.';}
+ catch(e){$('textMotionStatus').textContent='Gagal membuat storyboard: '+(e?.message||String(e));}
  finally{btn.disabled=false;}
 });
 $('copyTextMotionBtn').addEventListener('click',async()=>{
- const code=$('textMotionOutput').value;if(!code){$('textMotionStatus').textContent='Buat animasi terlebih dahulu.';return;}
- try{await navigator.clipboard.writeText(code);$('textMotionStatus').textContent='HTML berhasil disalin.';}
- catch(e){$('textMotionOutput').focus();$('textMotionOutput').select();$('textMotionStatus').textContent='Clipboard tidak diizinkan. Kode sudah dipilih; tekan Ctrl+C.';}
+ const code=$('textMotionOutput').value;if(!code){$('textMotionStatus').textContent='Generate storyboard terlebih dahulu.';return;}
+ try{await navigator.clipboard.writeText(code);$('textMotionStatus').textContent='HTML storyboard berhasil disalin.';}
+ catch(e){$('textMotionOutput').focus();$('textMotionOutput').select();$('textMotionStatus').textContent='Clipboard dibatasi browser. Kode sudah dipilih; tekan Ctrl+C.';}
 });
 $('previewTextMotionBtn').addEventListener('click',()=>{
- const code=$('textMotionOutput').value;if(!code){$('textMotionStatus').textContent='Buat animasi terlebih dahulu.';return;}
+ const code=$('textMotionOutput').value;if(!code){$('textMotionStatus').textContent='Generate storyboard terlebih dahulu.';return;}
  $('aiCodeTerminal').value=code;
  if(typeof validateHtmlTerminal==='function')validateHtmlTerminal();
  $('applyAiSvgBtn').click();
- $('textMotionStatus').textContent='HTML dikirim ke terminal dan perintah Terapkan ke Preview dijalankan. Periksa status terminal/preview jika impor memerlukan koreksi.';
+ $('textMotionStatus').textContent='Storyboard HTML dikirim ke terminal TROZAL. Periksa status terminal dan preview.';
 });
 $('resetTextMotionBtn').addEventListener('click',()=>{
- $('textMotionPrompt').value='';$('textMotionTitle').value='YOUR STORY STARTS HERE';$('textMotionSubtitle').value='A NEW EXPERIENCE';$('textMotionCta').value='DISCOVER MORE';$('textMotionOutput').value='';$('textMotionStatus').textContent='Form generator direset.';
+ $('textMotionPrompt').value='';$('textMotionScript').value='';$('textMotionOutput').value='';$('textMotionPreview').srcdoc='';$('textMotionStatus').textContent='Form storyboard direset.';
 });
-
 $('clearAiCodeBtn').addEventListener('click',()=>{$('aiCodeTerminal').value='';setAiStatus('Terminal dibersihkan.')});
 $('pasteCodeFromClipboardBtn').addEventListener('click',async()=>{try{const code=await navigator.clipboard.readText();if(!code.trim()){setAiStatus('Clipboard kosong. Salin kode HTML terlebih dahulu.');return}$('aiCodeTerminal').value=code;setAiStatus('Kode berhasil ditempel ('+code.length.toLocaleString()+' karakter). Klik Terapkan ke Preview.');$('aiCodeTerminal').focus()}catch(e){$('aiCodeTerminal').focus();setAiStatus('Clipboard tidak diizinkan browser. Klik terminal lalu tekan Ctrl+V.')}});
 
