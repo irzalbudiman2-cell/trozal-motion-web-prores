@@ -34,6 +34,18 @@ The app only reports ProRes as successful after FFprobe verifies the codec, prof
 
 The FFmpeg core is downloaded by the browser from this repository's GitHub Pages origin on first use. It runs in the user's browser; frames are not uploaded to a paid rendering service. 4K or long renders can require substantial browser memory.
 
+## Local AI Vision metadata (no paid API)
+
+TROZAL MOTION can analyze actual preview frames using a local Ollama model. The recommended starting model for a 16 GB RAM / GTX 1660 Super PC is `qwen3-vl:2b`. No OpenAI API key is required and image analysis runs on the user's computer.
+
+1. Install Ollama for Windows: https://ollama.com/download/windows
+2. Run `TROZAL_LOCAL_VISION_SETUP.bat` from this repository. It configures the GitHub Pages origin and downloads `qwen3-vl:2b`.
+3. Quit Ollama from the system tray and restart it.
+4. Open the site, expand the TROZAL LOCAL VISION panel, and click **Cek Ollama**.
+5. Click **Analisis Visual Sebenarnya** to analyze three preview frames, or select up to four screenshots.
+
+See [TROZAL_LOCAL_VISION.md](TROZAL_LOCAL_VISION.md) for setup, privacy, and troubleshooting details. Metadata is an AI draft and should be reviewed before export.
+
 ## Licensing
 
 The custom FFmpeg core contains GPL-enabled FFmpeg components. See `THIRD_PARTY_NOTICES.md` for upstream sources and license notes.
