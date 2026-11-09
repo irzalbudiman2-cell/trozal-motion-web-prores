@@ -3989,29 +3989,39 @@ function visualMotionAiStatus(message,isError=false){
  const el=$('visualMotionAiStatus');if(el){el.textContent=message;el.style.color=isError?'#ff9292':'#c9b6e8';}
 }
 async function visualMotionAiCheck(){
- visualMotionAiStatus('Memeriksa izin Loopback Network dan Ollama…');
+ visualMotionAiStatus('Menghubungkan ke Ollama… Jika Chrome meminta izin jaringan loopback, pilih Izinkan.');
  const endpoint='http://127.0.0.1:11435/api/tags';
  try{
-  let permissionState='unknown';
-  if(navigator.permissions?.query){
-   try{const p=await navigator.permissions.query({name:'loopback-network'});permissionState=p.state;}
-   catch(_){permissionState='unsupported';}
-  }
-  if(permissionState==='denied'){
-   throw new Error('Chrome memblokir izin Loopback Network. Buka pengaturan situs TROZAL, cari Loopback network, lalu pilih Allow. Local network saja belum cukup.');
-  }
-  const response=await fetch(endpoint,{method:'GET',mode:'cors',cache:'no-store',targetAddressSpace:'loopback'});
+  // Start fetch immediately in the button's user-gesture call stack.
+  // Do not await Permissions API first: Chrome LNA may require the
+  // first loopback request to be initiated directly by a user gesture.
+  const response=await fetch(endpoint,{
+   method:'GET',
+   mode:'cors',
+   credentials:'omit',
+   cache:'no-store',
+   targetAddressSpace:'loopback'
+  });
   if(!response.ok)throw new Error('Bridge merespons HTTP '+response.status);
   const data=await response.json();
   if(!Array.isArray(data.models))throw new Error('Respons bridge bukan daftar model Ollama yang valid.');
-  const models=data.models.map(x=>x.name||'').filter(Boolean);
-  const chosen=$('visualMotionAiModel').value;
+  const models=data.models.map(x=>String(x.name||'')).filter(Boolean);
+  const chosen=$('visualMotionAiModel')?.value||'qwen3-vl:2b';
   const found=models.some(n=>n===chosen||n.startsWith(chosen+':'));
-  visualMotionAiStatus('Ollama terhubung · '+models.length+' model terpasang · '+(found?'Model '+chosen+' tersedia.':'Model '+chosen+' belum diunduh.')+(permissionState==='prompt'?' · Izin Loopback telah diminta melalui Chrome.':''));
+  let permissionState='unknown';
+  try{
+   const permission=await navigator.permissions.query({name:'loopback-network'});
+   permissionState=permission.state;
+  }catch(_){permissionState='not-queryable';}
+  visualMotionAiStatus('OLLAMA TERHUBUNG · '+models.length+' model terdeteksi · '+(found?'Model '+chosen+' tersedia.':'Model '+chosen+' belum terpasang. Model tersedia: '+models.join(', '))+'.');
   return {models,found,permissionState};
  }catch(e){
   const reason=(e?.name?e.name+': ':'')+(e?.message||String(e));
-  visualMotionAiStatus('Gagal mengakses Bridge ('+reason+'). Periksa izin Loopback Network Chrome dan pastikan jendela TROZAL Ollama Bridge tetap terbuka.',true);
+  let hint='Pastikan jendela Bridge tetap terbuka.';
+  if(/failed to fetch|networkerror|load failed/i.test(reason)){
+   hint='Chrome belum mengizinkan Loopback Network untuk situs TROZAL. Buka Site settings → Apps on device / Loopback network → Allow, lalu muat ulang halaman.';
+  }
+  visualMotionAiStatus('KONEKSI GAGAL · '+reason+' '+hint,true);
   return null;
  }
 }
