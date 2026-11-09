@@ -153,7 +153,6 @@ Current limitations:
 - Browser preview and frame-render parity for all generated CSS transitions and camera effects still require visual testing.
 
 Next development:
-- Add scene thumbnails and playhead synchronization in the sequencer.
 - Add semantic object grouping/selection so related SVG paths (for example, a character's body parts or a jewelry product) can be selected and animated as one logical object without losing sub-part editability.
 - Add scene thumbnails and playhead synchronization in the sequencer.
 - Add scene-specific native keyframe tracks for objects and camera movement.
