@@ -166,32 +166,39 @@ Acceptance checks:
 
 ## Phase 7 — Evidence-Based Stock Metadata
 
-**Status: Initial evidence-grounded metadata generator committed; platform-specific validation and real visual-AI integration remain planned.**
+**Status: Initial evidence-grounded metadata generator and marketplace-specific validation profiles committed; visual-AI analysis and deeper platform export remain planned.**
 
 Implemented:
 - Metadata evidence is sourced from user-entered visual description, Prompt-to-Visual prompt, Visual Scene Sequencer scene descriptions, readable HTML/SVG text and labels, and asset/project name.
-- Evidence sources are displayed to the user with a qualitative evidence-coverage label.
-- Title and description are based on descriptive text instead of a generic fabricated template.
-- Category selection uses matched subject-topic rules and category weighting.
-- Keywords are derived from matched topics and meaningful source terms, capped at 47. The generator no longer fills unused slots with unrelated generic terms.
-- A limited Indonesian-to-English phrase dictionary supports common scene terms; generated English wording is explicitly marked for human review.
+- Evidence sources are displayed to the user with qualitative coverage labels.
+- Filename-only input cannot produce a fabricated title or keyword set.
+- Title and description are based on descriptive text instead of a generic filler template.
+- Category selection uses matched subject-topic rules and weighted categories.
+- Keywords are derived from matched topics and meaningful source terms, capped at 47. The generator does not pad unused slots with unrelated generic terms.
+- Limited Indonesian-to-English phrase handling is included; generated wording is explicitly marked for human review.
+- Adobe Stock profile checks the recommended title length, keyword ceiling and first-ten keyword priority; it flags a small set of possible brand/character terms for manual review.
+- Shutterstock profile converts generated titles to a complete English descriptive sentence and checks the minimum five-word requirement.
+- Dreamstime profile emphasizes relevance and leaves numeric limits to the current upload form rather than guessing.
+- Metadata fields are persisted in project JSON and autosave.
 - Metadata panel has its own amber feature color.
 
 Current limitations:
 - This is a local rule-based text/evidence generator, not a connected AI vision model. It does not inspect raster/video pixels or verify that a prompted object actually appears in the rendered frame.
-- Unknown Indonesian phrases and complex grammar may not translate accurately.
-- Keyword relevance is limited by the quality and completeness of the supplied prompt, labels and text evidence.
+- Indonesian-to-English phrase handling is limited and needs human proofreading, especially for unfamiliar terms and complex grammar.
+- Platform checks are preflight guidance, not official marketplace certification. Category taxonomies and submission rules may change and must be checked again before release.
+- The possible-IP term list is deliberately incomplete and does not replace legal/editorial review.
 
 Next development:
 - Add metadata preview by scene and allow users to approve/remove individual keywords.
-- Add per-platform title, description and keyword limits based on current marketplace guidance.
-- Add optional frame contact-sheet analysis through a securely configured vision-AI provider, with visible provenance and user review.
-- Add an exportable metadata CSV/sidecar file linked to render output.
+- Add platform-specific category mapping and optional CSV/sidecar metadata export.
+- Add optional rendered-frame contact-sheet analysis through a securely configured vision-AI provider, with visible provenance, confidence and user review.
+- Add a clear difference between facts extracted from the scene, terms inferred from prompts, and optional AI-vision suggestions.
 
 Acceptance checks:
 - Every generated title, category and keyword can be traced to supplied text or a clearly disclosed rule.
 - The generator never claims to have visually recognized pixels when no vision model was used.
 - The keyword count can be below 47 when there is insufficient relevant evidence.
+- Platform-specific preflight rules are shown for Adobe Stock, Shutterstock and Dreamstime without inventing unverified limits.
 - Repeated generation from identical evidence produces identical metadata.
 - Manual edits are preserved until the user explicitly generates again.
 
