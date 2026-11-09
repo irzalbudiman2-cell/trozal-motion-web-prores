@@ -129,7 +129,7 @@ Acceptance checks:
 
 ## Phase 6 — Prompt-to-Visual & Visual Scene Sequencer
 
-**Status: Procedural generator, editable sequencer and initial native-track import committed; browser QA and object-level scene editing remain in development.**
+**Status: Procedural generator, editable sequencer, grouped native-scene tracks and initial object-level SVG tracks committed; browser QA and deeper scene-object controls remain in development.**
 
 Implemented:
 - Prompt-to-Visual panel with its own purple feature color, separate from other editor panels.
@@ -142,18 +142,20 @@ Implemented:
 - Generated standalone HTML with one SVG composition per scene and a summed timeline duration.
 - Generated visual HTML can be sent through the existing HTML import/preview path.
 - **Import to Multi-Track:** each sequencer scene can be imported as one grouped native SVG layer/track, with its own start/end time, fade entrance/exit and camera-style motion mapped to existing layer controls.
+- Optional **Object-Level Split** mode recursively separates drawable SVG elements inside each generated scene into independently selectable native tracks. Each extracted track inherits its source scene's start/end time and camera loop preset; the default grouped-scene mode remains available as a composition-safe fallback.
 - Prompt, visual settings and scene sequence are persisted in project JSON and autosave.
 
 Current limitations:
 - Scene artwork is procedural SVG selected from keyword-driven visual templates. This is not an external generative image/video model and does not produce photorealistic AI footage.
 - Prompt understanding is keyword/template based; unsupported subjects may fall back to a generic illustration.
-- Each imported scene currently becomes one grouped SVG track. The objects and characters inside a scene are not yet individual native tracks.
+- Object-Level Split is structural SVG decomposition, not semantic object recognition. It can separate pieces that visually belong together (for example, a character or product built from multiple paths); switch back to grouped-scene mode when a composition must remain intact. The current limit is 60 native tracks per import.
 - Native track motion is applied at scene/group level; generated HTML's full internal CSS effects are not all converted to native keyframes.
 - Browser preview and frame-render parity for all generated CSS transitions and camera effects still require visual testing.
 
 Next development:
 - Add scene thumbnails and playhead synchronization in the sequencer.
-- Add object-level selection and independent motion controls within each generated scene.
+- Add semantic object grouping/selection so related SVG paths (for example, a character's body parts or a jewelry product) can be selected and animated as one logical object without losing sub-part editability.
+- Add scene thumbnails and playhead synchronization in the sequencer.
 - Add scene-specific native keyframe tracks for objects and camera movement.
 - Integrate a server-side AI image/video provider only after provider selection, secure key handling and usage controls are designed.
 
