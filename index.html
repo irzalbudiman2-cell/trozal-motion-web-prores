@@ -3289,7 +3289,7 @@ function trozalTranslateMetadataText(value){
   [/cincin/gi,'ring'],[/berlian/gi,'diamond'],[/jam tangan/gi,'watch'],[/perhiasan/gi,'jewelry'],
   [/bunga/gi,'flower'],[/pohon/gi,'tree'],[/pantai/gi,'beach'],[/gurun/gi,'desert'],
   [/kota/gi,'city'],[/jalanan/gi,'street'],[/jalan raya/gi,'road'],[/seorang/gi,'a person'],[/orang|manusia/gi,'people'],
-  [/wanita/gi,'woman'],[/pria/gi,'man'],[/anak-anak/gi,'children'],[/sedang/gi,''],[/sebuah/gi,'a'],[/yang/gi,'that'],[/serta/gi,'and'],[/dengan/gi,'with'],[/di atas/gi,'above'],[/di bawah/gi,'below'],[/di tengah/gi,'in the middle of'],[/pada/gi,'in'],[/pagi/gi,'morning'],[/siang/gi,'daytime'],[/sore/gi,'evening'],[/malam/gi,'night'],[/langit/gi,'sky'],[/cahaya/gi,'light'],[/lampu/gi,'lights'],[/jalanan/gi,'streets'],[/air/gi,'water'],[/berputar/gi,'rotating'],[/melintasi/gi,'crossing'],[/membawa/gi,'carrying'],[/berjalan/gi,'walking'],[/berlari/gi,'running'],[/bermain/gi,'playing'],[/tampak|terlihat/gi,'visible']
+  [/wanita/gi,'woman'],[/pria/gi,'man'],[/anak-anak/gi,'children'],[/\bdan\b/gi,'and'],[/sedang/gi,''],[/sebuah/gi,'a'],[/yang/gi,'that'],[/serta/gi,'and'],[/dengan/gi,'with'],[/\bdan\b/gi,'and'],[/di atas/gi,'above'],[/di bawah/gi,'below'],[/di tengah/gi,'in the middle of'],[/pada/gi,'in'],[/pagi/gi,'morning'],[/siang/gi,'daytime'],[/sore/gi,'evening'],[/malam/gi,'night'],[/langit/gi,'sky'],[/cahaya/gi,'light'],[/lampu/gi,'lights'],[/jalanan/gi,'streets'],[/air/gi,'water'],[/berputar/gi,'rotating'],[/melintasi/gi,'crossing'],[/membawa/gi,'carrying'],[/berjalan/gi,'walking'],[/berlari/gi,'running'],[/bermain/gi,'playing'],[/tampak|terlihat/gi,'visible']
  ];
  dictionary.forEach(([pattern,replacement])=>{text=text.replace(pattern,replacement)});
  return text.replace(/\s+/g,' ').trim();
