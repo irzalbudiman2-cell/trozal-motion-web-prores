@@ -726,31 +726,31 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
    <label>Judul (English)</label><input id="metadataTitle" type="text" placeholder="English title — review against the actual visual">
    <p class="help">Judul otomatis adalah draf. Periksa subjek, aksi, jumlah objek, dan latar sebelum digunakan.</p>
    <label>Deskripsi (English)</label><textarea id="metadataDescription" rows="3" placeholder="English description based only on the supplied visual description..."></textarea>
-   <label>Category</label><select id="metadataCategory"><option>Graphic Resources</option><option>Technology</option><option>Business</option><option>Education</option><option>Science</option><option>Nature</option><option>Culture and Religion</option><option>Celebration</option><option>Backgrounds and Textures</option><option>Lifestyle</option><option>Food</option><option>Sports</option><option>Travel</option><option>Industry</option><option>People</option><option>Plants and Flowers</option><option>Buildings and Architecture</option><option>Transportation</option><option>Environment</option></select>
+   <label>Kategori konten</label><p class="help">Pilih kelompok utama isi video, bukan gaya visual atau teknik animasinya. Jika ragu, pilih kategori paling dekat dan periksa lagi di marketplace.</p><select id="metadataCategory"><option>Graphic Resources</option><option>Technology</option><option>Business</option><option>Education</option><option>Science</option><option>Nature</option><option>Culture and Religion</option><option>Celebration</option><option>Backgrounds and Textures</option><option>Lifestyle</option><option>Food</option><option>Sports</option><option>Travel</option><option>Industry</option><option>People</option><option>Plants and Flowers</option><option>Buildings and Architecture</option><option>Transportation</option><option>Environment</option></select>
    <label>Kata kunci (English) <span class="value" id="metadataKeywordCount">0 / 47 maks.</span></label><textarea id="metadataKeywords" rows="4" placeholder="Kata kunci spesifik yang benar-benar menggambarkan visual"></textarea>
    <p class="help">Jumlah boleh kurang dari 47. Kata kunci umum atau hasil tebakan tidak ditambahkan hanya untuk memenuhi kuota.</p>
-   <div class="row" style="margin-top:8px"><button type="button" data-copy-meta="metadataTitle">Copy Title</button><button type="button" data-copy-meta="metadataDescription">Copy Description</button></div>
-   <div class="row"><button type="button" data-copy-meta="metadataCategory">Copy Category</button><button type="button" data-copy-meta="metadataKeywords">Copy Keywords</button></div>
-   <button type="button" class="green" id="copyAllMetadataBtn" style="width:100%;margin-top:7px">Copy All Metadata</button>
+   <div class="row" style="margin-top:8px"><button type="button" data-copy-meta="metadataTitle">Salin Judul</button><button type="button" data-copy-meta="metadataDescription">Salin Deskripsi</button></div>
+   <div class="row"><button type="button" data-copy-meta="metadataCategory">Salin Kategori</button><button type="button" data-copy-meta="metadataKeywords">Salin Kata Kunci</button></div>
+   <button type="button" class="green" id="copyAllMetadataBtn" style="width:100%;margin-top:7px">Salin Semua Metadata</button>
    <div id="metadataStatus" class="status" aria-live="polite"></div>
   </section>
   <section class="panel" id="metadataOptimizerPanel">
    <h3><b>✧</b> 9. METADATA QUALITY & DELIVERY</h3>
-   <p class="help">Audit editorial lokal untuk memeriksa kelengkapan, relevansi keyword terhadap sumber teks, duplikasi, dan aturan dasar platform. Skor ini bukan jaminan diterima marketplace.</p>
-   <div class="metadata-evidence" id="metadataQualitySummary">Skor metadata menunggu analisis.</div>
+   <p class="help">Audit editorial lokal untuk memeriksa kelengkapan, relevansi keyword terhadap sumber teks, duplikasi, dan aturan dasar platform. Skor kelengkapan ini bukan pemeriksaan visual dan bukan jaminan diterima marketplace.</p>
+   <div class="metadata-evidence" id="metadataQualitySummary">Kelengkapan metadata menunggu analisis.</div>
    <div class="metadata-quality-meter" role="meter" aria-label="Skor kualitas metadata" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="metadataQualityMeter"><span id="metadataQualityBar"></span></div>
    <div class="metadata-quality-grid" id="metadataQualityDetails"><div class="metadata-quality-item"><b>Judul</b><span>Belum diperiksa</span></div><div class="metadata-quality-item"><b>Deskripsi</b><span>Belum diperiksa</span></div><div class="metadata-quality-item"><b>Keyword</b><span>Belum diperiksa</span></div><div class="metadata-quality-item"><b>Bukti sumber</b><span>Belum diperiksa</span></div></div>
    <div class="row"><button type="button" id="optimizeMetadataBtn" class="primary">Prioritaskan Keyword Relevan</button><button type="button" id="exportMetadataCsvBtn">Ekspor CSV</button></div>
    <p class="help" id="metadataOptimizerStatus">Pemeringkatan hanya mengurutkan dan menghapus duplikasi yang jelas. Keyword yang tidak cocok dengan teks tidak dihapus otomatis; keyword tersebut diletakkan di akhir untuk ditinjau.</p>
 
    <div class="metadata-review-tools">
-    <h4>REVIEW KEYWORDS</h4>
+    <h4>PERIKSA KATA KUNCI</h4>
     <p class="help">Setujui keyword yang benar-benar sesuai dengan bukti teks, atau hapus yang tidak relevan. Persetujuan manual tidak berarti objek telah diverifikasi secara visual.</p>
     <div id="metadataKeywordReview" class="metadata-keyword-review"><span class="muted">Buat metadata untuk menampilkan daftar keyword.</span></div>
     <div class="row"><button type="button" id="metadataApplyApprovedBtn">Gunakan keyword disetujui</button><button type="button" id="metadataResetReviewBtn">Reset persetujuan</button></div>
    </div>
    <div class="metadata-batch-tools">
-    <h4>SCENE PREVIEW & BATCH DELIVERY</h4>
+    <h4>PRATINJAU SCENE & EKSPOR BATCH</h4>
     <label for="metadataSceneSelect">Pilih scene untuk pratinjau sumber</label>
     <select id="metadataSceneSelect"><option value="">Belum ada scene</option></select>
     <div id="metadataSceneEvidence" class="metadata-scene-evidence">Deskripsi scene akan tampil di sini. Ini adalah bukti teks, bukan analisis piksel.</div>
