@@ -31,17 +31,17 @@ small,.muted{color:var(--muted)}.row{display:flex;gap:8px;align-items:center}.ro
 .ai-tools textarea{width:100%;min-height:100px;resize:vertical;background:#10131a;color:#e9edf5;border:1px solid #414959;border-radius:7px;padding:9px;font:11px/1.45 ui-monospace,SFMono-Regular,Consolas,monospace}.ai-tools .btnrow{display:flex;gap:6px;margin-top:7px}.ai-tools .btnrow button{flex:1;font-size:11px}.ai-tools .terminal{min-height:180px;border-color:#397c64}.ai-tools .terminal-label{color:#83e8b2}.ai-tools .notice{font-size:10px;color:#aebbd0;margin:6px 0}
 
 
-/* TEXT TO ANIMATION — BLUE IMAGINATION STUDIO */
-#textToAnimationPanel{background:linear-gradient(145deg,#102b50 0%,#0b1b35 58%,#102b4c 100%);border:1px solid #347fc4;box-shadow:0 8px 24px #020d20aa,inset 0 1px #b9dcff22}
-#textToAnimationPanel h3{color:#a9d8ff;letter-spacing:.07em}
-#textToAnimationPanel .help,#textToAnimationPanel label{color:#c8e3ff}
-#textToAnimationPanel textarea{background:#07162c;border:1px solid #285b91;color:#eff7ff}
-#textToAnimationPanel input,#textToAnimationPanel select{background:#091d38;border:1px solid #326fa9;color:#eff7ff;border-radius:7px;padding:7px;width:100%}
+/* PROMPT-TO-VISUAL — DISTINCT VIOLET FEATURE THEME */
+#textToAnimationPanel{background:linear-gradient(145deg,#38205e 0%,#1b1035 58%,#30164c 100%);border:1px solid #925be0;box-shadow:0 8px 24px #10051faa,inset 0 1px #ead5ff22}
+#textToAnimationPanel h3{color:#e4c7ff;letter-spacing:.07em}
+#textToAnimationPanel .help,#textToAnimationPanel label{color:#e0d0fa}
+#textToAnimationPanel textarea{background:#150d29;border:1px solid #68419d;color:#faf5ff}
+#textToAnimationPanel input,#textToAnimationPanel select{background:#1a1031;border:1px solid #7950ae;color:#faf5ff;border-radius:7px;padding:7px;width:100%}
 #textToAnimationPanel input[type=color]{height:34px;padding:2px}
-#textToAnimationPanel .btnrow button{border-color:#397db9}
-#textToAnimationPanel button.primary{background:linear-gradient(135deg,#9bd6ff,#398ee0);color:#06172c}
-#textToAnimationPanel button.green{background:linear-gradient(135deg,#b9e3ff,#65aeea);color:#06172c}
-#textToAnimationPanel #textMotionPreview{box-shadow:0 4px 18px #0005}
+#textToAnimationPanel .btnrow button{border-color:#8053ba}
+#textToAnimationPanel button.primary{background:linear-gradient(135deg,#e3c5ff,#a56be8);color:#1c1030}
+#textToAnimationPanel button.green{background:linear-gradient(135deg,#e4d2ff,#b58aea);color:#1c1030}
+#textToAnimationPanel #visualMotionPreview{box-shadow:0 4px 18px #0007}
 .mask-keyframe-box input,.mask-keyframe-box select{width:100%;min-width:0;background:#071b14;color:#e8f5ee;border:1px solid #376b55;border-radius:5px;padding:5px}.mask-keyframe-box label{font-size:9px}.mask-keyframe-box .row>div{flex:1;min-width:0}.mask-keyframe-box button{font-size:10px}\n/* FIX27: searchable AI theme catalog, prompt resolution and HTML diagnostics */
 .ai-tools input[type=text],.ai-tools select{background:#071d15;border:1px solid #32634a;color:#e8f5ee;border-radius:9px;padding:8px;width:100%}
 .ai-tools .theme-search-hint,.ai-tools .resolution-hint{font-size:10px;color:#9ec9ae;margin:4px 0 6px}
@@ -393,44 +393,35 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
   </section>
 
   <section class="panel ai-tools" id="textToAnimationPanel">
-   <h3>▰ TEXT-TO-MOTION · IMAGINATION STUDIO</h3>
-   <p class="help">Tuliskan imajinasi Anda. Generator akan mengubah naskah menjadi rangkaian adegan motion typography, dengan komposisi kata, gerakan, transisi, dan grafis abstrak berbasis CSS. Tanpa foto atau gambar stok.</p>
-   <label>1 · CERITAKAN IMAJINASI / KONSEP VIDEO</label>
-   <textarea id="textMotionPrompt" rows="3" placeholder="Contoh: Sebuah perjalanan dari kota gelap menuju dunia masa depan. Suasana misterius, tulisan besar muncul dari kabut, kata-kata berlari dan pecah menjadi cahaya. Akhiri dengan pesan tentang harapan."></textarea>
-   <label>2 · STORYBOARD / KUMPULAN TEKS PER ADEGAN</label>
-   <textarea id="textMotionScript" rows="7" placeholder="THE LAST NIGHT | Semuanya dimulai dalam kegelapan&#10;A CITY WITHOUT LIMITS | Di mana mimpi bergerak lebih cepat&#10;THE FUTURE IS NOW | Masa depan ada di tangan kita&#10;CREATE YOUR WORLD | Mulai dari imajinasimu"></textarea>
-   <p class="help">Satu baris = satu adegan. Format opsional: JUDUL UTAMA | kalimat pendukung. Jika kolom ini kosong, generator akan menyusun adegan dari kalimat-kalimat pada konsep di atas.</p>
+   <h3>◈ PROMPT-TO-VISUAL · MOTION GENERATOR</h3>
+   <p class="help">Ubah instruksi teks menjadi rangkaian adegan visual bergerak. Hasilnya adalah gambar ilustrasi SVG—lingkungan, objek, kendaraan, karakter sederhana, dan atmosfer—bukan animasi tulisan.</p>
+   <label>1 · TEXT PROMPT / INSTRUKSI VISUAL</label>
+   <textarea id="visualMotionPrompt" rows="6" placeholder="Contoh: Santa Claus mengendarai kereta luncur terbang di antara gedung-gedung kota pada malam hari. Bulan bersinar, salju turun, kendaraan bergerak di jalan, kamera mengikuti kereta dari samping. Akhiri dengan pemandangan kota dari kejauhan."></textarea>
+   <p class="help">Tulis satu cerita utuh atau pisahkan beberapa adegan dengan baris baru. Generator akan membaca kata kunci visual dan membangun gambar vektor berbeda untuk setiap adegan. Tidak perlu menulis judul atau teks layar.</p>
    <div class="row">
-    <div><label>RASIO VIDEO</label><select id="textMotionRatio"><option value="16:9">16:9 · Landscape</option><option value="9:16">9:16 · Vertical</option><option value="1:1">1:1 · Square</option><option value="4:5">4:5 · Portrait</option><option value="21:9">21:9 · Cinematic</option></select></div>
-    <div><label>DURASI TOTAL</label><select id="textMotionDuration"><option value="8">8 detik</option><option value="10">10 detik</option><option value="15" selected>15 detik</option><option value="20">20 detik</option><option value="30">30 detik</option><option value="45">45 detik</option><option value="60">60 detik</option></select></div>
+    <div><label>RASIO VIDEO</label><select id="visualMotionRatio"><option value="16:9">16:9 · Landscape</option><option value="9:16">9:16 · Vertical</option><option value="1:1">1:1 · Square</option><option value="4:5">4:5 · Portrait</option><option value="21:9">21:9 · Cinematic</option></select></div>
+    <div><label>DURASI</label><select id="visualMotionDuration"><option value="8">8 detik</option><option value="10">10 detik</option><option value="15" selected>15 detik</option><option value="20">20 detik</option><option value="30">30 detik</option><option value="45">45 detik</option><option value="60">60 detik</option></select></div>
    </div>
    <div class="row">
-    <div><label>GAYA TIPOGRAFI</label><select id="textMotionStyle"><option value="cinematic">Cinematic / Dramatic</option><option value="kinetic">Kinetic Typography</option><option value="luxury">Luxury Editorial</option><option value="neon">Neon / Cyberpunk</option><option value="minimal">Minimal / Swiss</option><option value="retro">Retro / Pop</option><option value="tech">Futuristic / Tech</option><option value="poetry">Poetry / Emotional</option></select></div>
-    <div><label>GERAKAN UTAMA</label><select id="textMotionEffect"><option value="auto">Auto Mix · Variasi per adegan</option><option value="rise">Rise & Fade</option><option value="type">Typewriter</option><option value="split">Split / Word Stagger</option><option value="zoom">Cinematic Zoom</option><option value="rotate">3D Flip</option><option value="float">Floating</option><option value="wipe">Mask Wipe</option><option value="glitch">Glitch / Digital</option></select></div>
+    <div><label>GAYA VISUAL</label><select id="visualMotionStyle"><option value="cinematic">Cinematic Illustration</option><option value="illustration">Colorful 2D Illustration</option><option value="neon">Neon / Sci-Fi</option><option value="papercut">Paper Cut / Layered</option></select></div>
+    <div><label>GERAKAN KAMERA</label><select id="visualMotionCamera"><option value="parallax">Parallax / Depth Move</option><option value="pan">Slow Camera Pan</option><option value="orbit">Orbit / Drift</option><option value="follow">Follow the Main Object</option><option value="locked">Static Camera</option></select></div>
    </div>
    <div class="row">
-    <div><label>FONT</label><select id="textMotionFont"><option value="modern">Modern Sans</option><option value="editorial">Editorial Serif</option><option value="condensed">Condensed Display</option><option value="mono">Monospace</option><option value="rounded">Rounded</option></select></div>
-    <div><label>INTENSITAS</label><select id="textMotionIntensity"><option value="soft">Halus</option><option value="balanced" selected>Seimbang</option><option value="strong">Dramatis</option></select></div>
+    <div><label>TRANSISI ADEGAN</label><select id="visualMotionTransition"><option value="crossfade">Crossfade</option><option value="slide">Slide</option><option value="zoom">Cinematic Zoom</option><option value="glitch">Digital Glitch</option><option value="cut">Hard Cut</option></select></div>
+    <div><label>WARNA CAHAYA / AKSEN</label><input id="visualMotionAccent" type="color" value="#65d9ff"></div>
    </div>
-   <div class="row">
-    <div><label>WARNA TEKS</label><input id="textMotionColor" type="color" value="#f5f7ff"></div>
-    <div><label>WARNA AKSEN</label><input id="textMotionAccent" type="color" value="#56c8ff"></div>
-    <div><label>WARNA LATAR</label><input id="textMotionBackground" type="color" value="#050b1c"></div>
-   </div>
-   <label>ATMOSFER LATAR</label><select id="textMotionBackdrop"><option value="cinema">Cinematic Gradient</option><option value="void">Deep Space / Void</option><option value="grid">Digital Grid</option><option value="spotlight">Spotlight</option><option value="paper">Bright / Paper</option><option value="solid">Solid Color</option></select>
    <div class="row" style="flex-wrap:wrap">
-    <label class="inline-check"><input type="checkbox" id="textMotionParticles" checked> Partikel / titik cahaya</label>
-    <label class="inline-check"><input type="checkbox" id="textMotionShapes" checked> Bentuk grafis abstrak</label>
-    <label class="inline-check"><input type="checkbox" id="textMotionSound" checked> Marker beat visual</label>
+    <label class="inline-check"><input type="checkbox" id="visualMotionParticles" checked> Partikel / atmosfer</label>
+    <label class="inline-check"><input type="checkbox" id="visualMotionDepth" checked> Layer kedalaman</label>
    </div>
-   <div class="btnrow"><button type="button" class="primary" id="generateTextMotionBtn">✦ GENERATE VIDEO DARI TEKS</button><button type="button" id="resetTextMotionBtn">Reset</button></div>
-   <div class="status" id="textMotionStatus">Tulis konsep dan susunan teks adegan untuk mulai membuat animasi.</div>
-   <label>LIVE STORYBOARD PREVIEW</label>
-   <iframe id="textMotionPreview" title="Text motion storyboard preview" sandbox="" style="display:block;width:100%;height:280px;border:1px solid #3977bd;border-radius:9px;background:#050b1c"></iframe>
-   <label>HTML VIDEO / MOTION GRAPHIC</label>
-   <textarea id="textMotionOutput" spellcheck="false" placeholder="Kode HTML motion graphic multi-adegan akan tampil di sini…" style="min-height:220px"></textarea>
-   <div class="btnrow"><button type="button" id="copyTextMotionBtn">Salin HTML</button><button type="button" class="green" id="previewTextMotionBtn">▶ Buka di Preview TROZAL</button></div>
-   <p class="notice">Generator menghasilkan video tipografi multi-adegan berbasis HTML/CSS. Hasil dapat diputar di preview, diedit, lalu dirender menggunakan mesin ekspor TROZAL. Tidak menggunakan gambar, foto, atau aset visual eksternal.</p>
+   <div class="btnrow"><button type="button" class="primary" id="generateVisualMotionBtn">◈ GENERATE VISUAL MOTION</button><button type="button" id="resetVisualMotionBtn">Reset</button></div>
+   <div class="status" id="visualMotionStatus">Masukkan prompt visual untuk membuat adegan gambar bergerak.</div>
+   <label>LIVE VISUAL PREVIEW · TANPA TEKS</label>
+   <iframe id="visualMotionPreview" title="Prompt to visual motion preview" sandbox="" style="display:block;width:100%;height:300px;border:1px solid #8452c7;border-radius:9px;background:#090615"></iframe>
+   <label>HTML VISUAL MOTION · SIAP DIIMPOR KE TROZAL</label>
+   <textarea id="visualMotionOutput" spellcheck="false" placeholder="Dokumen HTML berisi komposisi SVG dan animasi visual akan tampil di sini…" style="min-height:220px"></textarea>
+   <div class="btnrow"><button type="button" id="copyVisualMotionBtn">Salin HTML</button><button type="button" class="green" id="previewVisualMotionBtn">▶ Kirim ke Preview TROZAL</button></div>
+   <p class="notice">Generator lokal ini membuat ilustrasi vektor SVG prosedural berdasarkan kata kunci prompt lalu menganimasikannya dengan CSS. Ini belum memakai model AI eksternal untuk membuat foto/video fotorealistis; hasil visual dapat diedit dan dirender oleh mesin ekspor TROZAL.</p>
   </section>
 
 <section class="panel ai-tools" id="motionPresetLibrary"><h3><b>✦</b> 6. MOTION PRESET LIBRARY</h3>
@@ -2263,66 +2254,138 @@ function setAiStatus(t){$('aiModeStatus').textContent=t}
 /* TEXT TO ANIMATION: imagination-driven multi-scene kinetic typography generator. */
 function textMotionEscape(v){return String(v||'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
 function textMotionWords(text){return String(text||'').trim().split(/\s+/).filter(Boolean).map((w,i)=>'<span class="word" style="--wi:'+i+'">'+textMotionEscape(w)+'</span>').join(' ');}
-function textMotionScenes(){
- const raw=$('textMotionScript').value.trim(),prompt=$('textMotionPrompt').value.trim();
- let lines=raw?raw.split(/\n+/).map(x=>x.trim()).filter(Boolean):prompt.split(/(?<=[.!?])\s+|\n+/).map(x=>x.trim()).filter(Boolean);
- if(!lines.length&&prompt)lines=[prompt];
- if(!lines.length)lines=['IMAGINE THE IMPOSSIBLE','LET YOUR IDEAS MOVE','CREATE A NEW WORLD'];
- return lines.slice(0,14).map((line,i)=>{const parts=line.split('|');let title=(parts.shift()||'').trim(),sub=parts.join('|').trim();if(!sub){const words=title.split(/\s+/);if(words.length>5){sub=words.slice(Math.max(2,Math.floor(words.length*.48))).join(' ');title=words.slice(0,Math.max(2,Math.floor(words.length*.48))).join(' ');}}return {title:title||'UNTITLED',sub,idx:i};});
+function visualMotionScenes(){
+ const raw=$('visualMotionPrompt').value.trim();
+ let lines=raw?raw.split(/\n{1,}/).map(x=>x.trim()).filter(Boolean):[];
+ if(lines.length<=1&&raw)lines=raw.split(/(?<=[.!?])\s+/).map(x=>x.trim()).filter(Boolean);
+ if(!lines.length&&raw)lines=[raw];
+ if(!lines.length)lines=['A luminous futuristic city at night with flying vehicles and glowing towers'];
+ return lines.slice(0,12);
 }
-function buildTextMotionHtml(){
- const prompt=$('textMotionPrompt').value.trim(),scenes=textMotionScenes();
- const ratio=$('textMotionRatio').value,total=Math.max(5,Math.min(60,+$('textMotionDuration').value||15));
- const ratioParts=ratio.split(':').map(Number),aspect=(ratioParts[0]||16)/(ratioParts[1]||9);
- const style=$('textMotionStyle').value,effect=$('textMotionEffect').value,font=$('textMotionFont').value,intensity=$('textMotionIntensity').value;
- const fg=$('textMotionColor').value,accent=$('textMotionAccent').value,bg=$('textMotionBackground').value,backdrop=$('textMotionBackdrop').value;
- const particles=$('textMotionParticles').checked,shapes=$('textMotionShapes').checked,beats=$('textMotionSound').checked;
- const fonts={modern:"Inter,Arial,sans-serif",editorial:"Georgia,'Times New Roman',serif",condensed:"'Arial Narrow',Impact,sans-serif",mono:"'Courier New',monospace",rounded:"'Trebuchet MS',Arial,sans-serif"};
- const styles={cinematic:{weight:850,spacing:'.015em',size:'clamp(38px,9vw,132px)',align:'center'},kinetic:{weight:950,spacing:'-.065em',size:'clamp(44px,11vw,154px)',align:'center'},luxury:{weight:500,spacing:'.13em',size:'clamp(32px,7vw,100px)',align:'center'},neon:{weight:950,spacing:'.04em',size:'clamp(38px,9vw,128px)',align:'center'},minimal:{weight:650,spacing:'-.045em',size:'clamp(38px,8vw,116px)',align:'left'},retro:{weight:950,spacing:'-.025em',size:'clamp(42px,10vw,140px)',align:'center'},tech:{weight:800,spacing:'.08em',size:'clamp(32px,7vw,104px)',align:'left'},poetry:{weight:500,spacing:'-.025em',size:'clamp(34px,7vw,102px)',align:'center'}};
- const st=styles[style]||styles.cinematic,sceneDur=total/scenes.length;
- const ease=intensity==='soft'?'cubic-bezier(.2,.7,.25,1)':intensity==='strong'?'cubic-bezier(.12,.95,.18,1)':'cubic-bezier(.16,1,.3,1)';
- const bgBase=backdrop==='solid'?bg:backdrop==='paper'?'radial-gradient(circle at 50% 40%,#fff,'+bg+' 78%)':backdrop==='grid'?'linear-gradient('+bg+'f2,'+bg+'f2),linear-gradient(90deg,'+accent+'22 1px,transparent 1px),linear-gradient('+accent+'22 1px,transparent 1px)':backdrop==='void'?'radial-gradient(ellipse at center,'+accent+'20,'+bg+' 70%)':backdrop==='spotlight'?'radial-gradient(ellipse at 50% 35%,#ffffff22,transparent 52%),'+bg:'radial-gradient(ellipse at 50% 42%,'+accent+'30,'+bg+' 72%)';
- const textColor=backdrop==='paper'?'#101a2b':fg;
- const sceneHtml=scenes.map((s,i)=>{
-  const start=i*sceneDur,delay=start.toFixed(3)+'s',sub=s.sub||prompt.split(/[.!?]/).filter(Boolean)[i%Math.max(1,prompt.split(/[.!?]/).filter(Boolean).length)]||'';
-  const mode=effect==='auto'?['rise','split','zoom','type','wipe','glitch','rotate','float'][i%8]:effect;
-  const align=style==='minimal'||style==='tech'?(i%2?'right':'left'):'center';
-  const pos=style==='minimal'||style==='tech'?(i%2?'justify-content:flex-end':'justify-content:flex-start'):'justify-content:center';
-  const wordDelay=mode==='type'?'.06':' .045';
-  const titleMarkup=textMotionWords(s.title);
-  const decor=shapes?'<div class="orb orb-a"></div><div class="orb orb-b"></div><div class="orbit"></div><div class="slash"></div>':'';
-  const particleMarkup=particles?Array.from({length:18},(_,n)=>'<i class="particle" style="--p:'+n+'"></i>').join(''):'';
-  return '<article class="scene scene-'+i+'" style="--start:'+delay+';--sceneDur:'+sceneDur.toFixed(3)+'s;--sceneIndex:'+i+'"><div class="scene-bg"></div>'+decor+'<div class="particles">'+particleMarkup+'</div><div class="scene-content" style="'+pos+';text-align:'+align+'"><div class="scene-index">0'+(i+1)+' / 0'+scenes.length+'</div><h1 class="headline effect-'+mode+'">'+titleMarkup+'</h1>'+(sub?'<p class="support">'+textMotionEscape(sub)+'</p>':'')+'<div class="rule"></div></div><div class="corner-mark">TROZAL / TYPE MOTION</div></article>';
+function visualMotionSvg(description,index,style,accent,depth){
+ const t=String(description||'').toLowerCase(),id='v'+index;
+ const has=(re)=>re.test(t);
+ const isSpace=has(/angkasa|luar angkasa|space|galaksi|galaxy|planet|astronaut|bintang|saturn|mars|bulan|moon/);
+ const isSanta=has(/santa|sinterklas|kereta luncur|sleigh|natal|christmas|salju|snow|winter/);
+ const isCity=has(/kota|gedung|bangunan|city|urban|skyscraper|jalan raya|jalan kota|traffic|lampu kota/);
+ const isOcean=has(/laut|samudra|ocean|underwater|bawah laut|ombak|ikan|paus|whale|kapal|submarine/);
+ const isNature=has(/hutan|forest|gunung|mountain|pegunungan|pohon|jungle|lembah|waterfall|air terjun/);
+ const isDesert=has(/gurun|desert|padang pasir|piramida|pyramid|dune/);
+ const isAir=has(/pesawat|airplane|plane|jet|helicopter|helikopter/);
+ const isRocket=has(/roket|rocket|spacecraft|spaceship/);
+ const isCar=has(/mobil|car|motor|motorcycle|truck|bus|kendaraan|vehicle|sportscar/);
+ const isJewelry=has(/cincin|ring|perhiasan|jewelry|diamond|berlian|jam tangan|watch|luxury product/);
+ const isAnimal=has(/singa|lion|harimau|tiger|serigala|wolf|rusa|deer|kuda|horse|naga|dragon|kucing|cat|anjing|dog|burung|bird/);
+ const isPerson=has(/manusia|orang|person|person|astronaut|pahlawan|woman|pria|wanita|anak/);
+ const stars=Array.from({length:34},(_,n)=>'<circle class="star" cx="'+((n*137+31)%1560+20)+'" cy="'+((n*73+19)%490+20)+'" r="'+(n%5===0?3:1.6)+'" fill="#fff" opacity=".72"/>').join('');
+ const clouds=Array.from({length:4},(_,n)=>'<g class="cloud" style="animation-delay:'+(-n*1.7)+'s" transform="translate('+(n*390-90)+' '+(100+n%2*85)+')"><ellipse cx="0" cy="20" rx="74" ry="19" fill="#d9eaff" opacity=".16"/><circle cx="-30" cy="8" r="25" fill="#d9eaff" opacity=".15"/><circle cx="4" cy="-3" r="34" fill="#d9eaff" opacity=".15"/><circle cx="36" cy="9" r="24" fill="#d9eaff" opacity=".15"/></g>').join('');
+ let defs='<defs><linearGradient id="'+id+'sky" x2="0" y2="1"><stop stop-color="'+(style==='neon'?'#100b35':style==='illustration'?'#55a8e8':'#101d42')+'"/><stop offset=".62" stop-color="'+(style==='papercut'?'#cb8d75':'#4c6d9c')+'"/><stop offset="1" stop-color="#17233a"/></linearGradient><linearGradient id="'+id+'ground" x2="0" y2="1"><stop stop-color="'+(style==='illustration'?'#427c55':'#1c3944')+'"/><stop offset="1" stop-color="#09151f"/></linearGradient><radialGradient id="'+id+'sun"><stop stop-color="#fff9d8"/><stop offset=".48" stop-color="'+accent+'"/><stop offset="1" stop-color="'+accent+'" stop-opacity="0"/></radialGradient><linearGradient id="'+id+'metal" x2="1" y2="1"><stop stop-color="#fff4c8"/><stop offset=".35" stop-color="'+accent+'"/><stop offset=".7" stop-color="#6a527d"/><stop offset="1" stop-color="#f9e5a2"/></linearGradient></defs>';
+ let sky='<rect width="1600" height="900" fill="url(#'+id+'sky)"/>'+stars+'<circle cx="1260" cy="170" r="130" fill="url(#'+id+'sun)" opacity=".85"/>'+clouds;
+ let back='',mid='',front='',hero='';
+ if(isSpace||isRocket){
+  sky='<rect width="1600" height="900" fill="url(#'+id+'sky)"/>'+stars+'<circle cx="1260" cy="175" r="150" fill="url(#'+id+'sun)" opacity=".65"/><path d="M-30 760 Q450 550 850 770 T1650 710 L1650 930 L-30 930Z" fill="#16143b"/>';
+  back='<ellipse cx="420" cy="335" rx="180" ry="48" transform="rotate(-22 420 335)" fill="none" stroke="'+accent+'" stroke-width="5" opacity=".45"/><circle cx="420" cy="335" r="112" fill="#b96d9c"/><path d="M330 300 Q420 220 510 310 Q450 410 345 390Z" fill="#e59bc2" opacity=".48"/><circle cx="1110" cy="500" r="170" fill="#283f86"/><path d="M1000 435 Q1120 370 1230 470 Q1180 600 1030 590Z" fill="#6c8fcb" opacity=".45"/>';
+  hero=isRocket?'<g class="hero"><path d="M760 520 Q690 420 800 260 Q910 420 840 520Z" fill="url(#'+id+'metal)" stroke="#fff" stroke-width="5"/><path d="M760 445 L680 530 L755 515Z M840 445 L920 530 L845 515Z" fill="#f36f83"/><circle cx="800" cy="410" r="32" fill="#172b4c" stroke="#fff" stroke-width="8"/><path d="M780 520 L800 650 L820 520Z" fill="#ffb24e"/><path d="M790 545 L800 700 L810 545Z" fill="#fff0a0" opacity=".8"/></g>':'<g class="hero"><path d="M650 435 Q800 300 950 435 Q820 500 650 435Z" fill="#c8d9ec" opacity=".88"/><ellipse cx="800" cy="430" rx="85" ry="58" fill="#ecf2ff" opacity=".9"/><path d="M760 430 Q800 390 840 430" fill="none" stroke="#5a73a9" stroke-width="10"/><path d="M740 490 L690 560 L810 500 L910 560 L860 480" fill="#95bde5"/><path d="M740 495 Q700 590 800 650 Q900 590 860 495" fill="#ff8e4b" opacity=".7"/></g>';
+ }else if(isSanta){
+  back=isCity?'<g opacity=".9">'+Array.from({length:13},(_,n)=>{const x=n*130-10,h=190+(n*71%330),w=85+(n*19%40);return '<rect x="'+x+'" y="'+(720-h)+'" width="'+w+'" height="'+h+'" fill="'+(n%2?'#17243b':'#202b49')+'"/>'+Array.from({length:12},(_,q)=>'<rect x="'+(x+12+(q%3)*22)+'" y="'+(735-h+Math.floor(q/3)*34)+'" width="9" height="15" rx="2" fill="'+accent+'" opacity="'+(.25+(q%3)*.14)+'"/>').join('')}).join('')+'</g>':'<path d="M0 690 Q280 570 600 700 T1200 670 T1600 690 L1600 900 L0 900Z" fill="#193551"/>';
+  mid='<path d="M0 760 Q300 710 600 770 T1200 760 T1600 740 L1600 900 L0 900Z" fill="#dcecff" opacity=".18"/>';
+  hero='<g class="hero"><g transform="translate(0 0)"><path d="M570 395 Q760 470 1035 400 L1110 470 Q820 550 560 465Z" fill="#a72e49" stroke="#ffc9d1" stroke-width="9"/><path d="M600 455 Q820 520 1060 455 L1020 500 Q820 560 615 500Z" fill="#f0c06a"/><path d="M700 390 Q700 300 800 300 Q900 300 900 395Z" fill="#c72f4d"/><circle cx="800" cy="285" r="56" fill="#f2c7a6"/><path d="M752 285 Q760 220 835 232 Q870 260 852 300 Q820 275 752 285Z" fill="#f5f3eb"/><path d="M740 258 Q785 168 870 225 L865 244 Q810 220 765 270Z" fill="#c83150"/><circle cx="868" cy="224" r="17" fill="#fff"/><path d="M762 302 Q800 365 846 302 Q842 375 802 372 Q770 360 762 302Z" fill="#fff"/><path d="M900 400 Q1020 300 1090 325" fill="none" stroke="#8e263e" stroke-width="18" stroke-linecap="round"/><g fill="#c18b5b" stroke="#f1d7b4" stroke-width="7"><path d="M1110 350 Q1150 320 1160 280 M1150 326 L1185 300 M1155 316 L1135 280" fill="none" stroke-width="9" stroke-linecap="round"/><ellipse cx="1115" cy="400" rx="55" ry="30"/><path d="M1080 420 L1065 470 M1140 420 L1150 470" fill="none" stroke-width="12"/></g></g></g>';
+ }else if(isCity){
+  back=Array.from({length:15},(_,n)=>{const x=n*112-15,h=180+(n*83%390),w=72+(n*23%55);return '<g><rect x="'+x+'" y="'+(760-h)+'" width="'+w+'" height="'+h+'" rx="3" fill="'+(n%2?'#1b2d4c':'#25385a')+'" stroke="#7596bd" stroke-opacity=".25"/><path d="M'+(x+8)+' '+(760-h+22)+' h'+(w-16)+'" stroke="'+accent+'" stroke-width="3" opacity=".3"/>'+Array.from({length:15},(_,q)=>'<rect x="'+(x+10+(q%3)*19)+'" y="'+(760-h+42+Math.floor(q/3)*29)+'" width="8" height="13" rx="1" fill="'+accent+'" opacity="'+(.16+(q%4)*.12)+'"/>').join('')+'</g>'}).join('');
+  mid='<path d="M0 760 L1600 760 L1600 900 L0 900Z" fill="#131f36"/><path d="M0 835 Q800 760 1600 835" fill="none" stroke="'+accent+'" stroke-width="4" opacity=".35"/>';
+  hero=isCar?'<g class="hero"><path d="M540 650 L610 560 Q650 520 740 520 L930 520 Q995 535 1040 615 L1110 660 L1095 710 L535 710Z" fill="#dc516c" stroke="#ffced5" stroke-width="8"/><path d="M680 548 L755 548 L755 610 L615 610Z M780 548 L920 548 L980 610 L780 610Z" fill="#8bd5ed" stroke="#fff" stroke-width="6"/><circle class="wheel" cx="665" cy="705" r="48" fill="#101827" stroke="#c9d8e8" stroke-width="14"/><circle class="wheel" cx="1000" cy="705" r="48" fill="#101827" stroke="#c9d8e8" stroke-width="14"/></g>':'<g class="hero"><path d="M650 600 Q800 530 950 600 L920 660 L680 660Z" fill="#66d8ff" opacity=".85"/><circle cx="800" cy="575" r="38" fill="#e7f4ff"/><path d="M700 595 L665 635 M900 595 L935 635" stroke="'+accent+'" stroke-width="13"/></g>';
+ }else if(isOcean){
+  sky='<rect width="1600" height="900" fill="url(#'+id+'sky)"/><circle cx="1270" cy="155" r="125" fill="url(#'+id+'sun)"/>'+stars;
+  back='<path d="M0 390 Q300 330 560 400 T1100 390 T1600 370 L1600 900 L0 900Z" fill="#174b72"/><path d="M0 500 Q300 440 600 510 T1200 500 T1600 480" fill="none" stroke="#70dcf2" stroke-width="13" opacity=".38"/>';
+  mid='<path class="wave" d="M0 600 Q220 540 420 600 T840 600 T1260 600 T1680 600 L1680 930 L0 930Z" fill="#11658a" opacity=".9"/><path class="wave" d="M0 700 Q260 630 520 700 T1040 700 T1560 700 L1560 930 L0 930Z" fill="#0c3d65"/>';
+  hero='<g class="hero"><path d="M620 470 Q800 340 990 470 Q800 610 620 470Z" fill="#e2a957" stroke="#fff1c4" stroke-width="8"/><path d="M700 460 Q800 380 900 460" fill="none" stroke="#f8d995" stroke-width="12"/><path d="M990 470 L1065 410 L1065 530Z" fill="#f6d99c"/><circle cx="740" cy="460" r="12" fill="#172b4c"/><path d="M680 515 Q800 575 950 515" fill="none" stroke="#fff" stroke-width="7" opacity=".6"/></g><g fill="#f6c66f"><path d="M300 740 Q390 650 480 740 Q390 800 300 740Z"/><circle cx="420" cy="730" r="8" fill="#142f53"/><path d="M1140 620 Q1210 550 1280 620 Q1210 690 1140 620Z"/><circle cx="1240" cy="610" r="7" fill="#142f53"/></g>';
+ }else if(isNature){
+  back='<path d="M0 650 L300 260 L590 650 L860 300 L1210 660 L1450 380 L1650 660 L1650 920 L0 920Z" fill="#526d8c"/><path d="M230 355 L300 260 L370 355 L330 340 L300 360 L268 340Z M780 405 L860 300 L945 410 L900 390 L860 410 L825 385Z" fill="#e0e8ef" opacity=".8"/>';
+  mid='<path d="M0 630 Q420 490 820 680 T1600 610 L1600 930 L0 930Z" fill="#28634d"/><path d="M0 740 Q350 620 710 760 T1450 730 L1600 930 L0 930Z" fill="url(#'+id+'ground)"/>';
+  front=Array.from({length:12},(_,n)=>'<g transform="translate('+(n*150-35)+' '+(690+(n%3)*26)+')"><path d="M0 0 L-52 105 L52 105Z" fill="'+(n%2?'#123e37':'#174b3e')+'"/><path d="M0 -48 L-42 43 L42 43Z" fill="#216b50"/><rect x="-7" y="90" width="14" height="52" fill="#725744"/></g>').join('');
+  hero='<g class="hero"><path d="M730 565 Q800 510 870 565 L850 680 L750 680Z" fill="#f2b25f"/><circle cx="800" cy="500" r="48" fill="#e9b68e"/><path d="M750 498 Q755 430 820 442 Q858 465 850 510Z" fill="#2a2635"/><path d="M770 680 L735 760 M830 680 L865 760" stroke="#273447" stroke-width="24" stroke-linecap="round"/></g>';
+ }else if(isDesert){
+  back='<path d="M0 600 L310 270 L630 600Z" fill="#b96f55"/><path d="M260 610 L520 350 L790 610Z" fill="#d08a5c"/><path d="M900 610 L1200 280 L1510 610Z" fill="#ad624e"/><path d="M0 610 L1600 610 L1600 900 L0 900Z" fill="#c9875d"/>';
+  mid='<path d="M0 710 Q350 590 690 720 T1400 690 T1700 730 L1700 930 L0 930Z" fill="#e1ae72"/>';
+  hero='<g class="hero"><path d="M690 670 L800 470 L910 670Z" fill="#e9c087" stroke="#9d6247" stroke-width="8"/><path d="M760 670 L800 570 L840 670Z" fill="#a45d4b"/><path d="M730 670 L730 640 L870 640 L870 670Z" fill="#cf9260"/><circle cx="1210" cy="205" r="92" fill="url(#'+id+'sun)"/></g>';
+ }else if(isAir){
+  back='<path d="M0 660 Q400 550 800 660 T1600 640 L1600 900 L0 900Z" fill="#284b5b" opacity=".7"/>';
+  hero='<g class="hero"><path d="M420 465 L790 420 L1130 270 L1190 300 L930 460 L1190 520 L1150 570 L800 505 L650 610 L595 592 L680 490 L420 500Z" fill="url(#'+id+'metal)" stroke="#fff" stroke-width="7"/><path d="M795 430 L860 275 L910 273 L875 442" fill="#c6d9ed" opacity=".85"/><path d="M800 500 L865 650 L910 655 L875 510" fill="#c6d9ed" opacity=".85"/></g>';
+ }else if(isJewelry){
+  sky='<rect width="1600" height="900" fill="url(#'+id+'sky)"/><ellipse cx="800" cy="690" rx="570" ry="160" fill="#17121f"/><circle cx="800" cy="390" r="300" fill="url(#'+id+'sun)" opacity=".2"/>';
+  back='<ellipse cx="800" cy="680" rx="340" ry="105" fill="#211b2a" stroke="#a58c78" stroke-width="6"/>';
+  hero='<g class="hero"><ellipse cx="800" cy="555" rx="185" ry="88" fill="none" stroke="url(#'+id+'metal)" stroke-width="38"/><ellipse cx="800" cy="555" rx="148" ry="61" fill="none" stroke="#f7eac6" stroke-width="8" opacity=".8"/><path d="M800 365 L735 455 L800 535 L865 455Z" fill="#bcecff" stroke="#fff" stroke-width="10"/><path d="M800 365 L800 535 L735 455Z" fill="#fff" opacity=".55"/><path d="M800 365 L865 455 L800 535Z" fill="#77bce8" opacity=".6"/><path d="M755 455 L845 455" stroke="#fff" stroke-width="8"/></g>';
+ }else if(isAnimal){
+  hero='<g class="hero"><ellipse cx="800" cy="565" rx="185" ry="92" fill="#c98b46"/><circle cx="955" cy="485" r="82" fill="#d39a53"/><path d="M900 425 L918 340 L962 415 L1000 340 L1015 450Z" fill="#b9793d"/><path d="M690 610 L675 745 M760 625 L750 750 M880 620 L895 750 M955 590 L980 735" stroke="#b9793d" stroke-width="34" stroke-linecap="round"/><path d="M635 540 Q550 470 575 400" stroke="#c98b46" stroke-width="28" fill="none" stroke-linecap="round"/><circle cx="984" cy="478" r="10" fill="#17233a"/><path d="M970 520 Q1000 540 1020 515" fill="none" stroke="#6d4933" stroke-width="8"/></g>';
+ }else{
+  back='<circle cx="800" cy="450" r="270" fill="url(#'+id+'sun)" opacity=".5"/><path d="M0 680 Q250 500 530 680 T1060 660 T1600 670 L1600 930 L0 930Z" fill="#263e66"/>';
+  mid='<path d="M0 760 Q330 620 700 760 T1400 740 T1700 770 L1700 930 L0 930Z" fill="#1b5b5b"/>';
+  hero='<g class="hero"><path d="M800 250 C900 250 1010 360 960 500 C925 610 825 650 730 570 C630 490 680 330 800 250Z" fill="url(#'+id+'metal)" stroke="#fff" stroke-width="7"/><circle cx="760" cy="410" r="35" fill="#fff" opacity=".55"/><path d="M700 580 Q800 700 930 580" fill="none" stroke="'+accent+'" stroke-width="13" opacity=".8"/></g>';
+ }
+ if(isSanta&&isCity){back+='<path d="M0 740 L1600 740 L1600 900 L0 900Z" fill="#10192f" opacity=".65"/>';}
+ if(depth){front+='<path d="M0 820 Q330 770 650 835 T1300 820 T1700 840 L1700 950 L0 950Z" fill="#081824" opacity=".34"/>';}
+ const weather=isSanta?'<g class="snow">'+Array.from({length:42},(_,n)=>'<circle cx="'+((n*97+41)%1580+10)+'" cy="'+((n*61+17)%870+10)+'" r="'+(n%4===0?4:2.2)+'" fill="#fff" opacity=".8"/>').join('')+'</g>':'';
+ const atmosphere=style==='neon'?'<rect width="1600" height="900" fill="#4f18b0" opacity=".09"/><path d="M0 720 Q800 620 1600 720" fill="none" stroke="'+accent+'" stroke-width="4" opacity=".5"/>':'';
+ return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Visual scene '+(index+1)+'">'+defs+sky+back+mid+front+hero+weather+atmosphere+'</svg>';
+}
+function buildVisualMotionHtml(){
+ const prompt=$('visualMotionPrompt').value.trim(),scenes=visualMotionScenes();
+ if(!prompt)throw new Error('Masukkan text prompt visual terlebih dahulu.');
+ const ratio=$('visualMotionRatio').value,total=Math.max(5,Math.min(60,+$('visualMotionDuration').value||15));
+ const parts=ratio.split(':').map(Number),aspect=(parts[0]||16)/(parts[1]||9);
+ const style=$('visualMotionStyle').value,camera=$('visualMotionCamera').value,transition=$('visualMotionTransition').value;
+ const accent=$('visualMotionAccent').value,particles=$('visualMotionParticles').checked,depth=$('visualMotionDepth').checked;
+ const sceneDur=total/scenes.length;
+ const sceneMarkup=scenes.map((scene,i)=>{
+  const begin=i/scenes.length*100,end=(i+1)/scenes.length*100;
+  const fade=transition==='cut'?.12:transition==='slide'||transition==='zoom'?1.8:2.6;
+  const enter=transition==='slide'?'translateX(5%)':transition==='zoom'?'scale(1.12)':transition==='glitch'?'translateX(-1.4%)':'translateX(0)';
+  const exit=transition==='slide'?'translateX(-5%)':transition==='zoom'?'scale(.94)':transition==='glitch'?'translateX(1.4%)':'translateX(0)';
+  const art=visualMotionSvg(scene,i,style,accent,depth);
+  const particleLayer=particles?Array.from({length:24},(_,n)=>'<i class="ambient" style="--x:'+((n*37+7)%100)+'%;--y:'+((n*53+11)%100)+'%;--d:'+(2+n%4)+'px;--delay:'+(n%7*.31)+'s"></i>').join(''):'';
+  const kf='@keyframes scene-'+i+'{0%,'+begin.toFixed(3)+'%{opacity:0;transform:'+enter+'}'+(begin+fade).toFixed(3)+'%{opacity:1;transform:translate(0,0) scale(1)}'+(end-fade).toFixed(3)+'%{opacity:1;transform:translate(0,0) scale(1)}'+end.toFixed(3)+'%,100%{opacity:0;transform:'+exit+'}}';
+  return '<article class="scene scene-'+i+'" style="--scene-index:'+i+'"><div class="art '+(style==='papercut'?'paper':'')+'">'+art+'</div><div class="atmosphere">'+particleLayer+'</div></article>'+kf;
  }).join('');
- const beatHtml=beats?'<div class="beatline">'+scenes.map((s,i)=>'<i style="animation-delay:'+(i*sceneDur).toFixed(3)+'s"></i>').join('')+'</div>':'';
- const sceneDuration=sceneDur.toFixed(3)+'s';
- const html='<!doctype html>\n<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+textMotionEscape(prompt.slice(0,70)||'Text Motion Story')+'</title><style>'+
- '*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:'+textColor+';font-family:'+fonts[font]+';display:grid;place-items:center}.stage{position:relative;width:min(100vw,calc(100vh * '+aspect+'));height:min(100vh,calc(100vw / '+aspect+'));aspect-ratio:'+ratioParts[0]+'/'+ratioParts[1]+';overflow:hidden;isolation:isolate;background:'+bgBase+'}.stage:after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 35%,#0005 100%);z-index:5}.scene{position:absolute;inset:0;overflow:hidden;display:flex;align-items:center;padding:8vw;opacity:0;animation:sceneLife '+sceneDuration+' linear var(--start) both}.scene-bg{position:absolute;inset:-15%;background:radial-gradient(circle at calc(25% + var(--sceneIndex)*7%) 50%,'+accent+'22,transparent 38%);animation:bgDrift '+sceneDuration+' ease-in-out var(--start) both}.scene-content{position:relative;z-index:3;width:min(100%,1300px);display:flex;flex-direction:column;align-items:inherit}.scene-index{font:600 clamp(9px,1vw,13px) monospace;letter-spacing:.24em;color:'+accent+';margin-bottom:clamp(16px,3vh,38px);opacity:0;animation:smallIn .8s '+ease+' calc(var(--start) + .08s) both}.headline{font-size:'+st.size+';font-weight:'+st.weight+';letter-spacing:'+st.spacing+';line-height:.94;text-transform:'+(style==='poetry'?'none':'uppercase')+';max-width:14ch;margin:0;text-wrap:balance;overflow:visible;text-shadow:'+(style==='neon'?'0 0 12px '+accent+',0 0 42px '+accent+'99':'0 12px 50px #0008')+'}.word{display:inline-block;opacity:0;animation:wordIn .9s '+ease+' calc(var(--start) + .18s + var(--wi)*.045s) both}.support{font-size:clamp(12px,2vw,25px);line-height:1.5;letter-spacing:.08em;max-width:55ch;color:'+accent+';margin:clamp(18px,3vh,34px) 0 0;opacity:0;animation:smallIn .9s '+ease+' calc(var(--start) + .8s) both}.rule{height:2px;width:clamp(45px,9vw,120px);background:'+accent+';margin-top:clamp(22px,4vh,42px);transform-origin:left;animation:ruleIn .8s '+ease+' calc(var(--start) + .65s) both}.corner-mark{position:absolute;right:4vw;bottom:3vh;font:9px monospace;letter-spacing:.2em;opacity:.48;z-index:3}.orb{position:absolute;border:1px solid '+accent+'55;border-radius:50%;pointer-events:none}.orb-a{width:48vw;height:48vw;right:-12vw;top:-18vw;box-shadow:inset 0 0 90px '+accent+'12;animation:orbSpin '+sceneDuration+' linear var(--start) both}.orb-b{width:28vw;height:28vw;left:-10vw;bottom:-16vw;animation:orbSpin '+sceneDuration+' reverse linear var(--start) both}.orbit{position:absolute;width:75vw;height:25vw;border:1px solid '+accent+'35;border-radius:50%;transform:rotate(-25deg);left:15%;top:35%;animation:orbitMove '+sceneDuration+' ease var(--start) both}.slash{position:absolute;width:1px;height:150%;left:72%;top:-20%;background:linear-gradient(transparent,'+accent+'55,transparent);transform:rotate(28deg)}.particles{position:absolute;inset:0;z-index:1;pointer-events:none}.particle{position:absolute;left:calc(var(--p)*5.4%);top:calc((var(--p)*31%));width:3px;height:3px;border-radius:50%;background:'+accent+';box-shadow:0 0 14px '+accent+';animation:particleDrift '+sceneDuration+' ease-in-out calc(var(--start) + .1s) both}.particle:nth-child(3n){width:5px;height:5px}.beatline{position:absolute;z-index:7;bottom:0;left:0;right:0;height:3px;display:flex}.beatline i{flex:1;background:'+accent+';opacity:.65;transform:scaleY(.35);transform-origin:bottom;animation:beatPulse .5s ease-in-out calc(var(--beat)*'+sceneDuration+') infinite alternate}'+
- '@keyframes sceneLife{0%{opacity:0}8%{opacity:1}82%{opacity:1}100%{opacity:0}}@keyframes wordIn{0%{opacity:0;transform:translate3d(0,.8em,0) scale(.94);filter:blur(12px)}100%{opacity:1;transform:translate3d(0,0,0) scale(1);filter:blur(0)}}@keyframes smallIn{from{opacity:0;transform:translateY(18px)}to{opacity:.9;transform:translateY(0)}}@keyframes ruleIn{from{transform:scaleX(0)}to{transform:scaleX(1)}}@keyframes bgDrift{from{transform:scale(1.12) translateX(-3%)}to{transform:scale(1) translateX(3%)}}@keyframes orbSpin{from{transform:rotate(0) scale(.75);opacity:0}to{transform:rotate(120deg) scale(1.15);opacity:.8}}@keyframes orbitMove{from{transform:rotate(-40deg) scale(.8);opacity:0}to{transform:rotate(-15deg) scale(1.1);opacity:.7}}@keyframes particleDrift{0%{transform:translateY(40px);opacity:0}50%{opacity:.75}100%{transform:translateY(-70px);opacity:0}}@keyframes beatPulse{to{transform:scaleY(1)}}'+
- '.effect-type .word{animation-name:typeWord;animation-duration:.5s}.effect-zoom .word{animation-name:zoomWord}.effect-rotate .word{animation-name:flipWord}.effect-wipe .word{animation-name:wipeWord}.effect-glitch .word{animation-name:glitchWord}.effect-float .word{animation-name:floatWord}.effect-split .word{animation-name:splitWord}@keyframes typeWord{from{opacity:0;clip-path:inset(0 100% 0 0)}to{opacity:1;clip-path:inset(0)}}@keyframes zoomWord{from{opacity:0;transform:scale(2);filter:blur(15px)}to{opacity:1;transform:scale(1);filter:blur(0)}}@keyframes flipWord{from{opacity:0;transform:perspective(500px) rotateX(90deg)}to{opacity:1;transform:perspective(500px) rotateX(0)}}@keyframes wipeWord{from{opacity:0;clip-path:inset(0 0 0 100%)}to{opacity:1;clip-path:inset(0)}}@keyframes glitchWord{0%{opacity:0;transform:translateX(-20px);text-shadow:4px 0 '+accent+'}40%{opacity:1;transform:translateX(4px)}100%{opacity:1;transform:translateX(0);text-shadow:none}}@keyframes floatWord{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}@keyframes splitWord{from{opacity:0;transform:translateY(1em) rotate(4deg);filter:blur(8px)}to{opacity:1;transform:translateY(0) rotate(0);filter:blur(0)}}@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-delay:0ms!important}}'+
- '</style></head><body><main class="stage">'+sceneHtml+beatHtml+'</main></body></html>';
- return {html,scenes,duration:total,ratio};
+ const cameraCss=camera==='locked'?'none':camera==='pan'?'cameraPan':camera==='orbit'?'cameraOrbit':camera==='follow'?'cameraFollow':'cameraParallax';
+ const sceneTime=total+'s';
+ const html='<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TROZAL Visual Motion</title><style>'+
+ '*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080913;display:grid;place-items:center}.stage{position:relative;width:min(100vw,calc(100vh * '+aspect+'));height:min(100vh,calc(100vw / '+aspect+'));aspect-ratio:'+parts[0]+'/'+parts[1]+';overflow:hidden;isolation:isolate;background:#10192b}.scene{position:absolute;inset:0;opacity:0;animation:scene-'+(scenes.length-1)+' '+sceneTime+' linear infinite}.art{position:absolute;inset:-5%;width:110%;height:110%;transform-origin:center;animation:'+cameraCss+' '+sceneTime+' ease-in-out infinite alternate}.art svg{width:100%;height:100%;display:block}.paper{filter:saturate(.82) contrast(1.05)}.hero{transform-box:fill-box;transform-origin:center;animation:heroFloat 3.8s ease-in-out infinite alternate}.cloud{animation:cloudDrift 17s linear infinite}.star{animation:twinkle 2.8s ease-in-out infinite alternate}.wave{animation:waveDrift 5s ease-in-out infinite alternate;transform-box:fill-box}.wheel{transform-box:fill-box;transform-origin:center;animation:wheelSpin 1.2s linear infinite}.snow{animation:snowFall 5s linear infinite}.ambient{position:absolute;left:var(--x);top:var(--y);width:var(--d);height:var(--d);border-radius:50%;background:'+accent+';box-shadow:0 0 12px '+accent+';opacity:0;animation:floatParticle 5s ease-in-out var(--delay) infinite}.scene:nth-child(even) .ambient{animation-direction:alternate}.stage:after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 45%,#05071388 100%);z-index:5}.scene .art{filter:'+ (style==='neon'?'saturate(1.35) drop-shadow(0 0 9px '+accent+'55)':style==='illustration'?'saturate(1.2)':'saturate(1.02)')+'}'+
+ '@keyframes heroFloat{0%{transform:translate3d(-1.2%,1.2%,0) rotate(-1deg)}100%{transform:translate3d(1.8%,-2%,0) rotate(1.5deg)}}@keyframes cloudDrift{from{translate:-3% 0}to{translate:5% 0}}@keyframes twinkle{from{opacity:.18}to{opacity:1}}@keyframes waveDrift{from{transform:translateY(9px)}to{transform:translateY(-12px)}}@keyframes wheelSpin{to{transform:rotate(360deg)}}@keyframes snowFall{from{transform:translateY(-30px)}to{transform:translateY(40px)}}@keyframes floatParticle{0%{opacity:0;transform:translateY(24px)}45%{opacity:.8}100%{opacity:0;transform:translateY(-34px)}}@keyframes cameraPan{from{transform:scale(1.04) translateX(-1.8%)}to{transform:scale(1.1) translateX(1.8%)}}@keyframes cameraOrbit{from{transform:scale(1.05) rotate(-.8deg)}to{transform:scale(1.11) rotate(.8deg)}}@keyframes cameraFollow{from{transform:scale(1.08) translateX(2%)}to{transform:scale(1.12) translateX(-2%)}}@keyframes cameraParallax{from{transform:scale(1.05) translate3d(-1%,-.6%,0)}to{transform:scale(1.12) translate3d(1%,.8%,0)}}'+
+ sceneMarkup+'@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-delay:0ms!important}}'+
+ '</style></head><body><main class="stage">'+scenes.map((s,i)=>'<article class="scene scene-'+i+'"><div class="art '+(style==='papercut'?'paper':'')+'">'+visualMotionSvg(s,i,style,accent,depth)+'</div>'+(particles?'<div class="atmosphere">'+Array.from({length:18},(_,n)=>'<i class="ambient" style="--x:'+((n*41+5)%100)+'%;--y:'+((n*57+13)%100)+'%;--d:'+(2+n%4)+'px;--delay:'+(n%6*.33)+'s"></i>').join('')+'</div>':'')+'</article>').join('')+'</main></body></html>';
+ const kfBlocks=scenes.map((scene,i)=>{
+  const begin=i/scenes.length*100,end=(i+1)/scenes.length*100,fade=transition==='cut'?.12:transition==='slide'||transition==='zoom'?1.8:2.6;
+  const enter=transition==='slide'?'translateX(5%)':transition==='zoom'?'scale(1.12)':transition==='glitch'?'translateX(-1.4%)':'translateX(0)';
+  const exit=transition==='slide'?'translateX(-5%)':transition==='zoom'?'scale(.94)':transition==='glitch'?'translateX(1.4%)':'translateX(0)';
+  return '@keyframes scene-'+i+'{0%,'+begin.toFixed(3)+'%{opacity:0;transform:'+enter+'}'+(begin+fade).toFixed(3)+'%{opacity:1;transform:translate(0,0) scale(1)}'+(end-fade).toFixed(3)+'%{opacity:1;transform:translate(0,0) scale(1)}'+end.toFixed(3)+'%,100%{opacity:0;transform:'+exit+'}}';
+ }).join('');
+ const safeHtml=html.replace('</style>',kfBlocks+'</style>');
+ return {html:safeHtml,scenes:scenes.length,duration:total,ratio};
 }
-$('generateTextMotionBtn').addEventListener('click',()=>{
- const btn=$('generateTextMotionBtn');btn.disabled=true;
- try{const r=buildTextMotionHtml();$('textMotionOutput').value=r.html;$('textMotionPreview').srcdoc=r.html;$('textMotionStatus').textContent='Storyboard berhasil dibuat: '+r.scenes.length+' adegan · '+r.duration+' detik · '+r.ratio+'. Seluruh adegan menggunakan animasi teks dan grafis CSS.';}
- catch(e){$('textMotionStatus').textContent='Gagal membuat storyboard: '+(e?.message||String(e));}
+$('generateVisualMotionBtn').addEventListener('click',()=>{
+ const btn=$('generateVisualMotionBtn');btn.disabled=true;
+ try{
+  const r=buildVisualMotionHtml();
+  $('visualMotionOutput').value=r.html;
+  $('visualMotionPreview').srcdoc=r.html;
+  $('visualMotionStatus').textContent='Visual berhasil dibuat: '+r.scenes+' adegan gambar SVG · '+r.duration+' detik · '+r.ratio+'. Tidak ada teks overlay.';
+ }catch(e){$('visualMotionStatus').textContent='Gagal membuat visual: '+(e?.message||String(e));}
  finally{btn.disabled=false;}
 });
-$('copyTextMotionBtn').addEventListener('click',async()=>{
- const code=$('textMotionOutput').value;if(!code){$('textMotionStatus').textContent='Generate storyboard terlebih dahulu.';return;}
- try{await navigator.clipboard.writeText(code);$('textMotionStatus').textContent='HTML storyboard berhasil disalin.';}
- catch(e){$('textMotionOutput').focus();$('textMotionOutput').select();$('textMotionStatus').textContent='Clipboard dibatasi browser. Kode sudah dipilih; tekan Ctrl+C.';}
+$('copyVisualMotionBtn').addEventListener('click',async()=>{
+ const code=$('visualMotionOutput').value;if(!code){$('visualMotionStatus').textContent='Generate visual motion terlebih dahulu.';return;}
+ try{await navigator.clipboard.writeText(code);$('visualMotionStatus').textContent='HTML visual motion berhasil disalin.';}
+ catch(e){$('visualMotionOutput').focus();$('visualMotionOutput').select();$('visualMotionStatus').textContent='Clipboard dibatasi browser. Kode sudah dipilih; tekan Ctrl+C.';}
 });
-$('previewTextMotionBtn').addEventListener('click',()=>{
- const code=$('textMotionOutput').value;if(!code){$('textMotionStatus').textContent='Generate storyboard terlebih dahulu.';return;}
+$('previewVisualMotionBtn').addEventListener('click',()=>{
+ const code=$('visualMotionOutput').value;if(!code){$('visualMotionStatus').textContent='Generate visual motion terlebih dahulu.';return;}
  $('aiCodeTerminal').value=code;
  if(typeof validateHtmlTerminal==='function')validateHtmlTerminal();
  $('applyAiSvgBtn').click();
- $('textMotionStatus').textContent='Storyboard HTML dikirim ke terminal TROZAL. Periksa status terminal dan preview.';
+ $('visualMotionStatus').textContent='HTML adegan visual dikirim ke terminal TROZAL. Periksa status terminal dan preview.';
 });
-$('resetTextMotionBtn').addEventListener('click',()=>{
- $('textMotionPrompt').value='';$('textMotionScript').value='';$('textMotionOutput').value='';$('textMotionPreview').srcdoc='';$('textMotionStatus').textContent='Form storyboard direset.';
+$('resetVisualMotionBtn').addEventListener('click',()=>{
+ $('visualMotionPrompt').value='';$('visualMotionOutput').value='';$('visualMotionPreview').srcdoc='';$('visualMotionStatus').textContent='Prompt visual direset.';
 });
 $('clearAiCodeBtn').addEventListener('click',()=>{$('aiCodeTerminal').value='';setAiStatus('Terminal dibersihkan.')});
 $('pasteCodeFromClipboardBtn').addEventListener('click',async()=>{try{const code=await navigator.clipboard.readText();if(!code.trim()){setAiStatus('Clipboard kosong. Salin kode HTML terlebih dahulu.');return}$('aiCodeTerminal').value=code;setAiStatus('Kode berhasil ditempel ('+code.length.toLocaleString()+' karakter). Klik Terapkan ke Preview.');$('aiCodeTerminal').focus()}catch(e){$('aiCodeTerminal').focus();setAiStatus('Clipboard tidak diizinkan browser. Klik terminal lalu tekan Ctrl+V.')}});
