@@ -2266,7 +2266,7 @@ function visualMotionSvg(description,index,style,accent,depth){
  const t=String(description||'').toLowerCase(),id='v'+index;
  const has=(re)=>re.test(t);
  const isSpace=has(/angkasa|luar angkasa|space|galaksi|galaxy|planet|astronaut|bintang|saturn|mars|bulan|moon/);
- const isSanta=has(/santa|sinterklas|kereta luncur|sleigh|natal|christmas|salju|snow|winter/);
+ const isSanta=has(/santa|sinterklas|kereta luncur|sleigh|natal|christmas/); const isWinter=has(/salju|snow|winter|natal|christmas/);
  const isCity=has(/kota|gedung|bangunan|city|urban|skyscraper|jalan raya|jalan kota|traffic|lampu kota/);
  const isOcean=has(/laut|samudra|ocean|underwater|bawah laut|ombak|ikan|paus|whale|kapal|submarine/);
  const isNature=has(/hutan|forest|gunung|mountain|pegunungan|pohon|jungle|lembah|waterfall|air terjun/);
@@ -2290,6 +2290,11 @@ function visualMotionSvg(description,index,style,accent,depth){
   back=isCity?'<g opacity=".9">'+Array.from({length:13},(_,n)=>{const x=n*130-10,h=190+(n*71%330),w=85+(n*19%40);return '<rect x="'+x+'" y="'+(720-h)+'" width="'+w+'" height="'+h+'" fill="'+(n%2?'#17243b':'#202b49')+'"/>'+Array.from({length:12},(_,q)=>'<rect x="'+(x+12+(q%3)*22)+'" y="'+(735-h+Math.floor(q/3)*34)+'" width="9" height="15" rx="2" fill="'+accent+'" opacity="'+(.25+(q%3)*.14)+'"/>').join('')}).join('')+'</g>':'<path d="M0 690 Q280 570 600 700 T1200 670 T1600 690 L1600 900 L0 900Z" fill="#193551"/>';
   mid='<path d="M0 760 Q300 710 600 770 T1200 760 T1600 740 L1600 900 L0 900Z" fill="#dcecff" opacity=".18"/>';
   hero='<g class="hero"><g transform="translate(0 0)"><path d="M570 395 Q760 470 1035 400 L1110 470 Q820 550 560 465Z" fill="#a72e49" stroke="#ffc9d1" stroke-width="9"/><path d="M600 455 Q820 520 1060 455 L1020 500 Q820 560 615 500Z" fill="#f0c06a"/><path d="M700 390 Q700 300 800 300 Q900 300 900 395Z" fill="#c72f4d"/><circle cx="800" cy="285" r="56" fill="#f2c7a6"/><path d="M752 285 Q760 220 835 232 Q870 260 852 300 Q820 275 752 285Z" fill="#f5f3eb"/><path d="M740 258 Q785 168 870 225 L865 244 Q810 220 765 270Z" fill="#c83150"/><circle cx="868" cy="224" r="17" fill="#fff"/><path d="M762 302 Q800 365 846 302 Q842 375 802 372 Q770 360 762 302Z" fill="#fff"/><path d="M900 400 Q1020 300 1090 325" fill="none" stroke="#8e263e" stroke-width="18" stroke-linecap="round"/><g fill="#c18b5b" stroke="#f1d7b4" stroke-width="7"><path d="M1110 350 Q1150 320 1160 280 M1150 326 L1185 300 M1155 316 L1135 280" fill="none" stroke-width="9" stroke-linecap="round"/><ellipse cx="1115" cy="400" rx="55" ry="30"/><path d="M1080 420 L1065 470 M1140 420 L1150 470" fill="none" stroke-width="12"/></g></g></g>';
+ }else if(isWinter){
+  back='<path d="M0 650 L300 250 L590 650 L900 310 L1210 660 L1450 380 L1650 660 L1650 920 L0 920Z" fill="#9fb4cf"/><path d="M230 355 L300 250 L370 355 L330 340 L300 360 L268 340Z M820 415 L900 310 L985 420 L940 400 L900 420 L865 395Z" fill="#fff"/><path d="M0 620 Q420 520 820 670 T1600 610 L1600 930 L0 930Z" fill="#d9e7f3"/>';
+  mid='<path d="M0 740 Q350 620 710 760 T1450 730 L1600 930 L0 930Z" fill="#eff6fc"/>';
+  front=Array.from({length:10},(_,n)=>'<g transform="translate('+(n*170-30)+' '+(690+(n%3)*25)+')"><path d="M0 0 L-58 112 L58 112Z" fill="#183f45"/><path d="M0 -48 L-45 48 L45 48Z" fill="#255a58"/><rect x="-7" y="100" width="14" height="44" fill="#725744"/></g>').join('');
+  hero='<g class="hero"><circle cx="800" cy="595" r="95" fill="#f7fbff"/><circle cx="800" cy="445" r="65" fill="#f7fbff"/><circle cx="778" cy="430" r="8" fill="#15253a"/><circle cx="822" cy="430" r="8" fill="#15253a"/><path d="M800 445 L815 462 L800 468Z" fill="#ed9957"/><path d="M760 382 Q800 340 840 382 L825 392 L775 392Z" fill="#b94656"/><path d="M775 385 L825 385 L825 400 L775 400Z" fill="#fff"/></g>';
  }else if(isCity){
   back=Array.from({length:15},(_,n)=>{const x=n*112-15,h=180+(n*83%390),w=72+(n*23%55);return '<g><rect x="'+x+'" y="'+(760-h)+'" width="'+w+'" height="'+h+'" rx="3" fill="'+(n%2?'#1b2d4c':'#25385a')+'" stroke="#7596bd" stroke-opacity=".25"/><path d="M'+(x+8)+' '+(760-h+22)+' h'+(w-16)+'" stroke="'+accent+'" stroke-width="3" opacity=".3"/>'+Array.from({length:15},(_,q)=>'<rect x="'+(x+10+(q%3)*19)+'" y="'+(760-h+42+Math.floor(q/3)*29)+'" width="8" height="13" rx="1" fill="'+accent+'" opacity="'+(.16+(q%4)*.12)+'"/>').join('')+'</g>'}).join('');
   mid='<path d="M0 760 L1600 760 L1600 900 L0 900Z" fill="#131f36"/><path d="M0 835 Q800 760 1600 835" fill="none" stroke="'+accent+'" stroke-width="4" opacity=".35"/>';
@@ -2336,16 +2341,6 @@ function buildVisualMotionHtml(){
  const style=$('visualMotionStyle').value,camera=$('visualMotionCamera').value,transition=$('visualMotionTransition').value;
  const accent=$('visualMotionAccent').value,particles=$('visualMotionParticles').checked,depth=$('visualMotionDepth').checked;
  const sceneDur=total/scenes.length;
- const sceneMarkup=scenes.map((scene,i)=>{
-  const begin=i/scenes.length*100,end=(i+1)/scenes.length*100;
-  const fade=transition==='cut'?.12:transition==='slide'||transition==='zoom'?1.8:2.6;
-  const enter=transition==='slide'?'translateX(5%)':transition==='zoom'?'scale(1.12)':transition==='glitch'?'translateX(-1.4%)':'translateX(0)';
-  const exit=transition==='slide'?'translateX(-5%)':transition==='zoom'?'scale(.94)':transition==='glitch'?'translateX(1.4%)':'translateX(0)';
-  const art=visualMotionSvg(scene,i,style,accent,depth);
-  const particleLayer=particles?Array.from({length:24},(_,n)=>'<i class="ambient" style="--x:'+((n*37+7)%100)+'%;--y:'+((n*53+11)%100)+'%;--d:'+(2+n%4)+'px;--delay:'+(n%7*.31)+'s"></i>').join(''):'';
-  const kf='@keyframes scene-'+i+'{0%,'+begin.toFixed(3)+'%{opacity:0;transform:'+enter+'}'+(begin+fade).toFixed(3)+'%{opacity:1;transform:translate(0,0) scale(1)}'+(end-fade).toFixed(3)+'%{opacity:1;transform:translate(0,0) scale(1)}'+end.toFixed(3)+'%,100%{opacity:0;transform:'+exit+'}}';
-  return '<article class="scene scene-'+i+'" style="--scene-index:'+i+'"><div class="art '+(style==='papercut'?'paper':'')+'">'+art+'</div><div class="atmosphere">'+particleLayer+'</div></article>'+kf;
- }).join('');
  const cameraCss=camera==='locked'?'none':camera==='pan'?'cameraPan':camera==='orbit'?'cameraOrbit':camera==='follow'?'cameraFollow':'cameraParallax';
  const sceneTime=total+'s';
  const html='<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TROZAL Visual Motion</title><style>'+
