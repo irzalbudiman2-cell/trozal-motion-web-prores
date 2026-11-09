@@ -4076,4 +4076,114 @@ $('visualMotionAiCheckBtn')?.addEventListener('click',visualMotionAiCheck);
 $('generateVisualMotionAiBtn')?.addEventListener('click',generateVisualMotionWithLocalAi);
 
 </script>
+<script>
+/* TROZAL LNA CONNECTIVITY GUARD
+   Rebind visible Ollama check buttons and use Chrome's documented
+   permission-first, explicit-user-gesture flow for loopback access. */
+(function(){
+ 'use strict';
+ const URL='http://127.0.0.1:11435/api/tags';
+ const ORIGIN='https://irzalbudiman2-cell.github.io';
+ function status(kind,message,isError){
+  const ids=kind==='vision'?['trozalVisionConnection','trozalVisionStatus']:['visualMotionAiStatus'];
+  ids.forEach(id=>{const el=document.getElementById(id);if(el){el.textContent=message;el.style.color=isError?'#ff8b8b':'#72e6b2';}});
+ }
+ function buttonFor(id){
+  const old=document.getElementById(id);
+  if(!old)return null;
+  const fresh=old.cloneNode(true);
+  old.replaceWith(fresh);
+  return fresh;
+ }
+ async function readPermission(){
+  if(!navigator.permissions||!navigator.permissions.query)return 'unsupported';
+  try{
+   const p=await navigator.permissions.query({name:'loopback-network'});
+   return p.state;
+  }catch(_){return 'unsupported';}
+ }
+ function modelSummary(kind,data){
+  const models=(data.models||[]).map(x=>String(x.name||'')).filter(Boolean);
+  const chosen=(document.getElementById(kind==='vision'?'trozalVisionModel':'visualMotionAiModel')||{}).value||'qwen3-vl:2b';
+  const found=models.some(n=>n===chosen||n.startsWith(chosen+':'));
+  if(kind==='vision'){
+   const select=document.getElementById('trozalVisionModel');
+   if(select)[...select.options].forEach(o=>o.dataset.installed=models.some(n=>n===o.value||n.startsWith(o.value+':'))?'1':'0');
+   status(kind,'TERHUBUNG · '+models.length+' model terpasang · '+(found?'Model '+chosen+' tersedia.':'Model '+chosen+' belum terpasang.')+' · '+models.join(', '),false);
+   const detail=document.getElementById('trozalVisionStatus');
+   if(detail)detail.textContent='Bridge dan Ollama siap digunakan untuk Local Vision.';
+  }else{
+   status(kind,'OLLAMA TERHUBUNG · '+models.length+' model terpasang · '+(found?'Model '+chosen+' tersedia.':'Model '+chosen+' belum terpasang.')+' · '+models.join(', '),false);
+  }
+  return {models,found};
+ }
+ async function requestBridge(kind,button){
+  status(kind,'Meminta akses ke Ollama lokal melalui 127.0.0.1:11435…',false);
+  button.disabled=true;
+  try{
+   // This fetch is initiated directly by the explicit second click when permission was "prompt".
+   const response=await fetch(URL,{
+    method:'GET',mode:'cors',credentials:'omit',cache:'no-store',targetAddressSpace:'loopback'
+   });
+   if(!response.ok)throw new Error('HTTP '+response.status);
+   const data=await response.json();
+   if(!Array.isArray(data.models))throw new Error('Respons Bridge tidak valid (models bukan array).');
+   button.dataset.lnaStep='check';
+   button.textContent=kind==='vision'?'↻ Cek Ollama':'Cek Ollama';
+   modelSummary(kind,data);
+   return data;
+  }catch(error){
+   const reason=(error&&error.name?error.name+': ':'')+(error&&error.message?error.message:String(error));
+   const permission=await readPermission();
+   let advice='Pastikan jendela TROZAL Ollama Bridge masih terbuka.';
+   if(permission==='denied')advice='Izin Loopback sedang BLOCK. Buka pengaturan situs Chrome dan ubah Loopback network menjadi Allow.';
+   else if(/failed to fetch|networkerror|load failed/i.test(reason))advice='Chrome menolak fetch ke loopback. Pastikan izin Loopback network untuk situs TROZAL = Allow; Local network saja tidak cukup.';
+   status(kind,'KONEKSI GAGAL · '+reason+' · Izin loopback: '+permission+'. '+advice,true);
+   button.dataset.lnaStep='check';
+   button.textContent=kind==='vision'?'↻ Cek Ollama':'Cek Ollama';
+   return null;
+  }finally{button.disabled=false;}
+ }
+ async function onCheck(kind,button){
+  if(button.dataset.lnaStep==='request'){
+   await requestBridge(kind,button);
+   return;
+  }
+  status(kind,'Memeriksa izin Loopback Network Chrome…',false);
+  const permission=await readPermission();
+  if(permission==='denied'){
+   button.dataset.lnaStep='check';
+   status(kind,'IZIN LOOPBACK DITOLAK. Buka pengaturan situs Chrome untuk https://irzalbudiman2-cell.github.io, cari Loopback network, ubah ke Allow, lalu muat ulang halaman.',true);
+   return;
+  }
+  if(permission==='prompt'){
+   button.dataset.lnaStep='request';
+   button.textContent='IZINKAN AKSES LOOPBACK';
+   status(kind,'Chrome belum memberi izin Loopback. Klik tombol “IZINKAN AKSES LOOPBACK” sekali lagi untuk memulai permintaan koneksi. Jika Chrome menampilkan dialog izin jaringan lokal, pilih Allow.',false);
+   return;
+  }
+  if(permission==='granted'||permission==='unsupported'){
+   // With permission already granted, fetch is safe. On browsers that
+   // don't expose the permission name, this explicit click is the fallback.
+   await requestBridge(kind,button);
+   return;
+  }
+  status(kind,'Status izin Loopback tidak dikenal ('+permission+'). Klik lagi untuk mencoba koneksi.',true);
+  button.dataset.lnaStep='request';
+  button.textContent='COBA KONEKSI';
+ }
+ const scene=buttonFor('visualMotionAiCheckBtn');
+ if(scene)scene.addEventListener('click',()=>onCheck('scene',scene));
+ const vision=buttonFor('trozalVisionCheckBtn');
+ if(vision)vision.addEventListener('click',()=>onCheck('vision',vision));
+ // Expose a common check routine for the Generate button's preflight.
+ window.trozalBridgeCheckFromScene=async function(){
+  const b=document.getElementById('visualMotionAiCheckBtn');
+  if(!b)return null;
+  if(b.dataset.lnaStep==='request'){return await requestBridge('scene',b);}
+  await onCheck('scene',b);
+  return null;
+ };
+})();
+</script>
 </body></html>
