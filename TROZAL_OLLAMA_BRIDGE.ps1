@@ -34,12 +34,12 @@ try {
       } else {
         $method = if ($req.HttpMethod -eq "GET") { [Net.Http.HttpMethod]::Get } elseif ($req.HttpMethod -eq "POST") { [Net.Http.HttpMethod]::Post } else { $null }
         if ($null -eq $method) { throw "Method not allowed" }
-        $message = New-Object System.Net.Http.HttpRequestMessage($method, ($ollama + $req.Url.AbsolutePath))
+        $message = [System.Net.Http.HttpRequestMessage]::new($method, ($ollama + $req.Url.AbsolutePath))
         if ($req.HttpMethod -eq "POST") {
           $reader = New-Object IO.StreamReader($req.InputStream, $req.ContentEncoding)
           $body = $reader.ReadToEnd()
           $reader.Dispose()
-          $message.Content = New-Object System.Net.Http.StringContent($body, [Text.Encoding]::UTF8, "application/json")
+          $message.Content = [System.Net.Http.StringContent]::new($body, [Text.Encoding]::UTF8, "application/json")
         }
         $upstream = $client.SendAsync($message).GetAwaiter().GetResult()
         $payload = $upstream.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult()
