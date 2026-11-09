@@ -166,7 +166,7 @@ Acceptance checks:
 
 ## Phase 7 — Evidence-Based Stock Metadata
 
-**Status: Initial evidence-grounded metadata generator and marketplace-specific validation profiles committed; visual-AI analysis and deeper platform export remain planned.**
+**Status: Evidence-grounded generator, marketplace preflight, keyword prioritization, editorial quality audit and single-asset CSV export implemented; visual-AI analysis and batch platform templates remain planned.**
 
 Implemented:
 - Metadata evidence is sourced from user-entered visual description, Prompt-to-Visual prompt, Visual Scene Sequencer scene descriptions, readable HTML/SVG text and labels, and asset/project name.
@@ -180,17 +180,23 @@ Implemented:
 - Shutterstock profile converts generated titles to a complete English descriptive sentence and checks the minimum five-word requirement.
 - Dreamstime profile emphasizes relevance and leaves numeric limits to the current upload form rather than guessing.
 - Metadata fields are persisted in project JSON and autosave.
-- Metadata panel has its own amber feature color.
+- Keyword ranking prioritizes exact phrase matches, then partial matches against supplied text; duplicates are normalized and removed without adding ungrounded terms.
+- A local editorial readiness score checks title, description, category, keyword relevance/duplicates and evidence coverage; it is explicitly not a marketplace acceptance score.
+- CSV export provides a UTF-8 BOM single-asset metadata record with evidence provenance and keyword count.
+- Metadata and metadata-quality panels have distinct amber and violet feature colors.
 
 Current limitations:
 - This is a local rule-based text/evidence generator, not a connected AI vision model. It does not inspect raster/video pixels or verify that a prompted object actually appears in the rendered frame.
 - Indonesian-to-English phrase handling is limited and needs human proofreading, especially for unfamiliar terms and complex grammar.
+- The quality score is a heuristic editorial aid, not an official marketplace score or acceptance guarantee.
+- CSV currently exports one asset per file; bulk multi-asset templates and sidecar JSON remain planned.
 - Platform checks are preflight guidance, not official marketplace certification. Category taxonomies and submission rules may change and must be checked again before release.
 - The possible-IP term list is deliberately incomplete and does not replace legal/editorial review.
 
 Next development:
 - Add metadata preview by scene and allow users to approve/remove individual keywords.
-- Add platform-specific category mapping and optional CSV/sidecar metadata export.
+- Add platform-specific category mapping, multiple-row batch metadata export and sidecar JSON.
+- Add scene-by-scene keyword provenance and manual approve/remove controls.
 - Add optional rendered-frame contact-sheet analysis through a securely configured vision-AI provider, with visible provenance, confidence and user review.
 - Add a clear difference between facts extracted from the scene, terms inferred from prompts, and optional AI-vision suggestions.
 

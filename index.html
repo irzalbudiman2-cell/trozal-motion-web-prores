@@ -46,6 +46,17 @@ small,.muted{color:var(--muted)}.row{display:flex;gap:8px;align-items:center}.ro
 #stockMetadataPanel button.primary{background:linear-gradient(135deg,#ffe1a4,#d39a42);color:#261805}
 #stockMetadataPanel button.green{background:linear-gradient(135deg,#f5d79a,#c28d36);color:#261805}
 .metadata-evidence{margin:7px 0;padding:8px;border:1px solid #8b6425;border-radius:7px;background:#201606;color:#f3d7a4;font-size:10px;line-height:1.5}
+/* METADATA QUALITY & DELIVERY — DISTINCT VIOLET FEATURE THEME */
+#metadataOptimizerPanel{background:linear-gradient(145deg,#332653 0%,#211936 58%,#30224e 100%);border:1px solid #9475d5;box-shadow:0 8px 22px #09051488,inset 0 1px #e8dcff22}
+#metadataOptimizerPanel h3{color:#e1d4ff;letter-spacing:.05em}
+#metadataOptimizerPanel .help,#metadataOptimizerPanel label{color:#ddd0f8}
+#metadataOptimizerPanel button{border-color:#8062c4}
+#metadataOptimizerPanel button.primary{background:linear-gradient(135deg,#e0d2ff,#a98be9);color:#211632}
+.metadata-quality-meter{height:9px;border-radius:99px;overflow:hidden;background:#171126;border:1px solid #7054a7;margin:8px 0}
+.metadata-quality-meter span{display:block;width:0;height:100%;background:linear-gradient(90deg,#9674d5,#d6c5ff);transition:width .2s ease}
+.metadata-quality-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:8px 0}
+.metadata-quality-item{padding:7px;border:1px solid #68518e;border-radius:7px;background:#211936;color:#e6dcfa;font-size:10px;line-height:1.4}
+.metadata-quality-item b{display:block;color:#cbb5ff;font-size:9px;letter-spacing:.04em;text-transform:uppercase;margin-bottom:2px}
 
 /* VISUAL SCENE SEQUENCER — DISTINCT TEAL FEATURE THEME */
 #visualSceneSequencer{background:linear-gradient(145deg,#123f43 0%,#0a272d 58%,#123b3d 100%);border:1px solid #35b7a8;box-shadow:0 8px 24px #020f12aa,inset 0 1px #c7fff322}
@@ -700,6 +711,15 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
    <div class="row"><button type="button" data-copy-meta="metadataCategory">Copy Category</button><button type="button" data-copy-meta="metadataKeywords">Copy Keywords</button></div>
    <button type="button" class="green" id="copyAllMetadataBtn" style="width:100%;margin-top:7px">Copy All Metadata</button>
    <div id="metadataStatus" class="status" aria-live="polite"></div>
+  </section>
+  <section class="panel" id="metadataOptimizerPanel">
+   <h3><b>✧</b> 9. METADATA QUALITY & DELIVERY</h3>
+   <p class="help">Audit editorial lokal untuk memeriksa kelengkapan, relevansi keyword terhadap sumber teks, duplikasi, dan aturan dasar platform. Skor ini bukan jaminan diterima marketplace.</p>
+   <div class="metadata-evidence" id="metadataQualitySummary">Skor metadata menunggu analisis.</div>
+   <div class="metadata-quality-meter" role="meter" aria-label="Skor kualitas metadata" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="metadataQualityMeter"><span id="metadataQualityBar"></span></div>
+   <div class="metadata-quality-grid" id="metadataQualityDetails"><div class="metadata-quality-item"><b>Judul</b><span>Belum diperiksa</span></div><div class="metadata-quality-item"><b>Deskripsi</b><span>Belum diperiksa</span></div><div class="metadata-quality-item"><b>Keyword</b><span>Belum diperiksa</span></div><div class="metadata-quality-item"><b>Bukti sumber</b><span>Belum diperiksa</span></div></div>
+   <div class="row"><button type="button" id="optimizeMetadataBtn" class="primary">Prioritaskan Keyword Relevan</button><button type="button" id="exportMetadataCsvBtn">Ekspor CSV</button></div>
+   <p class="help" id="metadataOptimizerStatus">Pemeringkatan hanya mengurutkan dan menghapus duplikasi yang jelas. Keyword yang tidak cocok dengan teks tidak dihapus otomatis; keyword tersebut diletakkan di akhir untuk ditinjau.</p>
   </section>
  </aside>
 </div>
@@ -3473,6 +3493,7 @@ function generateStockMetadata(){
  $('metadataCategory').value=hasDescriptiveEvidence?category:'Graphic Resources';
  $('metadataKeywords').value=keywords.slice(0,47).join(', ');
  updateMetadataCount();
+ trozalOptimizeMetadataKeywords(true);
  const sourceLabels=[...new Set(evidence.entries.map(x=>x.label.split(' · ')[0]))];
  let evidenceLevel='INSUFFICIENT';
  if(sceneTexts.length||subject.length>=30||promptText.length>=30)evidenceLevel='STRONG TEXT EVIDENCE';
@@ -3486,6 +3507,104 @@ function generateStockMetadata(){
  trozalUpdateMetadataPlatformValidation();
 }
 function updateMetadataCount(){const count=$('metadataKeywords').value.split(',').map(x=>x.trim()).filter(Boolean).length;$('metadataKeywordCount').textContent=count+' / 47';$('metadataKeywordCount').style.color=count===47?'#72e6a7':'#ffc36a'}
+
+function trozalMetadataWordKey(value){
+ let word=String(value||'').toLowerCase().replace(/[^a-z0-9]+/g,'').trim();
+ if(word.length>4&&/ies$/.test(word))word=word.slice(0,-3)+'y';
+ else if(word.length>5&&/(ches|shes|xes|zes)$/.test(word))word=word.slice(0,-2);
+ else if(word.length>4&&/s$/.test(word)&&!/(ss|us|is)$/.test(word))word=word.slice(0,-1);
+ return word;
+}
+function trozalMetadataKeywordAnalysis(){
+ const evidence=trozalMetadataEvidence();
+ const source=[evidence.text,$('metadataSubject')?.value||'',$('visualMotionPrompt')?.value||'',
+  ...(Array.isArray(visualSceneSequence)?visualSceneSequence.map(x=>x.text||[]):[])].join(' ');
+ const stop=new Set('a an the and or but with without from into onto over under between beside near at by on in of to is are was were be being been this that these those it its their his her they them he she as than then very more most some any all one two three four five six seven eight nine ten'.split(' '));
+ const sourceWords=(trozalTranslateMetadataText(source).toLowerCase().match(/[a-z0-9]+/g)||[]).map(trozalMetadataWordKey).filter(x=>x&&!stop.has(x));
+ const sourceSet=new Set(sourceWords);
+ const phraseExists=words=>{
+  if(!words.length)return false;
+  outer:for(let i=0;i<=sourceWords.length-words.length;i++){
+   for(let j=0;j<words.length;j++)if(sourceWords[i+j]!==words[j])continue outer;
+   return true;
+  }
+  return false;
+ };
+ const entries=String($('metadataKeywords')?.value||'').split(/[,;\n]+/).map((term,index)=>({term:term.trim().replace(/\s+/g,' '),index})).filter(x=>x.term);
+ const unique=[],seen=new Set();let duplicates=0;
+ entries.forEach(entry=>{
+  const words=entry.term.toLowerCase().match(/[a-z0-9]+/g)||[];
+  const key=words.map(trozalMetadataWordKey).filter(Boolean).join(' ');
+  if(!key||seen.has(key)){duplicates++;return;}
+  seen.add(key);
+  const meaningful=words.map(trozalMetadataWordKey).filter(x=>x&&!stop.has(x));
+  const exact=phraseExists(meaningful),matched=meaningful.filter(x=>sourceSet.has(x)).length;
+  const ratio=meaningful.length?matched/meaningful.length:0;
+  unique.push({...entry,key,exact,ratio,matched,wordCount:meaningful.length});
+ });
+ unique.sort((a,b)=>(Number(b.exact)-Number(a.exact))||(b.ratio-a.ratio)||(b.wordCount-a.wordCount)||(a.index-b.index));
+ return {evidence,entries:unique,duplicates,exactCount:unique.filter(x=>x.exact).length,
+  partialCount:unique.filter(x=>!x.exact&&x.ratio>0).length,unmatchedCount:unique.filter(x=>x.ratio===0).length};
+}
+function trozalRefreshMetadataQuality(){
+ const title=$('metadataTitle')?.value.trim()||'',description=$('metadataDescription')?.value.trim()||'';
+ const category=$('metadataCategory')?.value||'Graphic Resources',platform=$('metadataPlatform')?.value||'all';
+ const analysis=trozalMetadataKeywordAnalysis(),count=analysis.entries.length;
+ const sourceAvailable=!!($('metadataSubject')?.value.trim()||$('visualMotionPrompt')?.value.trim()||
+  (Array.isArray(visualSceneSequence)&&visualSceneSequence.some(x=>String(x.text||'').trim()))||
+  analysis.evidence.entries.some(x=>x.kind==='visible-text'||x.kind==='label'));
+ const verified=count?(analysis.exactCount+analysis.partialCount*.45)/count:0;
+ const titleOk=!!title&&title.length>=15&&(platform!=='adobe'||title.length<70)&&
+  (platform!=='shutterstock'||title.split(/\s+/).filter(Boolean).length>=5);
+ const descOk=description.length>=45;
+ const titlePts=titleOk?20:(title?10:0),descPts=descOk?20:(description?10:0);
+ const categoryPts=category==='Graphic Resources'?5:(sourceAvailable?10:5),evidencePts=sourceAvailable?10:0;
+ const keywordPts=count?((count>=5?10:5)+Math.round(verified*20)+(analysis.duplicates===0?5:0)+(count<=47?5:0)):0;
+ const score=Math.max(0,Math.min(100,titlePts+descPts+categoryPts+evidencePts+keywordPts));
+ const summary=$('metadataQualitySummary');
+ if(summary)summary.textContent='Kesiapan editorial: '+score+'/100 · '+(score>=85?'Baik — tetap tinjau akurasi visual.':score>=65?'Cukup — periksa bagian yang ditandai.':'Perlu dilengkapi sebelum unggah.');
+ const bar=$('metadataQualityBar');if(bar)bar.style.width=score+'%';
+ const meter=$('metadataQualityMeter');if(meter)meter.setAttribute('aria-valuenow',String(score));
+ const titleNote=!title?'Judul kosong':title.length<15?'Judul sangat pendek':(platform==='adobe'&&title.length>=70)?'Periksa batas judul Adobe':(platform==='shutterstock'&&title.split(/\s+/).filter(Boolean).length<5)?'Perlu minimal 5 kata':'Judul terisi';
+ const descNote=!description?'Deskripsi kosong':descOk?'Deskripsi terisi':'Deskripsi terlalu singkat';
+ const keywordNote=count+' keyword · '+analysis.exactCount+' cocok penuh · '+analysis.partialCount+' cocok sebagian · '+analysis.unmatchedCount+' belum cocok · '+analysis.duplicates+' duplikat';
+ const evidenceNote=sourceAvailable?'Teks deskriptif tersedia':'Belum ada bukti deskriptif yang kuat';
+ const details=$('metadataQualityDetails');
+ if(details)details.innerHTML=[['Judul',titleNote],['Deskripsi',descNote],['Keyword',keywordNote],['Bukti sumber',evidenceNote]]
+  .map(item=>'<div class="metadata-quality-item"><b>'+item[0]+'</b><span>'+item[1].replace(/[&<>"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]))+'</span></div>').join('');
+ return {score,analysis,sourceAvailable};
+}
+function trozalOptimizeMetadataKeywords(silent=false){
+ const analysis=trozalMetadataKeywordAnalysis(),ranked=analysis.entries.slice(0,47);
+ $('metadataKeywords').value=ranked.map(x=>x.term).join(', ');updateMetadataCount();
+ const omitted=Math.max(0,analysis.entries.length-ranked.length);
+ const message='Urutan diperbarui: '+analysis.exactCount+' frasa cocok penuh, '+analysis.partialCount+' cocok sebagian, '+analysis.unmatchedCount+' belum ditemukan pada sumber; '+analysis.duplicates+' duplikasi dinormalisasi'+(omitted?'; '+omitted+' keyword melebihi kapasitas 47':'')+'. Keyword tanpa kecocokan tetap disimpan di bagian akhir untuk pemeriksaan manual.';
+ if($('metadataOptimizerStatus'))$('metadataOptimizerStatus').textContent=message;
+ trozalRefreshMetadataQuality();
+ if(!silent)$('metadataStatus').textContent='Keyword diprioritaskan berdasarkan bukti. Tidak ada keyword baru yang ditambahkan.';
+}
+function trozalCsvCell(value){return '"'+String(value??'').replace(/"/g,'""')+'"';}
+function trozalExportMetadataCsv(){
+ const quality=trozalRefreshMetadataQuality(),keywords=String($('metadataKeywords').value||'').split(/[,;\n]+/).map(x=>x.trim()).filter(Boolean);
+ const evidence=quality.analysis.evidence;
+ const headers=['Platform','Title','Description','Category','Keywords','Keyword Count','Editorial Score','Evidence Level','Evidence Sources'];
+ const values=[$('metadataPlatform').value,$('metadataTitle').value,$('metadataDescription').value,$('metadataCategory').value,
+  keywords.join('|'),keywords.length,quality.score,quality.sourceAvailable?'Descriptive text evidence':'Insufficient descriptive evidence',
+  [...new Set(evidence.entries.map(x=>x.label.split(' · ')[0]))].join('; ')];
+ const csv='\uFEFF'+headers.map(trozalCsvCell).join(',')+'\r\n'+values.map(trozalCsvCell).join(',')+'\r\n';
+ const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+ const base=String($('objectName')?.value||'trozal-metadata').replace(/[^a-z0-9_-]+/gi,'_').replace(/^_+|_+$/g,'')||'trozal-metadata';
+ a.href=url;a.download=base+'_metadata.csv';document.body.appendChild(a);a.click();a.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),30000);
+ $('metadataOptimizerStatus').textContent='CSV disiapkan: '+a.download+' · 1 baris aset, UTF-8 BOM.';
+}
+$('optimizeMetadataBtn').addEventListener('click',()=>trozalOptimizeMetadataKeywords(false));
+$('exportMetadataCsvBtn').addEventListener('click',trozalExportMetadataCsv);
+['metadataTitle','metadataDescription','metadataCategory','metadataPlatform','metadataKeywords','metadataSubject'].forEach(id=>{
+ $(id)?.addEventListener('input',trozalRefreshMetadataQuality);
+ $(id)?.addEventListener('change',trozalRefreshMetadataQuality);
+});
+
 $('generateMetadataBtn').addEventListener('click',generateStockMetadata);
 $('metadataPlatform').addEventListener('change',()=>{
  const title=$('metadataTitle'),base=title.dataset.baseTitle||title.value;
@@ -3495,7 +3614,7 @@ $('metadataPlatform').addEventListener('change',()=>{
 $('metadataTitle').addEventListener('input',()=>{ $('metadataTitle').dataset.baseTitle='';trozalUpdateMetadataPlatformValidation(); });
 $('metadataKeywords').addEventListener('input',trozalUpdateMetadataPlatformValidation);
 
-$('clearMetadataBtn').addEventListener('click',()=>{['metadataSubject','metadataTitle','metadataDescription','metadataKeywords'].forEach(id=>$(id).value='');$('metadataCategory').selectedIndex=0;updateMetadataCount();$('metadataStatus').textContent='Metadata dikosongkan.'});
+$('clearMetadataBtn').addEventListener('click',()=>{['metadataSubject','metadataTitle','metadataDescription','metadataKeywords'].forEach(id=>$(id).value='');$('metadataCategory').selectedIndex=0;updateMetadataCount();$('metadataStatus').textContent='Metadata dikosongkan.';if($('metadataEvidence'))$('metadataEvidence').textContent='Sumber bukti akan ditampilkan setelah metadata dianalisis.';if($('metadataOptimizerStatus'))$('metadataOptimizerStatus').textContent='Metadata dikosongkan.';trozalRefreshMetadataQuality();});
 $('metadataKeywords').addEventListener('input',updateMetadataCount);
 document.querySelectorAll('[data-copy-meta]').forEach(b=>b.addEventListener('click',async()=>{const el=$(b.dataset.copyMeta);try{await navigator.clipboard.writeText(el.value||el.textContent);$('metadataStatus').textContent=b.textContent+' berhasil disalin.'}catch(e){el.focus();el.select();$('metadataStatus').textContent='Pilih teks lalu tekan Ctrl+C.'}}));
 $('copyAllMetadataBtn').addEventListener('click',async()=>{const platform=$('metadataPlatform').value;const payload='Platform: '+(platform==='all'?'Adobe Stock, Dreamstime, Shutterstock':platform)+'\nTitle: '+$('metadataTitle').value+'\nDescription: '+$('metadataDescription').value+'\nCategory: '+$('metadataCategory').value+'\nKeywords: '+$('metadataKeywords').value;try{await navigator.clipboard.writeText(payload);$('metadataStatus').textContent='Semua metadata berhasil disalin.'}catch(e){$('metadataStatus').textContent='Clipboard tidak tersedia. Salin setiap kolom secara manual.'}});
