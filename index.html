@@ -3232,6 +3232,7 @@ function trozalMetadataEvidence(){
   if(text)entries.push({label,text,kind});
  };
  add('Deskripsi visual pengguna',$('metadataSubject')?.value||'','prompt');
+ add('Prompt-to-Visual',$('visualMotionPrompt')?.value||'','visual-prompt');
  add('Nama aset/proyek',$('objectName')?.value||'','filename');
  if(Array.isArray(visualSceneSequence)&&visualSceneSequence.length){
   visualSceneSequence.forEach((scene,i)=>add('Visual Scene '+(i+1),scene.text,'scene'));
@@ -3276,7 +3277,7 @@ function trozalTranslateMetadataText(value){
  const dictionary=[
   [/kereta luncur/gi,'sleigh'],[/sinterklas/gi,'Santa Claus'],[/santa claus/gi,'Santa Claus'],
   [/gedung-gedung/gi,'buildings'],[/gedung/gi,'buildings'],[/di antara/gi,'between'],
-  [/malam hari|pada malam/gi,'at night'],[/bersinar/gi,'glowing'],[/salju turun/gi,'falling snow'],
+  [/pada malam hari|malam hari|pada malam/gi,'at night'],[/salju turun/gi,'falling snow'],[/bersinar/gi,'glowing'],
   [/salju/gi,'snow'],[/terbang|terbang di/gi,'flying'],[/mengendarai/gi,'riding'],
   [/bulan sabit/gi,'crescent moon'],[/bulan/gi,'moon'],[/lentera|lampion/gi,'lantern'],
   [/masjid/gi,'mosque'],[/ramadan|ramadhan/gi,'Ramadan'],[/idul fitri|lebaran/gi,'Eid al-Fitr'],
@@ -3287,7 +3288,7 @@ function trozalTranslateMetadataText(value){
   [/cincin/gi,'ring'],[/berlian/gi,'diamond'],[/jam tangan/gi,'watch'],[/perhiasan/gi,'jewelry'],
   [/bunga/gi,'flower'],[/pohon/gi,'tree'],[/pantai/gi,'beach'],[/gurun/gi,'desert'],
   [/kota/gi,'city'],[/jalanan/gi,'street'],[/jalan raya/gi,'road'],[/orang|manusia/gi,'people'],
-  [/wanita/gi,'woman'],[/pria/gi,'man'],[/anak-anak/gi,'children']
+  [/wanita/gi,'woman'],[/pria/gi,'man'],[/anak-anak/gi,'children'],[/sedang/gi,''],[/sebuah|seorang/gi,'a'],[/yang/gi,'that'],[/serta/gi,'and'],[/dengan/gi,'with'],[/di atas/gi,'above'],[/di bawah/gi,'below'],[/di tengah/gi,'in the middle of'],[/pada/gi,'in'],[/pagi/gi,'morning'],[/siang/gi,'daytime'],[/sore/gi,'evening'],[/malam/gi,'night'],[/langit/gi,'sky'],[/cahaya/gi,'light'],[/lampu/gi,'lights'],[/jalanan/gi,'streets'],[/air/gi,'water'],[/berputar/gi,'rotating'],[/melintasi/gi,'crossing'],[/membawa/gi,'carrying'],[/berjalan/gi,'walking'],[/berlari/gi,'running'],[/bermain/gi,'playing'],[/tampak|terlihat/gi,'visible']
  ];
  dictionary.forEach(([pattern,replacement])=>{text=text.replace(pattern,replacement)});
  return text.replace(/\s+/g,' ').trim();
@@ -3327,9 +3328,9 @@ function generateStockMetadata(){
  const raw=evidence.text;
  const sceneTexts=Array.isArray(visualSceneSequence)?visualSceneSequence.map(x=>String(x.text||'').trim()).filter(Boolean):[];
  const subject=String($('metadataSubject')?.value||'').trim();
- const sourceText=[subject,...sceneTexts].filter(Boolean).join('. ')||raw;
+ const sourceParts=[subject,...sceneTexts].map(x=>String(x||'').replace(/\s+/g,' ').trim()).filter(Boolean);const sourceSeen=new Set();const sourceText=sourceParts.filter(x=>{const k=x.toLowerCase();if(sourceSeen.has(k))return false;sourceSeen.add(k);return true;}).join('. ')||raw;
  const translated=trozalTranslateMetadataText(sourceText);
- const firstSentence=(translated.split(/(?<=[.!?])\s+/)[0]||translated).replace(/[|]+/g,' ').replace(/\s+/g,' ').trim();
+ const firstSentence=(translated.split(/(?<=[.!?])\s+/)[0]||translated).replace(/[|]+/g,' ').replace(/\s+/g,' ').replace(/\s+([,.;:!?])/g,'$1').replace(/^[,.;:]+|[,.;:]+$/g,'').trim();
  const title=trozalTitleCase(firstSentence).replace(/\s+/g,' ').slice(0,135);
  const categoryScores={};
  const keywords=[],seen=new Set();
@@ -3362,7 +3363,7 @@ function generateStockMetadata(){
  const hasDescriptiveEvidence=!!(subject||sceneTexts.length||evidence.entries.some(x=>x.kind==='visible-text'||x.kind==='label'));
  const safeTitle=hasDescriptiveEvidence?title:'';
  const description=hasDescriptiveEvidence&&translated
-  ?'Animated video featuring '+translated.replace(/[.?!]+$/,'').trim()+'.'
+  ?'Animated video depicting '+translated.replace(/[.?!]+$/,'').trim().slice(0,380).replace(/[,;:]+$/,'')+'.'
   :'';
  $('metadataTitle').value=safeTitle;
  $('metadataDescription').value=description;
@@ -3377,7 +3378,7 @@ function generateStockMetadata(){
  const evidenceEl=$('metadataEvidence');
  if(evidenceEl)evidenceEl.textContent='Evidence: '+evidenceLevel+' · Sources: '+(sourceLabels.join(', ')||'none')+' · Matched topics: '+(conceptHits.map(x=>x.category).filter((x,i,a)=>a.indexOf(x)===i).join(', ')||'none');
  $('metadataStatus').textContent=hasDescriptiveEvidence
-  ?'Metadata dibuat dari deskripsi/label yang tersedia. '+keywords.length+' keyword relevan ditemukan; maksimum 47. Tidak ada kata generik yang ditambahkan hanya untuk mengejar jumlah. Periksa title, deskripsi, kategori, dan keyword sebelum upload.'
+  ?'Metadata dibuat dari prompt dan teks/label yang dapat dibaca. '+keywords.length+' keyword relevan ditemukan; maksimum 47. Terjemahan judul memakai kamus lokal terbatas—periksa tata bahasa dan pastikan semua istilah sesuai visual sebelum upload.'
   :'Belum ada deskripsi visual yang cukup. Isi topik atau susun deskripsi tiap scene terlebih dahulu. Sistem tidak akan mengarang judul, deskripsi, atau keyword dari nama file saja.';
 }
 function updateMetadataCount(){const count=$('metadataKeywords').value.split(',').map(x=>x.trim()).filter(Boolean).length;$('metadataKeywordCount').textContent=count+' / 47';$('metadataKeywordCount').style.color=count===47?'#72e6a7':'#ffc36a'}
