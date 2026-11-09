@@ -167,7 +167,7 @@ Acceptance checks:
 
 ## Phase 7 — Evidence-Based Stock Metadata
 
-**Status: Evidence-grounded generator, marketplace preflight, keyword prioritization, editorial quality audit and single-asset CSV export implemented; visual-AI analysis and batch platform templates remain planned.**
+**Status: Evidence-provenance metadata generator, conservative keyword matching, user-reviewed evidence scoring, clearer Indonesian field guidance and batch provenance labels committed; visual-AI analysis and platform-specific templates remain planned.**
 
 Implemented:
 - Metadata evidence is separated by provenance: user-reviewed visual description, Prompt-to-Visual intent, Visual Scene Sequencer plans, readable HTML/SVG text and labels, and asset/project name. Prompt/scene plans and filenames are not treated as proof that an object appears in the rendered frame.
@@ -185,6 +185,10 @@ Implemented:
 - A local metadata-completeness score checks title, description, category, keyword relevance/duplicates and whether the user supplied a reviewed visual description. Prompt-only and scene-plan-only sources are explicitly identified as drafts; the score is not a visual-accuracy check or marketplace acceptance score.
 - CSV export provides a UTF-8 BOM single-asset metadata record with evidence provenance and keyword count.
 - Manual keyword review renders per-keyword text-evidence matches and lets the user approve or remove terms individually; applying approved terms is an explicit action.
+- Metadata generation now prioritizes the user's reviewed visual description. If it is absent, scene plans, prompts or readable labels produce a clearly marked draft rather than being described as verified visual content.
+- Keyword candidates must be supported word-by-word by the selected source text; the generator no longer pads with inferred synonyms or generic media labels. Keyword relevance scoring uses that same selected source rather than mixing all prompts and scene plans.
+- Batch records, CSV exports and JSON sidecars distinguish user-reviewed descriptions from unverified prompt/scene-plan evidence. Scene-only batch descriptions no longer prepend an unsupported generic 'Animated video showing' claim.
+- Metadata field explanations and review controls are presented in clearer Indonesian wording.
 - Scene evidence preview displays the selected Visual Scene Sequencer description and labels it as text evidence, not pixel-level recognition.
 - Local batch staging supports adding the current metadata record or an individual scene description, with duplicate-entry checks.
 - Batch CSV export produces multiple asset rows with keyword counts, editorial score where available, evidence level and provenance.
