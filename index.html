@@ -3275,6 +3275,7 @@ function trozalTitleCase(s){
 function trozalTranslateMetadataText(value){
  let text=String(value||'');
  const dictionary=[
+  [/cincin berlian/gi,'diamond ring'],[/di atas kain beludru hitam/gi,'on black velvet'],[/kain beludru hitam/gi,'black velvet fabric'],[/kain beludru/gi,'velvet fabric'],[/langit malam/gi,'night sky'],[/di langit/gi,'in the sky'],[/lentera emas/gi,'golden lanterns'],[/lampion emas/gi,'golden lanterns'],[/bercahaya/gi,'glowing'],[/emas/gi,'gold'],[/beludru/gi,'velvet'],[/hitam/gi,'black'],[/dan/gi,'and'],
   [/kereta luncur/gi,'sleigh'],[/sinterklas/gi,'Santa Claus'],[/santa claus/gi,'Santa Claus'],
   [/gedung-gedung/gi,'buildings'],[/gedung/gi,'buildings'],[/di antara/gi,'between'],
   [/pada malam hari|malam hari|pada malam/gi,'at night'],[/salju turun/gi,'falling snow'],[/bersinar/gi,'glowing'],
@@ -3333,6 +3334,19 @@ function trozalMetadataTitleFromEvidence(source,translated,fallback){
   if(/malam|night/.test(raw))parts.push('at Night');
   if(/moon|bulan/.test(raw))parts.push(/glow|bersinar|glowing/.test(raw)?'Under a Glowing Moon':'Under the Moon');
   if(/snow|salju|winter/.test(raw))parts.push('in a Snowy Winter Scene');
+  return parts.join(' ').slice(0,135);
+ }
+ if(/ramadan|ramadhan/.test(raw)){
+  const parts=['Ramadan'];
+  if(/crescent|bulan sabit/.test(raw))parts.push('Crescent Moon');
+  if(/lantern|lentera|lampion/.test(raw))parts.push(/glow|bercahaya|bersinar/.test(raw)?'and Glowing':'and','Gold Lanterns');
+  if(/night|malam|langit/.test(raw))parts.push('in the Night Sky');
+  return parts.join(' ').replace(/\s+/g,' ').slice(0,135);
+ }
+ if(/diamond ring|cincin berlian/.test(raw)){
+  const parts=['Diamond Ring'];
+  if(/rotat|berputar/.test(raw))parts.push('Rotating');
+  if(/velvet|beludru/.test(raw))parts.push('on Black Velvet');
   return parts.join(' ').slice(0,135);
  }
  return trozalTitleCase(fallback||translated).replace(/\s+/g,' ').slice(0,135);
