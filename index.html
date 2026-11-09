@@ -3278,7 +3278,7 @@ function trozalTranslateMetadataText(value){
   [/kereta luncur/gi,'sleigh'],[/sinterklas/gi,'Santa Claus'],[/santa claus/gi,'Santa Claus'],
   [/gedung-gedung/gi,'buildings'],[/gedung/gi,'buildings'],[/di antara/gi,'between'],
   [/pada malam hari|malam hari|pada malam/gi,'at night'],[/salju turun/gi,'falling snow'],[/bersinar/gi,'glowing'],
-  [/salju/gi,'snow'],[/terbang|terbang di/gi,'flying'],[/mengendarai/gi,'riding'],
+  [/salju/gi,'snow'],[/terbang di|terbang/gi,'flying'],[/mengendarai/gi,'riding'],
   [/bulan sabit/gi,'crescent moon'],[/bulan/gi,'moon'],[/lentera|lampion/gi,'lantern'],
   [/masjid/gi,'mosque'],[/ramadan|ramadhan/gi,'Ramadan'],[/idul fitri|lebaran/gi,'Eid al-Fitr'],
   [/hutan/gi,'forest'],[/pegunungan/gi,'mountains'],[/gunung/gi,'mountain'],
@@ -3287,8 +3287,8 @@ function trozalTranslateMetadataText(value){
   [/pesawat/gi,'aircraft'],[/roket/gi,'rocket'],[/mobil/gi,'car'],[/sepeda motor/gi,'motorcycle'],
   [/cincin/gi,'ring'],[/berlian/gi,'diamond'],[/jam tangan/gi,'watch'],[/perhiasan/gi,'jewelry'],
   [/bunga/gi,'flower'],[/pohon/gi,'tree'],[/pantai/gi,'beach'],[/gurun/gi,'desert'],
-  [/kota/gi,'city'],[/jalanan/gi,'street'],[/jalan raya/gi,'road'],[/orang|manusia/gi,'people'],
-  [/wanita/gi,'woman'],[/pria/gi,'man'],[/anak-anak/gi,'children'],[/sedang/gi,''],[/sebuah|seorang/gi,'a'],[/yang/gi,'that'],[/serta/gi,'and'],[/dengan/gi,'with'],[/di atas/gi,'above'],[/di bawah/gi,'below'],[/di tengah/gi,'in the middle of'],[/pada/gi,'in'],[/pagi/gi,'morning'],[/siang/gi,'daytime'],[/sore/gi,'evening'],[/malam/gi,'night'],[/langit/gi,'sky'],[/cahaya/gi,'light'],[/lampu/gi,'lights'],[/jalanan/gi,'streets'],[/air/gi,'water'],[/berputar/gi,'rotating'],[/melintasi/gi,'crossing'],[/membawa/gi,'carrying'],[/berjalan/gi,'walking'],[/berlari/gi,'running'],[/bermain/gi,'playing'],[/tampak|terlihat/gi,'visible']
+  [/kota/gi,'city'],[/jalanan/gi,'street'],[/jalan raya/gi,'road'],[/seorang/gi,'a person'],[/orang|manusia/gi,'people'],
+  [/wanita/gi,'woman'],[/pria/gi,'man'],[/anak-anak/gi,'children'],[/sedang/gi,''],[/sebuah/gi,'a'],[/yang/gi,'that'],[/serta/gi,'and'],[/dengan/gi,'with'],[/di atas/gi,'above'],[/di bawah/gi,'below'],[/di tengah/gi,'in the middle of'],[/pada/gi,'in'],[/pagi/gi,'morning'],[/siang/gi,'daytime'],[/sore/gi,'evening'],[/malam/gi,'night'],[/langit/gi,'sky'],[/cahaya/gi,'light'],[/lampu/gi,'lights'],[/jalanan/gi,'streets'],[/air/gi,'water'],[/berputar/gi,'rotating'],[/melintasi/gi,'crossing'],[/membawa/gi,'carrying'],[/berjalan/gi,'walking'],[/berlari/gi,'running'],[/bermain/gi,'playing'],[/tampak|terlihat/gi,'visible']
  ];
  dictionary.forEach(([pattern,replacement])=>{text=text.replace(pattern,replacement)});
  return text.replace(/\s+/g,' ').trim();
@@ -3323,6 +3323,20 @@ const TROZAL_METADATA_EXTRA_TERMS=[
  {re:/background|backdrop/i,terms:['background','backdrop']},
  {re:/animation|animated|motion graphic|motion design/i,terms:['animation','animated video','motion graphic','motion design']}
 ];
+function trozalMetadataTitleFromEvidence(source,translated,fallback){
+ const raw=String(source||'').toLowerCase();
+ const santa=/santa claus|santa|sinterklas/.test(raw),sleigh=/sleigh|kereta luncur/.test(raw);
+ if(santa&&sleigh){
+  const parts=['Santa Claus',/terbang|flying|airborne|flight/.test(raw)?'Flying a Sleigh':'Riding a Sleigh'];
+  if(/di antara|between/.test(raw))parts.push('Between City Buildings');
+  else if(/city|kota|building|gedung|skyline/.test(raw))parts.push('Over a City Skyline');
+  if(/malam|night/.test(raw))parts.push('at Night');
+  if(/moon|bulan/.test(raw))parts.push(/glow|bersinar|glowing/.test(raw)?'Under a Glowing Moon':'Under the Moon');
+  if(/snow|salju|winter/.test(raw))parts.push('in a Snowy Winter Scene');
+  return parts.join(' ').slice(0,135);
+ }
+ return trozalTitleCase(fallback||translated).replace(/\s+/g,' ').slice(0,135);
+}
 function generateStockMetadata(){
  const evidence=trozalMetadataEvidence();
  const raw=evidence.text;
@@ -3331,13 +3345,13 @@ function generateStockMetadata(){
  const sourceParts=[subject,...sceneTexts].map(x=>String(x||'').replace(/\s+/g,' ').trim()).filter(Boolean);const sourceSeen=new Set();const sourceText=sourceParts.filter(x=>{const k=x.toLowerCase();if(sourceSeen.has(k))return false;sourceSeen.add(k);return true;}).join('. ')||raw;
  const translated=trozalTranslateMetadataText(sourceText);
  const firstSentence=(translated.split(/(?<=[.!?])\s+/)[0]||translated).replace(/[|]+/g,' ').replace(/\s+/g,' ').replace(/\s+([,.;:!?])/g,'$1').replace(/^[,.;:]+|[,.;:]+$/g,'').trim();
- const title=trozalTitleCase(firstSentence).replace(/\s+/g,' ').slice(0,135);
+ const title=trozalMetadataTitleFromEvidence(sourceText,translated,firstSentence);
  const categoryScores={};
  const keywords=[],seen=new Set();
  const addKeyword=value=>{
   const word=String(value||'').toLowerCase().replace(/[_-]+/g,' ').replace(/\s+/g,' ').replace(/^[,.;:]+|[,.;:]+$/g,'').trim();
   if(!word||word.length<3||word.length>45||seen.has(word))return;
-  if(/^(the|and|for|with|from|into|over|under|between|this|that|there|their|your|video|visual|content|scene|scenes|image|graphic|design|motion|animated|animation)$/i.test(word))return;
+  if(/^(the|and|for|with|from|into|over|under|between|this|that|there|their|your|video|visual|content|scene|scenes|image|graphic|design|motion|animated|animation|claus)$/i.test(word))return;
   seen.add(word);keywords.push(word);
  };
  const analysisText=(trozalTranslateMetadataText(raw)+' '+sourceText).toLowerCase();
@@ -3363,7 +3377,7 @@ function generateStockMetadata(){
  const hasDescriptiveEvidence=!!(subject||sceneTexts.length||evidence.entries.some(x=>x.kind==='visible-text'||x.kind==='label'));
  const safeTitle=hasDescriptiveEvidence?title:'';
  const description=hasDescriptiveEvidence&&translated
-  ?'Animated video depicting '+translated.replace(/[.?!]+$/,'').trim().slice(0,380).replace(/[,;:]+$/,'')+'.'
+  ? 'Animated video showing '+safeTitle+'.'
   :'';
  $('metadataTitle').value=safeTitle;
  $('metadataDescription').value=description;
