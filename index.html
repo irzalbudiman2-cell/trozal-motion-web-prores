@@ -3874,7 +3874,7 @@ function trozalVisionSetConnection(message,isReady=false){
 async function trozalVisionCheck(){
  trozalVisionSetConnection('Menghubungi Ollama lokal…');
  try{
-  const response=await fetch(TROZAL_VISION_BASE+'/api/tags',{method:'GET',cache:'no-store'});
+  const response=await fetch(TROZAL_VISION_BASE+'/api/tags',{method:'GET',cache:'no-store',targetAddressSpace:'loopback'});
   if(!response.ok)throw new Error('HTTP '+response.status);
   const data=await response.json(),models=Array.isArray(data.models)?data.models:[];
   const select=$('trozalVisionModel'),available=models.map(m=>m.name||'');
@@ -3948,7 +3948,7 @@ async function trozalVisionAnalyze(){
   trozalVisionSetStatus('Mengirim '+images.length+' frame ke '+model+' pada komputer lokal. Tunggu proses model…');
   const categories=[...$('metadataCategory').options].map(o=>o.text);
   const prompt='You are a visual metadata analyst for stock motion graphics. Analyze ONLY what is visibly supported by the attached image frames. The images are frames from one animation or screenshots of one asset. Do not use, infer, or repeat any text prompt, filename, scene plan, or prior metadata. Describe visible subject(s), their visible action, background, colors, composition, and visual style. Do not invent hidden details, brand names, locations, identities, or unsupported motion. If something is uncertain, omit it. Return valid JSON only with this schema: {"title":"concise English title, max 100 characters","description":"accurate English description, 1-2 sentences","category":"one exact value from the allowed list","keywords":["up to 25 specific English keywords"],"visual_summary":"short evidence-based summary","visible_objects":["objects clearly visible"],"confidence_notes":"brief uncertainty note or empty string"}. Allowed categories: '+categories.join(' | ')+'. Keywords must be grounded in visible content; avoid generic filler. If the images do not show enough detail, say so and keep metadata conservative.';
-  const response=await fetch(TROZAL_VISION_BASE+'/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model,messages:[{role:'user',content:prompt,images}],format:'json',stream:false,options:{temperature:.15,num_ctx:4096},keep_alive:'5m'})});
+  const response=await fetch(TROZAL_VISION_BASE+'/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},targetAddressSpace:'loopback',body:JSON.stringify({model,messages:[{role:'user',content:prompt,images}],format:'json',stream:false,options:{temperature:.15,num_ctx:4096},keep_alive:'5m'})});
   if(!response.ok){let detail='HTTP '+response.status;try{detail=(await response.json()).error||detail}catch(_){}throw new Error(detail);}
   const data=await response.json(),parsed=trozalVisionCleanJson(data.message?.content||'');
   const title=String(parsed.title||'').trim(),description=String(parsed.description||'').trim();
@@ -3972,7 +3972,8 @@ async function trozalVisionAnalyze(){
 $('trozalVisionCheckBtn')?.addEventListener('click',trozalVisionCheck);
 $('trozalVisionAnalyzeBtn')?.addEventListener('click',trozalVisionAnalyze);
 $('trozalVisionClearImagesBtn')?.addEventListener('click',()=>{$('trozalVisionImages').value='';trozalVisionSetStatus('Gambar pilihan dibersihkan. Analisis berikutnya akan mengambil frame dari Preview.')});
-trozalVisionCheck();
+// Do not probe localhost automatically on page load: Chrome Local Network Access
+// requires the first loopback request to be initiated by a user gesture.
 
 
 /* TROZAL AI SCENE COMPOSER — local text-to-SVG generation through Ollama */
@@ -3982,7 +3983,7 @@ function visualMotionAiStatus(message,isError=false){
 async function visualMotionAiCheck(){
  visualMotionAiStatus('Memeriksa Ollama lokal…');
  try{
-  const r=await fetch('http://localhost:11434/api/tags',{cache:'no-store'});
+  const r=await fetch('http://localhost:11434/api/tags',{cache:'no-store',targetAddressSpace:'loopback'});
   if(!r.ok)throw new Error('HTTP '+r.status);
   const data=await r.json(),models=(data.models||[]).map(x=>x.name||[]);
   const chosen=$('visualMotionAiModel').value,found=models.some(n=>n===chosen||n.startsWith(chosen+':'));
@@ -4022,7 +4023,7 @@ async function generateVisualMotionWithLocalAi(){
   const system='You are a senior SVG motion-graphics scene designer. Return ONLY a complete standalone HTML5 document. Build a visually rich, polished, coherent animated vector scene from the user brief. Use inline SVG shapes, gradients, filters and CSS keyframe animation. No JavaScript, no external images, no network URLs, no external fonts, no iframe, no canvas. Use separate semantic SVG groups for independently moving objects, with descriptive ids and aria-labels. Keep the entire composition inside the viewBox; create clear foreground, midground and background depth; make the main subject recognizable and detailed, not generic icons. Animate relevant objects independently with natural motion and include subtle atmospheric movement. Ensure all objects remain visible within the frame and avoid unwanted zoom/cropping. Include a responsive full-viewport stage and preserve the requested aspect ratio. Use no text overlay unless text is an actual physical sign in the scene. Use CSS only for animation. Keep code compact but complete, valid HTML/SVG, and output no markdown fences or explanations.';
   const user='VISUAL BRIEF: '+brief+'\\nAspect ratio: '+ratio+'. Target duration: '+duration+' seconds. Visual style: '+style+'. Accent: '+accent+'. Camera direction: '+camera+'. Scene transition preference: '+transition+'. Produce a single coherent scene with distinct SVG groups/layers and CSS motion. Set animation duration to match '+duration+' seconds and make the animation loop smoothly when appropriate.';
   visualMotionAiStatus('Mengirim brief ke '+model+' pada komputer lokal. Proses dapat memerlukan beberapa menit…');
-  const response=await fetch('http://localhost:11434/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model,messages:[{role:'system',content:system},{role:'user',content:user}],stream:false,options:{temperature:.35,num_ctx:8192},keep_alive:'5m'})});
+  const response=await fetch('http://localhost:11434/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},targetAddressSpace:'loopback',body:JSON.stringify({model,messages:[{role:'system',content:system},{role:'user',content:user}],stream:false,options:{temperature:.35,num_ctx:8192},keep_alive:'5m'})});
   if(!response.ok){let detail='HTTP '+response.status;try{detail=(await response.json()).error||detail}catch(_){}throw new Error(detail);}
   const data=await response.json(),code=visualMotionAiExtractCode(data.message?.content||'');
   $('visualMotionOutput').value=code;$('visualMotionPreview').srcdoc=code;
