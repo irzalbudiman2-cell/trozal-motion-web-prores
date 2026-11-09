@@ -4,7 +4,8 @@ $listen = "http://127.0.0.1:11435/"
 $ollama = "http://127.0.0.1:11434"
 $listener = New-Object System.Net.HttpListener
 $listener.Prefixes.Add($listen)
-$client = New-Object System.Net.Http.HttpClient
+Add-Type -AssemblyName System.Net.Http
+$client = [System.Net.Http.HttpClient]::new()
 try {
   $listener.Start()
   Write-Host ""
