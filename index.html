@@ -32,6 +32,17 @@ small,.muted{color:var(--muted)}.row{display:flex;gap:8px;align-items:center}.ro
 
 
 
+
+/* EVIDENCE-BASED STOCK METADATA — DISTINCT AMBER FEATURE THEME */
+#stockMetadataPanel{background:linear-gradient(145deg,#4a3510 0%,#291d0b 58%,#46300c 100%);border:1px solid #c18b36;box-shadow:0 8px 24px #160d02aa,inset 0 1px #ffe6b322}
+#stockMetadataPanel h3{color:#ffe0a0;letter-spacing:.05em}
+#stockMetadataPanel .help,#stockMetadataPanel label{color:#f6e2bd}
+#stockMetadataPanel textarea,#stockMetadataPanel input,#stockMetadataPanel select{background:#211707;color:#fff5e3;border:1px solid #8b6425;border-radius:7px}
+#stockMetadataPanel button{border-color:#b27e2c}
+#stockMetadataPanel button.primary{background:linear-gradient(135deg,#ffe1a4,#d39a42);color:#261805}
+#stockMetadataPanel button.green{background:linear-gradient(135deg,#f5d79a,#c28d36);color:#261805}
+.metadata-evidence{margin:7px 0;padding:8px;border:1px solid #8b6425;border-radius:7px;background:#201606;color:#f3d7a4;font-size:10px;line-height:1.5}
+
 /* VISUAL SCENE SEQUENCER — DISTINCT TEAL FEATURE THEME */
 #visualSceneSequencer{background:linear-gradient(145deg,#123f43 0%,#0a272d 58%,#123b3d 100%);border:1px solid #35b7a8;box-shadow:0 8px 24px #020f12aa,inset 0 1px #c7fff322}
 #visualSceneSequencer h3{color:#adfff0;letter-spacing:.06em}
@@ -456,7 +467,8 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
  <div class="btnrow"><button type="button" class="primary" id="buildVisualSequenceBtn">✦ SUSUN ADEGAN DARI PROMPT</button><button type="button" id="addVisualSceneBtn">＋ TAMBAH ADEGAN</button></div>
  <div class="visual-sequence-summary" id="visualSceneTimelineSummary">Belum ada adegan. Masukkan prompt pada panel ungu lalu susun adegan di sini.</div>
  <div id="visualSceneList" class="visual-scene-list"></div>
- <div class="btnrow"><button type="button" class="primary" id="generateVisualSequenceBtn">▶ GENERATE DARI TIMELINE</button><button type="button" id="clearVisualSequenceBtn">Kosongkan Timeline</button></div>
+ <div class="btnrow"><button type="button" class="primary" id="generateVisualSequenceBtn">▶ GENERATE DARI TIMELINE</button><button type="button" id="importVisualScenesBtn">▣ IMPOR SCENE KE MULTI-TRACK</button></div>
+ <div class="btnrow"><button type="button" id="clearVisualSequenceBtn">Kosongkan Timeline</button></div>
  <p class="notice">Pengaturan pada timeline ini akan dipakai saat membuat HTML visual. Total durasi hasil mengikuti jumlah durasi seluruh adegan, bukan lagi durasi default generator.</p>
 </section>
 <section class="panel ai-tools" id="motionPresetLibrary"><h3><b>✦</b> 6. MOTION PRESET LIBRARY</h3>
@@ -669,17 +681,18 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
   </section>
   <section class="panel" id="stockMetadataPanel">
    <h3><b>✦</b> 8. METADATA VIDEO MICROSTOCK</h3>
-   <p class="help">Untuk video dari HTML: generator membaca teks yang tertanam di HTML/SVG dan topik yang Anda tulis di bawah. Generator TIDAK melihat/mengenali piksel video secara otomatis. Isi topik agar judul, kategori, dan 47 keyword lebih tepat.</p>
+   <p class="help">Metadata disusun hanya dari deskripsi prompt, Visual Scene Sequencer, teks/label HTML-SVG, dan nama aset. Generator lokal ini bukan model AI vision: tidak menebak objek dari piksel video. Keyword yang tidak didukung bukti tidak akan ditambahkan hanya untuk memenuhi angka 47.</p>
    <label>Platform tujuan</label>
    <select id="metadataPlatform"><option value="all">Semua platform (Adobe Stock, Dreamstime, Shutterstock)</option><option value="adobe">Adobe Stock</option><option value="dreamstime">Dreamstime</option><option value="shutterstock">Shutterstock</option></select>
-   <label>Topik / isi visual video (isi singkat dalam bahasa Indonesia atau Inggris)</label><textarea id="metadataSubject" rows="2" placeholder="Contoh: Ramadan crescent moon, glowing gold lanterns and elegant Islamic greeting animation"></textarea>
-   <div class="row" style="margin-top:8px"><button class="primary" id="generateMetadataBtn" type="button">✦ Generate Metadata</button><button id="clearMetadataBtn" type="button">Bersihkan</button></div>
+   <label>Deskripsi visual yang sudah diperiksa (Bahasa Indonesia atau Inggris)</label><textarea id="metadataSubject" rows="3" placeholder="Jelaskan objek utama, aksi, lokasi, suasana, dan elemen yang benar-benar terlihat. Prompt Visual Scene Sequencer juga dibaca otomatis."></textarea>
+   <div id="metadataEvidence" class="metadata-evidence">Sumber bukti akan ditampilkan setelah metadata dianalisis.</div>
+   <div class="row" style="margin-top:8px"><button class="primary" id="generateMetadataBtn" type="button">✦ ANALISIS & GENERATE METADATA</button><button id="clearMetadataBtn" type="button">Bersihkan</button></div>
    <label>Title (English)</label><input id="metadataTitle" type="text" placeholder="Video title for stock marketplace">
    <label>Description (English)</label><textarea id="metadataDescription" rows="3" placeholder="Describe the visual content and motion..."></textarea>
    <label>Category</label><select id="metadataCategory"><option>Graphic Resources</option><option>Technology</option><option>Business</option><option>Education</option><option>Science</option><option>Nature</option><option>Culture and Religion</option><option>Celebration</option><option>Backgrounds and Textures</option><option>Lifestyle</option><option>Food</option><option>Sports</option><option>Travel</option><option>Industry</option><option>People</option><option>Plants and Flowers</option><option>Buildings and Architecture</option><option>Transportation</option><option>Environment</option></select>
-   <label>Keywords <span class="value" id="metadataKeywordCount">0 / 47</span></label><textarea id="metadataKeywords" rows="4" placeholder="47 comma-separated English keywords"></textarea>
+   <label>Keywords <span class="value" id="metadataKeywordCount">0 / 47 maks.</span></label><textarea id="metadataKeywords" rows="4" placeholder="Hanya keyword yang didukung deskripsi visual; maksimum 47"></textarea>
    <div class="row" style="margin-top:8px"><button type="button" data-copy-meta="metadataTitle">Copy Title</button><button type="button" data-copy-meta="metadataDescription">Copy Description</button></div>
-   <div class="row"><button type="button" data-copy-meta="metadataCategory">Copy Category</button><button type="button" data-copy-meta="metadataKeywords">Copy 47 Keywords</button></div>
+   <div class="row"><button type="button" data-copy-meta="metadataCategory">Copy Category</button><button type="button" data-copy-meta="metadataKeywords">Copy Keywords</button></div>
    <button type="button" class="green" id="copyAllMetadataBtn" style="width:100%;margin-top:7px">Copy All Metadata</button>
    <div id="metadataStatus" class="status" aria-live="polite"></div>
   </section>
@@ -833,6 +846,10 @@ function splitSvgIntoPieces(silent=false){
   function walk(node,ancestors=[]){
    [...node.children].forEach(child=>{
     if(['defs','style','title','desc','metadata','linearGradient','radialGradient','clipPath','mask','filter','symbol'].includes(child.tagName))return;
+    if(child.tagName==='g' && child.hasAttribute('data-scene-track')){
+      // Preserve each generated visual scene as one editable native track.
+      leaves.push({node:child,ancestors});return;
+    }
     if(child.tagName==='g' && [...child.children].some(c=>graphicTags.has(c.tagName))){
       const drawable=[...child.children].filter(c=>graphicTags.has(c.tagName));
       const nested=[...child.children].some(c=>c.tagName==='g');
@@ -2387,6 +2404,70 @@ $('generateVisualSequenceBtn').addEventListener('click',()=>{
  if(visualSceneSequence.length)$('generateVisualMotionBtn').click();
 });
 
+function importVisualScenesToNativeTracks(){
+ if(!visualSceneSequence.length)buildVisualSceneSequenceFromPrompt();
+ const items=visualSceneSequence.filter(x=>String(x.text||'').trim());
+ if(!items.length){$('visualMotionStatus').textContent='Susun adegan dari prompt terlebih dahulu.';return;}
+ const total=items.reduce((sum,x)=>sum+Math.max(.5,Math.min(60,Number(x.duration)||1)),0);
+ if(total>300){$('visualMotionStatus').textContent='Total durasi native timeline dibatasi 300 detik. Kurangi durasi adegan sebelum impor.';return;}
+ try{
+  const ns='http://www.w3.org/2000/svg',parser=new DOMParser(),serializer=new XMLSerializer();
+  const master=parser.parseFromString('<svg xmlns="'+ns+'" viewBox="0 0 1600 900" width="1600" height="900"></svg>','image/svg+xml');
+  const root=master.documentElement,defs=master.createElementNS(ns,'defs'),wrapper=master.createElementNS(ns,'g');
+  wrapper.setAttribute('id','visual-scene-sequence');
+  wrapper.setAttribute('class','visual-scene-sequence');
+  items.forEach((item,index)=>{
+   const accent=$('visualMotionAccent').value,style=item.style||$('visualMotionStyle').value;
+   const visual=visualMotionSvg(item.text,index,style,accent,$('visualMotionDepth').checked);
+   const doc=parser.parseFromString(visual,'image/svg+xml'),svg=doc.documentElement;
+   if(doc.querySelector('parsererror')||svg.localName!=='svg')throw new Error('SVG adegan '+(index+1)+' tidak valid.');
+   [...svg.children].forEach(child=>{
+    if(child.localName==='defs') [...child.children].forEach(d=>defs.appendChild(master.importNode(d,true)));
+   });
+   const track=master.createElementNS(ns,'g');
+   track.setAttribute('id','visual-scene-track-'+(index+1));
+   track.setAttribute('data-scene-track','true');
+   track.setAttribute('aria-label','Scene '+String(index+1).padStart(2,'0')+' · '+String(item.text).slice(0,90));
+   track.setAttribute('data-scene-index',String(index));
+   [...svg.children].forEach(child=>{if(child.localName!=='defs')track.appendChild(master.importNode(child,true));});
+   wrapper.appendChild(track);
+  });
+  root.appendChild(defs);root.appendChild(wrapper);
+  const markup=serializer.serializeToString(root);
+  sourceSvg=markup;sourceType='image/svg+xml';preserveSvgColors=true;htmlMotionSource='';htmlMotionOutputName='';
+  setObjectMarkup(markup);
+  $('objectName').value='Prompt Visual Scene Timeline';
+  const duration=$('duration');
+  duration.max=String(Math.max(30,Math.ceil(total)));
+  duration.value=total.toFixed(2);
+  $('durationVal').textContent=total.toFixed(1)+' dtk';
+  updateInfo();
+  if(!splitSvgIntoPieces()){
+   $('visualMotionStatus').textContent='SVG scene berhasil disusun, tetapi pemisahan track gagal. Periksa objek SVG dan coba impor kembali.';
+   return;
+  }
+  let start=0;
+  const loopFor={locked:0,pan:11,parallax:23,orbit:17,follow:23};
+  items.forEach((item,index)=>{
+   const d=Math.max(.5,Math.min(60,Number(item.duration)||1)),end=start+d;
+   const set=(id,value)=>{const el=$(id+index);if(el)el.value=String(value)};
+   set('Delay',0);set('Start',start.toFixed(2));set('End',end.toFixed(2));
+   set('In',1);set('Out',1);set('Duration',Math.min(.55,Math.max(.12,d*.16)).toFixed(2));
+   set('Loop',loopFor[item.camera]??23);set('Intensity',45);set('Scale',100);set('Rotation',0);
+   set('On',true);set('Visible',true);set('Direction','normal');
+   start=end;
+  });
+  refreshTimelineEditor();renderAt(0);scheduleAutosave();
+  $('visualMotionStatus').textContent='Berhasil mengimpor '+items.length+' adegan menjadi '+svgPieces.length+' track SVG native. Setiap klip memiliki waktu mulai/selesai, fade masuk/keluar, dan gerakan sesuai kamera. Gunakan Multi-Track Timeline dan Keyframe Editor untuk penyuntingan lanjutan.';
+  setStatus('Visual Scene Sequencer diimpor ke Multi-Track Editor: '+items.length+' scene · '+total.toFixed(1)+' detik.');
+ }catch(e){
+  $('visualMotionStatus').textContent='Impor ke Multi-Track gagal: '+(e?.message||String(e));
+  setStatus('Impor visual scene gagal: '+(e?.message||String(e)));
+ }
+}
+$('importVisualScenesBtn').addEventListener('click',importVisualScenesToNativeTracks);
+
+
 function visualMotionScenes(){
  if(visualSceneSequence.length)return visualSceneSequence.map(x=>String(x.text||'').trim()).filter(Boolean).slice(0,12);
  const lines=visualMotionPromptLines();
@@ -3143,53 +3224,160 @@ function applyMotionPreset(key){
 }
 document.querySelectorAll('[data-motion-preset]').forEach(b=>b.addEventListener('click',()=>applyMotionPreset(b.dataset.motionPreset)));
 
-// Stock metadata helper: uses the user's topic plus visible text/labels in the active HTML or SVG.
-function trozalMetadataSourceText(){
- const parts=[$('metadataSubject')?.value||'', $('objectName')?.value||''];
- const collect=(root)=>{
+// Evidence-based microstock metadata. No pixel-recognition or AI-model claim.
+function trozalMetadataEvidence(){
+ const entries=[],add=(label,value,kind='text')=>{
+  const text=String(value||'').replace(/\s+/g,' ').trim();
+  if(text)entries.push({label,text,kind});
+ };
+ add('Deskripsi visual pengguna',$('metadataSubject')?.value||'','prompt');
+ add('Nama aset/proyek',$('objectName')?.value||'','filename');
+ if(Array.isArray(visualSceneSequence)&&visualSceneSequence.length){
+  visualSceneSequence.forEach((scene,i)=>add('Visual Scene '+(i+1),scene.text,'scene'));
+ }
+ const collect=(root,label)=>{
   if(!root)return;
   const clean=root.cloneNode(true);
   clean.querySelectorAll?.('style,script,defs,metadata').forEach(el=>el.remove());
-  const text=clean.textContent||'';if(text)parts.push(text);
-  clean.querySelectorAll?.('[aria-label],[title],[alt],[data-label]').forEach(el=>{
-   ['aria-label','title','alt','data-label'].forEach(a=>{const v=el.getAttribute(a);if(v)parts.push(v)});
+  add(label+' · teks terlihat',clean.textContent||'','visible-text');
+  clean.querySelectorAll?.('[aria-label],[title],[alt],[data-label]')?.forEach(el=>{
+   ['aria-label','title','alt','data-label'].forEach(attr=>add(label+' · '+attr,el.getAttribute(attr)||'','label'));
   });
+  clean.querySelectorAll?.('title,desc')?.forEach(el=>add(label+' · '+el.localName,el.textContent||'','label'));
  };
  try{
-  if(htmlMotionSource){const d=new DOMParser().parseFromString(htmlMotionSource,'text/html');collect(d.querySelector('#animove-scene')||d.body);}
-  else if(sourceSvg){const d=new DOMParser().parseFromString(sourceSvg,'image/svg+xml');if(!d.querySelector('parsererror'))collect(d.documentElement);}
-  else if(svgPieces.length){svgPieces.forEach(piece=>{const d=new DOMParser().parseFromString(piece,'image/svg+xml');if(!d.querySelector('parsererror'))collect(d.documentElement)});}
- }catch(e){console.warn('Metadata text extraction:',e)}
- return parts.join(' ').replace(/\s+/g,' ').trim().slice(0,12000);
+  if(htmlMotionSource){
+   const d=new DOMParser().parseFromString(htmlMotionSource,'text/html');
+   collect(d.querySelector('#animove-scene')||d.body,'HTML');
+  }else if(sourceSvg){
+   const d=new DOMParser().parseFromString(sourceSvg,'image/svg+xml');
+   if(!d.querySelector('parsererror'))collect(d.documentElement,'SVG');
+  }else if(svgPieces.length){
+   svgPieces.forEach((piece,i)=>{
+    const d=new DOMParser().parseFromString(piece,'image/svg+xml');
+    if(!d.querySelector('parsererror'))collect(d.documentElement,'SVG layer '+(i+1));
+   });
+  }
+ }catch(e){console.warn('Metadata evidence extraction:',e)}
+ const unique=[],seen=new Set();
+ entries.forEach(entry=>{
+  const key=entry.kind+'|'+entry.text.toLowerCase();
+  if(!seen.has(key)){seen.add(key);unique.push(entry);}
+ });
+ return {entries:unique,text:unique.map(x=>x.text).join(' ').replace(/\s+/g,' ').trim().slice(0,12000)};
 }
-function trozalTitleCase(s){return String(s||'').replace(/[_-]+/g,' ').replace(/\s+/g,' ').trim().replace(/\b\w/g,c=>c.toUpperCase())}
-function generateStockMetadata(){
- const raw=trozalMetadataSourceText(),subject=trozalTitleCase($('metadataSubject')?.value||''),name=trozalTitleCase($('objectName')?.value||'');
- const words=(raw.toLowerCase().match(/[a-z0-9]+/g)||[]);
- const stop=new Set('svg html xmlns viewbox width height style class fill stroke opacity transform animation keyframes ease linear important div span body head meta charset content type px rem var root data aria label title'.split(' '));
- const meaningful=[];for(const w of words){if(w.length>2&&!stop.has(w)&&!meaningful.includes(w))meaningful.push(w)}
- const topicRules=[
-  [/ramadan|islam|crescent|mosque|lantern|eid|muslim|prayer|quran|islamic/,'Culture and Religion',['ramadan','islamic','crescent moon','lantern','muslim','religion','spiritual','faith','festive','holy month']],
-  [/christmas|santa|reindeer|snowflake|xmas/,'Celebration',['christmas','holiday','winter','festive','celebration','seasonal','decoration','merry christmas']],
-  [/new year|2027|countdown|firework/,'Celebration',['new year','2027','celebration','fireworks','countdown','party','holiday','festive']],
-  [/robot|artificial intelligence|\bai\b|workflow|technology|digital|data|chip|cyber/,'Technology',['technology','digital','innovation','artificial intelligence','automation','futuristic','data','network','online']],
-  [/business|finance|chart|growth|marketing|office|startup/,'Business',['business','finance','marketing','strategy','growth','corporate','professional','success']],
-  [/education|school|teacher|book|learning|student/,'Education',['education','learning','school','knowledge','teaching','study','academic','training']],
-  [/flower|leaf|tree|nature|forest|mountain|sun|ocean|animal/,'Nature',['nature','organic','environment','green','ecology','wildlife','landscape','natural']],
-  [/food|coffee|cake|fruit|drink|restaurant/,'Food',['food','beverage','culinary','fresh','delicious','restaurant','nutrition']],
-  [/sport|football|soccer|basketball|fitness|athlete/,'Sports',['sports','fitness','athlete','competition','exercise','active','game']]
+function trozalMetadataSourceText(){return trozalMetadataEvidence().text;}
+function trozalTitleCase(s){
+ return String(s||'').replace(/[_-]+/g,' ').replace(/\s+/g,' ').trim().replace(/\b\w/g,ch=>ch.toUpperCase());
+}
+function trozalTranslateMetadataText(value){
+ let text=String(value||'');
+ const dictionary=[
+  [/kereta luncur/gi,'sleigh'],[/sinterklas/gi,'Santa Claus'],[/santa claus/gi,'Santa Claus'],
+  [/gedung-gedung/gi,'buildings'],[/gedung/gi,'buildings'],[/di antara/gi,'between'],
+  [/malam hari|pada malam/gi,'at night'],[/bersinar/gi,'glowing'],[/salju turun/gi,'falling snow'],
+  [/salju/gi,'snow'],[/terbang|terbang di/gi,'flying'],[/mengendarai/gi,'riding'],
+  [/bulan sabit/gi,'crescent moon'],[/bulan/gi,'moon'],[/lentera|lampion/gi,'lantern'],
+  [/masjid/gi,'mosque'],[/ramadan|ramadhan/gi,'Ramadan'],[/idul fitri|lebaran/gi,'Eid al-Fitr'],
+  [/hutan/gi,'forest'],[/pegunungan/gi,'mountains'],[/gunung/gi,'mountain'],
+  [/air terjun/gi,'waterfall'],[/laut|samudra/gi,'ocean'],[/bawah laut/gi,'underwater'],
+  [/paus/gi,'whales'],[/ikan/gi,'fish'],[/kapal selam/gi,'submarine'],[/kapal/gi,'ship'],
+  [/pesawat/gi,'aircraft'],[/roket/gi,'rocket'],[/mobil/gi,'car'],[/sepeda motor/gi,'motorcycle'],
+  [/cincin/gi,'ring'],[/berlian/gi,'diamond'],[/jam tangan/gi,'watch'],[/perhiasan/gi,'jewelry'],
+  [/bunga/gi,'flower'],[/pohon/gi,'tree'],[/pantai/gi,'beach'],[/gurun/gi,'desert'],
+  [/kota/gi,'city'],[/jalanan/gi,'street'],[/jalan raya/gi,'road'],[/orang|manusia/gi,'people'],
+  [/wanita/gi,'woman'],[/pria/gi,'man'],[/anak-anak/gi,'children']
  ];
- let category='Graphic Resources',extras=['motion graphic','animated','animation','video','dynamic','visual design','graphic design','creative','loop'];
- for(const [re,cat,kw] of topicRules){if(re.test(raw)){category=cat;extras=kw.concat(extras);break}}
- const contentSubject=subject||name||'Motion Graphic';
- const title=(contentSubject+' Animated Motion Graphic Video').replace(/\s+/g,' ').slice(0,180);
- const desc='Animated motion graphic featuring '+contentSubject.toLowerCase()+'. The video presents '+(meaningful.slice(0,8).join(', ')||'designed visual elements')+' with motion and a polished composition. Suitable for relevant presentations, digital content and promotional projects.';
- let pool=[...extras,...meaningful,'motion design','animated background','visual communication','digital content','seamless motion','4k','video footage','design element','stock video'];
- const seen=new Set(),keywords=[];
- for(let w of pool){w=String(w).trim().toLowerCase().replace(/\s+/g,' ');if(!w||seen.has(w)||w.length>45)continue;seen.add(w);keywords.push(w);if(keywords.length===47)break}
- for(const w of ['motion','graphic','animated video','visual effect','abstract design','modern design','creative concept','digital animation','looping animation','motion background','visual asset','video design','smooth animation','professional','presentation','advertising','social media','web design','marketing material','rendered video','moving image','illustration','visual storytelling','digital artwork','design background','animated elements','motion visuals','composition','graphic animation','video loop','concept','design','background','creative','animation design','stock footage','video asset','digital media','visual content','motion sequence','animated design']){if(keywords.length>=47)break;if(!seen.has(w)){seen.add(w);keywords.push(w)}}
- $('metadataTitle').value=title;$('metadataDescription').value=desc;$('metadataCategory').value=category;$('metadataKeywords').value=keywords.slice(0,47).join(', ');updateMetadataCount();
- $('metadataStatus').textContent=(subject?'Metadata dibuat dengan topik yang Anda masukkan dan teks yang terbaca dari HTML/SVG.':'Metadata dibuat dari teks yang terbaca. Isi Topik / isi visual video agar hasil lebih akurat.')+' Generator tidak menganalisis gambar/frame secara visual; periksa semua keyword sebelum upload.';
+ dictionary.forEach(([pattern,replacement])=>{text=text.replace(pattern,replacement)});
+ return text.replace(/\s+/g,' ').trim();
+}
+const TROZAL_METADATA_CONCEPTS=[
+ {re:/ramadan|ramadhan|islamic|islam|muslim|crescent moon|mosque|quran|eid|prayer|religious/ig,category:'Culture and Religion',terms:['ramadan','islamic','religion','muslim','spiritual']},
+ {re:/santa claus|sinterklas|christmas|reindeer|sleigh|xmas|snowman/ig,category:'Celebration',terms:['christmas','santa claus','holiday','seasonal','festive']},
+ {re:/new year|countdown|firework|fireworks/ig,category:'Celebration',terms:['new year','countdown','fireworks','celebration']},
+ {re:/city|cityscape|skyline|urban|building|buildings|skyscraper|architecture/ig,category:'Buildings and Architecture',terms:['city','cityscape','urban skyline','architecture','building','skyscraper']},
+ {re:/car|automobile|vehicle|motorcycle|truck|bus|sleigh|aircraft|airplane|helicopter|rocket|ship|submarine/ig,category:'Transportation',terms:['vehicle','transportation','travel','motion','transport']},
+ {re:/ocean|sea|underwater|whale|fish|marine|submarine/ig,category:'Nature',terms:['ocean','sea','underwater','marine life','aquatic','wildlife']},
+ {re:/forest|tree|trees|mountain|mountains|jungle|waterfall|flower|flowers|plant|plants|wildlife|animal/ig,category:'Nature',terms:['nature','landscape','environment','wildlife','outdoors']},
+ {re:/desert|dune|pyramid|sand/ig,category:'Travel',terms:['desert','sand dunes','arid landscape','landscape','travel']},
+ {re:/robot|artificial intelligence|technology|digital|data|chip|cyber|computer|network/ig,category:'Technology',terms:['technology','digital','innovation','computer','data']},
+ {re:/business|finance|chart|growth|marketing|office|startup|corporate/ig,category:'Business',terms:['business','finance','marketing','corporate','commerce']},
+ {re:/school|teacher|book|learning|student|education|classroom/ig,category:'Education',terms:['education','learning','school','teaching','knowledge']},
+ {re:/food|coffee|cake|fruit|drink|restaurant|cooking/ig,category:'Food',terms:['food','beverage','culinary','cooking','restaurant']},
+ {re:/sport|football|soccer|basketball|fitness|athlete|exercise/ig,category:'Sports',terms:['sports','fitness','athlete','exercise','competition']},
+ {re:/ring|jewelry|jewellery|diamond|watch|gold|necklace/ig,category:'Graphic Resources',terms:['jewelry','luxury','accessory','diamond','gold']},
+ {re:/person|people|woman|man|child|children|portrait|human/ig,category:'People',terms:['people','human','portrait','person']}
+];
+const TROZAL_METADATA_EXTRA_TERMS=[
+ {re:/\bnight\b|nighttime|malam/ig,terms:['night','nighttime']},
+ {re:/moon|crescent/ig,terms:['moon','moonlight']},
+ {re:/snow|snowfall|winter/ig,terms:['snow','winter']},
+ {re:/lantern|lamp|light|glow|glowing/ig,terms:['light','illumination']},
+ {re:/fly|flying|flight|airborne/ig,terms:['flying','flight','aerial']},
+ {re:/rotate|rotating|rotation|spin/ig,terms:['rotation','rotating']},
+ {re:/gold|golden/ig,terms:['gold','golden']},
+ {re:/glitter|sparkle|shimmer/ig,terms:['glitter','sparkling','shimmer']},
+ {re:/abstract|geometric|shape|shapes/ig,terms:['abstract','geometric','geometry']},
+ {re:/background|backdrop/ig,terms:['background','backdrop']},
+ {re:/animation|animated|motion graphic|motion design/ig,terms:['animation','animated video','motion graphic','motion design']}
+];
+function generateStockMetadata(){
+ const evidence=trozalMetadataEvidence();
+ const raw=evidence.text;
+ const sceneTexts=Array.isArray(visualSceneSequence)?visualSceneSequence.map(x=>String(x.text||'').trim()).filter(Boolean):[];
+ const subject=String($('metadataSubject')?.value||'').trim();
+ const sourceText=sceneTexts.length?sceneTexts.join('. '):subject||raw;
+ const translated=trozalTranslateMetadataText(sourceText);
+ const firstSentence=(translated.split(/(?<=[.!?])\s+/)[0]||translated).replace(/[|]+/g,' ').replace(/\s+/g,' ').trim();
+ const title=trozalTitleCase(firstSentence).replace(/\s+/g,' ').slice(0,135);
+ const categoryScores={};
+ const keywords=[],seen=new Set();
+ const addKeyword=value=>{
+  const word=String(value||'').toLowerCase().replace(/[_-]+/g,' ').replace(/\s+/g,' ').replace(/^[,.;:]+|[,.;:]+$/g,'').trim();
+  if(!word||word.length<3||word.length>45||seen.has(word))return;
+  if(/^(the|and|for|with|from|into|over|under|between|this|that|there|their|your|video|visual|content|scene|scenes|image|graphic|design|motion|animated|animation)$/i.test(word))return;
+  seen.add(word);keywords.push(word);
+ };
+ const analysisText=(trozalTranslateMetadataText(raw)+' '+sourceText).toLowerCase();
+ const conceptHits=[];
+ TROZAL_METADATA_CONCEPTS.forEach(rule=>{
+  const matches=[...analysisText.matchAll(rule.re)];
+  if(matches.length){
+   categoryScores[rule.category]=(categoryScores[rule.category]||0)+matches.length;
+   conceptHits.push({category:rule.category,matchCount:matches.length});
+   rule.terms.forEach(addKeyword);
+  }
+ });
+ // Preserve only meaningful subject terms actually present in the supplied description/labels.
+ const stop=new Set('a an the and or but with without from into onto over under between beside near at by on in of to is are was were be being been this that these those it its their his her they them he she as than then very more most some any all one two three four five six seven eight nine ten scene scenes featuring feature image video visual motion graphic design animation animated artwork illustration render rendered object objects style style of shows showing'.split(' '));
+ const meaningful=(trozalTranslateMetadataText(sourceText).toLowerCase().match(/[a-z0-9]+/g)||[]);
+ meaningful.forEach(word=>{if(word.length>2&&!stop.has(word))addKeyword(word)});
+ TROZAL_METADATA_EXTRA_TERMS.forEach(rule=>{if(rule.re.test(analysisText))rule.terms.forEach(addKeyword)});
+ // Only a medium/type keyword is added when the project is genuinely an animated scene.
+ if(sceneTexts.length||htmlMotionSource||sourceType.includes('svg'))['animated video','motion graphic'].forEach(addKeyword);
+ const ranked=Object.entries(categoryScores).sort((a,b)=>b[1]-a[1]);
+ const category=ranked.length&&ranked[0][1]>ranked[1]?.[1]?ranked[0][0]:(ranked.length===1?ranked[0][0]:'Graphic Resources');
+ const hasVisualEvidence=!!(subject||sceneTexts.length||htmlMotionSource||sourceSvg||svgPieces.length);
+ const hasDescriptiveEvidence=!!(subject||sceneTexts.length||evidence.entries.some(x=>x.kind==='visible-text'||x.kind==='label'));
+ const safeTitle=hasDescriptiveEvidence?title:'';
+ const description=hasDescriptiveEvidence&&translated
+  ?'Animated video featuring '+translated.replace(/[.?!]+$/,'').trim()+'.'
+  :'';
+ $('metadataTitle').value=safeTitle;
+ $('metadataDescription').value=description;
+ $('metadataCategory').value=category;
+ $('metadataKeywords').value=keywords.slice(0,47).join(', ');
+ updateMetadataCount();
+ const sourceLabels=[...new Set(evidence.entries.map(x=>x.label.split(' · ')[0]))];
+ let evidenceLevel='INSUFFICIENT';
+ if(sceneTexts.length||subject.length>=30)evidenceLevel='STRONG TEXT EVIDENCE';
+ else if(hasDescriptiveEvidence)evidenceLevel='LIMITED TEXT EVIDENCE';
+ else if(hasVisualEvidence)evidenceLevel='FILENAME / STRUCTURE ONLY';
+ const evidenceEl=$('metadataEvidence');
+ if(evidenceEl)evidenceEl.textContent='Evidence: '+evidenceLevel+' · Sources: '+(sourceLabels.join(', ')||'none')+' · Matched topics: '+(conceptHits.map(x=>x.category).filter((x,i,a)=>a.indexOf(x)===i).join(', ')||'none');
+ $('metadataStatus').textContent=hasDescriptiveEvidence
+  ?'Metadata dibuat dari deskripsi/label yang tersedia. '+keywords.length+' keyword relevan ditemukan; maksimum 47. Tidak ada kata generik yang ditambahkan hanya untuk mengejar jumlah. Periksa title, deskripsi, kategori, dan keyword sebelum upload.'
+  :'Belum ada deskripsi visual yang cukup. Isi topik atau susun deskripsi tiap scene terlebih dahulu. Sistem tidak akan mengarang judul, deskripsi, atau keyword dari nama file saja.';
 }
 function updateMetadataCount(){const count=$('metadataKeywords').value.split(',').map(x=>x.trim()).filter(Boolean).length;$('metadataKeywordCount').textContent=count+' / 47';$('metadataKeywordCount').style.color=count===47?'#72e6a7':'#ffc36a'}
 $('generateMetadataBtn').addEventListener('click',generateStockMetadata);
