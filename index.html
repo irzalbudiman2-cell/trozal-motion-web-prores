@@ -2182,7 +2182,7 @@ $('exportFrames').onclick=exportCurrentFramePng;
  }
 })();
 function getProject(){
- const ids=['shapeMaskType','shapeMaskMode','shapeMaskSize','shapeMaskRotation','shapeMaskX','shapeMaskY','shapePathColor','shapePathWidth','shapePathData','objectName','duration','fps','resolution','proresMode','animation','speed','intensity','scale','posX','posY','rotation','opacity','bgMode','customBg','effectPreset','effectIntensity','effectColor','particleCount','particleSpeed','format','quality','mp4Crf','renderSpeedMode','textLayerContent','textLayerFont','textLayerWeight','textLayerSize','textLayerColor','textLayerAlign','textLayerTracking','textLayerX','textLayerY','textLayerStart','textLayerDuration','textLayerAnimation','visualMotionPrompt','visualMotionRatio','visualMotionDuration','visualMotionStyle','visualMotionCamera','visualMotionTransition','visualMotionAccent'];
+ const ids=['shapeMaskType','shapeMaskMode','shapeMaskSize','shapeMaskRotation','shapeMaskX','shapeMaskY','shapePathColor','shapePathWidth','shapePathData','objectName','duration','fps','resolution','proresMode','animation','speed','intensity','scale','posX','posY','rotation','opacity','bgMode','customBg','effectPreset','effectIntensity','effectColor','particleCount','particleSpeed','format','quality','mp4Crf','renderSpeedMode','textLayerContent','textLayerFont','textLayerWeight','textLayerSize','textLayerColor','textLayerAlign','textLayerTracking','textLayerX','textLayerY','textLayerStart','textLayerDuration','textLayerAnimation','visualMotionPrompt','visualMotionRatio','visualMotionDuration','visualMotionStyle','visualMotionCamera','visualMotionTransition','visualMotionAccent','metadataPlatform','metadataSubject','metadataTitle','metadataDescription','metadataCategory','metadataKeywords'];
  const checks=['shapeMaskEnabled','shapePathReveal','transparentBg','sparkles','shadow','loop','effectOn','textLayerEnabled','visualMotionParticles','visualMotionDepth'];
  const controls={};ids.forEach(k=>{if($(k))controls[k]=$(k).value});
  checks.forEach(k=>{if($(k))controls[k]=$(k).checked});
@@ -2218,7 +2218,8 @@ function applyProject(p){
  }else if(sourceSvg){setObjectMarkup(sourceSvg)}else if(p.assetDataUrl){setObjectMarkup(`<img alt="Restored asset" src="${p.assetDataUrl}">`)}
  playhead=Math.max(0,Math.min(+$('duration').value||10,Number(p.playhead)||0));const selected=nativeTextLayers.find(x=>x.id===selectedTextLayerId);if(selected)writeTextLayerControls(selected);refreshTextLayerManager();
  updateInfo();applyBackground();renderAt(playhead);refreshTimelineEditor();
- setStatus('Proyek dipulihkan: aset, layer, keyframe, mask, marker, dan Visual Scene Timeline dimuat.');
+ if(typeof updateMetadataCount==='function')updateMetadataCount();
+ setStatus('Proyek dipulihkan: aset, layer, keyframe, mask, marker, Visual Scene Timeline, dan metadata dimuat.');
 }
 function saveProjectFile(){
  const blob=new Blob([JSON.stringify(getProject(),null,2)],{type:'application/json'});
