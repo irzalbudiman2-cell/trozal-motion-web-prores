@@ -715,7 +715,7 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
   </section>
   <section class="panel" id="stockMetadataPanel">
    <h3><b>✦</b> 8. METADATA VIDEO MICROSTOCK</h3>
-   <p class="help">Metadata disusun hanya dari deskripsi prompt, Visual Scene Sequencer, teks/label HTML-SVG, dan nama aset. Generator lokal ini bukan model AI vision: tidak menebak objek dari piksel video. Keyword yang tidak didukung bukti tidak akan ditambahkan hanya untuk memenuhi angka 47.</p>
+   <p class="help">Prioritas utama adalah deskripsi visual yang sudah Anda cocokkan dengan preview/render. Prompt dan rencana scene hanya draf, bukan bukti visual. TROZAL belum membaca piksel dengan AI vision; nama file tidak boleh menjadi dasar klaim isi video.</p>
    <label>Platform tujuan</label>
    <select id="metadataPlatform"><option value="all">Semua platform (Adobe Stock, Dreamstime, Shutterstock)</option><option value="adobe">Adobe Stock</option><option value="dreamstime">Dreamstime</option><option value="shutterstock">Shutterstock</option></select>
    <label>Deskripsi visual yang benar-benar terlihat (prioritas utama)</label><textarea id="metadataSubject" rows="3" placeholder="Contoh: Sebuah cincin berlian berputar perlahan di atas kain beludru hitam. Tuliskan hanya yang benar-benar tampak pada hasil akhir."></textarea>
@@ -3643,7 +3643,7 @@ function trozalExportMetadataCsv(){
  const evidence=quality.analysis.evidence;
  const headers=['Platform','Title','Description','Category','Keywords','Keyword Count','Editorial Score','Evidence Level','Evidence Sources'];
  const values=[$('metadataPlatform').value,$('metadataTitle').value,$('metadataDescription').value,$('metadataCategory').value,
-  keywords.join('|'),keywords.length,quality.score,quality.sourceAvailable?'Descriptive text evidence':'Insufficient descriptive evidence',
+  keywords.join('|'),keywords.length,quality.score,quality.verifiedSourceAvailable?'User-reviewed visual description':quality.sourceAvailable?'Prompt/scene/labels only — unverified draft':'Insufficient descriptive evidence',
   [...new Set(evidence.entries.map(x=>x.label.split(' · ')[0]))].join('; ')];
  const csv='\uFEFF'+headers.map(trozalCsvCell).join(',')+'\r\n'+values.map(trozalCsvCell).join(',')+'\r\n';
  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');
@@ -3774,7 +3774,7 @@ function trozalMetadataRenderScenes(){
  preview.textContent='Scene '+(idx+1)+' · '+(txt||'Deskripsi kosong')+'\nSumber: deskripsi scene yang dimasukkan pengguna/generator. Status: bukti teks, belum diverifikasi dari piksel.';
 }
 function trozalMetadataMakeKeywords(text){
- const stop=new Set('a an the and or but with without from into onto over under between beside near at by on in of to is are was were be being been this that these those it its their his her they them he she as than then very more most some any all one two three four five six seven eight nine ten'.split(' '));
+ const stop=new Set('a an the and or but with without from into onto over under between beside near at by on in of to is are was were be being been this that these those it its their his her they them he she as than then very more most some any all one two three four five six seven eight nine ten scene scenes featuring feature image video visual content graphic design motion animation animated artwork illustration render rendered object objects style shows showing slowly'.split(' '));
  const words=(trozalTranslateMetadataText(String(text||'')).toLowerCase().match(/[a-z0-9]+/g)||[]),seen=new Set(),out=[];
  for(const w of words){const key=trozalMetadataWordKey(w);if(key.length<3||stop.has(key)||seen.has(key))continue;seen.add(key);out.push(w);if(out.length>=47)break}
  return out;
@@ -3793,14 +3793,14 @@ function trozalMetadataRenderBatch(){
 function trozalMetadataAddCurrent(){
  const q=trozalRefreshMetadataQuality(),keywords=String($('metadataKeywords').value||'').split(/[,;\n]+/).map(x=>x.trim()).filter(Boolean);
  const title=$('metadataTitle').value.trim();if(!title){$('metadataBatchSummary').textContent='Judul masih kosong. Buat metadata sebelum menambahkan aset.';return}
- trozalMetadataAddBatch({platform:$('metadataPlatform').value,title,description:$('metadataDescription').value.trim(),category:$('metadataCategory').value,keywords,editorialScore:q.score,evidenceLevel:q.sourceAvailable?'descriptive-text':'insufficient',evidenceSources:[...new Set(q.analysis.evidence.entries.map(x=>x.label.split(' · ')[0]))],scene:'',createdAt:new Date().toISOString()});
+ trozalMetadataAddBatch({platform:$('metadataPlatform').value,title,description:$('metadataDescription').value.trim(),category:$('metadataCategory').value,keywords,editorialScore:q.score,evidenceLevel:q.verifiedSourceAvailable?'user-reviewed-visual-description':q.sourceAvailable?'prompt-or-scene-plan-unverified':'insufficient',evidenceSources:[...new Set(q.analysis.evidence.entries.map(x=>x.label.split(' · ')[0]))],scene:'',createdAt:new Date().toISOString()});
 }
 function trozalMetadataAddScene(){
  const scenes=Array.isArray(visualSceneSequence)?visualSceneSequence:[],idx=Number($('metadataSceneSelect')?.value);
  const scene=scenes[idx],source=trozalMetadataSceneText(scene);if(!scene||!source){$('metadataBatchSummary').textContent='Scene tidak memiliki deskripsi teks. Tidak ada metadata yang dibuat.';return}
- const words=trozalMetadataMakeKeywords(source),title=source.replace(/\s+/g,' ').trim().slice(0,120).replace(/[.!?]+$/,'');
- const description='Animated video showing '+title+'.';
- trozalMetadataAddBatch({platform:$('metadataPlatform').value,title,description,category:$('metadataCategory').value,keywords:words,editorialScore:null,evidenceLevel:'scene-description-only',evidenceSources:['Visual Scene Sequencer · scene '+(idx+1)],scene:'Scene '+(idx+1),createdAt:new Date().toISOString()});
+ const translated=trozalTranslateMetadataText(source).replace(/\s+/g,' ').trim(),words=trozalMetadataMakeKeywords(source),title=trozalTitleCase(translated).slice(0,120).replace(/[.!?]+$/,'');
+ const description=translated+(/[.!?]$/.test(translated)?'':'.');
+ trozalMetadataAddBatch({platform:$('metadataPlatform').value,title,description,category:$('metadataCategory').value,keywords:words,editorialScore:null,evidenceLevel:'scene-plan-unverified',evidenceSources:['Visual Scene Sequencer · scene '+(idx+1)+' · not visually verified'],scene:'Scene '+(idx+1),createdAt:new Date().toISOString()});
 }
 function trozalMetadataDownload(name,data,type){
  const blob=new Blob([data],{type}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
@@ -3815,7 +3815,7 @@ function trozalMetadataExportBatchCsv(){
 }
 function trozalMetadataExportSidecar(){
  if(!trozalMetadataBatch.length){$('metadataBatchSummary').textContent='Batch masih kosong.';return}
- const payload={schema:'trozal-metadata-sidecar-v1',generatedAt:new Date().toISOString(),notice:'Metadata bersumber dari teks/prompt/scene; bukan verifikasi visual AI.',assets:trozalMetadataBatch};
+ const payload={schema:'trozal-metadata-sidecar-v1',generatedAt:new Date().toISOString(),notice:'Metadata bersumber dari teks. Prompt dan rencana scene belum diverifikasi secara visual; hanya deskripsi yang ditandai user-reviewed yang berasal dari pemeriksaan pengguna. Bukan hasil analisis piksel AI.',assets:trozalMetadataBatch};
  trozalMetadataDownload('trozal_metadata_sidecar.json',JSON.stringify(payload,null,2),'application/json');$('metadataBatchSummary').textContent='JSON sidecar diekspor · '+trozalMetadataBatch.length+' aset.';
 }
 $('metadataKeywords')?.addEventListener('input',()=>{trozalMetadataApproved.clear();trozalMetadataRenderReview()});
