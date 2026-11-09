@@ -31,6 +31,31 @@ small,.muted{color:var(--muted)}.row{display:flex;gap:8px;align-items:center}.ro
 .ai-tools textarea{width:100%;min-height:100px;resize:vertical;background:#10131a;color:#e9edf5;border:1px solid #414959;border-radius:7px;padding:9px;font:11px/1.45 ui-monospace,SFMono-Regular,Consolas,monospace}.ai-tools .btnrow{display:flex;gap:6px;margin-top:7px}.ai-tools .btnrow button{flex:1;font-size:11px}.ai-tools .terminal{min-height:180px;border-color:#397c64}.ai-tools .terminal-label{color:#83e8b2}.ai-tools .notice{font-size:10px;color:#aebbd0;margin:6px 0}
 
 
+
+/* VISUAL SCENE SEQUENCER — DISTINCT TEAL FEATURE THEME */
+#visualSceneSequencer{background:linear-gradient(145deg,#123f43 0%,#0a272d 58%,#123b3d 100%);border:1px solid #35b7a8;box-shadow:0 8px 24px #020f12aa,inset 0 1px #c7fff322}
+#visualSceneSequencer h3{color:#adfff0;letter-spacing:.06em}
+#visualSceneSequencer .help,#visualSceneSequencer label{color:#c8f5ed}
+#visualSceneSequencer button{border-color:#328e86}
+#visualSceneSequencer button.primary{background:linear-gradient(135deg,#a5f3e4,#32b7a8);color:#082522}
+#visualSceneSequencer .visual-sequence-summary{margin:8px 0;padding:8px 10px;border:1px solid #287f77;border-radius:7px;background:#082a2a;color:#b8fff0;font-size:10px;line-height:1.5}
+.visual-scene-list{display:grid;gap:8px;margin:8px 0}
+.visual-scene-card{border:1px solid #287d76;border-radius:9px;padding:8px;background:linear-gradient(145deg,#103a3b,#0b292e);box-shadow:inset 0 1px #c7fff20c}
+.visual-scene-card.dragging{opacity:.42;border-style:dashed}
+.visual-scene-card.drag-over{border-color:#b1fff1;box-shadow:0 0 0 2px #52d6c455}
+.visual-scene-head{display:flex;align-items:center;gap:7px;margin-bottom:7px}
+.visual-scene-grip{cursor:grab;color:#9ef5e5;font-size:17px;user-select:none}
+.visual-scene-number{font-size:10px;font-weight:800;color:#b9fff0;letter-spacing:.08em}
+.visual-scene-head .visual-scene-spacer{flex:1}
+.visual-scene-card button{font-size:10px;padding:5px 7px}
+.visual-scene-card textarea{width:100%;min-height:56px;resize:vertical;background:#071c23;color:#effffb;border:1px solid #286c68;border-radius:6px;padding:7px;font:11px/1.45 inherit}
+.visual-scene-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:7px}
+.visual-scene-fields label{display:block;font-size:9px;color:#a7e8dc;margin-bottom:3px}
+.visual-scene-fields input,.visual-scene-fields select{width:100%;min-width:0;background:#071c23;color:#eafffa;border:1px solid #286c68;border-radius:6px;padding:6px;font-size:10px}
+.visual-scene-card .scene-actions{display:flex;gap:4px}
+.visual-scene-card .scene-actions button{min-width:28px}
+@media(max-width:520px){.visual-scene-fields{grid-template-columns:1fr 1fr}.visual-scene-head{gap:4px}}
+
 /* PROMPT-TO-VISUAL — DISTINCT VIOLET FEATURE THEME */
 #textToAnimationPanel{background:linear-gradient(145deg,#38205e 0%,#1b1035 58%,#30164c 100%);border:1px solid #925be0;box-shadow:0 8px 24px #10051faa,inset 0 1px #ead5ff22}
 #textToAnimationPanel h3{color:#e4c7ff;letter-spacing:.07em}
@@ -424,6 +449,16 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
    <p class="notice">Generator lokal ini membuat ilustrasi vektor SVG prosedural berdasarkan kata kunci prompt lalu menganimasikannya dengan CSS. Ini belum memakai model AI eksternal untuk membuat foto/video fotorealistis; hasil visual dapat diedit dan dirender oleh mesin ekspor TROZAL.</p>
   </section>
 
+
+<section class="panel ai-tools" id="visualSceneSequencer">
+ <h3>▰ VISUAL SCENE SEQUENCER · TIMELINE</h3>
+ <p class="help">Atur setiap adegan visual secara terpisah. Urutan dapat diubah dengan drag-and-drop, durasi dapat berbeda, dan setiap adegan memiliki transisi, gerakan kamera, serta gaya visual sendiri.</p>
+ <div class="btnrow"><button type="button" class="primary" id="buildVisualSequenceBtn">✦ SUSUN ADEGAN DARI PROMPT</button><button type="button" id="addVisualSceneBtn">＋ TAMBAH ADEGAN</button></div>
+ <div class="visual-sequence-summary" id="visualSceneTimelineSummary">Belum ada adegan. Masukkan prompt pada panel ungu lalu susun adegan di sini.</div>
+ <div id="visualSceneList" class="visual-scene-list"></div>
+ <div class="btnrow"><button type="button" class="primary" id="generateVisualSequenceBtn">▶ GENERATE DARI TIMELINE</button><button type="button" id="clearVisualSequenceBtn">Kosongkan Timeline</button></div>
+ <p class="notice">Pengaturan pada timeline ini akan dipakai saat membuat HTML visual. Total durasi hasil mengikuti jumlah durasi seluruh adegan, bukan lagi durasi default generator.</p>
+</section>
 <section class="panel ai-tools" id="motionPresetLibrary"><h3><b>✦</b> 6. MOTION PRESET LIBRARY</h3>
    <p class="help">Pilih preset untuk menerapkan gerakan yang sesuai dengan jenis objek. Background dan dekorasi tetap diam; teks dan objek utama mendapat gerakan berbeda.</p>
    <div class="preset-grid">
@@ -2254,13 +2289,104 @@ function setAiStatus(t){$('aiModeStatus').textContent=t}
 /* TEXT TO ANIMATION: imagination-driven multi-scene kinetic typography generator. */
 function textMotionEscape(v){return String(v||'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
 function textMotionWords(text){return String(text||'').trim().split(/\s+/).filter(Boolean).map((w,i)=>'<span class="word" style="--wi:'+i+'">'+textMotionEscape(w)+'</span>').join(' ');}
-function visualMotionScenes(){
+let visualSceneSequence=[];
+let visualSceneDragIndex=-1;
+function visualMotionPromptLines(){
  const raw=$('visualMotionPrompt').value.trim();
- let lines=raw?raw.split(/\n{1,}/).map(x=>x.trim()).filter(Boolean):[];
+ let lines=raw?raw.split(/\n+/).map(x=>x.trim()).filter(Boolean):[];
  if(lines.length<=1&&raw)lines=raw.split(/(?<=[.!?])\s+/).map(x=>x.trim()).filter(Boolean);
  if(!lines.length&&raw)lines=[raw];
- if(!lines.length)lines=['A luminous futuristic city at night with flying vehicles and glowing towers'];
  return lines.slice(0,12);
+}
+function visualMotionSceneDefaults(lines){
+ const total=Math.max(5,Math.min(60,+$('visualMotionDuration').value||15));
+ const dur=Math.max(.5,Math.round((total/Math.max(1,lines.length))*10)/10);
+ return lines.slice(0,12).map((text,i)=>({id:'scene-'+Date.now()+'-'+i,text,duration:dur,transition:$('visualMotionTransition').value||'crossfade',camera:$('visualMotionCamera').value||'parallax',style:$('visualMotionStyle').value||'cinematic'}));
+}
+function visualMotionSceneDurationTotal(){
+ return visualSceneSequence.reduce((sum,item)=>sum+Math.max(.5,Math.min(60,Number(item.duration)||1)),0);
+}
+function updateVisualSceneSequenceSummary(){
+ const el=$('visualSceneTimelineSummary');if(!el)return;
+ const total=visualMotionSceneDurationTotal();
+ const count=visualSceneSequence.length;
+ el.textContent=count?count+' adegan · '+total.toFixed(1)+' detik total · '+visualSceneSequence.map((x,i)=>(i+1)+': '+(Number(x.duration)||0).toFixed(1)+'s').join('  /  '):'Belum ada adegan. Klik “Susun Adegan dari Prompt” untuk membuat timeline.';
+}
+function visualSceneField(label,type,value,options){
+ const wrap=document.createElement('div'),lab=document.createElement('label'),field=document.createElement(type==='textarea'?'textarea':type);
+ lab.textContent=label;wrap.appendChild(lab);
+ if(type==='select'){
+  (options||[]).forEach(opt=>{const o=document.createElement('option');o.value=opt[0];o.textContent=opt[1];field.appendChild(o);});
+  field.value=value;
+ }else if(type==='textarea'){field.value=value||'';field.rows=2;}
+ else{field.type=type;field.value=value; if(type==='number'){field.min='.5';field.max='60';field.step='.5';}}
+ wrap.appendChild(field);return {wrap,field};
+}
+function renderVisualSceneSequence(){
+ const host=$('visualSceneList');if(!host)return;host.replaceChildren();
+ visualSceneSequence.forEach((item,index)=>{
+  const card=document.createElement('article');card.className='visual-scene-card';card.draggable=true;card.dataset.index=String(index);
+  const head=document.createElement('div');head.className='visual-scene-head';
+  const grip=document.createElement('span');grip.className='visual-scene-grip';grip.textContent='⠿';grip.title='Seret untuk mengubah urutan';
+  const num=document.createElement('span');num.className='visual-scene-number';num.textContent='ADEGAN '+String(index+1).padStart(2,'0');
+  const spacer=document.createElement('span');spacer.className='visual-scene-spacer';
+  const actions=document.createElement('div');actions.className='scene-actions';
+  const up=document.createElement('button');up.type='button';up.textContent='↑';up.title='Pindah ke atas';up.disabled=index===0;
+  up.addEventListener('click',()=>moveVisualScene(index,index-1));
+  const down=document.createElement('button');down.type='button';down.textContent='↓';down.title='Pindah ke bawah';down.disabled=index===visualSceneSequence.length-1;
+  down.addEventListener('click',()=>moveVisualScene(index,index+1));
+  const del=document.createElement('button');del.type='button';del.textContent='✕';del.title='Hapus adegan';
+  del.addEventListener('click',()=>{visualSceneSequence.splice(index,1);renderVisualSceneSequence();});
+  actions.append(up,down,del);head.append(grip,num,spacer,actions);card.appendChild(head);
+  const description=visualSceneField('DESKRIPSI VISUAL','textarea',item.text);
+  description.field.placeholder='Deskripsikan gambar, objek, karakter, suasana, atau sudut pandang kamera…';
+  description.field.addEventListener('input',()=>{item.text=description.field.value;});
+  card.appendChild(description.wrap);
+  const fields=document.createElement('div');fields.className='visual-scene-fields';
+  const duration=visualSceneField('DURASI ADEGAN (DETIK)','number',item.duration);
+  duration.field.addEventListener('input',()=>{item.duration=Math.max(.5,Math.min(60,Number(duration.field.value)||.5));updateVisualSceneSequenceSummary();});
+  const transition=visualSceneField('TRANSISI MASUK','select',item.transition,[['crossfade','Crossfade'],['slide','Slide'],['zoom','Zoom'],['glitch','Glitch'],['cut','Hard Cut']]);
+  transition.field.addEventListener('change',()=>item.transition=transition.field.value);
+  const camera=visualSceneField('GERAKAN KAMERA','select',item.camera,[['parallax','Parallax'],['pan','Pan'],['orbit','Orbit'],['follow','Follow'],['locked','Static']]);
+  camera.field.addEventListener('change',()=>item.camera=camera.field.value);
+  const style=visualSceneField('GAYA VISUAL','select',item.style,[['cinematic','Cinematic'],['illustration','2D Illustration'],['neon','Neon / Sci-Fi'],['papercut','Paper Cut']]);
+  style.field.addEventListener('change',()=>item.style=style.field.value);
+  fields.append(duration.wrap,transition.wrap,camera.wrap,style.wrap);card.appendChild(fields);
+  card.addEventListener('dragstart',e=>{visualSceneDragIndex=index;card.classList.add('dragging');if(e.dataTransfer){e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',String(index));}});
+  card.addEventListener('dragend',()=>{visualSceneDragIndex=-1;host.querySelectorAll('.visual-scene-card').forEach(x=>x.classList.remove('dragging','drag-over'));});
+  card.addEventListener('dragover',e=>{e.preventDefault();card.classList.add('drag-over');if(e.dataTransfer)e.dataTransfer.dropEffect='move';});
+  card.addEventListener('dragleave',()=>card.classList.remove('drag-over'));
+  card.addEventListener('drop',e=>{e.preventDefault();card.classList.remove('drag-over');const from=visualSceneDragIndex>=0?visualSceneDragIndex:Number(e.dataTransfer?.getData('text/plain'));if(Number.isInteger(from)&&from>=0)moveVisualScene(from,index);});
+  host.appendChild(card);
+ });
+ updateVisualSceneSequenceSummary();
+}
+function moveVisualScene(from,to){
+ if(from<0||to<0||from>=visualSceneSequence.length||to>=visualSceneSequence.length||from===to)return;
+ const moved=visualSceneSequence.splice(from,1)[0];visualSceneSequence.splice(to,0,moved);renderVisualSceneSequence();
+}
+function buildVisualSceneSequenceFromPrompt(){
+ const lines=visualMotionPromptLines();
+ if(!lines.length){$('visualMotionStatus').textContent='Isi prompt visual terlebih dahulu, lalu susun adegannya.';return;}
+ visualSceneSequence=visualMotionSceneDefaults(lines);renderVisualSceneSequence();
+ $('visualMotionStatus').textContent='Timeline dibuat dari '+visualSceneSequence.length+' deskripsi visual. Edit isi, durasi, kamera, dan transisi tiap adegan.';
+}
+$('buildVisualSequenceBtn').addEventListener('click',buildVisualSceneSequenceFromPrompt);
+$('addVisualSceneBtn').addEventListener('click',()=>{
+ if(visualSceneSequence.length>=12){$('visualMotionStatus').textContent='Maksimal 12 adegan untuk satu timeline.';return;}
+ visualSceneSequence.push({id:'scene-'+Date.now(),text:'Adegan visual baru — jelaskan objek dan lingkungannya',duration:3,transition:'crossfade',camera:'parallax',style:$('visualMotionStyle').value||'cinematic'});
+ renderVisualSceneSequence();
+});
+$('clearVisualSequenceBtn').addEventListener('click',()=>{visualSceneSequence=[];renderVisualSceneSequence();$('visualMotionStatus').textContent='Timeline adegan dikosongkan.';});
+$('generateVisualSequenceBtn').addEventListener('click',()=>{
+ if(!visualSceneSequence.length)buildVisualSceneSequenceFromPrompt();
+ if(visualSceneSequence.length)$('generateVisualMotionBtn').click();
+});
+
+function visualMotionScenes(){
+ if(visualSceneSequence.length)return visualSceneSequence.map(x=>String(x.text||'').trim()).filter(Boolean).slice(0,12);
+ const lines=visualMotionPromptLines();
+ return lines.length?lines:['A luminous futuristic city at night with flying vehicles and glowing towers'];
 }
 function visualMotionSvg(description,index,style,accent,depth){
  const t=String(description||'').toLowerCase(),id='v'+index;
@@ -2334,28 +2460,40 @@ function visualMotionSvg(description,index,style,accent,depth){
  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Visual scene '+(index+1)+'">'+defs+sky+back+mid+front+hero+weather+atmosphere+'</svg>';
 }
 function buildVisualMotionHtml(){
- const prompt=$('visualMotionPrompt').value.trim(),scenes=visualMotionScenes();
- if(!prompt)throw new Error('Masukkan text prompt visual terlebih dahulu.');
- const ratio=$('visualMotionRatio').value,total=Math.max(5,Math.min(60,+$('visualMotionDuration').value||15));
- const parts=ratio.split(':').map(Number),aspect=(parts[0]||16)/(parts[1]||9);
- const style=$('visualMotionStyle').value,camera=$('visualMotionCamera').value,transition=$('visualMotionTransition').value;
+ const prompt=$('visualMotionPrompt').value.trim();
+ const fallback=visualMotionScenes();
+ if(!prompt&&!visualSceneSequence.length)throw new Error('Masukkan text prompt visual terlebih dahulu.');
+ const ratio=$('visualMotionRatio').value,parts=ratio.split(':').map(Number),aspect=(parts[0]||16)/(parts[1]||9);
+ const globalStyle=$('visualMotionStyle').value,globalCamera=$('visualMotionCamera').value,globalTransition=$('visualMotionTransition').value;
  const accent=$('visualMotionAccent').value,particles=$('visualMotionParticles').checked,depth=$('visualMotionDepth').checked;
- const sceneDur=total/scenes.length;
- const cameraCss=camera==='locked'?'none':camera==='pan'?'cameraPan':camera==='orbit'?'cameraOrbit':camera==='follow'?'cameraFollow':'cameraParallax';
- const sceneTime=total+'s';
- const html='<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TROZAL Visual Motion</title><style>'+
- '*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080913;display:grid;place-items:center}.stage{position:relative;width:min(100vw,calc(100vh * '+aspect+'));height:min(100vh,calc(100vw / '+aspect+'));aspect-ratio:'+parts[0]+'/'+parts[1]+';overflow:hidden;isolation:isolate;background:#10192b}.scene{position:absolute;inset:0;opacity:0;animation-duration:'+sceneTime+';animation-timing-function:linear;animation-iteration-count:infinite}.art{position:absolute;inset:-5%;width:110%;height:110%;transform-origin:center;animation:'+cameraCss+' '+sceneTime+' ease-in-out infinite alternate}.art svg{width:100%;height:100%;display:block}.paper{filter:saturate(.82) contrast(1.05)}.hero{transform-box:fill-box;transform-origin:center;animation:heroFloat 3.8s ease-in-out infinite alternate}.cloud{animation:cloudDrift 17s linear infinite}.star{animation:twinkle 2.8s ease-in-out infinite alternate}.wave{animation:waveDrift 5s ease-in-out infinite alternate;transform-box:fill-box}.wheel{transform-box:fill-box;transform-origin:center;animation:wheelSpin 1.2s linear infinite}.snow{animation:snowFall 5s linear infinite}.ambient{position:absolute;left:var(--x);top:var(--y);width:var(--d);height:var(--d);border-radius:50%;background:'+accent+';box-shadow:0 0 12px '+accent+';opacity:0;animation:floatParticle 5s ease-in-out var(--delay) infinite}.scene:nth-child(even) .ambient{animation-direction:alternate}.stage:after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 45%,#05071388 100%);z-index:5}.scene .art{filter:'+ (style==='neon'?'saturate(1.35) drop-shadow(0 0 9px '+accent+'55)':style==='illustration'?'saturate(1.2)':'saturate(1.02)')+'}'+
- '@keyframes heroFloat{0%{transform:translate3d(-1.2%,1.2%,0) rotate(-1deg)}100%{transform:translate3d(1.8%,-2%,0) rotate(1.5deg)}}@keyframes cloudDrift{from{translate:-3% 0}to{translate:5% 0}}@keyframes twinkle{from{opacity:.18}to{opacity:1}}@keyframes waveDrift{from{transform:translateY(9px)}to{transform:translateY(-12px)}}@keyframes wheelSpin{to{transform:rotate(360deg)}}@keyframes snowFall{from{transform:translateY(-30px)}to{transform:translateY(40px)}}@keyframes floatParticle{0%{opacity:0;transform:translateY(24px)}45%{opacity:.8}100%{opacity:0;transform:translateY(-34px)}}@keyframes cameraPan{from{transform:scale(1.04) translateX(-1.8%)}to{transform:scale(1.1) translateX(1.8%)}}@keyframes cameraOrbit{from{transform:scale(1.05) rotate(-.8deg)}to{transform:scale(1.11) rotate(.8deg)}}@keyframes cameraFollow{from{transform:scale(1.08) translateX(2%)}to{transform:scale(1.12) translateX(-2%)}}@keyframes cameraParallax{from{transform:scale(1.05) translate3d(-1%,-.6%,0)}to{transform:scale(1.12) translate3d(1%,.8%,0)}}'+
- '@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-delay:0ms!important}}'+
- '</style></head><body><main class="stage">'+scenes.map((s,i)=>'<article class="scene scene-'+i+'" style="animation-name:scene-'+i+'"><div class="art '+(style==='papercut'?'paper':'')+'">'+visualMotionSvg(s,i,style,accent,depth)+'</div>'+(particles?'<div class="atmosphere">'+Array.from({length:18},(_,n)=>'<i class="ambient" style="--x:'+((n*41+5)%100)+'%;--y:'+((n*57+13)%100)+'%;--d:'+(2+n%4)+'px;--delay:'+(n%6*.33)+'s"></i>').join('')+'</div>':'')+'</article>').join('')+'</main></body></html>';
- const kfBlocks=scenes.map((scene,i)=>{
-  const begin=i/scenes.length*100,end=(i+1)/scenes.length*100,fade=transition==='cut'?.12:transition==='slide'||transition==='zoom'?1.8:2.6;
-  const enter=transition==='slide'?'translateX(5%)':transition==='zoom'?'scale(1.12)':transition==='glitch'?'translateX(-1.4%)':'translateX(0)';
-  const exit=transition==='slide'?'translateX(-5%)':transition==='zoom'?'scale(.94)':transition==='glitch'?'translateX(1.4%)':'translateX(0)';
-  return '@keyframes scene-'+i+'{0%,'+begin.toFixed(3)+'%{opacity:0;transform:'+enter+'}'+(begin+fade).toFixed(3)+'%{opacity:1;transform:translate(0,0) scale(1)}'+(end-fade).toFixed(3)+'%{opacity:1;transform:translate(0,0) scale(1)}'+end.toFixed(3)+'%,100%{opacity:0;transform:'+exit+'}}';
+ const items=visualSceneSequence.length?visualSceneSequence.map(x=>({...x})):fallback.map((text,i)=>({text,duration:Math.max(1,(+$('visualMotionDuration').value||15)/fallback.length),transition:globalTransition,camera:globalCamera,style:globalStyle}));
+ const total=items.reduce((sum,x)=>sum+Math.max(.5,Math.min(60,Number(x.duration)||1)),0);
+ let elapsed=0;
+ const sceneMarkup=items.map((item,i)=>{
+  const d=Math.max(.5,Math.min(60,Number(item.duration)||1)),start=elapsed;elapsed+=d;
+  const camera=item.camera||globalCamera,style=item.style||globalStyle,transition=item.transition||globalTransition;
+  const cameraName=camera==='locked'?'none':camera==='pan'?'cameraPan':camera==='orbit'?'cameraOrbit':camera==='follow'?'cameraFollow':'cameraParallax';
+  const safeDuration=d.toFixed(2)+'s',safeDelay=(-start).toFixed(2)+'s';
+  const svg=visualMotionSvg(item.text||'',i,style,accent,depth);
+  const particleLayer=particles?Array.from({length:18},(_,n)=>'<i class="ambient" style="--x:'+((n*41+5)%100)+'%;--y:'+((n*57+13)%100)+'%;--d:'+(2+n%4)+'px;--delay:'+(n%6*.33)+'s"></i>').join(''):'';
+  return '<article class="scene scene-'+i+'" style="animation-name:scene-'+i+'"><div class="art '+(style==='papercut'?'paper':'')+'" style="animation-name:'+cameraName+';animation-duration:'+safeDuration+';animation-delay:'+safeDelay+'">'+svg+'</div>'+(particles?'<div class="atmosphere">'+particleLayer+'</div>':'')+'</article>';
  }).join('');
- const safeHtml=html.replace('</style>',kfBlocks+'</style>');
- return {html:safeHtml,scenes:scenes.length,duration:total,ratio};
+ const kfBlocks=items.map((item,i)=>{
+  const d=Math.max(.5,Math.min(60,Number(item.duration)||1)),start=items.slice(0,i).reduce((sum,x)=>sum+Math.max(.5,Math.min(60,Number(x.duration)||1)),0),end=start+d;
+  const pctStart=start/total*100,pctEnd=end/total*100;
+  const trans=item.transition||globalTransition,fade=trans==='cut'?0.015:Math.min(.55,d*.22);
+  const enter=trans==='slide'?'translateX(5%)':trans==='zoom'?'scale(1.12)':trans==='glitch'?'translateX(-1.4%)':'translateX(0)';
+  const exit=trans==='slide'?'translateX(-5%)':trans==='zoom'?'scale(.94)':trans==='glitch'?'translateX(1.4%)':'translateX(0)';
+  const inPct=Math.min(pctEnd,pctStart+fade/total*100),outPct=Math.max(pctStart,pctEnd-fade/total*100);
+  return '@keyframes scene-'+i+'{0%,'+pctStart.toFixed(4)+'%{opacity:0;transform:'+enter+'}'+inPct.toFixed(4)+'%{opacity:1;transform:translate(0,0) scale(1)}'+outPct.toFixed(4)+'%{opacity:1;transform:translate(0,0) scale(1)}'+pctEnd.toFixed(4)+'%,100%{opacity:0;transform:'+exit+'}}';
+ }).join('');
+ const camCss='@keyframes cameraPan{from{transform:scale(1.04) translateX(-1.8%)}to{transform:scale(1.1) translateX(1.8%)}}@keyframes cameraOrbit{from{transform:scale(1.05) rotate(-.8deg)}to{transform:scale(1.11) rotate(.8deg)}}@keyframes cameraFollow{from{transform:scale(1.08) translateX(2%)}to{transform:scale(1.12) translateX(-2%)}}@keyframes cameraParallax{from{transform:scale(1.05) translate3d(-1%,-.6%,0)}to{transform:scale(1.12) translate3d(1%,.8%,0)}}';
+ const html='<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TROZAL Visual Motion</title><style>'+
+ '*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080913;display:grid;place-items:center}.stage{position:relative;width:min(100vw,calc(100vh * '+aspect+'));height:min(100vh,calc(100vw / '+aspect+'));aspect-ratio:'+parts[0]+'/'+parts[1]+';overflow:hidden;isolation:isolate;background:#10192b}.scene{position:absolute;inset:0;opacity:0;animation-duration:'+total.toFixed(2)+'s;animation-timing-function:linear;animation-iteration-count:infinite}.art{position:absolute;inset:-5%;width:110%;height:110%;transform-origin:center}.art svg{width:100%;height:100%;display:block}.paper{filter:saturate(.82) contrast(1.05)}.hero{transform-box:fill-box;transform-origin:center;animation:heroFloat 3.8s ease-in-out infinite alternate}.cloud{animation:cloudDrift 17s linear infinite}.star{animation:twinkle 2.8s ease-in-out infinite alternate}.wave{animation:waveDrift 5s ease-in-out infinite alternate;transform-box:fill-box}.wheel{transform-box:fill-box;transform-origin:center;animation:wheelSpin 1.2s linear infinite}.snow{animation:snowFall 5s linear infinite}.ambient{position:absolute;left:var(--x);top:var(--y);width:var(--d);height:var(--d);border-radius:50%;background:'+accent+';box-shadow:0 0 12px '+accent+';opacity:0;animation:floatParticle 5s ease-in-out var(--delay) infinite}.scene:nth-child(even) .ambient{animation-direction:alternate}.stage:after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 45%,#05071388 100%);z-index:5}.scene .art{filter:'+ (globalStyle==='neon'?'saturate(1.35) drop-shadow(0 0 9px '+accent+'55)':globalStyle==='illustration'?'saturate(1.2)':'saturate(1.02)')+'}'+
+ '@keyframes heroFloat{0%{transform:translate3d(-1.2%,1.2%,0) rotate(-1deg)}100%{transform:translate3d(1.8%,-2%,0) rotate(1.5deg)}}@keyframes cloudDrift{from{translate:-3% 0}to{translate:5% 0}}@keyframes twinkle{from{opacity:.18}to{opacity:1}}@keyframes waveDrift{from{transform:translateY(9px)}to{transform:translateY(-12px)}}@keyframes wheelSpin{to{transform:rotate(360deg)}}@keyframes snowFall{from{transform:translateY(-30px)}to{transform:translateY(40px)}}@keyframes floatParticle{0%{opacity:0;transform:translateY(24px)}45%{opacity:.8}100%{opacity:0;transform:translateY(-34px)}}'+camCss+
+ sceneMarkup+kfBlocks+'@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-delay:0ms!important}}'+
+ '</style></head><body><main class="stage">'+sceneMarkup+'</main></body></html>';
+ return {html,scenes:items.length,duration:total,ratio};
 }
 $('generateVisualMotionBtn').addEventListener('click',()=>{
  const btn=$('generateVisualMotionBtn');btn.disabled=true;
