@@ -718,14 +718,17 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
    <p class="help">Metadata disusun hanya dari deskripsi prompt, Visual Scene Sequencer, teks/label HTML-SVG, dan nama aset. Generator lokal ini bukan model AI vision: tidak menebak objek dari piksel video. Keyword yang tidak didukung bukti tidak akan ditambahkan hanya untuk memenuhi angka 47.</p>
    <label>Platform tujuan</label>
    <select id="metadataPlatform"><option value="all">Semua platform (Adobe Stock, Dreamstime, Shutterstock)</option><option value="adobe">Adobe Stock</option><option value="dreamstime">Dreamstime</option><option value="shutterstock">Shutterstock</option></select>
-   <label>Deskripsi visual yang sudah diperiksa (Bahasa Indonesia atau Inggris)</label><textarea id="metadataSubject" rows="3" placeholder="Jelaskan objek utama, aksi, lokasi, suasana, dan elemen yang benar-benar terlihat. Prompt Visual Scene Sequencer juga dibaca otomatis."></textarea>
-   <div id="metadataEvidence" class="metadata-evidence">Sumber bukti akan ditampilkan setelah metadata dianalisis.</div>
+   <label>Deskripsi visual yang benar-benar terlihat (prioritas utama)</label><textarea id="metadataSubject" rows="3" placeholder="Contoh: Sebuah cincin berlian berputar perlahan di atas kain beludru hitam. Tuliskan hanya yang benar-benar tampak pada hasil akhir."></textarea>
+   <p class="help">Isi kolom ini setelah memeriksa preview atau hasil render. Prompt AI dan rencana scene hanya menunjukkan niat pembuatan, bukan bukti bahwa objek benar-benar muncul.</p>
+   <div id="metadataEvidence" class="metadata-evidence">Belum dianalisis. Sistem akan memisahkan deskripsi terverifikasi, prompt/rencana, dan teks SVG/HTML.</div>
    <div id="metadataPlatformValidation" class="metadata-evidence">Pilih platform untuk melihat pemeriksaan judul dan keyword.</div>
    <div class="row" style="margin-top:8px"><button class="primary" id="generateMetadataBtn" type="button">✦ ANALISIS & GENERATE METADATA</button><button id="clearMetadataBtn" type="button">Bersihkan</button></div>
-   <label>Title (English)</label><input id="metadataTitle" type="text" placeholder="Video title for stock marketplace">
-   <label>Description (English)</label><textarea id="metadataDescription" rows="3" placeholder="Describe the visual content and motion..."></textarea>
+   <label>Judul (English)</label><input id="metadataTitle" type="text" placeholder="English title — review against the actual visual">
+   <p class="help">Judul otomatis adalah draf. Periksa subjek, aksi, jumlah objek, dan latar sebelum digunakan.</p>
+   <label>Deskripsi (English)</label><textarea id="metadataDescription" rows="3" placeholder="English description based only on the supplied visual description..."></textarea>
    <label>Category</label><select id="metadataCategory"><option>Graphic Resources</option><option>Technology</option><option>Business</option><option>Education</option><option>Science</option><option>Nature</option><option>Culture and Religion</option><option>Celebration</option><option>Backgrounds and Textures</option><option>Lifestyle</option><option>Food</option><option>Sports</option><option>Travel</option><option>Industry</option><option>People</option><option>Plants and Flowers</option><option>Buildings and Architecture</option><option>Transportation</option><option>Environment</option></select>
-   <label>Keywords <span class="value" id="metadataKeywordCount">0 / 47 maks.</span></label><textarea id="metadataKeywords" rows="4" placeholder="Hanya keyword yang didukung deskripsi visual; maksimum 47"></textarea>
+   <label>Kata kunci (English) <span class="value" id="metadataKeywordCount">0 / 47 maks.</span></label><textarea id="metadataKeywords" rows="4" placeholder="Kata kunci spesifik yang benar-benar menggambarkan visual"></textarea>
+   <p class="help">Jumlah boleh kurang dari 47. Kata kunci umum atau hasil tebakan tidak ditambahkan hanya untuk memenuhi kuota.</p>
    <div class="row" style="margin-top:8px"><button type="button" data-copy-meta="metadataTitle">Copy Title</button><button type="button" data-copy-meta="metadataDescription">Copy Description</button></div>
    <div class="row"><button type="button" data-copy-meta="metadataCategory">Copy Category</button><button type="button" data-copy-meta="metadataKeywords">Copy Keywords</button></div>
    <button type="button" class="green" id="copyAllMetadataBtn" style="width:100%;margin-top:7px">Copy All Metadata</button>
@@ -3319,11 +3322,11 @@ function trozalMetadataEvidence(){
   const text=String(value||'').replace(/\s+/g,' ').trim();
   if(text)entries.push({label,text,kind});
  };
- add('Deskripsi visual pengguna',$('metadataSubject')?.value||'','prompt');
- add('Prompt-to-Visual',$('visualMotionPrompt')?.value||'','visual-prompt');
- add('Nama aset/proyek',$('objectName')?.value||'','filename');
+ add('Deskripsi visual yang diperiksa pengguna',$('metadataSubject')?.value||'','verified-description');
+ add('Prompt-to-Visual (niat pembuatan, belum diverifikasi)',$('visualMotionPrompt')?.value||'','prompt-intent');
+ add('Nama aset/proyek (bukan bukti visual)',$('objectName')?.value||'','filename');
  if(Array.isArray(visualSceneSequence)&&visualSceneSequence.length){
-  visualSceneSequence.forEach((scene,i)=>add('Visual Scene '+(i+1),scene.text,'scene'));
+  visualSceneSequence.forEach((scene,i)=>add('Rencana Scene '+(i+1)+' (belum diverifikasi secara visual)',scene.text,'scene-plan'));
  }
  const collect=(root,label)=>{
   if(!root)return;
@@ -3494,72 +3497,66 @@ function trozalUpdateMetadataPlatformValidation(){
 }
 function generateStockMetadata(){
  const evidence=trozalMetadataEvidence();
- const raw=evidence.text;
- const sceneTexts=Array.isArray(visualSceneSequence)?visualSceneSequence.map(x=>String(x.text||'').trim()).filter(Boolean):[];
- const subject=String($('metadataSubject')?.value||'').trim();
- const promptText=String($('visualMotionPrompt')?.value||'').trim();
- const platform=$('metadataPlatform')?.value||'all';
- const sourceParts=[subject,promptText,...sceneTexts].map(x=>String(x||'').replace(/\s+/g,' ').trim()).filter(Boolean);const sourceSeen=new Set();const sourceText=sourceParts.filter(x=>{const k=x.toLowerCase();if(sourceSeen.has(k))return false;sourceSeen.add(k);return true;}).join('. ')||raw;
+ const subject=String($('metadataSubject')?.value||'').replace(/\\s+/g,' ').trim();
+ const promptText=String($('visualMotionPrompt')?.value||'').replace(/\\s+/g,' ').trim();
+ const sceneTexts=Array.isArray(visualSceneSequence)?visualSceneSequence.map(x=>String(x.text||'').replace(/\\s+/g,' ').trim()).filter(Boolean):[];
+ const readable=evidence.entries.filter(x=>x.kind==='visible-text'||x.kind==='label').map(x=>x.text).filter(Boolean);
+ // Strict source priority: reviewed visual description > scene plan > generation prompt > readable labels.
+ const sourceKind=subject?'verified-description':sceneTexts.length?'scene-plan':promptText?'prompt-intent':readable.length?'readable-labels':'none';
+ const sourceText=subject||sceneTexts.join('. ')||promptText||readable.join('. ');
  const translated=trozalTranslateMetadataText(sourceText);
- const firstSentence=(translated.split(/(?<=[.!?])\s+/)[0]||translated).replace(/[|]+/g,' ').replace(/\s+/g,' ').replace(/\s+([,.;:!?])/g,'$1').replace(/^[,.;:]+|[,.;:]+$/g,'').trim();
- const title=trozalMetadataTitleFromEvidence(sourceText,translated,firstSentence);
+ const cleanTranslated=translated.replace(/[|]+/g,' ').replace(/\\s+/g,' ').replace(/\\s+([,.;:!?])/g,'$1').replace(/^[,.;:]+|[,.;:]+$/g,'').trim();
+ const firstSentence=(cleanTranslated.split(/(?<=[.!?])\\s+/)[0]||cleanTranslated).trim();
+ const title=trozalMetadataTitleFromEvidence(sourceText,cleanTranslated,firstSentence);
  const categoryScores={};
  const keywords=[],seen=new Set();
+ const sourceWords=(cleanTranslated.toLowerCase().match(/[a-z0-9]+/g)||[]).map(trozalMetadataWordKey);
+ const sourceSet=new Set(sourceWords);
+ const stop=new Set('a an the and or but with without from into onto over under between beside near at by on in of to is are was were be being been this that these those it its their his her they them he she as than then very more most some any all one two three four five six seven eight nine ten scene scenes featuring feature image video visual motion graphic design animation animated artwork illustration render rendered object objects style shows showing'.split(' '));
  const addKeyword=value=>{
-  const word=String(value||'').toLowerCase().replace(/[_-]+/g,' ').replace(/\s+/g,' ').replace(/^[,.;:]+|[,.;:]+$/g,'').trim();
+  const word=String(value||'').toLowerCase().replace(/[_-]+/g,' ').replace(/\\s+/g,' ').replace(/^[,.;:]+|[,.;:]+$/g,'').trim();
   if(!word||word.length<3||word.length>45||seen.has(word))return;
-  if(/^(the|and|for|with|from|into|over|under|between|this|that|there|their|your|video|visual|content|scene|scenes|image|graphic|design|motion|animated|animation|claus)$/i.test(word))return;
+  const tokens=(word.match(/[a-z0-9]+/g)||[]).map(trozalMetadataWordKey).filter(x=>x&&!stop.has(x));
+  // Every meaningful word must be supported by the chosen source text. No broad inferred synonyms.
+  if(!tokens.length||!tokens.every(token=>sourceSet.has(token)))return;
   seen.add(word);keywords.push(word);
  };
- const analysisText=(trozalTranslateMetadataText(raw)+' '+sourceText).toLowerCase();
  const conceptHits=[];
  TROZAL_METADATA_CONCEPTS.forEach(rule=>{
-  const matches=[...analysisText.matchAll(rule.re)];
+  const matches=[...cleanTranslated.toLowerCase().matchAll(rule.re)];
   if(matches.length){
    categoryScores[rule.category]=(categoryScores[rule.category]||0)+matches.length*(rule.priority||1);
    conceptHits.push({category:rule.category,matchCount:matches.length});
    rule.terms.forEach(addKeyword);
   }
  });
- // Preserve only meaningful subject terms actually present in the supplied description/labels.
- const stop=new Set('a an the and or but with without from into onto over under between beside near at by on in of to is are was were be being been this that these those it its their his her they them he she as than then very more most some any all one two three four five six seven eight nine ten scene scenes featuring feature image video visual motion graphic design animation animated artwork illustration render rendered object objects style style of shows showing'.split(' '));
- const meaningful=(trozalTranslateMetadataText(sourceText).toLowerCase().match(/[a-z0-9]+/g)||[]);
- meaningful.forEach(word=>{if(word.length>2&&!stop.has(word))addKeyword(word)});
- TROZAL_METADATA_EXTRA_TERMS.forEach(rule=>{if(rule.re.test(analysisText))rule.terms.forEach(addKeyword)});
- // Only a medium/type keyword is added when the project is genuinely an animated scene.
- if(sceneTexts.length||htmlMotionSource||sourceType.includes('svg'))['animated video','motion graphic'].forEach(addKeyword);
- if(platform==='adobe'&&/santa claus|santa|sinterklas/i.test(analysisText)){
-  const allowed=keywords.filter(word=>!(/santa|claus|sinterklas/i.test(word)));
-  keywords.splice(0,keywords.length,...allowed);
- }
+ const meaningful=(cleanTranslated.toLowerCase().match(/[a-z0-9]+/g)||[]);
+ meaningful.forEach(word=>{const normalized=trozalMetadataWordKey(word);if(word.length>2&&!stop.has(normalized))addKeyword(word)});
+ // Remove duplicates and keep only evidence-backed terms; never pad with generic media labels.
  const ranked=Object.entries(categoryScores).sort((a,b)=>b[1]-a[1]);
- const category=ranked.length&&ranked[0][1]>ranked[1]?.[1]?ranked[0][0]:(ranked.length===1?ranked[0][0]:'Graphic Resources');
- const hasVisualEvidence=!!(subject||sceneTexts.length||htmlMotionSource||sourceSvg||svgPieces.length);
- const hasDescriptiveEvidence=!!(subject||promptText||sceneTexts.length||evidence.entries.some(x=>x.kind==='visible-text'||x.kind==='label'));
- const safeTitle=hasDescriptiveEvidence?title:'';
- const description=hasDescriptiveEvidence&&translated
-  ? 'Animated video showing '+safeTitle+'.'
-  :'';
- if(!hasDescriptiveEvidence)keywords.length=0;
+ const category=ranked.length&&ranked[0][1]>(ranked[1]?.[1]||0)?ranked[0][0]:(ranked.length===1?ranked[0][0]:'Graphic Resources');
+ const hasEvidence=sourceKind!=='none'&&!!cleanTranslated;
+ const safeTitle=hasEvidence?title:'';
+ const description=hasEvidence?(cleanTranslated+(/[.!?]$/.test(cleanTranslated)?'':'.')):'';
  $('metadataTitle').dataset.baseTitle=safeTitle;
- $('metadataTitle').value=trozalFormatMetadataTitleForPlatform(safeTitle,platform);
+ $('metadataTitle').value=trozalFormatMetadataTitleForPlatform(safeTitle,$('metadataPlatform')?.value||'all');
  $('metadataDescription').value=description;
- $('metadataCategory').value=hasDescriptiveEvidence?category:'Graphic Resources';
+ $('metadataCategory').value=hasEvidence?category:'Graphic Resources';
  $('metadataKeywords').value=keywords.slice(0,47).join(', ');
  updateMetadataCount();
  trozalOptimizeMetadataKeywords(true);
- const sourceLabels=[...new Set(evidence.entries.map(x=>x.label.split(' · ')[0]))];
- let evidenceLevel='INSUFFICIENT';
- if(sceneTexts.length||subject.length>=30||promptText.length>=30)evidenceLevel='STRONG TEXT EVIDENCE';
- else if(hasDescriptiveEvidence)evidenceLevel='LIMITED TEXT EVIDENCE';
- else if(hasVisualEvidence)evidenceLevel='FILENAME / STRUCTURE ONLY';
+ const counts={verified:subject?1:0,planned:sceneTexts.length+(promptText?1:0),readable:readable.length};
  const evidenceEl=$('metadataEvidence');
- if(evidenceEl)evidenceEl.textContent='Evidence: '+evidenceLevel+' · Sources: '+(sourceLabels.join(', ')||'none')+' · Matched topics: '+(conceptHits.map(x=>x.category).filter((x,i,a)=>a.indexOf(x)===i).join(', ')||'none');
- $('metadataStatus').textContent=hasDescriptiveEvidence
-  ?'Metadata dibuat dari prompt dan teks/label yang dapat dibaca. '+keywords.length+' keyword relevan ditemukan; maksimum 47. Terjemahan judul memakai kamus lokal terbatas—periksa tata bahasa dan pastikan semua istilah sesuai visual sebelum upload.'
-  :'Belum ada deskripsi visual yang cukup. Isi topik atau susun deskripsi tiap scene terlebih dahulu. Sistem tidak akan mengarang judul, deskripsi, atau keyword dari nama file saja.';
+ if(evidenceEl){
+  const level=sourceKind==='verified-description'?'DESKRIPSI DIPERIKSA PENGGUNA':sourceKind==='scene-plan'?'RENCANA SCENE — BELUM TERVERIFIKASI':sourceKind==='prompt-intent'?'PROMPT — NIAT PEMBUATAN SAJA':sourceKind==='readable-labels'?'LABEL/Teks SVG — BUKAN PEMERIKSAAN PIXEL':'TIDAK ADA BUKTI';
+  evidenceEl.textContent='SUMBER UTAMA: '+level+'. Deskripsi diperiksa: '+counts.verified+' · Prompt/rencana: '+counts.planned+' · Label terbaca: '+counts.readable+'. Keyword yang lolos bukti teks: '+keywords.length+'. '+(sourceKind==='verified-description'?'Tetap cocokkan setiap kata dengan gambar aktual.':'Untuk metadata yang lebih akurat, periksa preview lalu tulis deskripsi visual pada kolom di atas dan generate ulang.');
+ }
+ $('metadataStatus').textContent=hasEvidence
+  ?(sourceKind==='verified-description'?'Metadata dibuat dari deskripsi visual yang Anda nyatakan sudah diperiksa.':'Metadata ini masih DRAF dari '+(sourceKind==='scene-plan'?'rencana scene':sourceKind==='prompt-intent'?'prompt':'label SVG/HTML')+'; belum membuktikan isi frame. Periksa hasil visual, isi deskripsi terverifikasi, lalu generate ulang.')+' '+keywords.length+' keyword didukung teks; tidak ditambah sinonim yang tidak ada pada sumber.'
+  :'Belum ada deskripsi atau teks yang cukup. Isi deskripsi visual setelah memeriksa hasil render. Sistem tidak membuat metadata dari nama file saja.';
  trozalUpdateMetadataPlatformValidation();
 }
+
 function updateMetadataCount(){const count=$('metadataKeywords').value.split(',').map(x=>x.trim()).filter(Boolean).length;$('metadataKeywordCount').textContent=count+' / 47';$('metadataKeywordCount').style.color=count===47?'#72e6a7':'#ffc36a'}
 
 function trozalMetadataWordKey(value){
