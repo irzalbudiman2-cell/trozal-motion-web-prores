@@ -3964,7 +3964,7 @@ async function trozalMetadataAnalyzeSource(kind){
   trozalMetadataSourceStatus('Mengambil frame dari Preview utama TROZAL. Metadata akan mengikuti hasil yang benar-benar tampil…');
   const images=await trozalVisionCapturePreviewFrames();
   if(!images.length)throw new Error('Tidak ada frame Preview yang berhasil diambil.');
-  const tags=await fetch(TROZAL_VISION_BASE+'/api/tags',{cache:'no-store'});
+  const tags=await fetch(TROZAL_VISION_BASE+'/api/tags',{method:'GET',mode:'cors',credentials:'omit',cache:'no-store',targetAddressSpace:'loopback'});
   if(!tags.ok)throw new Error('Bridge Ollama tidak merespons (HTTP '+tags.status+').');
   const tagData=await tags.json(),models=(tagData.models||[]).map(m=>String(m.name||''));
   const preferred=$('trozalVisionModel')?.value||'qwen3-vl:2b';
@@ -3973,7 +3973,7 @@ async function trozalMetadataAnalyzeSource(kind){
   trozalMetadataSourceStatus('Menganalisis '+images.length+' frame Preview TROZAL dengan '+model+'…');
   const categories=[...$('metadataCategory').options].map(o=>o.text);
   const prompt='You are a visual metadata analyst for stock motion graphics. Analyze ONLY what is visibly shown in the attached frames captured from the FINAL TROZAL MOTION PREVIEW. Do not use the source prompt or filenames. Describe only visible subjects, objects, actions, background, colors, composition and visual style. Do not invent hidden details or unsupported movement. The frames are sequential samples from one animation; infer motion only when the visual differences support it. Return JSON only: {"title":"concise English title, max 100 characters","description":"accurate English description, 1-2 sentences","category":"one exact allowed category","keywords":["up to 25 specific English keywords"],"visual_summary":"brief visible scene summary","visible_objects":["clearly visible objects"],"motion_details":["motion supported by frame changes"],"confidence_notes":"brief uncertainty or empty string"}. Allowed categories: '+categories.join(' | ')+'. Keep keywords specific and grounded in visible content.';
-  const response=await fetch(TROZAL_VISION_BASE+'/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model,messages:[{role:'user',content:prompt,images}],format:'json',think:false,stream:false,options:{temperature:.15,num_ctx:4096,num_predict:1200},keep_alive:'10m'})});
+  const response=await fetch(TROZAL_VISION_BASE+'/api/chat',{method:'POST',mode:'cors',credentials:'omit',headers:{'Content-Type':'application/json'},targetAddressSpace:'loopback',body:JSON.stringify({model,messages:[{role:'user',content:prompt,images}],format:'json',think:false,stream:false,options:{temperature:.15,num_ctx:4096,num_predict:1200},keep_alive:'10m'})});
   if(!response.ok){let detail='HTTP '+response.status;try{detail=(await response.json()).error||detail}catch(_){}throw new Error(detail);}
   const data=await response.json(),parsed=trozalVisionCleanJson(data.message?.content||'');
   const title=String(parsed.title||'').trim(),description=String(parsed.description||'').trim();
@@ -3990,7 +3990,7 @@ async function trozalMetadataAnalyzeSource(kind){
   if(typeof trozalMetadataRenderReview==='function'){trozalMetadataApproved?.clear?.();trozalMetadataRenderReview();}
   scheduleAutosave();
   trozalMetadataSourceStatus('SELESAI · Metadata '+label+' dibuat dari '+images.length+' frame Preview utama TROZAL, bukan hanya prompt atau kode.');
- }catch(error){trozalMetadataSourceStatus('GAGAL · '+label+': '+(error?.message||String(error)),true);}
+ }catch(error){const message=error?.message||String(error);trozalMetadataSourceStatus('GAGAL · '+label+': '+message+(message.includes('Failed to fetch')?' · Browser menolak akses Loopback. Pastikan Chrome memberi izin Local Network Access dan Bridge aktif.':''),true);}
  finally{button.disabled=false;if(other)other.disabled=false;}
 }
 $('metadataFromHtmlMotionBtn')?.addEventListener('click',()=>trozalMetadataAnalyzeSource('html'));
