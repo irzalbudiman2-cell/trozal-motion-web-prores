@@ -6,6 +6,8 @@ $listener = New-Object System.Net.HttpListener
 $listener.Prefixes.Add($listen)
 Add-Type -AssemblyName System.Net.Http
 $client = [System.Net.Http.HttpClient]::new()
+# Local model generation can take several minutes on mid-range GPUs.
+$client.Timeout = [TimeSpan]::FromMinutes(10)
 $appUrl = "https://raw.githubusercontent.com/irzalbudiman2-cell/trozal-motion-web-prores/main/index.html"
 $appHtml = $null
 try {
