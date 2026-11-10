@@ -6,11 +6,17 @@ $listener = New-Object System.Net.HttpListener
 $listener.Prefixes.Add($listen)
 Add-Type -AssemblyName System.Net.Http
 $client = [System.Net.Http.HttpClient]::new()
+$appUrl = "https://raw.githubusercontent.com/irzalbudiman2-cell/trozal-motion-web-prores/main/index.html"
+$appHtml = $null
 try {
+  Write-Host "Mengambil TROZAL MOTION versi terbaru..." -ForegroundColor Cyan
+  $appHtml = $client.GetStringAsync($appUrl).GetAwaiter().GetResult()
+  if ([string]::IsNullOrWhiteSpace($appHtml)) { throw "Gagal mengambil index.html TROZAL MOTION dari GitHub." }
   $listener.Start()
   Write-Host ""
   Write-Host "TROZAL OLLAMA BRIDGE AKTIF" -ForegroundColor Green
-  Write-Host "Browser : $listen"
+  Write-Host "Browser : $listen" 
+  Write-Host "TROZAL  : buka alamat Browser di atas (mode lokal tanpa izin Chrome loopback lintas situs)." -ForegroundColor Yellow
   Write-Host "Ollama  : $ollama"
   Write-Host "Jangan tutup jendela ini selama TROZAL MOTION digunakan."
   Write-Host "Tekan Ctrl+C untuk berhenti."
@@ -27,6 +33,13 @@ try {
     try {
       if ($req.HttpMethod -eq "OPTIONS") {
         $res.StatusCode = 204
+      } elseif ($req.HttpMethod -eq "GET" -and $req.Url.AbsolutePath -in @("/", "/index.html")) {
+        $bytes = [Text.Encoding]::UTF8.GetBytes($appHtml)
+        $res.StatusCode = 200
+        $res.ContentType = "text/html; charset=utf-8"
+        $res.Headers["Cache-Control"] = "no-store"
+        $res.ContentLength64 = $bytes.Length
+        $res.OutputStream.Write($bytes, 0, $bytes.Length)
       } elseif ($req.Url.AbsolutePath -notin @("/api/tags", "/api/chat")) {
         $res.StatusCode = 404
         $bytes = [Text.Encoding]::UTF8.GetBytes('{"error":"Endpoint not allowed"}')
