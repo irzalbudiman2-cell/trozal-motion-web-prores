@@ -17,14 +17,18 @@ Gunakan 2B sebagai default untuk perangkat dengan VRAM 6 GB. Model 4B dapat dico
 ## Instalasi
 
 1. Install Ollama: https://ollama.com/download/windows
-2. Jalankan `TROZAL_LOCAL_VISION_SETUP.bat` dari folder repo (atau jalankan perintah berikut di PowerShell):
+2. Pastikan model tersedia:
    ```powershell
-   setx OLLAMA_ORIGINS "https://irzalbudiman2-cell.github.io"
    ollama pull qwen3-vl:2b
    ```
-3. Quit Ollama dari ikon system tray, lalu jalankan ulang agar environment variable terbaca.
-4. Buka https://irzalbudiman2-cell.github.io/trozal-motion-web-prores/
-5. Pada panel Metadata, tekan **Cek Ollama**. Status harus berubah menjadi terhubung.
+3. Jalankan Ollama seperti biasa. Tidak perlu mengatur `OLLAMA_ORIGINS` untuk mode Bridge lokal.
+4. Unduh/jalankan `TROZAL_OLLAMA_BRIDGE_START.bat` dari folder repo.
+5. Bridge akan mengambil versi TROZAL MOTION terbaru dan otomatis membuka `http://127.0.0.1:11435/`.
+6. Gunakan tab TROZAL MOTION lokal yang terbuka dari Bridge. Jangan gunakan tab GitHub Pages untuk fitur AI lokal jika ingin menghindari izin Loopback Chrome.
+
+## Koneksi lokal
+
+Bridge menyajikan halaman TROZAL dan meneruskan endpoint `/api/tags` serta `/api/chat` ke Ollama. Karena halaman dan API berjalan pada origin loopback yang sama, browser tidak perlu mengizinkan halaman publik GitHub Pages mengakses loopback. Biarkan jendela Bridge tetap terbuka selama penggunaan.
 
 ## Cara menggunakan
 
@@ -36,10 +40,8 @@ Gunakan 2B sebagai default untuk perangkat dengan VRAM 6 GB. Model 4B dapat dico
 
 ## Privasi dan keamanan
 
-- Endpoint yang digunakan adalah `http://localhost:11434`.
+- Browser menggunakan Bridge lokal `http://127.0.0.1:11435`; Bridge meneruskan permintaan ke Ollama `http://127.0.0.1:11434`.
 - Tidak ada API key, backend cloud, atau biaya per request.
-- `OLLAMA_ORIGINS` dibatasi ke origin GitHub Pages TROZAL MOTION.
-- Jangan mengubahnya menjadi wildcard `*` untuk penggunaan normal.
 - Gambar yang dipilih atau ditangkap diproses oleh model Ollama lokal.
 
 ## Batasan
