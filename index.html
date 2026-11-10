@@ -3869,7 +3869,7 @@ trozalMetadataRenderReview();trozalMetadataRenderScenes();trozalMetadataRenderBa
 
 /* TROZAL LOCAL VISION — visual-first metadata through Ollama on the user's PC */
 let trozalLocalVisionLastAnalysis=null;
-const TROZAL_VISION_BASE='http://127.0.0.1:11435';
+const TROZAL_VISION_BASE=(location.hostname==='127.0.0.1'||location.hostname==='localhost')?location.origin:'http://127.0.0.1:11435';
 const TROZAL_VISION_ORIGIN='https://irzalbudiman2-cell.github.io';
 function trozalVisionSetStatus(message,isError=false){
  const el=$('trozalVisionStatus');if(el){el.textContent=message;el.style.color=isError?'#ff8b8b':'';}
@@ -4082,7 +4082,7 @@ $('generateVisualMotionAiBtn')?.addEventListener('click',generateVisualMotionWit
    permission-first, explicit-user-gesture flow for loopback access. */
 (function(){
  'use strict';
- const URL='http://127.0.0.1:11435/api/tags';
+ const URL=((location.hostname==='127.0.0.1'||location.hostname==='localhost')?location.origin:'http://127.0.0.1:11435')+'/api/tags';
  const ORIGIN='https://irzalbudiman2-cell.github.io';
  function status(kind,message,isError){
   const ids=kind==='vision'?['trozalVisionConnection','trozalVisionStatus']:['visualMotionAiStatus'];
