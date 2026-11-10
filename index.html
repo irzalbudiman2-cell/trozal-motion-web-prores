@@ -4217,7 +4217,7 @@ async function visualMotionAiCheck(){
 function visualMotionAiExtractCode(raw){
  let code=String(raw||'').trim();
  const fence=String.fromCharCode(96).repeat(3);
- if(code.startsWith(fence)){code=code.slice(fence.length);const line=code.indexOf('\\n');if(line>=0)code=code.slice(line+1);const last=code.lastIndexOf(fence);if(last>=0)code=code.slice(0,last);}
+ if(code.startsWith(fence)){code=code.slice(fence.length);const line=code.indexOf('\n');if(line>=0)code=code.slice(line+1);const last=code.lastIndexOf(fence);if(last>=0)code=code.slice(0,last);}
  const low=code.toLowerCase();
  const startHtml=low.indexOf('<!doctype html'),startDoc=low.indexOf('<html'),startSvg=low.indexOf('<svg');
  const starts=[startHtml,startDoc,startSvg].filter(n=>n>=0);
@@ -4226,7 +4226,7 @@ function visualMotionAiExtractCode(raw){
  if(!check.includes('<svg'))throw new Error('Model tidak menghasilkan SVG. Pilih model Qwen3.5 4B untuk pembuatan kode.');
  if(!check.includes('</svg>'))throw new Error('Kode SVG terpotong sebelum selesai. Coba lagi atau gunakan brief yang lebih singkat.');
  if((check.includes('<!doctype html')||check.includes('<html'))&&!check.includes('</html>'))throw new Error('Dokumen HTML terpotong sebelum selesai. Coba lagi dengan brief lebih singkat.');
- const groupCount=(check.match(/<g\\b/g)||[]).length;
+ const groupCount=(check.match(/<g(?:\s|>)/gi)||[]).length;
  if(groupCount<3)throw new Error('Adegan belum memiliki pemisahan layer yang cukup ('+groupCount+' grup). Generate ulang dengan model Qwen3.5 4B.');
  if(check.includes('<script')||check.includes('<iframe')||check.includes('<object')||check.includes('<embed'))throw new Error('Output AI memuat elemen aktif/eksternal yang diblokir demi keamanan. Ulangi dengan instruksi SVG dan CSS saja.');
  if(check.includes('href="http')||check.includes("href='http")||check.includes('src="http')||check.includes("src='http")||check.includes('url(http')||check.includes('url(https')||check.includes('@import')||check.includes('//fonts.'))throw new Error('Output mengandung resource eksternal. Generator hanya menerima aset SVG/CSS lokal tanpa resource luar.');
