@@ -4001,7 +4001,7 @@ async function trozalMetadataAnalyzeSource(kind){
   scheduleAutosave();
   trozalMetadataSourceStatus('SELESAI · Metadata '+source.label+' berhasil dibuat dari '+images.length+' frame visual oleh '+model+'. Periksa hasil sebelum digunakan.');
  }catch(error){
-  const message=error?.name==='AbortError'?'Waktu tunggu Ollama lebih dari 4 menit. Periksa beban model dan coba lagi.':(error?.message||String(error));
+  const message=error?.name==='AbortError'?'Waktu tunggu Ollama lebih dari 8 menit. Periksa Ollama dan beban model.':(error?.message||String(error));
   trozalMetadataSourceStatus('GAGAL · '+label+': '+message,true);
  }finally{
   button.disabled=false;button.dataset.analyzing='0';button.textContent=oldLabel;
