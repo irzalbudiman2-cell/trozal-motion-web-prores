@@ -2186,7 +2186,32 @@ async function trozalLoadCanvasImage(src){
  if(ownedBlobUrl)URL.revokeObjectURL(ownedBlobUrl);
  return image;
 }
-$('renderBtn').onclick=async()=>{const convertButton=$('convertPngToMov');if(convertButton){convertButton.style.display='none';convertButton.disabled=false;convertButton.textContent='Convert PNG ke MOV ProRes 4444';convertButton.onclick=null;}const turboMode=$('renderSpeedMode')?.value==='turbo';let wanted=$('format').value;const movMode=wanted==='mov',frameSequenceMode=wanted==='mp4'||movMode||wanted==='pngseq';if(!frameSequenceMode&&!window.MediaRecorder){setStatus('Browser tidak mendukung MediaRecorder. Coba Chrome/Edge terbaru.');setExportStatus('Render gagal: browser tidak mendukung MediaRecorder.');setRenderProgress(0,'Render gagal','error');return}let [w,h]=$('resolution').value.split('x').map(Number),d=+$('duration').value,fps=+$('fps').value;if(frameSequenceMode&&!window.JSZip){setStatus('Memuat pustaka ZIP untuk menyiapkan frame video…');try{await new Promise((resolve,reject)=>{let sc=document.createElement('script');sc.src='./vendor/jszip.min.js';sc.onload=resolve;sc.onerror=reject;document.head.appendChild(sc)})}catch(e){setStatus('Gagal memuat JSZip. Periksa koneksi internet lalu coba lagi.');setExportStatus('Render gagal: pustaka ZIP tidak dapat dimuat.');setRenderProgress(0,'Gagal memuat pustaka','error');return}}if(!Number.isFinite(w)||!Number.isFinite(h)||!Number.isFinite(d)||!Number.isFinite(fps)||w<1||h<1||d<=0||fps<1){setStatus('Periksa resolusi, durasi, dan FPS.');setExportStatus('Render gagal: resolusi, durasi, atau FPS tidak valid.');setRenderProgress(0,'Pengaturan tidak valid','error');return}const activeImg=$('object').querySelector('img'),hasRenderableAsset=!!(htmlMotionSource||sourceSvg||svgPieces.length||activeImg);
+$('renderBtn').onclick=async()=>{const convertButton=$('convertPngToMov');if(convertButton){convertButton.style.display='none';convertButton.disabled=false;convertButton.textContent='Convert PNG ke MOV ProRes 4444';convertButton.onclick=null;}const turboMode=$('renderSpeedMode')?.value==='turbo';let wanted=$('format').value;const movMode=wanted==='mov',frameSequenceMode=wanted==='mp4'||movMode||wanted==='pngseq';if(!frameSequenceMode&&!window.MediaRecorder){setStatus('Browser tidak mendukung MediaRecorder. Coba Chrome/Edge terbaru.');setExportStatus('Render gagal: browser tidak mendukung MediaRecorder.');setRenderProgress(0,'Render gagal','error');return}let [w,h]=$('resolution').value.split('x').map(Number),d=+$('duration').value,fps=+$('fps').value;if(frameSequenceMode&&!window.JSZip){
+ setStatus('Memuat pustaka ZIP untuk menyiapkan frame video…');
+ const zipSources=['./vendor/jszip.min.js','https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js','https://unpkg.com/jszip@3.10.1/dist/jszip.min.js'];
+ let zipLoadErrors=[];
+ for(const src of zipSources){
+  try{
+   await new Promise((resolve,reject)=>{
+    const sc=document.createElement('script'),timer=setTimeout(()=>{sc.remove();reject(new Error('timeout '+src))},25000);
+    sc.src=src;sc.async=true;
+    sc.onload=()=>{clearTimeout(timer);if(window.JSZip)resolve();else reject(new Error('JSZip global tidak ditemukan dari '+src))};
+    sc.onerror=()=>{clearTimeout(timer);sc.remove();reject(new Error('gagal memuat '+src))};
+    document.head.appendChild(sc);
+   });
+   if(window.JSZip)break;
+  }catch(zipError){zipLoadErrors.push(zipError.message)}
+ }
+ if(!window.JSZip){
+  const detail=zipLoadErrors.join(' | ');
+  setStatus('Gagal memuat JSZip dari sumber lokal maupun CDN.');
+  setExportStatus('Render gagal: JSZip tidak tersedia. Detail: '+detail);
+  setRenderProgress(0,'Gagal memuat pustaka ZIP','error');
+  console.error('TROZAL JSZip load failed:',zipLoadErrors);
+  return;
+ }
+ setStatus('Pustaka ZIP siap. Menyiapkan frame render…');
+}if(!Number.isFinite(w)||!Number.isFinite(h)||!Number.isFinite(d)||!Number.isFinite(fps)||w<1||h<1||d<=0||fps<1){setStatus('Periksa resolusi, durasi, dan FPS.');setExportStatus('Render gagal: resolusi, durasi, atau FPS tidak valid.');setRenderProgress(0,'Pengaturan tidak valid','error');return}const activeImg=$('object').querySelector('img'),hasRenderableAsset=!!(htmlMotionSource||sourceSvg||svgPieces.length||activeImg);
 if(!hasRenderableAsset){setStatus('Belum ada aset untuk dirender. Unggah HTML/SVG/PNG/JPG atau gunakan tombol Pakai contoh terlebih dahulu.');setExportStatus('Render dibatalkan: preview kosong karena belum ada aset.');setRenderProgress(0,'Gagal · aset belum siap','error');return}
 const plannedFrames=Math.max(1,Math.round(d*fps)),plannedPixelFrames=w*h*plannedFrames;if(movMode&&$('browserMov')?.checked&&plannedPixelFrames>220000000){setExportStatus('Proyek berat: '+plannedPixelFrames.toLocaleString('id-ID')+' piksel-frame. Frame diproses per batch kecil; pastikan ruang memori browser cukup.')}if(movMode&&$('browserMov')?.checked&&!($('bgMode').value==='transparent'&&$('transparentBg').checked)){setExportStatus('Catatan: latar tidak transparan; MOV H.264 terkompresi tidak mendukung alpha/transparansi.')}let canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;const wantsAlpha=$('bgMode').value==='transparent'&&$('transparentBg').checked;let ctx=canvas.getContext('2d',{alpha:wantsAlpha,desynchronized:true});let stream=frameSequenceMode?null:canvas.captureStream(fps);let candidates=wanted==='mp4'?['video/mp4;codecs=avc1.42E01E','video/mp4']:['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'];let mime=frameSequenceMode?'image/png':candidates.find(m=>MediaRecorder.isTypeSupported(m));if(!frameSequenceMode&&!mime){if(wanted==='mp4'){setStatus('Browser ini tidak menyediakan ekspor MP4 native. Pilih WebM untuk render yang dapat diunduh; konversi MP4 dapat dilakukan setelahnya.');setExportStatus('Render gagal: MP4 tidak didukung langsung oleh browser ini.');setRenderProgress(0,'Format tidak didukung','error');return}setStatus('Codec video tidak tersedia di browser ini.');setExportStatus('Render gagal: codec video tidak tersedia.');setRenderProgress(0,'Codec tidak tersedia','error');return}
 const qualityMbps=$('quality').value==='max'?80:$('quality').value==='high'?45:18;const bitrate=Math.round(Math.max(350000,Math.min(100000000,qualityMbps*1000000)));let rec=frameSequenceMode?null:new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:bitrate});let chunks=[],pngZip=frameSequenceMode?new JSZip():null;if(rec){rec.onerror=e=>{console.error('MediaRecorder error',e);finishRender();setStatus('Render gagal. Coba resolusi atau kualitas lebih rendah.');setExportStatus('Render gagal; periksa dukungan codec dan memori browser.');setRenderProgress(100,'Render gagal','error')};rec.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};rec.onstop=()=>{lastBlob=new Blob(chunks,{type:mime});const url=URL.createObjectURL(lastBlob),link=document.createElement('a');link.href=url;link.download=activeRenderBaseName+(mime.includes('mp4')?'.mp4':'.webm');lastDownloadName=link.download;link.click();setTimeout(()=>URL.revokeObjectURL(url),30000);$('downloadVideo').disabled=false;const actualMB=lastBlob.size/1024/1024;setExportStatus('Selesai: '+actualMB.toFixed(1)+' MB · '+(mime.includes('mp4')?'MP4':'WebM')+' · '+totalFrames+' frame'+(actualMB>targetMB?' · melebihi target; turunkan preset kualitas atau resolusi':''));setStatus('Render video selesai dan unduhan dimulai.')}};
@@ -4252,11 +4277,28 @@ async function generateVisualMotionWithLocalAi(){
   const system='You are a senior motion-graphics art director and SVG animation engineer. Return ONLY a complete standalone HTML5 document, no markdown. Create a polished, richly detailed, coherent scene that faithfully depicts the brief. Use SVG vector illustration, not generic icon placeholders. Structure the scene into at least 5 independently addressable semantic <g> layers with unique descriptive ids: background, environment, main subject, secondary objects, foreground/atmosphere. Animate at least 3 appropriate groups independently using CSS keyframes and transform-origin; use natural, subtle movement. Use gradients, layered shapes, carefully controlled highlights/shadows and depth. Preserve the requested aspect ratio and keep all important objects inside the viewBox. Include complete inline CSS and SVG. No JavaScript, external assets, remote URLs, external fonts, iframe, canvas, scripts or embedded media. Avoid text overlays unless the brief requires visible signage. Ensure the SVG and HTML are fully closed and syntactically complete. Keep output compact enough to finish in one response. Do not explain anything; output only code.';
   const user='VISUAL BRIEF: '+brief+'\\nAspect ratio: '+ratio+'. Target duration: '+duration+' seconds. Visual style: '+style+'. Accent: '+accent+'. Camera direction: '+camera+'. Scene transition preference: '+transition+'. Produce a single coherent scene with distinct SVG groups/layers and CSS motion. Set animation duration to match '+duration+' seconds and make the animation loop smoothly when appropriate.';
   visualMotionAiStatus('Mengirim brief ke '+model+' pada komputer lokal. Proses dapat memerlukan beberapa menit…');
-  const response=await fetch('http://127.0.0.1:11435/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},targetAddressSpace:'loopback',body:JSON.stringify({model,messages:[{role:'system',content:system},{role:'user',content:user}],think:false,stream:false,options:{temperature:.35,num_ctx:8192,num_predict:4096},keep_alive:'10m'})});
-  if(!response.ok){let detail='HTTP '+response.status;try{detail=(await response.json()).error||detail}catch(_){}throw new Error(detail);}
-  const data=await response.json();
-  const rawCode=String(data.message?.content||'').trim();
-  if(!rawCode)throw new Error('Ollama selesai tanpa mengirim isi kode. Coba ulangi; jika berulang, kirim hasil tes model di CMD.');
+  const endpoint='http://127.0.0.1:11435';
+  const requestOptions={temperature:.25,num_ctx:8192,num_predict:8192};
+  const requests=[
+   {url:endpoint+'/api/chat',body:{model,messages:[{role:'system',content:system},{role:'user',content:user}],think:false,stream:false,options:requestOptions,keep_alive:'10m'}},
+   {url:endpoint+'/api/generate',body:{model,prompt:system+'\\n\\n'+user,think:false,stream:false,raw:false,options:requestOptions,keep_alive:'10m'}}
+  ];
+  let rawCode='',responseInfo=[],data=null;
+  for(let requestIndex=0;requestIndex<requests.length;requestIndex++){
+   const request=requests[requestIndex];
+   visualMotionAiStatus(requestIndex===0?'Meminta kode SVG melalui Ollama Chat…':'Chat tidak memberi kode. Mencoba jalur Ollama Generate…');
+   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),10*60*1000);
+   try{
+    const response=await fetch(request.url,{method:'POST',headers:{'Content-Type':'application/json'},targetAddressSpace:'loopback',signal:controller.signal,body:JSON.stringify(request.body)});
+    data=await response.json().catch(()=>({}));
+    if(!response.ok){responseInfo.push(request.url.split('/').pop()+' HTTP '+response.status+': '+String(data.error||''));continue;}
+    rawCode=String(data.message?.content||data.response||data.message?.tool_calls?.[0]?.function?.arguments||'').trim();
+    if(rawCode)break;
+    responseInfo.push(request.url.split('/').pop()+' kosong (done_reason: '+String(data.done_reason||data.message?.done_reason||'tidak tersedia')+', eval_count: '+String(data.eval_count||data.message?.eval_count||0)+')');
+   }catch(requestError){responseInfo.push(request.url.split('/').pop()+': '+(requestError?.name==='AbortError'?'timeout 10 menit':requestError.message||String(requestError)));}
+   finally{clearTimeout(timer);}
+  }
+  if(!rawCode)throw new Error('Ollama tidak mengirim kode pada jalur Chat maupun Generate. '+responseInfo.join(' · ')+'. Pastikan model Qwen3.5 4B terpasang, bukan model Vision 2B, lalu periksa RAM/GPU dan log Ollama.');
   const code=visualMotionAiExtractCode(rawCode);
   $('visualMotionOutput').value=code;$('visualMotionPreview').srcdoc=code;
   visualMotionPreviewDoc=null;visualMotionPreviewAnimations=[];
