@@ -4106,8 +4106,12 @@ async function trozalVisionRequestJson(model, images, prompt) {
    if(!response.ok)throw new Error('Ollama /api/chat HTTP '+response.status+': '+String(data.error||'respons kosong'));
    const content=String(data.message?.content||data.response||'').trim();
    if(!content)throw new Error('Ollama mengirim respons kosong'+(data.done_reason?' (done_reason: '+data.done_reason+')':'')+'. Periksa model Vision dan log Ollama.');
-   try{return {parsed:trozalVisionCleanJson(content),data,content};}
-   catch(parseError){throw new Error('Respons Vision bukan JSON valid: '+parseError.message+' · cuplikan: '+content.slice(0,180));}
+   try{
+    const parsed=trozalVisionCleanJson(content);
+    const usable=String(parsed.title||'').trim()||String(parsed.description||'').trim()||String(parsed.visual_summary||'').trim()||(Array.isArray(parsed.visible_objects)&&parsed.visible_objects.length);
+    if(!usable)throw new Error('JSON Vision valid tetapi seluruh isi metadata kosong.');
+    return {parsed,data,content};
+   }catch(parseError){throw new Error('Respons Vision tidak dapat dipakai: '+parseError.message+' · cuplikan: '+content.slice(0,180));}
   }catch(error){lastError=error;if(attempt===0&&!/HTTP 4\d\d|Failed to fetch|NetworkError/i.test(error.message||''))continue;break;}
   finally{clearTimeout(timeout);}
  }
@@ -4116,7 +4120,7 @@ async function trozalVisionRequestJson(model, images, prompt) {
 function trozalVisionNormalizeKeywords(parsed) {
  const stop=new Set(['the','and','with','from','this','that','into','over','under','for','are','is','of','in','on','a','an','to','by','as','at','it','its','scene','video','animation','motion','graphic','graphics','visual']);
  const supplied=Array.isArray(parsed.keywords)?parsed.keywords:[];
- const fallback=[...(Array.isArray(parsed.visible_objects)?parsed.visible_objects:[]),String(parsed.visual_summary||'')]
+ const fallback=[...(Array.isArray(parsed.visible_objects)?parsed.visible_objects:[]),String(parsed.visual_summary||''),String(parsed.title||''),String(parsed.description||'')]
   .flatMap(value=>String(value).toLowerCase().match(/[a-z][a-z0-9-]{2,}/g)||[])
   .filter(word=>!stop.has(word));
  const values=supplied.length?supplied:fallback;
