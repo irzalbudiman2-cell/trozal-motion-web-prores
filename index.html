@@ -4282,7 +4282,7 @@ async function generateVisualMotionWithLocalAi(){
   const requestOptions={temperature:.25,num_ctx:8192,num_predict:8192};
   const requests=[
    {url:endpoint+'/api/chat',body:{model,messages:[{role:'system',content:system},{role:'user',content:user}],think:false,stream:false,options:requestOptions,keep_alive:'10m'}},
-   {url:endpoint+'/api/generate',body:{model,prompt:system+'\\n\\n'+user,think:false,stream:false,raw:false,options:requestOptions,keep_alive:'10m'}}
+   {url:endpoint+'/api/generate',body:{model,prompt:system+'\n\n'+user,think:false,stream:false,raw:false,options:requestOptions,keep_alive:'10m'}}
   ];
   let rawCode='',responseInfo=[],data=null;
   for(let requestIndex=0;requestIndex<requests.length;requestIndex++){
