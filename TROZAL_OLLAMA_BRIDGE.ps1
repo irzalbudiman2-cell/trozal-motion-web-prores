@@ -13,6 +13,7 @@ try {
   $appHtml = $client.GetStringAsync($appUrl).GetAwaiter().GetResult()
   if ([string]::IsNullOrWhiteSpace($appHtml)) { throw "Gagal mengambil index.html TROZAL MOTION dari GitHub." }
   $listener.Start()
+  Start-Process $listen
   Write-Host ""
   Write-Host "TROZAL OLLAMA BRIDGE AKTIF" -ForegroundColor Green
   Write-Host "Browser : $listen" 
@@ -32,6 +33,8 @@ try {
     $res.Headers["Access-Control-Max-Age"] = "600"
     try {
       if ($req.HttpMethod -eq "OPTIONS") {
+        $res.StatusCode = 204
+      } elseif ($req.HttpMethod -eq "GET" -and $req.Url.AbsolutePath -eq "/favicon.ico") {
         $res.StatusCode = 204
       } elseif ($req.HttpMethod -eq "GET" -and $req.Url.AbsolutePath -in @("/", "/index.html")) {
         $bytes = [Text.Encoding]::UTF8.GetBytes($appHtml)
