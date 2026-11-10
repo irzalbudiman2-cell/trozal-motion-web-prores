@@ -3544,8 +3544,9 @@ function generateStockMetadata(){
  // Strict source priority: reviewed visual description > scene plan > generation prompt > readable labels.
  const aiAnalysis=trozalLocalVisionLastAnalysis;
  const aiText=aiAnalysis?[aiAnalysis.title,aiAnalysis.description,aiAnalysis.visualSummary,(aiAnalysis.visibleObjects||[]).join(', ')].filter(Boolean).join('. '):'';
- const sourceKind=subject?'verified-description':aiText?'ai-visual-analysis':sceneTexts.length?'scene-plan':promptText?'prompt-intent':readable.length?'readable-labels':'none';
- const sourceText=subject||aiText||sceneTexts.join('. ')||promptText||readable.join('. ');
+ const codeAnalysis=trozalMetadataActiveSource?[trozalMetadataActiveSource.title,trozalMetadataActiveSource.description,trozalMetadataActiveSource.visualSummary,(trozalMetadataActiveSource.visibleObjects||[]).join(', ')].filter(Boolean).join('. '):'';
+ const sourceKind=subject?'verified-description':codeAnalysis?'ai-source-code-analysis':aiText?'ai-visual-analysis':sceneTexts.length?'scene-plan':promptText?'prompt-intent':readable.length?'readable-labels':'none';
+ const sourceText=subject||codeAnalysis||aiText||sceneTexts.join('. ')||promptText||readable.join('. ');
  const translated=trozalTranslateMetadataText(sourceText);
  const cleanTranslated=translated.replace(/[|]+/g,' ').replace(/\s+/g,' ').replace(/\s+([,.;:!?])/g,'$1').replace(/^[,.;:]+|[,.;:]+$/g,'').trim();
  const firstSentence=(cleanTranslated.split(/(?<=[.!?])\s+/)[0]||cleanTranslated).trim();
@@ -3590,11 +3591,11 @@ function generateStockMetadata(){
  const counts={verified:subject?1:0,planned:sceneTexts.length+(promptText?1:0),readable:readable.length};
  const evidenceEl=$('metadataEvidence');
  if(evidenceEl){
-  const level=sourceKind==='verified-description'?'DESKRIPSI DIPERIKSA PENGGUNA':sourceKind==='ai-visual-analysis'?'ANALISIS FRAME OLEH AI LOKAL — WAJIB DITINJAU':sourceKind==='scene-plan'?'RENCANA SCENE — BELUM TERVERIFIKASI':sourceKind==='prompt-intent'?'PROMPT — NIAT PEMBUATAN SAJA':sourceKind==='readable-labels'?'LABEL/Teks SVG — BUKAN PEMERIKSAAN PIXEL':'TIDAK ADA BUKTI';
+  const level=sourceKind==='verified-description'?'DESKRIPSI DIPERIKSA PENGGUNA':sourceKind==='ai-source-code-analysis'?'ANALISIS KODE HTML/SVG OLEH AI LOKAL — WAJIB DITINJAU':sourceKind==='ai-visual-analysis'?'ANALISIS FRAME OLEH AI LOKAL — WAJIB DITINJAU':sourceKind==='scene-plan'?'RENCANA SCENE — BELUM TERVERIFIKASI':sourceKind==='prompt-intent'?'PROMPT — NIAT PEMBUATAN SAJA':sourceKind==='readable-labels'?'LABEL/Teks SVG — BUKAN PEMERIKSAAN PIXEL':'TIDAK ADA BUKTI';
   evidenceEl.textContent='SUMBER UTAMA: '+level+'. Deskripsi diperiksa: '+counts.verified+' · Prompt/rencana: '+counts.planned+' · Label terbaca: '+counts.readable+'. Keyword yang lolos bukti teks: '+keywords.length+'. '+(sourceKind==='verified-description'?'Tetap cocokkan setiap kata dengan gambar aktual.':'Untuk metadata yang lebih akurat, periksa preview lalu tulis deskripsi visual pada kolom di atas dan generate ulang.');
  }
  $('metadataStatus').textContent=hasEvidence
-  ?(sourceKind==='verified-description'?'Metadata dibuat dari deskripsi visual yang Anda nyatakan sudah diperiksa.':'Metadata ini masih DRAF dari '+(sourceKind==='scene-plan'?'rencana scene':sourceKind==='ai-visual-analysis'?'analisis frame AI lokal':sourceKind==='prompt-intent'?'prompt':'label SVG/HTML')+'; tetap tinjau kecocokannya dengan frame aktual. Periksa hasil visual, isi deskripsi terverifikasi bila perlu, lalu generate ulang.')+' '+keywords.length+' keyword didukung teks; tidak ditambah sinonim yang tidak ada pada sumber.'
+  ?(sourceKind==='verified-description'?'Metadata dibuat dari deskripsi visual yang Anda nyatakan sudah diperiksa.':'Metadata ini masih DRAF dari '+(sourceKind==='scene-plan'?'rencana scene':sourceKind==='ai-source-code-analysis'?'analisis kode HTML/SVG':sourceKind==='ai-visual-analysis'?'analisis frame AI lokal':sourceKind==='prompt-intent'?'prompt':'label SVG/HTML')+'; tetap tinjau kecocokannya dengan frame aktual. Periksa hasil visual, isi deskripsi terverifikasi bila perlu, lalu generate ulang.')+' '+keywords.length+' keyword didukung teks; tidak ditambah sinonim yang tidak ada pada sumber.'
   :'Belum ada deskripsi atau teks yang cukup. Isi deskripsi visual setelah memeriksa hasil render. Sistem tidak membuat metadata dari nama file saja.';
  trozalUpdateMetadataPlatformValidation();
 }
@@ -3669,7 +3670,7 @@ function trozalRefreshMetadataQuality(){
  const titleNote=!title?'Judul kosong':title.length<15?'Judul sangat pendek':(platform==='adobe'&&title.length>=70)?'Periksa batas judul Adobe':(platform==='shutterstock'&&title.split(/\s+/).filter(Boolean).length<5)?'Perlu minimal 5 kata':'Judul terisi';
  const descNote=!description?'Deskripsi kosong':descOk?'Deskripsi terisi':'Deskripsi terlalu singkat';
  const keywordNote=count+' keyword · '+analysis.exactCount+' cocok penuh · '+analysis.partialCount+' cocok sebagian · '+analysis.unmatchedCount+' belum cocok · '+analysis.duplicates+' duplikat';
- const evidenceNote=verifiedSourceAvailable?'Deskripsi visual diperiksa pengguna':aiVisualAvailable?'Frame dianalisis AI lokal — perlu tinjauan pengguna':sourceAvailable?'Hanya prompt/rencana/label — belum diverifikasi':'Belum ada bukti deskriptif';
+ const evidenceNote=verifiedSourceAvailable?'Deskripsi visual diperiksa pengguna':trozalMetadataActiveSource?'Kode HTML/SVG dianalisis AI lokal — perlu tinjauan pengguna':aiVisualAvailable?'Frame dianalisis AI lokal — perlu tinjauan pengguna':sourceAvailable?'Hanya prompt/rencana/label — belum diverifikasi':'Belum ada bukti deskriptif';
  const details=$('metadataQualityDetails');
  if(details)details.innerHTML=[['Judul',titleNote],['Deskripsi',descNote],['Keyword',keywordNote],['Bukti sumber',evidenceNote]]
   .map(item=>'<div class="metadata-quality-item"><b>'+item[0]+'</b><span>'+item[1].replace(/[&<>"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]))+'</span></div>').join('');
@@ -3862,7 +3863,7 @@ function trozalMetadataExportBatchCsv(){
 }
 function trozalMetadataExportSidecar(){
  if(!trozalMetadataBatch.length){$('metadataBatchSummary').textContent='Batch masih kosong.';return}
- const payload={schema:'trozal-metadata-sidecar-v1',generatedAt:new Date().toISOString(),notice:'Metadata bersumber dari teks. Prompt dan rencana scene belum diverifikasi secara visual; hanya deskripsi yang ditandai user-reviewed yang berasal dari pemeriksaan pengguna. Bukan hasil analisis piksel AI.',assets:trozalMetadataBatch};
+ const payload={schema:'trozal-metadata-sidecar-v1',generatedAt:new Date().toISOString(),notice:'Metadata menyimpan sumber bukti dan jenis analisis. Analisis kode HTML/SVG tidak sama dengan analisis piksel; analisis gambar hanya berlaku jika Local Vision digunakan. Tinjau hasil terhadap preview aktual sebelum pengiriman.',assets:trozalMetadataBatch};
  trozalMetadataDownload('trozal_metadata_sidecar.json',JSON.stringify(payload,null,2),'application/json');$('metadataBatchSummary').textContent='JSON sidecar diekspor · '+trozalMetadataBatch.length+' aset.';
 }
 $('metadataKeywords')?.addEventListener('input',()=>{trozalMetadataApproved.clear();trozalMetadataRenderReview()});
