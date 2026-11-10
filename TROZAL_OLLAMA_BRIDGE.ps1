@@ -45,7 +45,7 @@ try {
         $res.Headers["Cache-Control"] = "no-store"
         $res.ContentLength64 = $bytes.Length
         $res.OutputStream.Write($bytes, 0, $bytes.Length)
-      } elseif ($req.Url.AbsolutePath -notin @("/api/tags", "/api/chat")) {
+      } elseif ($req.Url.AbsolutePath -notin @("/api/tags", "/api/chat", "/api/generate")) {
         $res.StatusCode = 404
         $bytes = [Text.Encoding]::UTF8.GetBytes('{"error":"Endpoint not allowed"}')
         $res.ContentType = "application/json; charset=utf-8"
