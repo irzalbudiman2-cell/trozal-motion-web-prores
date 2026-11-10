@@ -2740,7 +2740,44 @@ function buildVisualMotionHtml(){
  '*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080913;display:grid;place-items:center}.stage{position:relative;width:min(100vw,calc(100vh * '+aspect+'));height:min(100vh,calc(100vw / '+aspect+'));aspect-ratio:'+parts[0]+'/'+parts[1]+';overflow:hidden;isolation:isolate;background:#10192b}.scene{position:absolute;inset:0;opacity:0;animation-duration:'+total.toFixed(2)+'s;animation-timing-function:linear;animation-iteration-count:infinite}.art{position:absolute;inset:-5%;width:110%;height:110%;transform-origin:center}.art svg{width:100%;height:100%;display:block}.paper{filter:saturate(.82) contrast(1.05)}.hero{transform-box:fill-box;transform-origin:center;animation:heroFloat 3.8s ease-in-out infinite alternate}.cloud{animation:cloudDrift 17s linear infinite}.star{animation:twinkle 2.8s ease-in-out infinite alternate}.wave{animation:waveDrift 5s ease-in-out infinite alternate;transform-box:fill-box}.wheel{transform-box:fill-box;transform-origin:center;animation:wheelSpin 1.2s linear infinite}.snow{animation:snowFall 5s linear infinite}.ambient{position:absolute;left:var(--x);top:var(--y);width:var(--d);height:var(--d);border-radius:50%;background:'+accent+';box-shadow:0 0 12px '+accent+';opacity:0;animation:floatParticle 5s ease-in-out var(--delay) infinite}.scene:nth-child(even) .ambient{animation-direction:alternate}.stage:after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 45%,#05071388 100%);z-index:5}'+
  '@keyframes heroFloat{0%{transform:translate3d(-1.2%,1.2%,0) rotate(-1deg)}100%{transform:translate3d(1.8%,-2%,0) rotate(1.5deg)}}@keyframes cloudDrift{from{translate:-3% 0}to{translate:5% 0}}@keyframes twinkle{from{opacity:.18}to{opacity:1}}@keyframes waveDrift{from{transform:translateY(9px)}to{transform:translateY(-12px)}}@keyframes wheelSpin{to{transform:rotate(360deg)}}@keyframes snowFall{from{transform:translateY(-30px)}to{transform:translateY(40px)}}@keyframes floatParticle{0%{opacity:0;transform:translateY(24px)}45%{opacity:.8}100%{opacity:0;transform:translateY(-34px)}}'+camCss+
  kfBlocks+'@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-delay:0ms!important}}'+
- '</style></head><body><main class="stage">'+sceneMarkup+'</main></body></html>';
+ '</style></head><body><main class="stage">'+sceneMarkup+'</main>
+<!-- TROZAL OLLAMA GENERATE CLICK RECOVERY -->
+<style>
+#visualMotionAiCheckBtn,#generateVisualMotionAiBtn{position:relative!important;z-index:60!important;pointer-events:auto!important;touch-action:manipulation}
+#visualMotionAiStatus{position:relative;z-index:5;min-height:22px}
+</style>
+<script>
+(function(){
+ 'use strict';
+ const byId=id=>document.getElementById(id);
+ const status=byId('visualMotionAiStatus');
+ const btn=byId('generateVisualMotionAiBtn');
+ if(!btn||btn.dataset.trozalClickRecovery==='1')return;
+ btn.dataset.trozalClickRecovery='1';
+ // Replace old listener-bearing node so this recovery handler is the only generate click handler.
+ const fresh=btn.cloneNode(true);btn.replaceWith(fresh);
+ fresh.addEventListener('click',function(event){
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  const brief=byId('visualMotionPrompt');
+  if(status)status.textContent='TOMBOL AKTIF · Memulai generator lokal…';
+  if(!brief||!brief.value.trim()){
+   if(status)status.textContent='Tulis brief visual terlebih dahulu.';
+   brief?.focus();return;
+  }
+  if(typeof window.generateVisualMotionWithLocalAi==='function'){
+   window.generateVisualMotionWithLocalAi();
+  }else if(status){
+   status.textContent='HANDLER BELUM SIAP · Fungsi generator tidak termuat. Muat ulang halaman (Ctrl+Shift+R).';
+   status.style.color='#ff9292';
+  }
+ },true);
+ fresh.style.pointerEvents='auto';
+ fresh.style.position='relative';
+ fresh.style.zIndex='60';
+})();
+</script>
+</body></html>';
  return {html,scenes:items.length,duration:total,ratio};
 }
 $('generateVisualMotionBtn').addEventListener('click',()=>{
