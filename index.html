@@ -2741,42 +2741,7 @@ function buildVisualMotionHtml(){
  '@keyframes heroFloat{0%{transform:translate3d(-1.2%,1.2%,0) rotate(-1deg)}100%{transform:translate3d(1.8%,-2%,0) rotate(1.5deg)}}@keyframes cloudDrift{from{translate:-3% 0}to{translate:5% 0}}@keyframes twinkle{from{opacity:.18}to{opacity:1}}@keyframes waveDrift{from{transform:translateY(9px)}to{transform:translateY(-12px)}}@keyframes wheelSpin{to{transform:rotate(360deg)}}@keyframes snowFall{from{transform:translateY(-30px)}to{transform:translateY(40px)}}@keyframes floatParticle{0%{opacity:0;transform:translateY(24px)}45%{opacity:.8}100%{opacity:0;transform:translateY(-34px)}}'+camCss+
  kfBlocks+'@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-delay:0ms!important}}'+
  '</style></head><body><main class="stage">'+sceneMarkup+'</main>
-<!-- TROZAL OLLAMA GENERATE CLICK RECOVERY -->
-<style>
-#visualMotionAiCheckBtn,#generateVisualMotionAiBtn{position:relative!important;z-index:60!important;pointer-events:auto!important;touch-action:manipulation}
-#visualMotionAiStatus{position:relative;z-index:5;min-height:22px}
-</style>
-<script>
-(function(){
- 'use strict';
- const byId=id=>document.getElementById(id);
- const status=byId('visualMotionAiStatus');
- const btn=byId('generateVisualMotionAiBtn');
- if(!btn||btn.dataset.trozalClickRecovery==='1')return;
- btn.dataset.trozalClickRecovery='1';
- // Replace old listener-bearing node so this recovery handler is the only generate click handler.
- const fresh=btn.cloneNode(true);btn.replaceWith(fresh);
- fresh.addEventListener('click',function(event){
-  event.preventDefault();
-  event.stopImmediatePropagation();
-  const brief=byId('visualMotionPrompt');
-  if(status)status.textContent='TOMBOL AKTIF · Memulai generator lokal…';
-  if(!brief||!brief.value.trim()){
-   if(status)status.textContent='Tulis brief visual terlebih dahulu.';
-   brief?.focus();return;
-  }
-  if(typeof window.generateVisualMotionWithLocalAi==='function'){
-   window.generateVisualMotionWithLocalAi();
-  }else if(status){
-   status.textContent='HANDLER BELUM SIAP · Fungsi generator tidak termuat. Muat ulang halaman (Ctrl+Shift+R).';
-   status.style.color='#ff9292';
-  }
- },true);
- fresh.style.pointerEvents='auto';
- fresh.style.position='relative';
- fresh.style.zIndex='60';
-})();
-</script>
+
 </body></html>';
  return {html,scenes:items.length,duration:total,ratio};
 }
@@ -4410,6 +4375,38 @@ $('generateVisualMotionAiBtn')?.addEventListener('click',generateVisualMotionWit
   await onCheck('scene',b);
   return null;
  };
+})();
+</script>
+
+<!-- TROZAL OLLAMA GENERATE CLICK RECOVERY -->
+<style>
+#visualMotionAiCheckBtn,#generateVisualMotionAiBtn{position:relative!important;z-index:60!important;pointer-events:auto!important;touch-action:manipulation}
+#visualMotionAiStatus{position:relative;z-index:5;min-height:22px}
+</style>
+<script>
+(function(){
+ 'use strict';
+ const btn=document.getElementById('generateVisualMotionAiBtn');
+ const status=document.getElementById('visualMotionAiStatus');
+ if(!btn||btn.dataset.trozalClickRecovery==='1')return;
+ btn.dataset.trozalClickRecovery='1';
+ const fresh=btn.cloneNode(true);btn.replaceWith(fresh);
+ fresh.addEventListener('click',function(event){
+  event.preventDefault();event.stopImmediatePropagation();
+  const brief=document.getElementById('visualMotionPrompt');
+  if(status)status.textContent='TOMBOL AKTIF · Memulai generator lokal…';
+  if(!brief||!brief.value.trim()){
+   if(status)status.textContent='Tulis brief visual terlebih dahulu.';
+   brief?.focus();return;
+  }
+  if(typeof window.generateVisualMotionWithLocalAi==='function'){
+   window.generateVisualMotionWithLocalAi();
+  }else if(status){
+   status.textContent='HANDLER BELUM SIAP · Muat ulang halaman (Ctrl+Shift+R).';
+   status.style.color='#ff9292';
+  }
+ },true);
+ fresh.style.pointerEvents='auto';fresh.style.position='relative';fresh.style.zIndex='60';
 })();
 </script>
 </body></html>
