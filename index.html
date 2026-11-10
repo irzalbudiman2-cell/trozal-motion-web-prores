@@ -4008,7 +4008,7 @@ async function trozalMetadataAnalyzeSource(kind){
   updateMetadataCount();trozalRefreshMetadataQuality();trozalUpdateMetadataPlatformValidation();
   if(typeof trozalMetadataRenderReview==='function'){trozalMetadataApproved?.clear?.();trozalMetadataRenderReview();}
   scheduleAutosave();
-  trozalMetadataSourceStatus('SELESAI · Metadata '+label+' berhasil dibuat dari '+images.length+' frame visual oleh '+model+'. Periksa hasil sebelum digunakan.');
+  trozalMetadataSourceStatus('SELESAI · Metadata '+source.label+' berhasil dibuat dari '+images.length+' frame visual oleh '+model+'. Periksa hasil sebelum digunakan.');
  }catch(error){
   const message=error?.name==='AbortError'?'Waktu tunggu Ollama lebih dari 4 menit. Periksa beban model dan coba lagi.':(error?.message||String(error));
   trozalMetadataSourceStatus('GAGAL · '+label+': '+message,true);
