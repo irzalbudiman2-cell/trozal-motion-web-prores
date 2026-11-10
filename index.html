@@ -1957,6 +1957,7 @@ $('playBtn').onclick=()=>{if(playing){playing=false;cancelAnimationFrame(raf);$(
 $('stopBtn').onclick=()=>{playing=false;cancelAnimationFrame(raf);playhead=0;renderAt(0);$('playBtn').textContent='▶ Putar'};
 $('scrubber').oninput=()=>{playing=false;cancelAnimationFrame(raf);playhead=+$('scrubber').value/1000*+$('duration').value;renderAt(playhead);$('playBtn').textContent='▶ Putar';scheduleAutosave()};
 $('prevFrame').onclick=()=>renderAt(playhead-1/(+$('fps').value));$('nextFrame').onclick=()=>renderAt(playhead+1/(+$('fps').value));
+const TROZAL_ASSET_ROOT=(location.hostname==='127.0.0.1'||location.hostname==='localhost')?'https://irzalbudiman2-cell.github.io/trozal-motion-web-prores/':new URL('.',document.baseURI).href;
 async function encodeMovWithWasm(pngZip,totalFrames,fps,width,height,outputFormat='mov'){
  // Module workers used by FFmpeg.wasm are unreliable from opaque file:// origins.
  // Require localhost so Chrome/Edge can create the module worker and import its Blob dependencies.
@@ -1972,7 +1973,7 @@ async function encodeMovWithWasm(pngZip,totalFrames,fps,width,height,outputForma
  const deviceRam=Number(navigator.deviceMemory||0), roughFrameMB=framePixels*4/1048576;
  if(deviceRam && roughFrameMB>deviceRam*1024*.18) setExportStatus('Peringatan RAM: satu buffer frame sekitar '+roughFrameMB.toFixed(0)+' MB.');
  const cdns=[
-  {name:'ProRes Core lokal',pkg:new URL('./vendor/ffmpeg/',document.baseURI).href,core:new URL('./vendor/prores-core/',document.baseURI).href}
+  {name:'ProRes Core TROZAL',pkg:new URL('vendor/ffmpeg/',TROZAL_ASSET_ROOT).href,core:new URL('vendor/prores-core/',TROZAL_ASSET_ROOT).href}
  ];
  let ffmpeg=null, workerBlobUrl='', coreBlobUrl='', wasmBlobUrl='', activeCdn='';
  const timeout=(promise,ms,label)=>Promise.race([promise,new Promise((_,reject)=>setTimeout(()=>reject(new Error(label+' melewati batas waktu '+Math.round(ms/1000)+' detik.')),ms))]);
@@ -2188,7 +2189,7 @@ async function trozalLoadCanvasImage(src){
 }
 $('renderBtn').onclick=async()=>{const convertButton=$('convertPngToMov');if(convertButton){convertButton.style.display='none';convertButton.disabled=false;convertButton.textContent='Convert PNG ke MOV ProRes 4444';convertButton.onclick=null;}const turboMode=$('renderSpeedMode')?.value==='turbo';let wanted=$('format').value;const movMode=wanted==='mov',frameSequenceMode=wanted==='mp4'||movMode||wanted==='pngseq';if(!frameSequenceMode&&!window.MediaRecorder){setStatus('Browser tidak mendukung MediaRecorder. Coba Chrome/Edge terbaru.');setExportStatus('Render gagal: browser tidak mendukung MediaRecorder.');setRenderProgress(0,'Render gagal','error');return}let [w,h]=$('resolution').value.split('x').map(Number),d=+$('duration').value,fps=+$('fps').value;if(frameSequenceMode&&!window.JSZip){
  setStatus('Memuat pustaka ZIP untuk menyiapkan frame video…');
- const zipSources=['./vendor/jszip.min.js','https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js','https://unpkg.com/jszip@3.10.1/dist/jszip.min.js'];
+ const zipSources=[new URL('vendor/jszip.min.js',TROZAL_ASSET_ROOT).href,'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js','https://unpkg.com/jszip@3.10.1/dist/jszip.min.js'];
  let zipLoadErrors=[];
  for(const src of zipSources){
   try{
