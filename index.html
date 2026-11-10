@@ -1900,6 +1900,15 @@ function drawShapePathOnCanvas(ctx,baseW,baseH,s){
 ['shapeMaskType','shapeMaskMode','shapeMaskSize','shapeMaskRotation','shapeMaskX','shapeMaskY','shapeMaskEnabled','shapePathColor','shapePathWidth','shapePathReveal','shapePathData'].forEach(id=>$(id)?.addEventListener('input',()=>{syncActiveMaskFromControls();if(id==='shapeMaskSize'&&$('shapeMaskSizeVal'))$('shapeMaskSizeVal').textContent=$('shapeMaskSize').value+'%';refreshMaskManager();renderAt(playhead);scheduleAutosave()}));
 
 let visualMotionPreviewDoc=null,visualMotionPreviewAnimations=[];
+function visualMotionPreviewSetRatio(){
+ const frame=$('visualMotionPreview'),value=$('visualMotionRatio')?.value||'16:9';
+ if(!frame)return;
+ const parts=value.split(':').map(Number);
+ if(parts.length===2&&parts.every(n=>n>0))frame.style.aspectRatio=parts[0]+' / '+parts[1];
+ frame.style.height='auto';frame.style.maxHeight='320px';
+}
+$('visualMotionRatio')?.addEventListener('change',visualMotionPreviewSetRatio);
+
 function visualMotionPreviewLoaded(){
  const frame=$('visualMotionPreview');
  try{
@@ -1919,6 +1928,7 @@ function visualMotionPreviewSync(seconds){
  }catch(_){}
 }
 $('visualMotionPreview')?.addEventListener('load',visualMotionPreviewLoaded);
+visualMotionPreviewSetRatio();
 
 function renderAt(t){
  playhead=Math.max(0,Math.min(+$('duration').value,t));
