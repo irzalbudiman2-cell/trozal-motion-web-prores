@@ -806,6 +806,7 @@ let sourceSvg='', sourceUrl='', sourceType='', files=[], playing=false, raf=0, s
 let timelineMarkers=[], timelineTrackLocks={}, timelineDragState=null, keyframeGraphDragState=null;
 let timelineSnapEnabled=true, motionPathDragState=null, trozalUndoStack=[], trozalUndoIndex=-1, trozalHistoryBusy=false;
 // HTML-to-Motion uses an isolated same-origin document and DOM capture; it is not rasterized through SVG foreignObject.
+let trozalMetadataActiveSource=null;
 let htmlMotionSource='', htmlMotionIframe=null, htmlMotionFrame=null, htmlMotionCaptureBusy=false, htmlMotionAnimations=[], htmlMotionFontsReady=null, htmlMotionRenderer=null, htmlMotionLastTime=-1;
 let htmlMotionWidth=1920, htmlMotionHeight=1080, htmlMotionOutputName='', activeRenderBaseName='trozal-render';
 const demoSvg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500"><g stroke="#9b5a2b" stroke-width="9" stroke-linecap="round" fill="none"><circle cx="250" cy="260" r="125" stroke-dasharray="12 18"/><circle cx="250" cy="260" r="160" stroke-width="4"/><path d="M250 50V105 M250 415V470 M40 260H95 M405 260H460 M101 111L140 150 M360 370L399 409 M399 111L360 150 M140 370L101 409 M168 62L192 120 M332 400L356 458 M42 188L102 210 M398 310L458 332 M332 62L308 120 M192 400L168 458 M42 332L102 310 M398 210L458 188"/></g><g fill="${currentColor}"><path d="M176 176h148v52c0 62-30 98-74 98s-74-36-74-98z"/><path d="M176 176h74v150c-44 0-74-36-74-98z" fill="#f8c14e"/><path d="M324 176h25c15 0 22 15 15 28l-14 21h-26zM176 176h-25c-15 0-22 15-15 28l14 21h26z" fill="#e87824"/><circle cx="420" cy="85" r="17"/><circle cx="390" cy="425" r="10"/><path d="M200 340h100v16H200z" fill="#fff"/></g></svg>`;
@@ -3879,7 +3880,6 @@ trozalMetadataRenderReview();trozalMetadataRenderScenes();trozalMetadataRenderBa
 
 
 /* TROZAL METADATA SOURCE ROUTER — separate HTML Motion and AI Scene Composer analysis */
-let trozalMetadataActiveSource=null;
 function trozalMetadataSourceStatus(message,isError=false){
  const el=$('trozalMetadataSourceStatus');if(el){el.textContent=message;el.style.color=isError?'#ff8b8b':'#72e6b2';}
 }
@@ -4061,6 +4061,7 @@ async function trozalVisionAnalyze(){
   const keywords=[...new Set((Array.isArray(parsed.keywords)?parsed.keywords:[]).map(x=>String(x).trim().toLowerCase()).filter(x=>{if(!x||x.length>=60)return false;const tokens=x.match(/[a-z0-9]+/g)||[];return tokens.length>0&&tokens.every(t=>groundedTokens.has(t));}))].slice(0,25);
   $('metadataTitle').value=title.slice(0,150);$('metadataTitle').dataset.baseTitle=title.slice(0,150);
   $('metadataDescription').value=description;$('metadataCategory').value=category;$('metadataKeywords').value=keywords.join(', ');
+  trozalMetadataActiveSource=null;
   trozalLocalVisionLastAnalysis={model,createdAt:new Date().toISOString(),imageCount:images.length,title,description,category,keywords,visualSummary:String(parsed.visual_summary||''),visibleObjects:Array.isArray(parsed.visible_objects)?parsed.visible_objects:[],confidenceNotes:String(parsed.confidence_notes||'')};
   if($('metadataEvidence'))$('metadataEvidence').textContent='BUKTI VISUAL AI LOKAL · '+images.length+' gambar dianalisis oleh '+model+'. '+(trozalLocalVisionLastAnalysis.visualSummary||'Metadata diturunkan dari isi piksel gambar, bukan prompt teks.')+(trozalLocalVisionLastAnalysis.confidenceNotes?' Catatan: '+trozalLocalVisionLastAnalysis.confidenceNotes:'')+' · Tetap periksa hasil sebelum ekspor.';
   updateMetadataCount();trozalRefreshMetadataQuality();trozalUpdateMetadataPlatformValidation();
