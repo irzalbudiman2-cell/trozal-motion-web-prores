@@ -4046,11 +4046,13 @@ async function trozalVisionCapturePreviewFrames(){
  const stage=$('stage');if(!stage)throw new Error('Area Preview tidak ditemukan.');
  const original=playhead,duration=Math.max(.1,+$('duration').value||10),times=[0,duration*.5,duration*.85],images=[];
  try{
-  const renderer=await ensureHtmlToImage();
+  const renderer=htmlMotionIframe?.contentDocument?null:await ensureHtmlToImage();
   for(let i=0;i<times.length;i++){
    renderAt(times[i]);
    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
-   const canvas=await renderer.toCanvas(stage,{pixelRatio:1,cacheBust:true,skipAutoScale:true});
+   const canvas=htmlMotionIframe?.contentDocument
+    ?await captureHtmlMotionAt(times[i])
+    :await renderer.toCanvas(stage,{pixelRatio:1,cacheBust:true,skipAutoScale:true});
    const scale=Math.min(1,1280/Math.max(canvas.width,canvas.height));
    let finalCanvas=canvas;
    if(scale<1){finalCanvas=document.createElement('canvas');finalCanvas.width=Math.max(1,Math.round(canvas.width*scale));finalCanvas.height=Math.max(1,Math.round(canvas.height*scale));finalCanvas.getContext('2d').drawImage(canvas,0,0,finalCanvas.width,finalCanvas.height);}
