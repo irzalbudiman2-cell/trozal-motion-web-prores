@@ -748,7 +748,16 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
     </details>
    </section>
    <div id="metadataPlatformValidation" class="metadata-evidence">Pilih platform untuk melihat pemeriksaan judul dan keyword.</div>
-   <div class="row" style="margin-top:8px"><button class="primary" id="generateMetadataBtn" type="button">✦ ANALISIS & GENERATE METADATA</button><button id="clearMetadataBtn" type="button">Bersihkan</button></div>
+   <section class="metadata-evidence" id="trozalMetadataSourcePanel" style="margin:12px 0;border:1px solid #b18aff;background:rgba(125,78,190,.09)">
+    <div style="font-weight:800;color:#c9a7ff;margin-bottom:6px">✦ TROZAL METADATA · PILIH SUMBER HASIL</div>
+    <p class="help">Pilih sumber yang sudah dibuat. Metadata dibuat dari struktur dan isi HTML/SVG hasil akhir, bukan hanya dari prompt. Model lokal Qwen3.5 4B akan membaca kode adegan dan menghasilkan judul, deskripsi, kategori, serta keyword.</p>
+    <div class="row" style="gap:8px;flex-wrap:wrap">
+     <button type="button" class="primary" id="metadataFromHtmlMotionBtn" style="flex:1">① METADATA HTML MOTION</button>
+     <button type="button" class="primary" id="metadataFromSceneAiBtn" style="flex:1">② METADATA SCENE AI</button>
+    </div>
+    <div id="trozalMetadataSourceStatus" class="help" aria-live="polite">Pilih salah satu sumber untuk mulai analisis.</div>
+   </section>
+   <div class="row" style="margin-top:8px"><button id="generateMetadataBtn" type="button">Generate dari bukti teks / manual</button><button id="clearMetadataBtn" type="button">Bersihkan</button></div>
    <label>Judul (English)</label><input id="metadataTitle" type="text" placeholder="English title — review against the actual visual">
    <p class="help">Judul otomatis adalah draf. Periksa subjek, aksi, jumlah objek, dan latar sebelum digunakan.</p>
    <label>Deskripsi (English)</label><textarea id="metadataDescription" rows="3" placeholder="English description based only on the supplied visual description..."></textarea>
@@ -3351,6 +3360,7 @@ function trozalMetadataEvidence(){
   if(text)entries.push({label,text,kind});
  };
  add('Deskripsi visual yang diperiksa pengguna',$('metadataSubject')?.value||'','verified-description');
+ if(trozalMetadataActiveSource)add('Metadata AI dari '+trozalMetadataActiveSource.sourceLabel,[trozalMetadataActiveSource.title,trozalMetadataActiveSource.description,trozalMetadataActiveSource.visualSummary,(trozalMetadataActiveSource.visibleObjects||[]).join(', '),(trozalMetadataActiveSource.motionDetails||[]).join(', ')].filter(Boolean).join('. '),'source-code-analysis');
  if(trozalLocalVisionLastAnalysis){const a=trozalLocalVisionLastAnalysis;add('Analisis piksel AI lokal · '+(a.model||'model lokal'),[a.title,a.description,a.visualSummary,(a.visibleObjects||[]).join(', ')].filter(Boolean).join('. '),'ai-visual-analysis');}
  add('Prompt-to-Visual (niat pembuatan, belum diverifikasi)',$('visualMotionPrompt')?.value||'','prompt-intent');
  add('Nama aset/proyek (bukan bukti visual)',$('objectName')?.value||'','filename');
@@ -3602,10 +3612,11 @@ function trozalMetadataKeywordAnalysis(){
  const reviewed=String($('metadataSubject')?.value||'').trim();
  const ai=trozalLocalVisionLastAnalysis;
  const aiText=ai?[ai.title,ai.description,ai.visualSummary,(ai.visibleObjects||[]).join(' ')].filter(Boolean).join(' '):'';
+ const sourceAi=trozalMetadataActiveSource?[trozalMetadataActiveSource.title,trozalMetadataActiveSource.description,trozalMetadataActiveSource.visualSummary,(trozalMetadataActiveSource.visibleObjects||[]).join(' ')].filter(Boolean).join(' '):'';
  const scenes=Array.isArray(visualSceneSequence)?visualSceneSequence.map(x=>String(x.text||'').trim()).filter(Boolean):[];
  const prompt=String($('visualMotionPrompt')?.value||'').trim();
  const readable=evidence.entries.filter(x=>x.kind==='visible-text'||x.kind==='label').map(x=>x.text).filter(Boolean);
- const source=reviewed||aiText||scenes.join(' ')||prompt||readable.join(' ');
+ const source=reviewed||sourceAi||aiText||scenes.join(' ')||prompt||readable.join(' ');
  const stop=new Set('a an the and or but with without from into onto over under between beside near at by on in of to is are was were be being been this that these those it its their his her they them he she as than then very more most some any all one two three four five six seven eight nine ten'.split(' '));
  const sourceWords=(trozalTranslateMetadataText(source).toLowerCase().match(/[a-z0-9]+/g)||[]).map(trozalMetadataWordKey).filter(x=>x&&!stop.has(x));
  const sourceSet=new Set(sourceWords);
@@ -3637,7 +3648,7 @@ function trozalRefreshMetadataQuality(){
  const title=$('metadataTitle')?.value.trim()||'',description=$('metadataDescription')?.value.trim()||'';
  const category=$('metadataCategory')?.value||'Graphic Resources',platform=$('metadataPlatform')?.value||'all';
  const analysis=trozalMetadataKeywordAnalysis(),count=analysis.entries.length;
- const aiVisualAvailable=!!trozalLocalVisionLastAnalysis;
+ const aiVisualAvailable=!!trozalLocalVisionLastAnalysis||!!trozalMetadataActiveSource;
  const sourceAvailable=!!($('metadataSubject')?.value.trim()||aiVisualAvailable||$('visualMotionPrompt')?.value.trim()||
   (Array.isArray(visualSceneSequence)&&visualSceneSequence.some(x=>String(x.text||'').trim()))||
   analysis.evidence.entries.some(x=>x.kind==='visible-text'||x.kind==='label'));
@@ -3828,7 +3839,7 @@ function trozalMetadataRenderBatch(){
 function trozalMetadataAddCurrent(){
  const q=trozalRefreshMetadataQuality(),keywords=String($('metadataKeywords').value||'').split(/[,;\n]+/).map(x=>x.trim()).filter(Boolean);
  const title=$('metadataTitle').value.trim();if(!title){$('metadataBatchSummary').textContent='Judul masih kosong. Buat metadata sebelum menambahkan aset.';return}
- trozalMetadataAddBatch({platform:$('metadataPlatform').value,title,description:$('metadataDescription').value.trim(),category:$('metadataCategory').value,keywords,editorialScore:q.score,evidenceLevel:trozalLocalVisionLastAnalysis?'local-ai-vision-pixel-analysis':q.verifiedSourceAvailable?'user-reviewed-visual-description':q.sourceAvailable?'prompt-or-scene-plan-unverified':'insufficient',evidenceSources:trozalLocalVisionLastAnalysis?['TROZAL LOCAL VISION · actual preview/image frames']: [...new Set(q.analysis.evidence.entries.map(x=>x.label.split(' · ')[0]))],scene:'',createdAt:new Date().toISOString()});
+ trozalMetadataAddBatch({platform:$('metadataPlatform').value,title,description:$('metadataDescription').value.trim(),category:$('metadataCategory').value,keywords,editorialScore:q.score,evidenceLevel:trozalLocalVisionLastAnalysis?'local-ai-vision-pixel-analysis':trozalMetadataActiveSource?'local-ai-source-code-analysis':q.verifiedSourceAvailable?'user-reviewed-visual-description':q.sourceAvailable?'prompt-or-scene-plan-unverified':'insufficient',evidenceSources:trozalLocalVisionLastAnalysis?['TROZAL LOCAL VISION · actual preview/image frames']:trozalMetadataActiveSource?[trozalMetadataActiveSource.sourceLabel+' · source code analysis']: [...new Set(q.analysis.evidence.entries.map(x=>x.label.split(' · ')[0]))],scene:'',createdAt:new Date().toISOString()});
 }
 function trozalMetadataAddScene(){
  const scenes=Array.isArray(visualSceneSequence)?visualSceneSequence:[],idx=Number($('metadataSceneSelect')?.value);
@@ -3866,6 +3877,78 @@ $('metadataExportSidecarBtn')?.addEventListener('click',trozalMetadataExportSide
 $('metadataClearBatchBtn')?.addEventListener('click',()=>{trozalMetadataBatch=[];trozalMetadataSaveBatch();trozalMetadataRenderBatch()});
 trozalMetadataRenderReview();trozalMetadataRenderScenes();trozalMetadataRenderBatch();
 
+
+/* TROZAL METADATA SOURCE ROUTER — separate HTML Motion and AI Scene Composer analysis */
+let trozalMetadataActiveSource=null;
+function trozalMetadataSourceStatus(message,isError=false){
+ const el=$('trozalMetadataSourceStatus');if(el){el.textContent=message;el.style.color=isError?'#ff8b8b':'#72e6b2';}
+}
+function trozalMetadataCollectHtmlMotion(){
+ let code=String(htmlMotionSource||'').trim();
+ let label='HTML Motion aktif';
+ if(!code&&$('object')){code=$('object').innerHTML||'';label='Objek/HTML Motion pada canvas utama';}
+ if(!code&&sourceSvg){code=sourceSvg;label='SVG aktif pada canvas utama';}
+ if(!code&&svgPieces.length){code='<div>'+svgPieces.join('\n')+'</div>';label='SVG layers aktif';}
+ if(!code)throw new Error('Belum ada hasil HTML Motion pada canvas utama. Muat atau terapkan HTML Motion terlebih dahulu.');
+ return {code,label};
+}
+function trozalMetadataCollectSceneAi(){
+ const code=String($('visualMotionOutput')?.value||'').trim();
+ if(!code)throw new Error('Belum ada hasil Scene AI. Buat adegan melalui AI Scene Composer terlebih dahulu.');
+ return {code,label:'TROZAL AI Scene Composer'};
+}
+function trozalMetadataSanitizeSource(code){
+ return String(code||'')
+  .replace(/data:image\/(?:png|jpeg|webp|gif);base64,[a-z0-9+/=]+/gi,'[embedded image omitted]')
+  .replace(/data:font\/[a-z0-9.+-]+;base64,[a-z0-9+/=]+/gi,'[embedded font omitted]')
+  .replace(/<script\b[\s\S]*?<\/script>/gi,' ')
+  .replace(/<!--([\s\S]*?)-->/g,' ')
+  .replace(/\s+/g,' ').trim().slice(0,26000);
+}
+async function trozalMetadataAnalyzeSource(kind){
+ const button=$(kind==='html'?'metadataFromHtmlMotionBtn':'metadataFromSceneAiBtn');
+ if(button.disabled)return;
+ const other=$(kind==='html'?'metadataFromSceneAiBtn':'metadataFromHtmlMotionBtn');
+ button.disabled=true;if(other)other.disabled=true;
+ const label=kind==='html'?'HTML Motion':'AI Scene Composer';
+ try{
+  const source=kind==='html'?trozalMetadataCollectHtmlMotion():trozalMetadataCollectSceneAi();
+  const code=trozalMetadataSanitizeSource(source.code);
+  if(code.length<80)throw new Error('Sumber terlalu pendek atau kosong untuk dianalisis.');
+  trozalMetadataSourceStatus('Menganalisis '+source.label+' ('+code.length.toLocaleString()+' karakter) dengan Qwen3.5 4B. Tunggu beberapa saat…');
+  const tags=await fetch(TROZAL_VISION_BASE+'/api/tags',{cache:'no-store'});
+  if(!tags.ok)throw new Error('Bridge tidak merespons daftar model (HTTP '+tags.status+').');
+  const tagData=await tags.json(),models=(tagData.models||[]).map(m=>String(m.name||''));
+  const model=models.find(n=>n==='qwen3.5:4b')||models.find(n=>n.startsWith('qwen3.5:4b'));
+  if(!model)throw new Error('Model qwen3.5:4b belum terpasang. Jalankan ollama pull qwen3.5:4b.');
+  const categories=[...$('metadataCategory').options].map(o=>o.text);
+  const system='You are a senior stock motion-graphics metadata editor. Analyze the supplied FINAL HTML/SVG/CSS source code, not the prompt or project name. Identify only objects and scene details explicitly represented by actual SVG elements, HTML elements, labels, CSS selectors, animation definitions, colors and composition. Distinguish intended animation from static appearance: describe motion only when CSS/SMIL/Web Animations clearly define it. Ignore editor UI, comments, code variable names, filenames and generic boilerplate. Do not invent people, brands, locations or objects. Return JSON only with keys: title (concise English, max 100 chars), description (accurate English, 1-2 sentences), category (one exact allowed category), keywords (up to 25 specific English phrases), visible_objects (array), motion_details (array), visual_summary (one short evidence-based summary), confidence_notes (brief uncertainty note). Allowed categories: '+categories.join(' | ')+'. Avoid generic filler such as digital art unless supported. Keywords must describe actual depicted content and visual attributes.';
+  const user='SOURCE TYPE: '+label+'\nSOURCE LABEL: '+source.label+'\nFINAL SOURCE CODE (truncated to 26k chars):\n'+code+'\nAnalyze only the final source code above. Do not infer anything from a creation prompt.';
+  const response=await fetch(TROZAL_VISION_BASE+'/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model,messages:[{role:'system',content:system},{role:'user',content:user}],format:'json',think:false,stream:false,options:{temperature:.15,num_ctx:8192,num_predict:1400},keep_alive:'10m'})});
+  if(!response.ok){let detail='HTTP '+response.status;try{detail=(await response.json()).error||detail}catch(_){}throw new Error(detail);}
+  const data=await response.json(),parsed=trozalVisionCleanJson(data.message?.content||'');
+  const title=String(parsed.title||'').trim(),description=String(parsed.description||'').trim();
+  if(!title||!description)throw new Error('Model tidak mengembalikan judul/deskripsi valid. Coba analisis ulang.');
+  const opts=[...$('metadataCategory').options].map(o=>o.text);
+  const category=opts.find(x=>x.toLowerCase()===String(parsed.category||'').trim().toLowerCase())||'Graphic Resources';
+  const keywordList=[...new Set((Array.isArray(parsed.keywords)?parsed.keywords:[]).map(x=>String(x).trim().toLowerCase()).filter(x=>x&&x.length<55))].slice(0,25);
+  $('metadataTitle').dataset.baseTitle=title.slice(0,150);
+  $('metadataTitle').value=trozalFormatMetadataTitleForPlatform(title.slice(0,150),$('metadataPlatform').value);
+  $('metadataDescription').value=description;
+  $('metadataCategory').value=category;
+  $('metadataKeywords').value=keywordList.join(', ');
+  trozalMetadataActiveSource={kind,model,sourceLabel:source.label,createdAt:new Date().toISOString(),title,description,category,keywords:keywordList,visibleObjects:Array.isArray(parsed.visible_objects)?parsed.visible_objects:[],motionDetails:Array.isArray(parsed.motion_details)?parsed.motion_details:[],visualSummary:String(parsed.visual_summary||''),confidenceNotes:String(parsed.confidence_notes||'')};
+  trozalLocalVisionLastAnalysis=null;
+  $('metadataEvidence').textContent='ANALISIS SUMBER KODE · '+source.label+' · '+model+'. '+(trozalMetadataActiveSource.visualSummary||'Metadata disusun dari elemen HTML/SVG/CSS hasil akhir.')+' Objek terdeteksi: '+trozalMetadataActiveSource.visibleObjects.join(', ')+'. '+(trozalMetadataActiveSource.confidenceNotes||'Periksa kembali hasil dengan Preview aktual.');
+  updateMetadataCount();trozalRefreshMetadataQuality();trozalUpdateMetadataPlatformValidation();
+  if(typeof trozalMetadataRenderReview==='function'){trozalMetadataApproved?.clear?.();trozalMetadataRenderReview();}
+  scheduleAutosave();
+  trozalMetadataSourceStatus('Selesai · '+label+' dianalisis dari kode hasil akhir. '+keywordList.length+' keyword dibuat. Periksa metadata sebelum ekspor.');
+ }catch(error){trozalMetadataSourceStatus('Analisis '+label+' gagal: '+(error?.message||String(error)),true);}
+ finally{button.disabled=false;if(other)other.disabled=false;}
+}
+$('metadataFromHtmlMotionBtn')?.addEventListener('click',()=>trozalMetadataAnalyzeSource('html'));
+$('metadataFromSceneAiBtn')?.addEventListener('click',()=>trozalMetadataAnalyzeSource('scene'));
 
 /* TROZAL LOCAL VISION — visual-first metadata through Ollama on the user's PC */
 let trozalLocalVisionLastAnalysis=null;
