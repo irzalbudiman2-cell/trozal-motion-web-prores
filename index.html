@@ -3982,6 +3982,9 @@ function trozalMetadataSanitizeSource(code){
   .replace(/<!--([\s\S]*?)-->/g,' ')
   .replace(/\s+/g,' ').trim().slice(0,26000);
 }
+/* Initialize the local Vision endpoint before any metadata action can run. */
+var TROZAL_VISION_BASE=(location.hostname==='127.0.0.1'||location.hostname==='localhost')?location.origin:'http://127.0.0.1:11435';
+var TROZAL_VISION_ORIGIN='https://irzalbudiman2-cell.github.io';
 async function trozalMetadataAnalyzeSource(kind){
  const button=$(kind==='html'?'metadataFromHtmlMotionBtn':'metadataFromSceneAiBtn');
  if(!button||button.dataset.analyzing==='1')return;
@@ -4051,8 +4054,6 @@ $('metadataFromHtmlMotionBtn')?.addEventListener('click',()=>trozalMetadataAnaly
 
 /* TROZAL LOCAL VISION — visual-first metadata through Ollama on the user's PC */
 var trozalLocalVisionLastAnalysis=null; // var is intentionally hoisted: metadata quality helpers run before the Vision section initializes.
-const TROZAL_VISION_BASE=(location.hostname==='127.0.0.1'||location.hostname==='localhost')?location.origin:'http://127.0.0.1:11435';
-const TROZAL_VISION_ORIGIN='https://irzalbudiman2-cell.github.io';
 function trozalVisionSetStatus(message,isError=false){
  const el=$('trozalVisionStatus');if(el){el.textContent=message;el.style.color=isError?'#ff8b8b':'';}
 }
