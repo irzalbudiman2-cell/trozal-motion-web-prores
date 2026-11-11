@@ -3982,8 +3982,12 @@ function trozalMetadataSanitizeSource(code){
   .replace(/<!--([\s\S]*?)-->/g,' ')
   .replace(/\s+/g,' ').trim().slice(0,26000);
 }
-/* Initialize the local Vision endpoint before any metadata action can run. */
-var TROZAL_VISION_BASE=(location.hostname==='127.0.0.1'||location.hostname==='localhost')?location.origin:'http://127.0.0.1:11435';
+/* Resolve Bridge URL at call time; never rely on a stale/undefined global. */
+function trozalVisionBaseUrl(){
+ const host=String(window.location.hostname||location.hostname||'');
+ return (host==='127.0.0.1'||host==='localhost')?window.location.origin:'http://127.0.0.1:11435';
+}
+var TROZAL_VISION_BASE=trozalVisionBaseUrl();
 var TROZAL_VISION_ORIGIN='https://irzalbudiman2-cell.github.io';
 async function trozalMetadataAnalyzeSource(kind){
  const button=$(kind==='html'?'metadataFromHtmlMotionBtn':'metadataFromSceneAiBtn');
@@ -4015,7 +4019,7 @@ async function trozalMetadataAnalyzeSource(kind){
   const images=await trozalVisionCapturePreviewFrames();
   if(images.length!==3)throw new Error('Capture Preview tidak lengkap ('+images.length+'/3 frame).');
   trozalMetadataSourceStatus('③ Menghubungi Ollama Bridge dan memeriksa model Vision…');
-  const tagsUrl=TROZAL_VISION_BASE+'/api/tags';
+  const tagsUrl=trozalVisionBaseUrl()+'/api/tags';
   const tags=await fetch(tagsUrl,{method:'GET',mode:'cors',credentials:'omit',cache:'no-store',targetAddressSpace:'loopback'});
   if(!tags.ok){
    let detail='';try{detail=(await tags.text()).slice(0,500)}catch(_){}
@@ -4071,7 +4075,7 @@ async function trozalVisionCheck(){
   catch(_){return 'tidak didukung oleh Permissions API';}
  })();
  try{
-  const response=await fetch(TROZAL_VISION_BASE+'/api/tags',{method:'GET',mode:'cors',credentials:'omit',cache:'no-store',targetAddressSpace:'loopback'});
+  const response=await fetch(trozalVisionBaseUrl()+'/api/tags',{method:'GET',mode:'cors',credentials:'omit',cache:'no-store',targetAddressSpace:'loopback'});
   if(!response.ok)throw new Error('Bridge merespons HTTP '+response.status);
   const data=await response.json();
   if(!Array.isArray(data.models))throw new Error('Respons Bridge tidak berisi daftar model Ollama.');
@@ -4093,7 +4097,7 @@ async function trozalVisionCheck(){
    :/failed to fetch|networkerror|load failed/i.test(reason)
     ?'Chrome memblokir fetch. Periksa izin Loopback network (bukan hanya Local network), lalu reload.'
     :'Pastikan jendela TROZAL Ollama Bridge tetap terbuka.';
-  trozalVisionSetStatus(hint+' Endpoint: '+TROZAL_VISION_BASE+'/api/tags',true);
+  trozalVisionSetStatus(hint+' Endpoint: '+trozalVisionBaseUrl()+'/api/tags',true);
   return null;
  }
 }
@@ -4145,7 +4149,7 @@ async function trozalVisionRequestJson(model, images, prompt) {
   try{
    const strictPrompt=prompt+'\nReturn one complete JSON object only. Do not explain or reason. Fill title, description, category, keywords, visual_summary, visible_objects and confidence_notes.';
    const body=attempt===0?payloadBase:attempt===1?{...payloadBase,messages:[{role:'user',content:strictPrompt,images}]}:{...payloadBase,format:undefined,options:{...payloadBase.options,num_predict:2200},messages:[{role:'user',content:strictPrompt,images}]};
-   const response=await fetch(TROZAL_VISION_BASE+'/api/chat',{method:'POST',mode:'cors',credentials:'omit',headers:{'Content-Type':'application/json'},targetAddressSpace:'loopback',signal:controller.signal,body:JSON.stringify(body)});
+   const response=await fetch(trozalVisionBaseUrl()+'/api/chat',{method:'POST',mode:'cors',credentials:'omit',headers:{'Content-Type':'application/json'},targetAddressSpace:'loopback',signal:controller.signal,body:JSON.stringify(body)});
    let data={};try{data=await response.json();}catch(_){}
    if(!response.ok)throw new Error('Ollama /api/chat HTTP '+response.status+': '+String(data.error||'respons kosong'));
    const content=String(data.message?.content||data.response||'').trim();
