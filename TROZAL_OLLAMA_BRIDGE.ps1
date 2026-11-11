@@ -45,8 +45,9 @@ try {
         $res.Headers["Cache-Control"] = "no-store"
         $res.ContentLength64 = $bytes.Length
         $res.OutputStream.Write($bytes, 0, $bytes.Length)
-      } elseif ($req.HttpMethod -eq "GET" -and $req.Url.AbsolutePath.StartsWith("/vendor/")) {
-        # Serve FFmpeg/JSZip through localhost: browsers block cross-origin module Workers.
+      } elseif ($req.HttpMethod -in @("GET", "HEAD") -and $req.Url.AbsolutePath.StartsWith("/vendor/")) {
+        # Serve FFmpeg/JSZip through localhost. FFmpeg.wasm checks assets with HEAD
+        # before loading them; support both HEAD and GET on this route.
         $assetPath = $req.Url.AbsolutePath.Substring(1)
         if ($assetPath.Contains("..")) {
           $res.StatusCode = 400
@@ -55,13 +56,24 @@ try {
           $res.OutputStream.Write($bytes, 0, $bytes.Length)
         } else {
           $assetUrl = "https://irzalbudiman2-cell.github.io/trozal-motion-web-prores/" + $assetPath
+          # Fetch the complete asset even for HEAD so Content-Length and MIME type
+          # are consistent with the subsequent GET response.
           $assetResponse = $client.GetAsync($assetUrl).GetAwaiter().GetResult()
-          $assetBytes = $assetResponse.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult()
           $res.StatusCode = [int]$assetResponse.StatusCode
-          $res.ContentType = $assetResponse.Content.Headers.ContentType.ToString()
+          if ($null -ne $assetResponse.Content.Headers.ContentType) {
+            $res.ContentType = $assetResponse.Content.Headers.ContentType.ToString()
+          } else {
+            $res.ContentType = "application/octet-stream"
+          }
           $res.Headers["Cache-Control"] = "public, max-age=3600"
-          $res.ContentLength64 = $assetBytes.Length
-          if ($assetBytes.Length -gt 0) { $res.OutputStream.Write($assetBytes, 0, $assetBytes.Length) }
+          if ($null -ne $assetResponse.Content.Headers.ContentLength) {
+            $res.ContentLength64 = [long]$assetResponse.Content.Headers.ContentLength
+          }
+          if ($req.HttpMethod -eq "GET") {
+            $assetBytes = $assetResponse.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult()
+            $res.ContentLength64 = $assetBytes.Length
+            if ($assetBytes.Length -gt 0) { $res.OutputStream.Write($assetBytes, 0, $assetBytes.Length) }
+          }
           $assetResponse.Dispose()
         }
       } elseif ($req.Url.AbsolutePath -notin @("/api/tags", "/api/chat", "/api/generate")) {
