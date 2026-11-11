@@ -4015,8 +4015,12 @@ async function trozalMetadataAnalyzeSource(kind){
   const images=await trozalVisionCapturePreviewFrames();
   if(images.length!==3)throw new Error('Capture Preview tidak lengkap ('+images.length+'/3 frame).');
   trozalMetadataSourceStatus('③ Menghubungi Ollama Bridge dan memeriksa model Vision…');
-  const tags=await fetch(TROZAL_VISION_BASE+'/api/tags',{method:'GET',mode:'cors',credentials:'omit',cache:'no-store',targetAddressSpace:'loopback'});
-  if(!tags.ok)throw new Error('Bridge Ollama tidak merespons (HTTP '+tags.status+'). Pastikan TROZAL Ollama Bridge aktif.');
+  const tagsUrl=TROZAL_VISION_BASE+'/api/tags';
+  const tags=await fetch(tagsUrl,{method:'GET',mode:'cors',credentials:'omit',cache:'no-store',targetAddressSpace:'loopback'});
+  if(!tags.ok){
+   let detail='';try{detail=(await tags.text()).slice(0,500)}catch(_){}
+   throw new Error('GET '+tagsUrl+' mengembalikan HTTP '+tags.status+(detail?' · '+detail:'')+'. Periksa log jendela Bridge.');
+  }
   const tagData=await tags.json(),models=(tagData.models||[]).map(m=>String(m.name||''));
   const preferred=$('trozalVisionModel')?.value||'qwen3-vl:2b';
   const model=models.find(n=>n===preferred)||models.find(n=>n.startsWith(preferred+':'))||models.find(n=>/^qwen3-vl:2b/.test(n));
