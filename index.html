@@ -4152,7 +4152,7 @@ async function trozalVisionRequestJson(model, images, prompt) {
  for(let attempt=0;attempt<attempts.length;attempt++){
   const spec=attempts[attempt],controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),8*60*1000);
   try{
-   const body={model,messages:[{role:'user',content:spec.prompt,images}],think:false,stream:false,options:{temperature:0.02,num_ctx:12288,num_predict:spec.numPredict},keep_alive:'10m'};
+   const body={model,messages:[{role:'user',content:spec.prompt,images}],think:false,stream:false,options:{temperature:0.02,num_ctx:8192,num_predict:spec.numPredict},keep_alive:'10m'};
    if(spec.format)body.format=spec.format;
    const response=await fetch(trozalVisionBaseUrl()+'/api/chat',{method:'POST',mode:'cors',credentials:'omit',headers:{'Content-Type':'application/json'},targetAddressSpace:'loopback',signal:controller.signal,body:JSON.stringify(body)});
    let data={};try{data=await response.json();}catch(_){}
