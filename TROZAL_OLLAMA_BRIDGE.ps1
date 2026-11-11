@@ -45,6 +45,25 @@ try {
         $res.Headers["Cache-Control"] = "no-store"
         $res.ContentLength64 = $bytes.Length
         $res.OutputStream.Write($bytes, 0, $bytes.Length)
+      } elseif ($req.HttpMethod -eq "GET" -and $req.Url.AbsolutePath.StartsWith("/vendor/")) {
+        # Serve FFmpeg/JSZip through localhost: browsers block cross-origin module Workers.
+        $assetPath = $req.Url.AbsolutePath.Substring(1)
+        if ($assetPath.Contains("..")) {
+          $res.StatusCode = 400
+          $bytes = [Text.Encoding]::UTF8.GetBytes('{"error":"Invalid asset path"}')
+          $res.ContentType = "application/json; charset=utf-8"
+          $res.OutputStream.Write($bytes, 0, $bytes.Length)
+        } else {
+          $assetUrl = "https://irzalbudiman2-cell.github.io/trozal-motion-web-prores/" + $assetPath
+          $assetResponse = $client.GetAsync($assetUrl).GetAwaiter().GetResult()
+          $assetBytes = $assetResponse.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult()
+          $res.StatusCode = [int]$assetResponse.StatusCode
+          $res.ContentType = $assetResponse.Content.Headers.ContentType.ToString()
+          $res.Headers["Cache-Control"] = "public, max-age=3600"
+          $res.ContentLength64 = $assetBytes.Length
+          if ($assetBytes.Length -gt 0) { $res.OutputStream.Write($assetBytes, 0, $assetBytes.Length) }
+          $assetResponse.Dispose()
+        }
       } elseif ($req.Url.AbsolutePath -notin @("/api/tags", "/api/chat", "/api/generate")) {
         $res.StatusCode = 404
         $bytes = [Text.Encoding]::UTF8.GetBytes('{"error":"Endpoint not allowed"}')
