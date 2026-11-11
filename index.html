@@ -1957,7 +1957,7 @@ $('playBtn').onclick=()=>{if(playing){playing=false;cancelAnimationFrame(raf);$(
 $('stopBtn').onclick=()=>{playing=false;cancelAnimationFrame(raf);playhead=0;renderAt(0);$('playBtn').textContent='▶ Putar'};
 $('scrubber').oninput=()=>{playing=false;cancelAnimationFrame(raf);playhead=+$('scrubber').value/1000*+$('duration').value;renderAt(playhead);$('playBtn').textContent='▶ Putar';scheduleAutosave()};
 $('prevFrame').onclick=()=>renderAt(playhead-1/(+$('fps').value));$('nextFrame').onclick=()=>renderAt(playhead+1/(+$('fps').value));
-const TROZAL_ASSET_ROOT=(location.hostname==='127.0.0.1'||location.hostname==='localhost')?'https://irzalbudiman2-cell.github.io/trozal-motion-web-prores/':new URL('.',document.baseURI).href;
+const TROZAL_ASSET_ROOT=(location.hostname==='127.0.0.1'||location.hostname==='localhost')?new URL('/',location.origin).href:new URL('.',document.baseURI).href;
 async function encodeMovWithWasm(pngZip,totalFrames,fps,width,height,outputFormat='mov'){
  // Module workers used by FFmpeg.wasm are unreliable from opaque file:// origins.
  // Require localhost so Chrome/Edge can create the module worker and import its Blob dependencies.
