@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- trozal_MOTION Fix32: Local FFmpeg launcher and ProRes 4444 export -->
+<!-- TROZAL MOTION · Ollama Local AI Edition -->
 <html lang="id">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>trozal_MOTION — Web Free</title>
+<title>TROZAL MOTION — Ollama AI</title>
 <style>
 :root{--bg:#15171e;--panel:#20232c;--panel2:#252934;--line:#343a48;--text:#e9edf5;--muted:#9da8bc;--gold:#ffbd45;--green:#13b96b;--blue:#7cb7ff}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:13px/1.45 Inter,Segoe UI,Arial,sans-serif}
@@ -413,7 +413,7 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
 </head>
 <body>
 <header class="topbar">
- <div class="brand">trozal<span>_MOTION</span></div><div class="topnote">Fix32 · AI Theme Search · HTML Repair · Local ProRes Export</div>
+ <div class="brand">TROZAL <span>MOTION</span></div><div class="topnote">OLLAMA AI · LOCAL GENERATION · PRORES EXPORT</div>
  <div class="render-progress topbar-render-progress is-idle" id="renderProgress" role="status" aria-live="polite"><span class="render-progress-label" id="renderProgressLabel">Siap · 0%</span><div class="render-progress-track"><div class="render-progress-fill" id="renderProgressFill"></div></div></div>
  <div class="topright"><button id="helpBtn">Panduan</button><button id="resetLayoutBtn" title="Kembalikan ukuran dan urutan panel">Tata Letak</button><button id="resetBtn">Reset</button></div>
 </header>
@@ -4428,6 +4428,11 @@ $('generateVisualMotionAiBtn')?.addEventListener('click',generateVisualMotionWit
 <style>
 #visualMotionAiCheckBtn,#generateVisualMotionAiBtn{position:relative!important;z-index:60!important;pointer-events:auto!important;touch-action:manipulation}
 #visualMotionAiStatus{position:relative;z-index:5;min-height:22px}
+
+/* TROZAL MOTION Ollama edition: orange identity badge */
+.topbar .brand{color:#fff;font-weight:950;letter-spacing:1.15px;text-transform:uppercase}
+.topbar .brand span{color:#fff}
+.topbar .topnote{display:inline-flex;align-items:center;min-height:25px;padding:4px 10px;border:1px solid #f59b32;border-radius:7px;background:linear-gradient(135deg,#ffbd45,#ed861c);color:#241506!important;font-size:10px;font-weight:900;letter-spacing:.65px;text-transform:uppercase;box-shadow:0 3px 12px #ef941f33}
 </style>
 <script>
 (function(){
