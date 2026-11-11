@@ -726,7 +726,7 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
     <p class="help">Analisis dilakukan oleh model lokal di PC Anda. Gambar preview tidak dikirim ke OpenAI atau layanan cloud.</p>
     <div class="row" style="align-items:center;gap:8px;flex-wrap:wrap">
      <button type="button" id="trozalVisionCheckBtn">↻ Cek Ollama</button>
-     <select id="trozalVisionModel" aria-label="Model AI Vision" style="flex:1;min-width:150px"><option value="qwen3-vl:2b">Qwen3-VL 2B · disarankan</option><option value="qwen3-vl:4b">Qwen3-VL 4B · lebih berat</option></select>
+     <select id="trozalVisionModel" aria-label="Model AI Vision" style="flex:1;min-width:150px"><option value="qwen3.5:4b">Qwen3.5 4B · disarankan (Vision)</option><option value="qwen3-vl:2b">Qwen3-VL 2B · cadangan ringan</option><option value="qwen3-vl:4b">Qwen3-VL 4B · lebih berat</option></select>
     </div>
     <div id="trozalVisionConnection" class="help" aria-live="polite">Belum terhubung · Ollama lokal: http://127.0.0.1:11435</div>
     <label style="margin-top:8px">Gambar bukti (opsional)</label>
@@ -740,11 +740,11 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
     <details style="margin-top:8px"><summary style="cursor:pointer;font-weight:700">Panduan instalasi satu kali</summary>
      <ol class="help">
       <li>Pasang Ollama untuk Windows.</li>
-      <li>Jalankan <code>ollama pull qwen3-vl:2b</code> di PowerShell.</li>
+      <li>Model yang disarankan: <code>qwen3.5:4b</code> (jika sudah terpasang, tidak perlu mengunduh ulang). Alternatif: <code>ollama pull qwen3-vl:2b</code>.</li>
       <li>Tambahkan environment variable Windows <code>OLLAMA_ORIGINS</code> dengan nilai <code>https://irzalbudiman2-cell.github.io</code>, lalu tutup Ollama dari system tray dan jalankan kembali.</li>
       <li>Kembali ke sini dan tekan Cek Ollama.</li>
      </ol>
-     <p class="help"><a href="https://ollama.com/download/windows" target="_blank" rel="noopener">Unduh Ollama Windows</a> · <a href="https://ollama.com/library/qwen3-vl" target="_blank" rel="noopener">Info model Qwen3-VL</a></p>
+     <p class="help"><a href="https://ollama.com/download/windows" target="_blank" rel="noopener">Unduh Ollama Windows</a> · <a href="https://ollama.com/library/qwen3.5" target="_blank" rel="noopener">Info Qwen3.5 Vision</a> · <a href="https://ollama.com/library/qwen3-vl" target="_blank" rel="noopener">Info Qwen3-VL</a></p>
     </details>
    </section>
    <div id="metadataPlatformValidation" class="metadata-evidence">Pilih platform untuk melihat pemeriksaan judul dan keyword.</div>
@@ -4026,10 +4026,10 @@ async function trozalMetadataAnalyzeSource(kind){
    throw new Error('GET '+tagsUrl+' mengembalikan HTTP '+tags.status+(detail?' · '+detail:'')+'. Periksa log jendela Bridge.');
   }
   const tagData=await tags.json(),models=(tagData.models||[]).map(m=>String(m.name||''));
-  const preferred=$('trozalVisionModel')?.value||'qwen3-vl:2b';
-  const model=models.find(n=>n===preferred)||models.find(n=>n.startsWith(preferred+':'))||models.find(n=>/^qwen3-vl:2b/.test(n));
-  if(!model)throw new Error('Model Vision Qwen3-VL belum terpasang. Jalankan ollama pull qwen3-vl:2b lalu cek ulang koneksi.');
-  trozalMetadataSourceStatus('④ Qwen3-VL sedang membaca '+images.length+' frame. Model lokal dapat memerlukan beberapa menit…');
+  const preferred=$('trozalVisionModel')?.value||'qwen3.5:4b';
+  const model=models.find(n=>n===preferred)||models.find(n=>n.startsWith(preferred+':'))||models.find(n=>/^qwen3\.5:4b/.test(n))||models.find(n=>/^qwen3-vl:2b/.test(n));
+  if(!model)throw new Error('Model Vision belum terpasang. Disarankan: ollama pull qwen3.5:4b');
+  trozalMetadataSourceStatus('④ '+model+' sedang membaca '+images.length+' frame. Model lokal dapat memerlukan beberapa menit…');
   const categories=[...$('metadataCategory').options].map(o=>o.text);
   const prompt='You are a visual metadata analyst for stock motion graphics. Analyze ONLY visible pixels in these three sequential frames captured from the final TROZAL MOTION preview. Do not infer from source code, prompt, filename, or scene plan. Describe only visible subjects, objects, supported actions, background, colors, composition and style. Infer motion only when frame differences support it. Return JSON only: {"title":"concise English title, max 100 characters","description":"accurate English description, 1-2 sentences","category":"one exact allowed category","keywords":["up to 25 specific English keywords"],"visual_summary":"brief visible scene summary","visible_objects":["clearly visible objects"],"motion_details":["motion supported by frame changes"],"confidence_notes":"brief uncertainty or empty string"}. Allowed categories: '+categories.join(' | ')+'. Keep all claims grounded in the pixels.';
   const result=await trozalVisionRequestJson(model,images,prompt);
@@ -4081,9 +4081,9 @@ async function trozalVisionCheck(){
   if(!Array.isArray(data.models))throw new Error('Respons Bridge tidak berisi daftar model Ollama.');
   const models=data.models,select=$('trozalVisionModel'),available=models.map(m=>String(m.name||'')).filter(Boolean);
   if(select)[...select.options].forEach(option=>{option.dataset.installed=available.some(name=>name===option.value||name.startsWith(option.value+':'))?'1':'0'});
-  const preferred=available.find(name=>name==='qwen3-vl:2b')||available.find(name=>name.startsWith('qwen3-vl:2b'));
-  if(preferred&&select)select.value='qwen3-vl:2b';
-  const vision=available.filter(name=>/qwen3-vl|llava|gemma.*vision/i.test(name));
+  const preferred=available.find(name=>name==='qwen3.5:4b')||available.find(name=>name.startsWith('qwen3.5:4b'))||available.find(name=>name==='qwen3-vl:2b')||available.find(name=>name.startsWith('qwen3-vl:2b'));
+  if(preferred&&select)select.value=preferred.startsWith('qwen3.5:4b')?'qwen3.5:4b':'qwen3-vl:2b';
+  const vision=available.filter(name=>/qwen3(?:\.5|-vl)|llava|gemma.*vision/i.test(name));
   const permissionState=await permissionPromise;
   trozalVisionSetConnection('TERHUBUNG · '+models.length+' model terpasang · Loopback: '+permissionState+(vision.length?' · Vision: '+vision.join(', '):' · Model Vision belum terpasang'),true);
   trozalVisionSetStatus(vision.length?'Bridge dan Ollama siap. Model Vision tersedia: '+vision.join(', '):'Bridge aktif, tetapi belum ada model Vision yang cocok. Model terpasang: '+available.join(', '));
@@ -4161,7 +4161,8 @@ async function trozalVisionRequestJson(model, images, prompt) {
    if(!content){
     const reason=String(data.done_reason||data.message?.done_reason||'tidak tersedia');
     const evalCount=Number(data.eval_count||data.message?.eval_count||0);
-    throw new Error('Ollama mengirim respons kosong (done_reason: '+reason+', eval_count: '+evalCount+', batas output: '+spec.numPredict+').');
+    const thinking=String(data.message?.thinking||'').length;
+    throw new Error('Model '+model+' mengirim content kosong (done_reason: '+reason+', eval_count: '+evalCount+', batas output: '+spec.numPredict+', karakter thinking: '+thinking+'). Pilih Qwen3.5 4B Vision atau model Vision lain; jangan hanya menaikkan token.');
    }
    try{
     const parsed=trozalVisionCleanJson(content);
