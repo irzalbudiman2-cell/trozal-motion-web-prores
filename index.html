@@ -4028,12 +4028,32 @@ async function trozalMetadataAnalyzeSource(kind){
   }
   const tagData=await tags.json(),models=(tagData.models||[]).map(m=>String(m.name||''));
   const preferred=$('trozalVisionModel')?.value||'qwen3.5:4b';
-  const model=models.find(n=>n===preferred)||models.find(n=>n.startsWith(preferred+':'))||models.find(n=>/^qwen3\.5:4b/.test(n))||models.find(n=>/^qwen3-vl:2b/.test(n));
-  if(!model)throw new Error('Model Vision belum terpasang. Disarankan: ollama pull qwen3.5:4b');
-  trozalMetadataSourceStatus('④ '+model+' sedang membaca '+images.length+' frame. Model lokal dapat memerlukan beberapa menit…');
+  const candidateModels=[...new Set([
+   models.find(n=>n===preferred)||models.find(n=>n.startsWith(preferred+':')),
+   models.find(n=>/^qwen3\.5:4b/.test(n)),
+   models.find(n=>/^qwen3-vl:2b/.test(n))
+  ].filter(Boolean))];
+  if(!candidateModels.length)throw new Error('Model Vision belum terpasang. Disarankan: ollama pull qwen3.5:4b atau ollama pull qwen3-vl:2b');
+  // Reduce the three preview frames before inference to lower VRAM/RAM pressure.
+  images=await Promise.all(images.map(async value=>(await trozalVisionResizeImage('data:image/jpeg;base64,'+value,960)).split(',')[1]));
+  let model=candidateModels[0];
+  trozalMetadataSourceStatus('④ '+model+' sedang membaca '+images.length+' frame yang sudah dioptimalkan. Model lokal dapat memerlukan beberapa menit…');
   const categories=[...$('metadataCategory').options].map(o=>o.text);
   const prompt='You are a visual metadata analyst for stock motion graphics. Analyze ONLY visible pixels in these three sequential frames captured from the final TROZAL MOTION preview. Do not infer from source code, prompt, filename, or scene plan. Describe only visible subjects, objects, supported actions, background, colors, composition and style. Infer motion only when frame differences support it. Return JSON only: {"title":"concise English title, max 100 characters","description":"accurate English description, 1-2 sentences","category":"one exact allowed category","keywords":["up to 25 specific English keywords"],"visual_summary":"brief visible scene summary","visible_objects":["clearly visible objects"],"motion_details":["motion supported by frame changes"],"confidence_notes":"brief uncertainty or empty string"}. Allowed categories: '+categories.join(' | ')+'. Keep all claims grounded in the pixels.';
-  const result=await trozalVisionRequestJson(model,images,prompt);
+  let result=null,lastModelError=null;
+  for(let modelIndex=0;modelIndex<candidateModels.length;modelIndex++){
+   model=candidateModels[modelIndex];
+   try{
+    result=await trozalVisionRequestJson(model,images,prompt);
+    break;
+   }catch(modelError){
+    lastModelError=modelError;
+    if(modelIndex<candidateModels.length-1){
+     trozalMetadataSourceStatus('Model '+model+' gagal ('+(modelError?.message||modelError)+'). Mencoba model Vision cadangan '+candidateModels[modelIndex+1]+'…');
+    }
+   }
+  }
+  if(!result)throw lastModelError||new Error('Semua model Vision lokal gagal menghasilkan metadata.');
   const parsed=result.parsed,fields=trozalVisionGetCoreFields(parsed);
   const title=fields.title,description=fields.description;
   const category=[...$('metadataCategory').options].map(o=>o.text).find(x=>x.toLowerCase()===fields.category.toLowerCase())||'Graphic Resources';
