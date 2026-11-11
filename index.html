@@ -3299,16 +3299,26 @@ async function createHtmlMotionRenderer(raw){
  if(htmlMotionIframe){htmlMotionIframe.remove();htmlMotionIframe=null;}
  const frame=document.createElement('iframe');frame.setAttribute('sandbox','allow-same-origin');frame.title='HTML Motion preview and deterministic export capture (imported scripts removed)';
  frame.style.cssText='width:'+htmlMotionWidth+'px;height:'+htmlMotionHeight+'px;border:0;display:block;position:absolute;left:50%;top:50%;transform-origin:center center;background:transparent;';
- frame.srcdoc=safeDoc;
+ // Register iframe load handlers BEFORE assigning srcdoc and attaching it.
+ // This prevents a fast srcdoc load from being missed and causing a false timeout.
+ const frameLoad=new Promise((resolve,reject)=>{
+  let settled=false;
+  const timer=setTimeout(()=>{if(!settled){settled=true;reject(new Error('HTML scene belum selesai dimuat dalam 60 detik. Periksa apakah dokumen terlalu berat atau berisi aset eksternal yang lambat.'));}},60000);
+  frame.addEventListener('load',()=>{if(!settled){settled=true;clearTimeout(timer);resolve();}},{once:true});
+  frame.addEventListener('error',()=>{if(!settled){settled=true;clearTimeout(timer);reject(new Error('Gagal memuat dokumen HTML di frame terisolasi.'));}},{once:true});
+ });
  // Fit the complete HTML scene to the stage instead of cropping oversized AI/4K canvases.
  $('object').style.width='100%';$('object').style.height='100%';$('object').style.transform='none';$('object').style.opacity='1';$('object').style.clipPath='none';
- $('object').innerHTML='';$('object').appendChild(frame);htmlMotionIframe=frame;const fitScale=Math.min(Math.max(1,$('object').clientWidth)/htmlMotionWidth,Math.max(1,$('object').clientHeight)/htmlMotionHeight);frame.style.transform='translate(-50%,-50%) scale('+fitScale+')';
- await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(new Error('HTML scene tidak selesai dimuat dalam 15 detik.')),15000);frame.onload=()=>{clearTimeout(timer);resolve();};frame.onerror=()=>{clearTimeout(timer);reject(new Error('Gagal memuat dokumen HTML di frame terisolasi.'));};});
+ $('object').innerHTML='';frame.srcdoc=safeDoc;$('object').appendChild(frame);htmlMotionIframe=frame;const fitScale=Math.min(Math.max(1,$('object').clientWidth)/htmlMotionWidth,Math.max(1,$('object').clientHeight)/htmlMotionHeight);frame.style.transform='translate(-50%,-50%) scale('+fitScale+')';
+ await frameLoad;
  const doc=frame.contentDocument;if(!doc)throw new Error('Dokumen HTML terisolasi tidak dapat diakses.');
  await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
  const scene=doc.body;
  if(!scene)throw new Error('Elemen visual HTML tidak ditemukan.');
- if(doc.fonts?.ready)await doc.fonts.ready;
+ if(doc.fonts?.ready){
+  // A remote font must not block scene generation indefinitely; system fallback is usable.
+  await Promise.race([doc.fonts.ready,new Promise(resolve=>setTimeout(resolve,15000))]);
+ }
  // Original HTML effects are preserved; no visual fallback rewrites are applied.
  // Pause all CSS/Web Animations at a deterministic point; each render frame seeks these timelines.
  const animations=doc.getAnimations({subtree:true});htmlMotionAnimations=animations;animations.forEach(a=>{try{a.pause();}catch(_){}});
