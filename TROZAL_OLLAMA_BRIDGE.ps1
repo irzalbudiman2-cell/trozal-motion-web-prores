@@ -27,6 +27,7 @@ try {
     $ctx = $listener.GetContext()
     $req = $ctx.Request
     $res = $ctx.Response
+    Write-Host ("[{0}] {1} {2}" -f (Get-Date -Format "HH:mm:ss"), $req.HttpMethod, $req.Url.AbsolutePath) -ForegroundColor DarkGray
     $res.Headers["Access-Control-Allow-Origin"] = $origin
     $res.Headers["Vary"] = "Origin"
     $res.Headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
@@ -94,6 +95,7 @@ try {
         $upstream = $client.SendAsync($message).GetAwaiter().GetResult()
         $payload = $upstream.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult()
         $res.StatusCode = [int]$upstream.StatusCode
+        Write-Host ("  -> Ollama {0} {1}" -f [int]$upstream.StatusCode, ($ollama + $req.Url.AbsolutePath)) -ForegroundColor $(if([int]$upstream.StatusCode -ge 400){"Red"}else{"DarkGreen"})
         $res.ContentType = "application/json; charset=utf-8"
         $res.ContentLength64 = $payload.Length
         if ($payload.Length -gt 0) { $res.OutputStream.Write($payload, 0, $payload.Length) }
