@@ -4024,17 +4024,21 @@ async function trozalMetadataAnalyzeSource(kind){
   const source=kind==='html'?trozalMetadataCollectHtmlMotion():trozalMetadataCollectSceneAi();
   const raw=String(source.code||'').trim();
   if(raw.length<80)throw new Error('Sumber hasil kosong atau terlalu pendek.');
-  trozalMetadataSourceStatus('① Memuat '+source.label+' ke Preview utama TROZAL…');
-  // Do not call generateMotionSvgLocally(): it catches renderer errors internally,
-  // which previously allowed metadata analysis to continue with a stale preview.
-  const rendered=await createHtmlMotionRenderer(raw);
-  if(!rendered?.doc?.body||!htmlMotionIframe?.contentDocument)throw new Error('HTML tidak berhasil dimuat ke Preview utama.');
+  trozalMetadataSourceStatus('① Memuat '+source.label+' ke Preview utama TROZAL melalui renderer HTML-to-Motion…');
+  // Match the proven Browser AI path: load through the same public renderer used by
+  // the Generate button, then verify the real iframe before asking Ollama to inspect it.
+  if(playing){playing=false;cancelAnimationFrame(raf);$('playBtn').textContent='▶ Putar';}
   $('aiCodeTerminal').value=raw.replace(/^\x60{3}(?:html|htm)?\s*/i,'').replace(/\s*\x60{3}$/,'');
+  await generateMotionSvgLocally();
+  await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+  if(!htmlMotionIframe?.contentDocument?.body){
+   const rendererStatus=$('aiStatus')?.textContent||$('status')?.textContent||'';
+   throw new Error('Renderer belum berhasil memuat HTML Motion ke Preview.'+(rendererStatus?' Detail: '+rendererStatus:' Periksa panel HTML-to-Motion.'));
+  }
   preserveSvgColors=true;
   htmlMotionOutputName=trozalReadHtmlOutputName(raw)||htmlMotionOutputName;
   $('objectName').value=htmlMotionOutputName||'HTML_to_Motion_Graphic';
   playhead=0;
-  if(playing){playing=false;cancelAnimationFrame(raf);$('playBtn').textContent='▶ Putar';}
   renderAt(0);
   await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
   trozalMetadataSourceStatus('② Mengambil tiga frame dari Preview aktual…');
@@ -4099,21 +4103,14 @@ async function trozalMetadataAnalyzeSource(kind){
   if(other)other.disabled=false;
  }
 }
-// Explicit global entry point plus capture-phase delegation. This runs before panel-level
-// handlers and avoids silent no-op clicks when another control stops event propagation.
+// Same direct button wiring pattern as the working Browser AI version.
 window.trozalMetadataAnalyzeSource=trozalMetadataAnalyzeSource;
-document.addEventListener('click',event=>{
- const target=event.target?.closest?.('#metadataFromHtmlMotionBtn, #metadataFromSceneAiBtn');
- if(!target)return;
- event.preventDefault();
- event.stopPropagation();
- const kind=target.id==='metadataFromHtmlMotionBtn'?'html':'scene';
- if(target.dataset.analyzing==='1')return;
- trozalMetadataSourceStatus('KLIK DITERIMA · Menyiapkan analisis '+(kind==='html'?'HTML Motion':'Scene AI')+'…');
- Promise.resolve().then(()=>window.trozalMetadataAnalyzeSource(kind)).catch(error=>{
-  trozalMetadataSourceStatus('GAGAL MEMULAI · '+(error?.message||String(error)),true);
- });
-},true);
+window.trozalMetadataCollectHtmlMotion=trozalMetadataCollectHtmlMotion;
+window.trozalMetadataCollectSceneAi=trozalMetadataCollectSceneAi;
+window.trozalVisionCapturePreviewFrames=trozalVisionCapturePreviewFrames;
+window.generateMotionSvgLocally=generateMotionSvgLocally;
+$('metadataFromHtmlMotionBtn')?.addEventListener('click',()=>trozalMetadataAnalyzeSource('html'));
+$('metadataFromSceneAiBtn')?.addEventListener('click',()=>trozalMetadataAnalyzeSource('scene'));
 
 /* TROZAL LOCAL VISION — visual-first metadata through Ollama on the user's PC */
 var trozalLocalVisionLastAnalysis=null; // var is intentionally hoisted: metadata quality helpers run before the Vision section initializes.
