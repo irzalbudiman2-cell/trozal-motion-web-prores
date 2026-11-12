@@ -752,7 +752,7 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
     <div style="font-weight:800;color:#c9a7ff;margin-bottom:6px">✦ TROZAL METADATA · PILIH SUMBER HASIL</div>
     <p class="help">Pilih sumber yang sudah dibuat. Metadata dibuat dari tiga frame hasil render yang benar-benar tampil di Preview TROZAL. Model Vision Qwen3-VL 2B menganalisis piksel untuk menghasilkan judul, deskripsi, kategori, dan keyword.</p>
     <div class="row" style="gap:8px;flex-wrap:wrap">
-     <button type="button" class="primary" id="metadataFromHtmlMotionBtn" onclick="trozalMetadataAnalyzeSource('html')" style="flex:1;pointer-events:auto;position:relative;z-index:3">① METADATA HTML MOTION</button>
+     <button type="button" class="primary" id="metadataFromHtmlMotionBtn" style="flex:1;pointer-events:auto;position:relative;z-index:3">① METADATA HTML MOTION</button>
      <button type="button" class="primary" id="metadataFromSceneAiBtn" onclick="trozalMetadataAnalyzeSource(&quot;scene&quot;)" style="flex:1;pointer-events:auto;position:relative;z-index:3">② METADATA SCENE AI</button>
     </div>
     <div id="trozalMetadataSourceStatus" class="help" aria-live="polite">Pilih salah satu sumber untuk mulai analisis.</div>
@@ -3969,10 +3969,21 @@ function trozalMetadataSourceStatus(message,isError=false){
 function trozalMetadataCollectHtmlMotion(){
  let code=String(htmlMotionSource||'').trim();
  let label='HTML Motion aktif';
- if(!code&&$('object')){code=$('object').innerHTML||'';label='Objek/HTML Motion pada canvas utama';}
+ // Prefer the exact imported source used by the renderer; if unavailable, recover from the live preview.
+ if(!code&&htmlMotionIframe?.contentDocument?.documentElement){
+  code='<!doctype html>'+htmlMotionIframe.contentDocument.documentElement.outerHTML;
+  label='HTML Motion dari dokumen Preview aktif';
+ }
+ if(!code&&$('aiCodeTerminal')?.value?.trim()){
+  const candidate=String($('aiCodeTerminal').value).trim();
+  if(/<(?:!doctype\s+html|html|svg|div|section|main|article)\b/i.test(candidate)){
+   code=candidate;label='HTML Motion dari Terminal HTML';
+  }
+ }
+ if(!code&&$('object')?.innerHTML?.trim()){code=$('object').innerHTML;label='Objek/HTML Motion pada canvas utama';}
  if(!code&&sourceSvg){code=sourceSvg;label='SVG aktif pada canvas utama';}
  if(!code&&svgPieces.length){code='<div>'+svgPieces.join('\n')+'</div>';label='SVG layers aktif';}
- if(!code)throw new Error('Belum ada hasil HTML Motion pada canvas utama. Muat atau terapkan HTML Motion terlebih dahulu.');
+ if(!code)throw new Error('Belum ada hasil HTML Motion. Terapkan kode HTML/SVG ke Preview utama TROZAL terlebih dahulu.');
  return {code,label};
 }
 function trozalMetadataCollectSceneAi(){
@@ -4085,8 +4096,10 @@ async function trozalMetadataAnalyzeSource(kind){
   if(other)other.disabled=false;
  }
 }
-// HTML Motion metadata uses the same direct inline click path as Scene AI for reliable activation.
-// Scene AI metadata uses an inline click entry point so it remains clickable even if an earlier optional UI initializer fails.
+// Explicit global entry point plus native listeners: avoid inline-handler scope/CSP issues.
+window.trozalMetadataAnalyzeSource=trozalMetadataAnalyzeSource;
+$('metadataFromHtmlMotionBtn')?.addEventListener('click',()=>trozalMetadataAnalyzeSource('html'));
+$('metadataFromSceneAiBtn')?.addEventListener('click',()=>trozalMetadataAnalyzeSource('scene'));
 
 /* TROZAL LOCAL VISION — visual-first metadata through Ollama on the user's PC */
 var trozalLocalVisionLastAnalysis=null; // var is intentionally hoisted: metadata quality helpers run before the Vision section initializes.
