@@ -752,7 +752,7 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
     <div style="font-weight:800;color:#c9a7ff;margin-bottom:6px">✦ TROZAL METADATA · PILIH SUMBER HASIL</div>
     <p class="help">Pilih sumber yang sudah dibuat. Metadata dibuat dari tiga frame hasil render yang benar-benar tampil di Preview TROZAL. Model Vision Qwen3-VL 2B menganalisis piksel untuk menghasilkan judul, deskripsi, kategori, dan keyword.</p>
     <div class="row" style="gap:8px;flex-wrap:wrap">
-     <button type="button" class="primary" id="metadataFromHtmlMotionBtn" style="flex:1">① METADATA HTML MOTION</button>
+     <button type="button" class="primary" id="metadataFromHtmlMotionBtn" onclick="trozalMetadataAnalyzeSource('html')" style="flex:1;pointer-events:auto;position:relative;z-index:3">① METADATA HTML MOTION</button>
      <button type="button" class="primary" id="metadataFromSceneAiBtn" onclick="trozalMetadataAnalyzeSource(&quot;scene&quot;)" style="flex:1;pointer-events:auto;position:relative;z-index:3">② METADATA SCENE AI</button>
     </div>
     <div id="trozalMetadataSourceStatus" class="help" aria-live="polite">Pilih salah satu sumber untuk mulai analisis.</div>
@@ -4042,7 +4042,7 @@ async function trozalMetadataAnalyzeSource(kind){
   ].filter(Boolean))];
   if(!candidateModels.length)throw new Error('Model Vision belum terpasang. Disarankan: ollama pull qwen3.5:4b atau ollama pull qwen3-vl:2b');
   // Reduce the three preview frames before inference to lower VRAM/RAM pressure.
-  images=await Promise.all(images.map(async value=>(await trozalVisionResizeImage('data:image/jpeg;base64,'+value,960)).split(',')[1]));
+  images=await Promise.all(images.map(async value=>(await trozalVisionResizeImage('data:image/png;base64,'+value,960)).split(',')[1]));
   let model=candidateModels[0];
   trozalMetadataSourceStatus('④ '+model+' sedang membaca '+images.length+' frame yang sudah dioptimalkan. Model lokal dapat memerlukan beberapa menit…');
   const categories=[...$('metadataCategory').options].map(o=>o.text);
@@ -4085,7 +4085,7 @@ async function trozalMetadataAnalyzeSource(kind){
   if(other)other.disabled=false;
  }
 }
-$('metadataFromHtmlMotionBtn')?.addEventListener('click',()=>trozalMetadataAnalyzeSource('html'));
+// HTML Motion metadata uses the same direct inline click path as Scene AI for reliable activation.
 // Scene AI metadata uses an inline click entry point so it remains clickable even if an earlier optional UI initializer fails.
 
 /* TROZAL LOCAL VISION — visual-first metadata through Ollama on the user's PC */
@@ -4156,7 +4156,7 @@ async function trozalVisionCapturePreviewFrames(){
    const scale=Math.min(1,1280/Math.max(canvas.width,canvas.height));
    let finalCanvas=canvas;
    if(scale<1){finalCanvas=document.createElement('canvas');finalCanvas.width=Math.max(1,Math.round(canvas.width*scale));finalCanvas.height=Math.max(1,Math.round(canvas.height*scale));finalCanvas.getContext('2d').drawImage(canvas,0,0,finalCanvas.width,finalCanvas.height);}
-   images.push(finalCanvas.toDataURL('image/jpeg',.84).split(',')[1]);
+   images.push(finalCanvas.toDataURL('image/png').split(',')[1]);
    trozalVisionSetStatus('Mengambil frame Preview '+(i+1)+' dari 3…');
   }
  }finally{renderAt(original);}
