@@ -752,7 +752,7 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
     <div style="font-weight:800;color:#c9a7ff;margin-bottom:6px">✦ TROZAL METADATA · PILIH SUMBER HASIL</div>
     <p class="help">Pilih sumber yang sudah dibuat. Metadata dibuat dari tiga frame hasil render yang benar-benar tampil di Preview TROZAL. Model Vision Qwen3-VL 2B menganalisis piksel untuk menghasilkan judul, deskripsi, kategori, dan keyword.</p>
     <div class="row" style="gap:8px;flex-wrap:wrap">
-     <button type="button" class="primary" id="metadataFromHtmlMotionBtn" onclick="window.trozalMetadataAnalyzeSource &amp;&amp; window.trozalMetadataAnalyzeSource('html')" style="flex:1;pointer-events:auto;position:relative;z-index:3">① METADATA HTML MOTION</button>
+     <button type="button" class="primary" id="metadataFromHtmlMotionBtn" style="flex:1;pointer-events:auto;position:relative;z-index:5">① METADATA HTML MOTION</button>
      <button type="button" class="primary" id="metadataFromSceneAiBtn" onclick="trozalMetadataAnalyzeSource(&quot;scene&quot;)" style="flex:1;pointer-events:auto;position:relative;z-index:3">② METADATA SCENE AI</button>
     </div>
     <div id="trozalMetadataSourceStatus" class="help" aria-live="polite">Pilih salah satu sumber untuk mulai analisis.</div>
@@ -4009,8 +4009,10 @@ function trozalVisionBaseUrl(){
 var TROZAL_VISION_BASE=trozalVisionBaseUrl();
 var TROZAL_VISION_ORIGIN='https://irzalbudiman2-cell.github.io';
 async function trozalMetadataAnalyzeSource(kind){
+ kind=kind==='html'?'html':'scene';
  const button=$(kind==='html'?'metadataFromHtmlMotionBtn':'metadataFromSceneAiBtn');
- if(!button||button.dataset.analyzing==='1')return;
+ if(!button){trozalMetadataSourceStatus('GAGAL · Tombol sumber metadata tidak ditemukan di halaman.',true);return;}
+ if(button.dataset.analyzing==='1')return;
  const other=$(kind==='html'?'metadataFromSceneAiBtn':'metadataFromHtmlMotionBtn');
  const label=kind==='html'?'HTML Motion':'AI Scene Composer';
  button.dataset.analyzing='1';button.disabled=true;
@@ -4018,6 +4020,7 @@ async function trozalMetadataAnalyzeSource(kind){
  const oldLabel=button.textContent;
  button.textContent='MENGANALISIS…';
  try{
+  trozalMetadataSourceStatus('① Tombol aktif · Mengambil sumber '+label+'…');
   const source=kind==='html'?trozalMetadataCollectHtmlMotion():trozalMetadataCollectSceneAi();
   const raw=String(source.code||'').trim();
   if(raw.length<80)throw new Error('Sumber hasil kosong atau terlalu pendek.');
@@ -4096,10 +4099,21 @@ async function trozalMetadataAnalyzeSource(kind){
   if(other)other.disabled=false;
  }
 }
-// Explicit global entry point plus native listeners: avoid inline-handler scope/CSP issues.
+// Explicit global entry point plus capture-phase delegation. This runs before panel-level
+// handlers and avoids silent no-op clicks when another control stops event propagation.
 window.trozalMetadataAnalyzeSource=trozalMetadataAnalyzeSource;
-$('metadataFromHtmlMotionBtn')?.addEventListener('click',()=>trozalMetadataAnalyzeSource('html'));
-$('metadataFromSceneAiBtn')?.addEventListener('click',()=>trozalMetadataAnalyzeSource('scene'));
+document.addEventListener('click',event=>{
+ const target=event.target?.closest?.('#metadataFromHtmlMotionBtn, #metadataFromSceneAiBtn');
+ if(!target)return;
+ event.preventDefault();
+ event.stopPropagation();
+ const kind=target.id==='metadataFromHtmlMotionBtn'?'html':'scene';
+ if(target.dataset.analyzing==='1')return;
+ trozalMetadataSourceStatus('KLIK DITERIMA · Menyiapkan analisis '+(kind==='html'?'HTML Motion':'Scene AI')+'…');
+ Promise.resolve().then(()=>window.trozalMetadataAnalyzeSource(kind)).catch(error=>{
+  trozalMetadataSourceStatus('GAGAL MEMULAI · '+(error?.message||String(error)),true);
+ });
+},true);
 
 /* TROZAL LOCAL VISION — visual-first metadata through Ollama on the user's PC */
 var trozalLocalVisionLastAnalysis=null; // var is intentionally hoisted: metadata quality helpers run before the Vision section initializes.
