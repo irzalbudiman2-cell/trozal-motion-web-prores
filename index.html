@@ -4163,7 +4163,10 @@ async function trozalVisionResizeImage(dataUrl,maxSide=1280){
  const scale=Math.min(1,maxSide/Math.max(imgEl.naturalWidth,imgEl.naturalHeight));
  const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(imgEl.naturalWidth*scale));canvas.height=Math.max(1,Math.round(imgEl.naturalHeight*scale));
  const ctx=canvas.getContext('2d');ctx.drawImage(imgEl,0,0,canvas.width,canvas.height);
- return canvas.toDataURL('image/jpeg',.84).split(',')[1];
+ const png=canvas.toDataURL('image/png');
+ const base64=png.split(',')[1]||'';
+ if(!base64||!/^iVBORw0KGgo/.test(base64))throw new Error('Frame Preview gagal dikonversi menjadi PNG valid untuk Ollama.');
+ return base64;
 }
 async function trozalVisionCapturePreviewFrames(){
  if(playing)throw new Error('Hentikan Putar terlebih dahulu agar frame yang dianalisis stabil.');
@@ -4224,7 +4227,7 @@ async function trozalVisionRequestJson(model, images, prompt) {
    }catch(parseError){throw new Error('Respons Vision tidak dapat dipakai: '+parseError.message+' · cuplikan: '+content.slice(0,180));}
   }catch(error){
    lastError=error;
-   if(attempt<attempts.length-1&&!/HTTP 4\\d\\d|Failed to fetch|NetworkError/i.test(error.message||''))continue;
+   if(attempt<attempts.length-1&&!/HTTP 4\d\d|Failed to fetch|NetworkError/i.test(error.message||''))continue;
    break;
   }finally{clearTimeout(timeout);}
  }
