@@ -3502,7 +3502,21 @@ function trozalInitThemeCatalog(){
  search.addEventListener('change',resolve);
  search.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();const first=results.querySelector('button');if(first)choose(first.textContent);else resolve();}else if(e.key==='Escape')results.hidden=true;});
  document.addEventListener('click',e=>{if(!e.target.closest('#svgMotionModePanel'))results.hidden=true;});
- const randomBtn=$('svgAiRandomThemeBtn');if(randomBtn)randomBtn.addEventListener('click',()=>{const pool=TROZAL_AI_THEMES.filter(t=>t!==select.value);choose(pool[Math.floor(Math.random()*pool.length)]);});
+ const randomBtn=$('svgAiRandomThemeBtn');
+ if(randomBtn)randomBtn.addEventListener('click',e=>{
+  e.preventDefault();
+  const pool=TROZAL_AI_THEMES.filter(t=>t&&t!==select.value);
+  if(!pool.length){hint.textContent='Katalog tema belum tersedia. Muat ulang halaman lalu coba lagi.';return;}
+  const picked=pool[Math.floor(Math.random()*pool.length)];
+  try{
+   choose(picked);
+   hint.textContent='✦ Tema inspirasi dipilih: '+picked+'. Kategori visual dan subtema sudah disesuaikan.';
+  }catch(err){
+   select.value=picked;
+   search.value=picked;
+   hint.textContent='Tema terpilih: '+picked+'. Ada kendala saat memperbarui kategori: '+(err&&err.message?err.message:'periksa konsol browser');
+  }
+ });
 }
 function trozalGetPromptCanvas(){
  const ratio=$('svgAiRatio').value,level=+$('svgAiResolution').value||2160;let width,height,label;
