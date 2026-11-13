@@ -4260,7 +4260,7 @@ function trozalVisionNormalizeKeywords(parsed) {
   if(!phrase||phrase.length<3||phrase.length>45||words.length>4||words.some(w=>stop.has(w)))continue;
   if(words.every(w=>w.length<3)||seen.has(phrase))continue;
   seen.add(phrase);result.push(phrase);
-  if(result.length>=40)break;
+  if(result.length>=47)break;
  }
  return result;
 }
@@ -4292,7 +4292,7 @@ async function trozalVisionAnalyze(){
   }
   if(!images.length)throw new Error('Tidak ada gambar untuk dianalisis.');
   const categories=[...$('metadataCategory').options].map(o=>o.text);
-  const prompt='You are a stock motion-graphics visual metadata analyst. Inspect ONLY the attached image pixels. Ignore prompts, filenames, source code and scene plans. Identify visible objects, colors, background, composition, visual style and only motion supported by differences between frames. Do not invent details. Return ONE valid JSON object with keys title, description, category, keywords, visual_summary, visible_objects, confidence_notes. title must be a concise English phrase under 100 characters. description must be 1-2 clear English sentences. category must exactly match one of: '+categories.join(' | ')+'. keywords must be an array of 30-40 specific English search terms when supported by the pixels. Include distinct visible objects, materials, colors, composition, visual style, setting, and accurate 2-3 word phrases. Avoid duplicates, vague filler, and unsupported assumptions. Aim for 35 terms; never invent details just to reach the count. Keep fields non-empty when the images provide enough evidence. If uncertain, describe only what is clear.';
+  const prompt='You are a stock motion-graphics visual metadata analyst. Inspect ONLY the attached image pixels. Ignore prompts, filenames, source code and scene plans. Identify visible objects, colors, background, composition, visual style and only motion supported by differences between frames. Do not invent details. Return ONE valid JSON object with keys title, description, category, keywords, visual_summary, visible_objects, confidence_notes. title must be a concise English phrase under 100 characters. description must be 1-2 clear English sentences. category must exactly match one of: '+categories.join(' | ')+'. keywords must be an array of 35-47 specific English search terms when supported by the pixels. Include distinct visible objects, materials, colors, composition, visual style, setting, and accurate 2-3 word phrases. Avoid duplicates, vague filler, and unsupported assumptions. Aim for 42-47 terms when the visual evidence supports them; never invent details just to reach the count. Keep fields non-empty when the images provide enough evidence. If uncertain, describe only what is clear.';
   trozalVisionSetStatus('Mengirim '+images.length+' frame ke '+model+'. Menunggu analisis lokal (dapat memerlukan beberapa menit)…');
   const result=await trozalVisionRequestJson(model,images,prompt),parsed=result.parsed,fields=trozalVisionGetCoreFields(parsed);
   const category=categories.find(x=>x.toLowerCase()===fields.category.toLowerCase())||'Graphic Resources';
