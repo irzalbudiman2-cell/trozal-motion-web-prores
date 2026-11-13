@@ -4198,7 +4198,7 @@ function trozalVisionCleanJson(text){
 }
 async function trozalVisionRequestJson(model, images, prompt) {
  let lastError=null;
- const strictPrompt=prompt+'\nReturn a SHORT, complete JSON object only. No reasoning, no markdown. Keep title under 18 words, description under 45 words, keywords as 12-20 short specific terms. Fill title, description, category, keywords, visual_summary, visible_objects and confidence_notes. Finish every JSON bracket.';
+ const strictPrompt=prompt+'\nReturn a SHORT, complete JSON object only. No reasoning, no markdown. Keep title under 18 words, description under 45 words, keywords as 30-40 specific accurate English search terms when supported; include useful 2-3 word phrases, visible objects, colors, materials, setting and style. Avoid duplicates and unsupported assumptions. Fill title, description, category, keywords, visual_summary, visible_objects and confidence_notes. Finish every JSON bracket.';
  const attempts=[
   {format:'json',numPredict:3072,prompt},
   {format:'json',numPredict:4096,prompt:strictPrompt},
@@ -4234,14 +4234,35 @@ async function trozalVisionRequestJson(model, images, prompt) {
  throw lastError||new Error('Analisis Vision tidak menghasilkan respons.');
 }
 function trozalVisionNormalizeKeywords(parsed) {
- const stop=new Set(['the','and','with','from','this','that','into','over','under','for','are','is','of','in','on','a','an','to','by','as','at','it','its','scene','video','animation','motion','graphic','graphics','visual']);
- const supplied=Array.isArray(parsed.keywords)?parsed.keywords:[];
- const fallback=[...(Array.isArray(parsed.visible_objects)?parsed.visible_objects:[]),String(parsed.visual_summary||''),String(parsed.title||''),String(parsed.description||'')]
-  .flatMap(value=>String(value).toLowerCase().match(/[a-z][a-z0-9-]{2,}/g)||[])
-  .filter(word=>!stop.has(word));
- const values=supplied.length?supplied:fallback;
- return [...new Set(values.map(value=>String(value).trim().toLowerCase())
-  .filter(value=>value.length>2&&value.length<60&&/[a-z0-9]/.test(value)))].slice(0,25);
+ const stop=new Set(['the','and','with','from','this','that','into','over','under','for','are','is','of','in','on','a','an','to','by','as','at','it','its','scene','video','animation','motion','graphic','graphics','visual','show','shows','showing','image','images','frame','frames','there','their','while','where','which','that','these','those','some','many','very','more','most','can','may','could','should','being','been','has','have','had','its','than','then','also','such','each','other','another','background','foreground']);
+ const candidates=[];
+ const add=value=>{const text=String(value||'').toLowerCase().replace(/[_-]+/g,' ').replace(/[^a-z0-9 ]+/g,' ').replace(/\\s+/g,' ').trim();if(text)candidates.push(text);};
+ // Preserve the model's own specific terms first.
+ (Array.isArray(parsed.keywords)?parsed.keywords:[]).forEach(add);
+ // A short model response often gives only 8-10 keywords. Mine additional
+ // evidence-backed phrases from the model's own visible-object and summary fields.
+ (Array.isArray(parsed.visible_objects)?parsed.visible_objects:[]).forEach(add);
+ [parsed.visual_summary,parsed.title,parsed.description].forEach(add);
+ const base=[...candidates];
+ for(const phrase of base){
+  const words=phrase.split(' ').filter(w=>w.length>2&&!stop.has(w));
+  // Add compact 2-3 word phrases before individual words.
+  for(let n=3;n>=2;n--)for(let i=0;i<=words.length-n;i++){
+   const part=words.slice(i,i+n).join(' ');
+   if(part.length<=45)candidates.push(part);
+  }
+  words.forEach(w=>candidates.push(w));
+ }
+ const result=[],seen=new Set();
+ for(const value of candidates){
+  const phrase=value.replace(/\\s+/g,' ').trim();
+  const words=phrase.split(' ').filter(Boolean);
+  if(!phrase||phrase.length<3||phrase.length>45||words.length>4||words.some(w=>stop.has(w)))continue;
+  if(words.every(w=>w.length<3)||seen.has(phrase))continue;
+  seen.add(phrase);result.push(phrase);
+  if(result.length>=40)break;
+ }
+ return result;
 }
 function trozalVisionGetCoreFields(parsed) {
  const summary=String(parsed.visual_summary||'').trim();
@@ -4271,7 +4292,7 @@ async function trozalVisionAnalyze(){
   }
   if(!images.length)throw new Error('Tidak ada gambar untuk dianalisis.');
   const categories=[...$('metadataCategory').options].map(o=>o.text);
-  const prompt='You are a stock motion-graphics visual metadata analyst. Inspect ONLY the attached image pixels. Ignore prompts, filenames, source code and scene plans. Identify visible objects, colors, background, composition, visual style and only motion supported by differences between frames. Do not invent details. Return ONE valid JSON object with keys title, description, category, keywords, visual_summary, visible_objects, confidence_notes. title must be a concise English phrase under 100 characters. description must be 1-2 clear English sentences. category must exactly match one of: '+categories.join(' | ')+'. keywords must be an array of up to 25 specific English search terms, including useful visible-object synonyms. Keep fields non-empty when the images provide enough evidence. If uncertain, describe only what is clear.';
+  const prompt='You are a stock motion-graphics visual metadata analyst. Inspect ONLY the attached image pixels. Ignore prompts, filenames, source code and scene plans. Identify visible objects, colors, background, composition, visual style and only motion supported by differences between frames. Do not invent details. Return ONE valid JSON object with keys title, description, category, keywords, visual_summary, visible_objects, confidence_notes. title must be a concise English phrase under 100 characters. description must be 1-2 clear English sentences. category must exactly match one of: '+categories.join(' | ')+'. keywords must be an array of 30-40 specific English search terms when supported by the pixels. Include distinct visible objects, materials, colors, composition, visual style, setting, and accurate 2-3 word phrases. Avoid duplicates, vague filler, and unsupported assumptions. Aim for 35 terms; never invent details just to reach the count. Keep fields non-empty when the images provide enough evidence. If uncertain, describe only what is clear.';
   trozalVisionSetStatus('Mengirim '+images.length+' frame ke '+model+'. Menunggu analisis lokal (dapat memerlukan beberapa menit)…');
   const result=await trozalVisionRequestJson(model,images,prompt),parsed=result.parsed,fields=trozalVisionGetCoreFields(parsed);
   const category=categories.find(x=>x.toLowerCase()===fields.category.toLowerCase())||'Graphic Resources';
