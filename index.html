@@ -4236,7 +4236,7 @@ async function trozalVisionRequestJson(model, images, prompt) {
 function trozalVisionNormalizeKeywords(parsed) {
  const stop=new Set(['the','and','with','from','this','that','into','over','under','for','are','is','of','in','on','a','an','to','by','as','at','it','its','scene','video','animation','motion','graphic','graphics','visual','show','shows','showing','image','images','frame','frames','there','their','while','where','which','that','these','those','some','many','very','more','most','can','may','could','should','being','been','has','have','had','its','than','then','also','such','each','other','another','background','foreground']);
  const candidates=[];
- const add=value=>{const text=String(value||'').toLowerCase().replace(/[_-]+/g,' ').replace(/[^a-z0-9 ]+/g,' ').replace(/\\s+/g,' ').trim();if(text)candidates.push(text);};
+ const add=value=>{const text=String(value||'').toLowerCase().replace(/[_-]+/g,' ').replace(/[^a-z0-9 ]+/g,' ').replace(/\s+/g,' ').trim();if(text)candidates.push(text);};
  // Preserve the model's own specific terms first.
  (Array.isArray(parsed.keywords)?parsed.keywords:[]).forEach(add);
  // A short model response often gives only 8-10 keywords. Mine additional
@@ -4255,7 +4255,7 @@ function trozalVisionNormalizeKeywords(parsed) {
  }
  const result=[],seen=new Set();
  for(const value of candidates){
-  const phrase=value.replace(/\\s+/g,' ').trim();
+  const phrase=value.replace(/\s+/g,' ').trim();
   const words=phrase.split(' ').filter(Boolean);
   if(!phrase||phrase.length<3||phrase.length>45||words.length>4||words.some(w=>stop.has(w)))continue;
   if(words.every(w=>w.length<3)||seen.has(phrase))continue;
