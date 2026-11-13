@@ -3160,7 +3160,8 @@ let htmlDiagnosticDebounce=0;$('aiCodeTerminal').addEventListener('input',()=>{c
 
 
 // FIX27 AI topic catalogue and semantic style/subtheme matching.
-const TROZAL_AI_THEMES=[
+const TROZAL_AI_THEMES=[...new Set([
+
 'Brand Identity & Logo','Kinetic Typography','Product Commercial','E-commerce & Retail','Social Media Content','YouTube Intro / Outro','Explainer & Educational','Technology & Artificial Intelligence','SaaS & Web App','Mobile App UI','Dashboard & Data Storytelling','Business & Corporate','Finance & Fintech','Healthcare & Wellness','Medical & Pharmaceutical','Science & Research','Education & E-learning','Food & Beverage','Restaurant & Culinary','Beauty & Cosmetics','Fashion & Lifestyle','Travel & Tourism','Architecture & Interior','Real Estate','Automotive & Transportation','Gaming & Esports','Music & Entertainment','Sports & Fitness','Nature & Environment','Wildlife & Conservation','Ocean & Marine Life','Green Energy & Sustainability','Space & Astronomy','Culture & Heritage','Indonesian Culture & Tourism','Festival & Celebration','Ramadan & Eid','Islamic Education & Values','Hajj & Umrah','Christmas & Holiday','Chinese New Year & Lunar Festival','Diwali & Festival of Lights','Halloween & Spooky Season','New Year Countdown','Wedding & Event','News & Editorial','Infographic & Statistics','Maps & Geospatial','Abstract & Experimental','Character & Mascot','Storytelling & Narrative','Public Service Announcement','Microstock Motion Design','Packaging & Label Design','Typography & Fonts','Cybersecurity','Cloud Computing','Robotics & Automation','Blockchain & Web3','Internet of Things','Smart Home','Renewable Energy','Agriculture & Farming','Pet & Animal Care','Parenting & Family','Career & Recruitment','Logistics & Supply Chain','Education Technology','Travel Destination','Coffee & Tea','Bakery & Dessert','Banking & Insurance','Construction & Engineering','Government & Civic Services','Mental Wellness & Mindfulness','Luxury & Premium Brand','Science Fiction & Fantasy','Weather & Climate','Space Exploration','Wedding Photography & Videography',
 "AI & Generative Media",
 "Prompt Engineering & AI Tools",
@@ -3445,8 +3446,47 @@ const TROZAL_THEME_RULES=[
  {re:/space|astronomy|science fiction|fantasy/i,styles:['Futuristic Sci-Fi','Cinematic Lighting','3D Layered Composition','Surreal Abstract','Isometric Illustration'],specific:['Planet and orbit system visualization','Space exploration title sequence','Astronaut journey and mission timeline','Nebula and cosmic energy transition','Satellite communication network','Sci-fi portal and dimensional reveal']},
  {re:/culture|heritage|indonesian|tourism|travel|destination|map|geospatial/i,styles:['Modern Editorial','Flat Vector Illustration','Paper Cutout','Isometric Illustration','Cinematic Lighting'],specific:['Travel destination opener','Cultural heritage pattern reveal','Traditional architecture and landmark showcase','World map route animation','Local tourism campaign','Traditional craft and textile story']},
  {re:/gaming|esports|music|entertainment|sports|fitness|character|mascot|storytelling|abstract/i,styles:['Futuristic Sci-Fi','Bright Playful','2D Cartoon','3D Layered Composition','Surreal Abstract'],specific:['Sports event opener','Fitness training sequence','Esports tournament package','Music visualizer interface','Character mascot introduction','Animated storytelling scene','Abstract energy and particle transition']},
- {re:/microstock|infographic|statistics|public service|social media|youtube/i,styles:['Editorial Infographic','Flat Vector Illustration','Minimal Swiss Design','Clean Corporate','Modern Editorial'],specific:['Statistics counter sequence','Step-by-step process infographic','Comparison infographic','Timeline and roadmap','Public service awareness campaign','Social media campaign opener','Explainer title and data sequence']}
-];
+ {re:/microstock|infographic|statistics|public service|social media|youtube/i,styles:['Editorial Infographic','Flat Vector Illustration','Minimal Swiss Design','Clean Corporate','Modern Editorial'],specific:['Statistics counter sequence','Step-by-step process infographic','Comparison infographic','Timeline and roadmap','Public service awareness campaign','Social media campaign opener','Explainer title and data sequence']},
+...[
+'Smart Agriculture',
+'Marine Conservation',
+'Wildlife Documentary',
+'Medical Innovation',
+'Space Mission',
+'Electric Mobility',
+'Renewable Energy',
+'Smart City Infrastructure',
+'Architecture Showcase',
+'Interior Design',
+'Luxury Hospitality',
+'Culinary Storytelling',
+'Coffee Culture',
+'Fashion Collection',
+'Beauty and Skincare',
+'Sports Performance',
+'Music Festival',
+'Gaming Universe',
+'Financial Technology',
+'Digital Banking',
+'Cybersecurity Awareness',
+'Artificial Intelligence',
+'Robotics Engineering',
+'Education Technology',
+'Travel Destination',
+'Aviation Showcase',
+'Automotive Performance',
+'Real Estate Development',
+'Industrial Manufacturing',
+'Logistics and Supply Chain',
+'Environmental Sustainability',
+'Ocean Exploration',
+'Scientific Research',
+'Cultural Heritage',
+'Public Safety',
+'Nonprofit Campaign',
+'Consumer Electronics'
+].flatMap(domain=>['Cinematic Brand Film','Premium 3D Showcase','Minimal Editorial Story','Futuristic Motion Graphics','Animated Infographic','Luxury Product Commercial'].map(style=>domain+' · '+style))
+])];
 
 const TROZAL_THEME_RULES_EXTRA=[
  {re:/cinematic|hollywood|epic trailer|brand film|film opener|cinematography|volumetric light|macro product|atmosphere film|editorial campaign|showreel/i,styles:['Cinematic Lighting','Film Grain / Texture','Anamorphic Lens Look','Volumetric Light','Deep Contrast','Premium Editorial','Slow Motion Hero','Macro Cinematography','Atmospheric Particles','Wide Cinematic Composition','Elegant Typography','Film Title Treatment','Lens Flare','Color Grading · Teal & Amber'],specific:['Cinematic hero reveal with dramatic light sweep','Anamorphic wide title sequence with film grain','Slow-motion product reveal with macro detail','Volumetric light beams through atmospheric haze','Epic trailer typography with impact transitions','Cinematic environment flythrough with depth','Premium brand manifesto with elegant typography','Atmospheric particle drift and lens flare','Golden-hour product silhouette reveal','Teal-and-amber cinematic color story','Macro material and texture showcase','Dramatic silhouette-to-product reveal','Cinematic logo reveal with light streaks','Film chapter cards and editorial title treatment','Luxury campaign with slow camera push-in','Cinematic closing frame and brand signature']},
