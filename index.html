@@ -621,7 +621,7 @@ body[data-ui-layout="professional"] .visual-scene-card:focus-within{
 
   <section class="panel ai-tools" id="svgMotionModePanel"><h3><b>✦</b> MODE HTML MOTION · GENERATE AI</h3>
    <p class="help">Buat konsep motion graphic HTML + CSS yang siap diimpor. Cari tema, pilih resolusi dan rasio, lalu tempel dokumen HTML lengkap ke terminal trozal_MOTION.</p>
-   <label>Search tema AI</label><input id="svgAiThemeSearch" type="text" list="svgAiThemeSuggestions" autocomplete="off" placeholder="Cari tema: Cybersecurity, Ramadan, Space, Coffee..."><datalist id="svgAiThemeSuggestions"></datalist><div id="svgAiThemeResults" class="theme-search-results" hidden></div><div class="theme-quick-picks"><button type="button" data-theme-pick="Cinematic Brand Film">Cinematic</button><button type="button" data-theme-pick="Futuristic Technology Commercial">Futuristic</button><button type="button" data-theme-pick="Luxury Brand Commercial">Premium</button><button type="button" data-theme-pick="3D Product Visualization">3D</button><button type="button" data-theme-pick="Commercial Motion Package">Commercial</button></div><div class="row" style="display:flex;gap:7px;margin:6px 0 10px"><button type="button" id="svgAiRandomThemeBtn" class="secondary">✦ Tema inspirasi acak</button><span class="help" id="svgAiCatalogCount">Memuat katalog tema…</span></div><p class="theme-search-hint" id="svgAiThemeSearchHint">Cari tema atau ketik tema khusus. Kategori visual dan subtema akan disesuaikan otomatis.</p>
+   <label>Search tema AI</label><input id="svgAiThemeSearch" type="text" list="svgAiThemeSuggestions" autocomplete="off" placeholder="Cari tema: Cybersecurity, Ramadan, Space, Coffee..."><datalist id="svgAiThemeSuggestions"></datalist><div id="svgAiThemeResults" class="theme-search-results" hidden></div><div class="theme-quick-picks"><button type="button" data-theme-pick="Cinematic Brand Film">Cinematic</button><button type="button" data-theme-pick="Futuristic Technology Commercial">Futuristic</button><button type="button" data-theme-pick="Luxury Brand Commercial">Premium</button><button type="button" data-theme-pick="3D Product Visualization">3D</button><button type="button" data-theme-pick="Commercial Motion Package">Commercial</button></div><div class="row" style="display:flex;gap:7px;margin:6px 0 10px"><button type="button" id="svgAiRandomThemeBtn" class="secondary" onclick="return trozalRandomTheme(event)">✦ Tema inspirasi acak</button><span class="help" id="svgAiCatalogCount">Memuat katalog tema…</span></div><p class="theme-search-hint" id="svgAiThemeSearchHint">Cari tema atau ketik tema khusus. Kategori visual dan subtema akan disesuaikan otomatis.</p>
    <label>Tema utama</label><select id="svgAiTheme"><option>Brand Identity & Logo</option></select>
    <label>Kategori visual (otomatis mengikuti tema)</label><select id="svgAiCategory"><option>Minimal Swiss Design</option><option>Modern Editorial</option><option>Clean Corporate</option><option>Premium Luxury</option><option>Futuristic Sci-Fi</option><option>Cyberpunk Neon</option><option>Glassmorphism</option><option>Liquid / Fluid Design</option><option>3D Layered Composition</option><option>Isometric Illustration</option><option>Flat Vector Illustration</option><option>2D Cartoon</option><option>Claymorphism</option><option>Soft Gradient</option><option>Bold Brutalist</option><option>Retro / Vintage</option><option>Y2K Digital</option><option>Memphis Geometry</option><option>Bauhaus Geometric</option><option>Monochrome</option><option>Duotone</option><option>Pastel Soft</option><option>High Contrast</option><option>Photorealistic Product</option><option>Cinematic Lighting</option><option>Paper Cutout</option><option>Hand-drawn Sketch</option><option>Line Art / Monoline</option><option>Typography-led</option><option>Data Visualization</option><option>UI Prototype</option><option>Organic Nature</option><option>Surreal Abstract</option><option>Pixel Art</option><option>Minimal Iconography</option><option>Mixed Media</option><option>Dark Interface</option><option>Bright Playful</option><option>Editorial Infographic</option></select>
    <label>Kategori spesifik / subtema (relevan dengan tema)</label><select id="svgAiSpecific"><option>Logo reveal with custom emblem</option><option>Logo build from geometric pieces</option><option>Wordmark kinetic reveal</option><option>Brand guideline opener</option><option>Product hero on floating podium</option><option>Product 360 showcase</option><option>Cosmetic bottle luxury reveal</option><option>Food hero with ingredient orbit</option><option>Sneaker / fashion product launch</option><option>Smartphone device showcase</option><option>App onboarding sequence</option><option>Website landing page hero</option><option>SaaS feature explainer</option><option>Animated dashboard KPI</option><option>Data chart growth story</option><option>Financial market overview</option><option>AI neural network visualization</option><option>Robotics and automation</option><option>Cloud computing ecosystem</option><option>Cybersecurity shield sequence</option><option>Medical awareness explainer</option><option>Anatomy / science visualization</option><option>Learning process step-by-step</option><option>Timeline and roadmap</option><option>Before-after transformation</option><option>Process flow diagram</option><option>Comparison infographic</option><option>Statistics counter sequence</option><option>World map data routes</option><option>Travel destination opener</option><option>City / architecture flythrough</option><option>Nature landscape layers</option><option>Ocean and underwater scene</option><option>Wildlife conservation story</option><option>Renewable energy system</option><option>Solar / wind energy explainer</option><option>Sports event opener</option><option>Fitness training sequence</option><option>Esports tournament package</option><option>Music visualizer interface</option><option>Character mascot introduction</option><option>Animated storytelling scene</option><option>Event countdown</option><option>New year celebration</option><option>Ramadan lantern and crescent</option><option>Eid greeting composition</option><option>Wedding invitation motion</option><option>Sale campaign and discount</option><option>App interface micro-interaction</option><option>Notification and UX flow</option><option>Loading / progress animation</option><option>Abstract liquid transition</option><option>Particle field and energy</option><option>Typography quote animation</option><option>News headline package</option><option>Real estate property showcase</option><option>Automotive feature presentation</option><option>Custom specific concept</option></select>
@@ -3519,6 +3519,20 @@ function trozalThemeProfile(theme){
  return {styles:['Minimal Swiss Design','Modern Editorial','Clean Corporate','Flat Vector Illustration','Cinematic Lighting','3D Layered Composition','Editorial Infographic','Kinetic Typography','Soft Gradient'],specifics:[t+' hero title sequence',t+' product or service showcase',t+' process and workflow explainer',t+' key visual and infographic',t+' feature and benefit sequence',t+' campaign opener',t+' data storytelling and statistics','Timeline and roadmap','Animated brand or topic identity']};
 }
 function trozalSetSelectOptions(select,items,prefer){select.replaceChildren();[...new Set(items)].forEach((v,i)=>{const o=document.createElement('option');o.textContent=v;o.value=v;if((prefer&&v===prefer)||(!prefer&&i===0))o.selected=true;select.appendChild(o);});}
+function trozalRandomTheme(e){
+ if(e){e.preventDefault();e.stopPropagation();}
+ const status=$('svgAiThemeSearchHint'),count=$('svgAiCatalogCount'),select=$('svgAiTheme');
+ try{
+  const themes=Array.isArray(TROZAL_AI_THEMES)?TROZAL_AI_THEMES.filter(Boolean):[];
+  if(!themes.length){if(status)status.textContent='Katalog tema belum siap. Muat ulang halaman lalu coba lagi.';return false;}
+  const current=select?.value||'',pool=themes.filter(t=>t!==current);
+  const picked=(pool.length?pool:themes)[Math.floor(Math.random()*(pool.length||themes.length))];
+  trozalApplyTheme(picked);
+  if(count)count.textContent=themes.length+' tema tersedia';
+  if(status)status.textContent='✦ Tema inspirasi dipilih: '+picked+'. Kategori visual dan subtema sudah disesuaikan.';
+ }catch(err){if(status)status.textContent='Gagal memilih tema: '+(err&&err.message?err.message:'kesalahan tidak diketahui');}
+ return false;
+}
 function trozalApplyTheme(theme,keepCustomSearch=false){
  const clean=String(theme||'').trim();if(!clean)return;
  const select=$('svgAiTheme');let opt=[...select.options].find(o=>o.value.toLowerCase()===clean.toLowerCase());if(!opt){opt=document.createElement('option');opt.value=clean;opt.textContent=clean;select.appendChild(opt);}select.value=opt.value;
@@ -3530,25 +3544,6 @@ function trozalApplyTheme(theme,keepCustomSearch=false){
 function trozalInitThemeCatalog(){
  const select=$('svgAiTheme'),list=$('svgAiThemeSuggestions'),search=$('svgAiThemeSearch'),results=$('svgAiThemeResults'),hint=$('svgAiThemeSearchHint');
  const current=select.value||'Brand Identity & Logo';
- // Bind random inspiration first, before any catalogue rendering can fail.
- const randomBtn=$('svgAiRandomThemeBtn');
- if(randomBtn&&!randomBtn.dataset.trozalRandomBound){
-  randomBtn.dataset.trozalRandomBound='1';
-  randomBtn.addEventListener('click',e=>{
-   e.preventDefault();e.stopPropagation();
-   const status=$('svgAiThemeSearchHint');
-   try{
-    const themes=Array.isArray(TROZAL_AI_THEMES)?TROZAL_AI_THEMES.filter(Boolean):[];
-    if(!themes.length){if(status)status.textContent='Katalog tema belum siap. Muat ulang halaman lalu coba lagi.';return;}
-    const currentTheme=$('svgAiTheme')?.value||'';
-    const pool=themes.filter(t=>t!==currentTheme);
-    const picked=(pool.length?pool:themes)[Math.floor(Math.random()*(pool.length||themes.length))];
-    trozalApplyTheme(picked);
-    const count=$('svgAiCatalogCount');if(count)count.textContent=themes.length+' tema tersedia';
-    if(status)status.textContent='✦ Tema inspirasi dipilih: '+picked+'. Kategori visual dan subtema sudah disesuaikan.';
-   }catch(err){if(status)status.textContent='Gagal memilih tema: '+(err?.message||'kesalahan tidak diketahui');}
-  });
- }
  trozalSetSelectOptions(select,TROZAL_AI_THEMES,current);
  list.replaceChildren();TROZAL_AI_THEMES.forEach(t=>{const o=document.createElement('option');o.value=t;list.appendChild(o);});
  search.value=current;trozalApplyTheme(current,true);
