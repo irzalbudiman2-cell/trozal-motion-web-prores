@@ -474,6 +474,49 @@ body[data-ui-layout="classic"] .ui-layout-btn[aria-pressed="true"]{background:#d
 @media(max-width:1050px){.ui-layout-switcher{order:4}.topright{flex-wrap:wrap}}
 @media(max-width:720px){.ui-layout-switcher{width:100%;justify-content:flex-end}.ui-layout-label{margin-right:auto}.ui-layout-btn{min-height:36px}.topbar{height:auto;min-height:42px}}
 
+/* TROZAL Professional Mode polish — presentation only */
+body[data-ui-layout="professional"] .panel{
+ border-radius:12px;
+ background:linear-gradient(155deg,rgba(35,45,59,.98),rgba(25,31,42,.98));
+ transition:border-color .18s ease,box-shadow .18s ease;
+}
+body[data-ui-layout="professional"] .panel:hover{
+ border-color:#55758b;
+ box-shadow:0 8px 22px rgba(0,0,0,.24);
+}
+body[data-ui-layout="professional"] .panel h3{
+ display:flex;align-items:center;gap:8px;
+ padding-bottom:8px;margin-bottom:10px;
+ border-bottom:1px solid rgba(133,177,204,.18);
+ letter-spacing:.35px;
+}
+body[data-ui-layout="professional"] .ai-tools{
+ background:linear-gradient(155deg,rgba(35,43,60,.98),rgba(27,29,43,.98));
+ border-color:#555078;
+}
+body[data-ui-layout="professional"] #visualSceneSequencer{
+ border-color:#78649b;
+ box-shadow:inset 3px 0 0 rgba(180,145,230,.72),0 5px 16px #0002;
+}
+body[data-ui-layout="professional"] #ollamaRenderAdvisor,
+body[data-ui-layout="professional"] #stockMetadataPanel,
+body[data-ui-layout="professional"] #metadataOptimizerPanel{
+ border-color:#426e70;
+ box-shadow:inset 3px 0 0 rgba(89,190,174,.68),0 5px 16px #0002;
+}
+body[data-ui-layout="professional"] .panel button:focus-visible,
+body[data-ui-layout="professional"] .panel select:focus-visible,
+body[data-ui-layout="professional"] .panel input:focus-visible,
+body[data-ui-layout="professional"] .panel textarea:focus-visible,
+body[data-ui-layout="professional"] .ui-layout-btn:focus-visible{
+ outline:2px solid #75c9db;outline-offset:2px;
+}
+@media(max-width:720px){
+ body[data-ui-layout="professional"] .panel{border-radius:10px}
+ body[data-ui-layout="professional"] .panel h3{font-size:12px}
+}
+
+
 </style>
 </head>
 <body>
