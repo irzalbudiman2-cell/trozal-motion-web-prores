@@ -5182,35 +5182,5 @@ body[data-ui-layout="classic"] .ui-layout-btn[aria-pressed="true"]{background:#d
  },true);
  fresh.style.pointerEvents='auto';fresh.style.position='relative';fresh.style.zIndex='60';
 })();
-(function(){
- 'use strict';
-
- document.addEventListener('click',function(event){
-  const button=event.target&&event.target.closest?event.target.closest('#svgAiRandomThemeBtn'):null;
-  if(!button)return;
-  event.preventDefault();event.stopImmediatePropagation();
-  const select=document.getElementById('svgAiTheme');
-  const search=document.getElementById('svgAiThemeSearch');
-  const hint=document.getElementById('svgAiThemeSearchHint');
-  const count=document.getElementById('svgAiCatalogCount');
-  if(!select){if(hint)hint.textContent='Kontrol tema tidak ditemukan. Muat ulang halaman.';return;}
-  const sources=[...select.options,...(document.getElementById('svgAiThemeSuggestions')||{options:[]}).options];
-  const fallback=['Brand Identity & Logo','Technology & AI','Cybersecurity','Space Exploration','Luxury Product Commercial','Travel & Tourism','Architecture & Interior','Nature & Wildlife','Automotive','Aviation & Aerospace','Food & Beverage','Fashion Editorial','Sports Broadcast','Scientific Visualization','Smart City','Renewable Energy','Abstract Motion Art','Education & Learning','Healthcare Awareness','Cinematic Title Sequence'];
-  const themes=[...new Set([...sources.map(o=>String(o.value||o.textContent||'').trim()),...fallback])].filter(Boolean);
-  const pool=themes.filter(theme=>theme.toLowerCase()!==String(select.value||'').toLowerCase());
-  if(!pool.length){if(hint)hint.textContent='Katalog tema belum tersedia. Muat ulang halaman lalu coba lagi.';return;}
-  const picked=pool[Math.floor(Math.random()*pool.length)];
-  let option=[...select.options].find(o=>o.value.toLowerCase()===picked.toLowerCase());
-  if(!option){option=document.createElement('option');option.value=picked;option.textContent=picked;select.appendChild(option);}
-  select.value=option.value;
-  if(search)search.value=picked;
-  select.dispatchEvent(new Event('change',{bubbles:true}));
-  if(typeof window.trozalApplyTheme==='function'){
-   try{window.trozalApplyTheme(picked);}catch(error){if(hint)hint.textContent='Tema dipilih, tetapi pembaruan kategori perlu diperiksa: '+(error.message||String(error));}
-  }
-  if(hint)hint.textContent='✦ Tema inspirasi dipilih: '+picked+'. Tema utama, kategori visual, dan subtema diperbarui.';
-  if(count)count.textContent=themes.length+' tema tersedia';
- },true);
-})();
 </script>
 </body></html>
