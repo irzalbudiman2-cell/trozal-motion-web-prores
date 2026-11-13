@@ -409,14 +409,41 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
 .metadata-batch-item button{padding:3px 6px;font-size:9px}
 #metadataOptimizerPanel select{background:#211707;color:#fff5e3;border:1px solid #8b6425;border-radius:7px;padding:7px;width:100%}
 
+
+/* Workspace layout editor */
+.workspace-panel{position:relative;resize:vertical;overflow:auto;min-height:74px;max-height:78vh}
+.workspace-panel[draggable="true"]{cursor:grab}
+.workspace-panel.workspace-dragging{opacity:.42;outline:2px dashed #f3bd59}
+.workspace-panel.workspace-drop-target{outline:2px solid #f3bd59;outline-offset:2px}
+.workspace-panel .workspace-drag-handle{display:inline-flex;align-items:center;gap:5px;margin-right:7px;padding:2px 6px;border:1px solid #8c6b35;border-radius:5px;background:#302510;color:#ffe2a3;font-size:9px;cursor:grab;touch-action:none;user-select:none}
+.workspace-tools{position:fixed;z-index:9999;inset:8% 6%;max-width:760px;margin:auto;max-height:84vh;overflow:auto;padding:16px;border:1px solid #d4a64d;border-radius:14px;background:#101d19;color:#eaf7ef;box-shadow:0 18px 70px #000b}
+.workspace-tools[hidden]{display:none}
+.workspace-tools h2{margin:0 0 8px;color:#f5d18a}
+.workspace-tools .workspace-tool-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.workspace-tools .workspace-tool-card{padding:10px;border:1px solid #356b57;border-radius:9px;background:#142b22}
+.workspace-tools input{width:100%;margin:7px 0;padding:9px;border-radius:7px;border:1px solid #4c8268;background:#071b13;color:#fff}
+.workspace-tools .workspace-tool-status{padding:8px;border-radius:7px;background:#0a2118;font-size:12px;white-space:pre-wrap}
+.workspace-tools .workspace-close{float:right}
+.workspace-drop-zone{min-height:24px}
+@media(max-width:720px){.workspace-tools{inset:3%;max-height:92vh}.workspace-tools .workspace-tool-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <header class="topbar">
  <div class="brand">TROZAL <span>MOTION</span></div><div class="topnote">OLLAMA AI · LOCAL GENERATION · PRORES EXPORT</div>
  <div class="render-progress topbar-render-progress is-idle" id="renderProgress" role="status" aria-live="polite"><span class="render-progress-label" id="renderProgressLabel">Siap · 0%</span><div class="render-progress-track"><div class="render-progress-fill" id="renderProgressFill"></div></div></div>
- <div class="topright"><button id="helpBtn">Panduan</button><button id="resetLayoutBtn" title="Kembalikan ukuran dan urutan panel">Tata Letak</button><button id="resetBtn">Reset</button></div>
+ <div class="topright"><button id="helpBtn">Pusat Utilitas</button><button id="resetLayoutBtn" title="Atur ulang posisi dan ukuran panel">Tata Letak</button><button id="resetBtn" title="Kembalikan workspace ke susunan awal">Reset Workspace</button></div>
 </header>
+<section class="workspace-tools" id="workspaceTools" hidden role="dialog" aria-modal="true" aria-labelledby="workspaceToolsTitle">
+ <button class="workspace-close" id="workspaceToolsClose" type="button">Tutup ✕</button><h2 id="workspaceToolsTitle">PUSAT UTILITAS TROZAL</h2>
+ <p class="help">Cari panel dan periksa kesiapan lingkungan lokal tanpa mengubah proyek.</p>
+ <label for="workspacePanelSearch">Cari panel / fitur</label><input id="workspacePanelSearch" type="search" placeholder="Contoh: metadata, render, Ollama, timeline...">
+ <div class="workspace-tool-grid"><div class="workspace-tool-card"><strong>Koneksi Ollama</strong><p class="help">Periksa API lokal Ollama di port 11434.</p><button id="workspaceCheckOllama" type="button">Periksa Ollama</button><div class="workspace-tool-status" id="workspaceOllamaStatus">Belum diperiksa.</div></div>
+ <div class="workspace-tool-card"><strong>Bridge Lokal</strong><p class="help">Periksa layanan TROZAL Bridge di port 11435.</p><button id="workspaceCheckBridge" type="button">Periksa Bridge</button><div class="workspace-tool-status" id="workspaceBridgeStatus">Belum diperiksa.</div></div>
+ <div class="workspace-tool-card"><strong>Workspace</strong><p class="help">Kelola susunan panel dan pengaturan tampilan.</p><button id="workspaceResetLayout" type="button">Pulihkan tata letak awal</button></div>
+ <div class="workspace-tool-card"><strong>Tips render</strong><p class="help">Untuk mengurangi beban, uji dahulu 1080p/30 FPS sebelum ekspor 4K atau 60 FPS. Pastikan aset lokal sudah dimuat.</p></div></div>
+ <div class="workspace-tool-status" id="workspaceSearchResults" style="margin-top:10px">Ketik kata kunci untuk menemukan panel.</div>
+ </section>
 <div class="app">
  <aside class="sidebar">
   <div class="tabs"><button class="active" data-mode="single">Single Object</button><button data-mode="multi">Multi Object</button><button data-mode="batch">Batch Folder</button></div>
@@ -2492,7 +2519,22 @@ async function restoreAutosave(){
 }
 window.addEventListener('pagehide',()=>{try{const raw=JSON.stringify(getProject());localStorage.setItem(AUTOSAVE_KEY,raw)}catch(_){}});
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));b.classList.add('active');currentMode=b.dataset.mode;if(currentMode!=='single')$('multiInput').click();else $('fileInput').click();if(currentMode==='batch')setStatus('Batch Folder: pilih banyak file. Aset pertama menjadi preview; file lainnya tetap ada di daftar pilihan browser.')});
-$('resetBtn').onclick=()=>{if(confirm('Reset semua pengaturan?'))location.reload()};$('helpBtn').onclick=()=>alert('trozal_MOTION — Panduan singkat\\n1. Unggah SVG/PNG/JPG atau pilih Pakai contoh.\\n2. Atur durasi, FPS, resolusi, latar, animasi, skala, dan posisi.\\n3. Tekan Putar untuk preview.\\n4. Tekan Render Video untuk membuat WebM dan mengunduhnya.\\n5. Gunakan Batch Asset Queue untuk mengelola beberapa aset dan tombol Muat untuk berpindah aset.\n6. Simpan proyek untuk menyimpan pengaturan dalam JSON.\\nCatatan: render video dilakukan di browser; 4K dan terutama 8K membutuhkan memori/GPU besar. SVG dapat dipecah menjadi layer grafis tingkat atas lewat tombol Pecah SVG. SVG lebih cocok untuk aset vector.');
+// Workspace layout: drag panels to reorder, persist layout separately from project data.
+(function initWorkspaceEditor(){
+ const sidebar=document.querySelector('.sidebar'),tools=$('workspaceTools'),layoutKey='trozal_ollama_workspace_layout_v1';if(!sidebar)return;
+ const panels=[...sidebar.querySelectorAll(':scope > .panel')];const initial=panels.map((p,i)=>({key:p.id||('panel-'+i),parent:p.parentElement,index:i}));
+ panels.forEach((p,i)=>{p.classList.add('workspace-panel');p.dataset.workspaceKey=p.id||('panel-'+i);p.draggable=true;const h=p.querySelector('h3');if(h&&!h.querySelector('.workspace-drag-handle')){const grip=document.createElement('span');grip.className='workspace-drag-handle';grip.textContent='⠿ PINDAH';grip.title='Seret panel ini untuk mengubah urutan';h.prepend(grip);}});
+ const save=()=>{try{localStorage.setItem(layoutKey,JSON.stringify(panels.map(p=>p.dataset.workspaceKey)))}catch(e){console.warn('Workspace layout tidak dapat disimpan',e)}};
+ const restore=()=>{let order=[];try{order=JSON.parse(localStorage.getItem(layoutKey)||'[]')}catch(_){};const map=new Map(panels.map(p=>[p.dataset.workspaceKey,p]));order.forEach(k=>{const p=map.get(k);if(p)sidebar.appendChild(p)});initial.forEach(x=>{const p=map.get(x.key);if(p&&(!order.includes(x.key)))sidebar.appendChild(p);});panels.forEach(p=>{p.style.height='';p.style.maxHeight='78vh'});save();};
+ let dragged=null;panels.forEach(p=>{p.addEventListener('dragstart',e=>{if(e.target.closest('input,textarea,select,button')){e.preventDefault();return}dragged=p;p.classList.add('workspace-dragging');e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',p.dataset.workspaceKey)});p.addEventListener('dragover',e=>{if(!dragged||dragged===p)return;e.preventDefault();p.classList.add('workspace-drop-target')});p.addEventListener('dragleave',()=>p.classList.remove('workspace-drop-target'));p.addEventListener('drop',e=>{if(!dragged||dragged===p)return;e.preventDefault();p.classList.remove('workspace-drop-target');const r=p.getBoundingClientRect();sidebar.insertBefore(dragged,e.clientY<r.top+r.height/2?p:p.nextSibling);save()});p.addEventListener('dragend',()=>{p.classList.remove('workspace-dragging');panels.forEach(x=>x.classList.remove('workspace-drop-target'));dragged=null;save()});});
+ const open=()=>{tools.hidden=false;$('workspacePanelSearch')?.focus()};const close=()=>tools.hidden=true;
+ $('helpBtn').onclick=open;$('workspaceToolsClose').onclick=close;$('resetLayoutBtn').onclick=()=>{restore();open();$('workspaceSearchResults').textContent='Tata letak awal berhasil dipulihkan. Proyek dan aset tidak dihapus.'};$('workspaceResetLayout').onclick=()=>{$('resetLayoutBtn').click()};
+ $('resetBtn').onclick=()=>{if(!confirm('Reset workspace ke susunan awal? Proyek, aset, metadata, dan fitur tidak dihapus.'))return;restore();close();setStatus('Workspace dikembalikan ke susunan awal. Data proyek tetap aman.')};
+ $('workspacePanelSearch').addEventListener('input',()=>{const q=$('workspacePanelSearch').value.trim().toLowerCase(),matches=panels.filter(p=>(p.innerText||'').toLowerCase().includes(q));$('workspaceSearchResults').textContent=q?(matches.length?matches.map(p=>(p.querySelector('h3')?.innerText||p.id||'Panel').trim().replace(/\\s+/g,' ')).join('\\n'):'Tidak ada panel yang cocok.'):'Ketik kata kunci untuk menemukan panel.';panels.forEach(p=>{p.style.outline=q&&(p.innerText||'').toLowerCase().includes(q)?'2px solid #f3bd59':''})});
+ const check=async(url,id,label)=>{const node=$(id);node.textContent='Memeriksa...';try{const response=await fetch(url,{method:'GET',cache:'no-store'});if(!response.ok)throw new Error('HTTP '+response.status);let detail='Terhubung · HTTP '+response.status;if(url.includes('/api/tags')){const data=await response.json();detail+=' · '+(data.models?.length||0)+' model terdeteksi';}node.textContent=detail;}catch(e){node.textContent='Belum terhubung: '+(e.message||'gagal mengakses layanan')+'. Pastikan layanan berjalan dan CORS mengizinkan akses.'}};
+ $('workspaceCheckOllama').onclick=()=>check('http://127.0.0.1:11434/api/tags','workspaceOllamaStatus','Ollama');$('workspaceCheckBridge').onclick=()=>check('http://127.0.0.1:11435/health','workspaceBridgeStatus','Bridge');
+ tools.addEventListener('click',e=>{if(e.target===tools)close()});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!tools.hidden)close()});restore();
+})();
 $('animation').onchange=()=>renderAt(playhead);$('loop').onchange=()=>renderAt(playhead);['speed','intensity','scale','posX','posY','rotation','opacity'].forEach(id=>$(id).addEventListener('input',()=>renderAt(playhead)));$('parts').addEventListener('change',()=>renderAt(playhead));['effectPreset','effectIntensity','effectColor','effectOn','sparkles','shadow','particleCount','particleSpeed'].forEach(id=>$(id).addEventListener('input',()=>renderAt(playhead)));
 ['particleCount','particleSpeed'].forEach(id=>$(id).addEventListener('input',()=>{const out=$(id+'Val');if(out)out.textContent=id==='particleCount'?$(id).value:$(id).value+'%'}));['effectOn','sparkles','shadow'].forEach(id=>$(id).addEventListener('change',()=>renderAt(playhead)));
 
