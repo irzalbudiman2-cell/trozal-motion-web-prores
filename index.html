@@ -4060,7 +4060,7 @@ async function trozalMetadataAnalyzeSource(kind){
   ].filter(Boolean))];
   if(!candidateModels.length)throw new Error('Model Vision belum terpasang. Disarankan: ollama pull qwen3.5:4b atau ollama pull qwen3-vl:2b');
   // Reduce the three preview frames before inference to lower VRAM/RAM pressure.
-  images=await Promise.all(images.map(async value=>(await trozalVisionResizeImage('data:image/png;base64,'+value,960)).split(',')[1]));
+  images=await Promise.all(images.map(async value=>trozalVisionResizeImage('data:image/png;base64,'+value,960)));
   let model=candidateModels[0];
   trozalMetadataSourceStatus('④ '+model+' sedang membaca '+images.length+' frame yang sudah dioptimalkan. Model lokal dapat memerlukan beberapa menit…');
   const categories=[...$('metadataCategory').options].map(o=>o.text);
