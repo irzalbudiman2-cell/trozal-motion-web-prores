@@ -203,6 +203,16 @@ select,input[type=text],input[type=number],.ai-tools textarea{background:#071d15
 
 
 /* TROZAL MOTION · brushed metallic gold monitor skin */
+/* FIX · Keep the core editing workspace visible before settings panels */
+.app>.main{display:flex;flex-direction:column;min-width:0}
+.app>.main>.stagewrap{order:0;flex:0 0 auto;min-height:300px}
+.app>.main>.stageinfo{order:1;flex:0 0 auto}
+.app>.main>.timeline{order:2;flex:0 0 auto;display:block;visibility:visible}
+.app>.main>.topcontrols{order:3;flex:0 0 auto}
+.app>.main>.panel{order:4}
+.app>.main>.stagewrap .stage{display:flex;visibility:visible}
+.app>.main>.timeline .multi-track-editor{display:block;visibility:visible}
+
 .stagewrap{
  background:
   radial-gradient(ellipse at 50% 46%,rgba(205,158,61,.18),transparent 62%),
@@ -4153,10 +4163,15 @@ function wireStudioLayout(){
  sortable(right,'.panel','right-panels',el=>el.querySelector('h3'));
  const top=document.querySelector('.topcontrols');if(top)sortable(top,'.control','top-controls',el=>el.querySelector('label'));
  const stageWrap=document.querySelector('.stagewrap'),info=document.querySelector('.stageinfo'),timeline=document.querySelector('.timeline');
+ // Core center workspace must remain at the top. Do not restore a stale drag order
+ // that can bury Preview / Timeline beneath the animation controls.
+ try{localStorage.removeItem('trozal_order_main-panels')}catch(_){}
  if(stageWrap){stageWrap.dataset.layoutId='preview';addHandle(stageWrap,'⠿ Preview')}
  if(info){info.dataset.layoutId='stage-info';addHandle(info,'⠿ Info')}
  if(timeline){timeline.dataset.layoutId='timeline';addHandle(timeline,'⠿ Timeline')}
- sortable(main,'.stagewrap, .stageinfo, .timeline','main-panels',el=>el.querySelector('.layout-drag-handle'));
+ if(stageWrap)main.insertBefore(stageWrap,main.firstChild);
+ if(info&&stageWrap)main.insertBefore(info,stageWrap.nextSibling);
+ if(timeline&&info)main.insertBefore(timeline,info.nextSibling);
  if(stageWrap&&!stageWrap.querySelector('.stage-resize-handle')){
   const h=document.createElement('button');h.type='button';h.className='stage-resize-handle';h.textContent='↕';h.title='Tarik ke bawah/atas untuk mengubah tinggi Preview';stageWrap.appendChild(h);
   let y=0,height=0;
