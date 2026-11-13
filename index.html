@@ -94,6 +94,11 @@ small,.muted{color:var(--muted)}.row{display:flex;gap:8px;align-items:center}.ro
 #textToAnimationPanel button.green{background:linear-gradient(135deg,#e4d2ff,#b58aea);color:#1c1030}
 #textToAnimationPanel #visualMotionPreview{box-shadow:0 4px 18px #0007}
 .mask-keyframe-box input,.mask-keyframe-box select{width:100%;min-width:0;background:#071b14;color:#e8f5ee;border:1px solid #376b55;border-radius:5px;padding:5px}.mask-keyframe-box label{font-size:9px}.mask-keyframe-box .row>div{flex:1;min-width:0}.mask-keyframe-box button{font-size:10px}\n/* FIX27: searchable AI theme catalog, prompt resolution and HTML diagnostics */
+#svgMotionModePanel .theme-search-results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;max-height:230px;overflow:auto;padding:7px;margin:5px 0 7px;border:1px solid #397c64;border-radius:8px;background:#071b14}
+#svgMotionModePanel .theme-result{width:100%;text-align:left;white-space:normal;font-size:10px;padding:7px;background:#123729;border:1px solid #326b50;color:#e8f5ee}
+#svgMotionModePanel .theme-result:hover{background:#1b573d;border-color:#7de0a9;color:#fff}
+@media(max-width:560px){#svgMotionModePanel .theme-search-results{grid-template-columns:1fr}}
+
 .ai-tools input[type=text],.ai-tools select{background:#071d15;border:1px solid #32634a;color:#e8f5ee;border-radius:9px;padding:8px;width:100%}
 .ai-tools .theme-search-hint,.ai-tools .resolution-hint{font-size:10px;color:#9ec9ae;margin:4px 0 6px}
 .html-diagnostic-panel{margin-top:10px;padding:9px;border:1px solid #7c3b40;border-radius:8px;background:#211316}
@@ -485,7 +490,7 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
 
   <section class="panel ai-tools" id="svgMotionModePanel"><h3><b>✦</b> MODE HTML MOTION · GENERATE AI</h3>
    <p class="help">Buat konsep motion graphic HTML + CSS yang siap diimpor. Cari tema, pilih resolusi dan rasio, lalu tempel dokumen HTML lengkap ke terminal trozal_MOTION.</p>
-   <label>Search tema AI</label><input id="svgAiThemeSearch" type="text" list="svgAiThemeSuggestions" autocomplete="off" placeholder="Cari tema: Cybersecurity, Ramadan, Space, Coffee..."><datalist id="svgAiThemeSuggestions"></datalist><p class="theme-search-hint" id="svgAiThemeSearchHint">Cari tema atau ketik tema khusus. Kategori visual dan subtema akan disesuaikan otomatis.</p>
+   <label>Search tema AI</label><input id="svgAiThemeSearch" type="search" list="svgAiThemeSuggestions" autocomplete="off" placeholder="Ketik: cinematic, premium, 3D, futuristic..."><datalist id="svgAiThemeSuggestions"></datalist><div id="svgAiThemeResults" class="theme-search-results" hidden></div><p class="theme-search-hint" id="svgAiThemeSearchHint">Cari tema atau ketik tema khusus. Kategori visual dan subtema akan disesuaikan otomatis.</p>
    <label>Tema utama</label><select id="svgAiTheme"><option>Brand Identity & Logo</option></select>
    <label>Kategori visual (otomatis mengikuti tema)</label><select id="svgAiCategory"><option>Minimal Swiss Design</option><option>Modern Editorial</option><option>Clean Corporate</option><option>Premium Luxury</option><option>Futuristic Sci-Fi</option><option>Cyberpunk Neon</option><option>Glassmorphism</option><option>Liquid / Fluid Design</option><option>3D Layered Composition</option><option>Isometric Illustration</option><option>Flat Vector Illustration</option><option>2D Cartoon</option><option>Claymorphism</option><option>Soft Gradient</option><option>Bold Brutalist</option><option>Retro / Vintage</option><option>Y2K Digital</option><option>Memphis Geometry</option><option>Bauhaus Geometric</option><option>Monochrome</option><option>Duotone</option><option>Pastel Soft</option><option>High Contrast</option><option>Photorealistic Product</option><option>Cinematic Lighting</option><option>Paper Cutout</option><option>Hand-drawn Sketch</option><option>Line Art / Monoline</option><option>Typography-led</option><option>Data Visualization</option><option>UI Prototype</option><option>Organic Nature</option><option>Surreal Abstract</option><option>Pixel Art</option><option>Minimal Iconography</option><option>Mixed Media</option><option>Dark Interface</option><option>Bright Playful</option><option>Editorial Infographic</option></select>
    <label>Kategori spesifik / subtema (relevan dengan tema)</label><select id="svgAiSpecific"><option>Logo reveal with custom emblem</option><option>Logo build from geometric pieces</option><option>Wordmark kinetic reveal</option><option>Brand guideline opener</option><option>Product hero on floating podium</option><option>Product 360 showcase</option><option>Cosmetic bottle luxury reveal</option><option>Food hero with ingredient orbit</option><option>Sneaker / fashion product launch</option><option>Smartphone device showcase</option><option>App onboarding sequence</option><option>Website landing page hero</option><option>SaaS feature explainer</option><option>Animated dashboard KPI</option><option>Data chart growth story</option><option>Financial market overview</option><option>AI neural network visualization</option><option>Robotics and automation</option><option>Cloud computing ecosystem</option><option>Cybersecurity shield sequence</option><option>Medical awareness explainer</option><option>Anatomy / science visualization</option><option>Learning process step-by-step</option><option>Timeline and roadmap</option><option>Before-after transformation</option><option>Process flow diagram</option><option>Comparison infographic</option><option>Statistics counter sequence</option><option>World map data routes</option><option>Travel destination opener</option><option>City / architecture flythrough</option><option>Nature landscape layers</option><option>Ocean and underwater scene</option><option>Wildlife conservation story</option><option>Renewable energy system</option><option>Solar / wind energy explainer</option><option>Sports event opener</option><option>Fitness training sequence</option><option>Esports tournament package</option><option>Music visualizer interface</option><option>Character mascot introduction</option><option>Animated storytelling scene</option><option>Event countdown</option><option>New year celebration</option><option>Ramadan lantern and crescent</option><option>Eid greeting composition</option><option>Wedding invitation motion</option><option>Sale campaign and discount</option><option>App interface micro-interaction</option><option>Notification and UX flow</option><option>Loading / progress animation</option><option>Abstract liquid transition</option><option>Particle field and energy</option><option>Typography quote animation</option><option>News headline package</option><option>Real estate property showcase</option><option>Automotive feature presentation</option><option>Custom specific concept</option></select>
@@ -582,6 +587,10 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
   <section class="panel" id="ollamaRenderAdvisor"><h3>◈ RENDER SYNC & PERFORMANCE ADVISOR</h3><p class="help">Periksa jumlah frame dan beban ekspor sebelum render. Preview akan dikunci pada posisi terakhir selama ekspor.</p><div class="ollama-render-stats" id="ollamaRenderStats"><div><b>Total frame</b><span>—</span></div><div><b>Pixel-frame</b><span>—</span></div><div><b>Buffer / frame</b><span>—</span></div><div><b>Profil beban</b><span>—</span></div></div><button type="button" id="ollamaRenderCheck" style="width:100%">Periksa kesiapan render</button><div class="help" id="ollamaRenderAdvice">Atur durasi, FPS, dan resolusi, lalu periksa.</div></section>
  </aside>
  <main class="main">
+  <div class="stagewrap"><div class="stage" id="stage"><div class="stage-badge"><span>TROZAL MOTION</span><b>LIVE PREVIEW</b></div>
+  <canvas id="previewFx" class="preview-fx"></canvas><svg id="motionPathOverlay" class="motion-path-overlay" aria-hidden="true"></svg><div id="nativeTextPreview" aria-hidden="true"></div><div id="object"><div class="demo" id="demo"></div></div></div></div>
+  <div class="stageinfo"><span>Resolusi: <b id="resolutionInfo">4K UHD (3840×2160)</b></span><span>Durasi: <b id="durationInfo">10.0s</b></span><span>FPS: <b id="fpsInfo">30</b></span><span>Total frame: <b id="frameInfo">300</b></span></div>
+
   <div class="topcontrols">
    <div class="control"><label>Durasi video <span class="value" id="durationVal">10.0 dtk</span></label><input type="range" id="duration" min="1" max="30" step=".5" value="10"></div>
    <div class="control"><label>Frame rate</label><select id="fps"><option>24</option><option selected>30</option><option>60</option></select></div>
@@ -591,9 +600,6 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
    <div class="control" id="transparentExportMode"><label for="proresMode">Mode ekspor transparan</label><select id="proresMode"><option value="unlimited" selected>ProRes 4444 · tanpa batas ukuran file</option><option value="pngUnlimited">PNG Sequence ZIP · tanpa batas ukuran file</option></select><small class="target-hint" id="proresModeHint">ProRes 4444 + alpha melalui encoder web. Pilih PNG Sequence ZIP untuk ekspor frame transparan.</small></div>
    <div class="render render-with-progress"><button class="green" id="renderBtn">▶ Render</button><button type="button" id="cancelRenderBtn" style="display:none;width:100%;margin-top:8px;background:#9f3038;color:#fff;border:1px solid #d75c65">■ BATALKAN RENDER</button></div>
   </div>
-  <div class="stagewrap"><div class="stage" id="stage"><div class="stage-badge"><span>TROZAL MOTION</span><b>LIVE PREVIEW</b></div>
-  <canvas id="previewFx" class="preview-fx"></canvas><svg id="motionPathOverlay" class="motion-path-overlay" aria-hidden="true"></svg><div id="nativeTextPreview" aria-hidden="true"></div><div id="object"><div class="demo" id="demo"></div></div></div></div>
-  <div class="stageinfo"><span>Resolusi: <b id="resolutionInfo">4K UHD (3840×2160)</b></span><span>Durasi: <b id="durationInfo">10.0s</b></span><span>FPS: <b id="fpsInfo">30</b></span><span>Total frame: <b id="frameInfo">300</b></span></div>
   <div class="timeline"><div class="timelinehead"><strong>Timeline & Preview</strong><button id="playBtn">▶ Putar</button><button id="stopBtn">■ Stop</button><button id="prevFrame">◀ Frame</button><button id="nextFrame">Frame ▶</button><span class="muted" id="timeReadout">00:00.0</span></div><input type="range" id="scrubber" min="0" max="1000" value="0"><div class="track"><div class="trackfill" id="trackfill"></div></div><div class="parts" id="timelineTabs" role="tablist" aria-label="Kontrol timeline"><button type="button" class="part active" data-editor-tab="masuk" role="tab" aria-selected="true">01 · Masuk</button><button type="button" class="part" data-editor-tab="gerakan" role="tab" aria-selected="false">02 · Gerakan</button><button type="button" class="part" data-editor-tab="efek" role="tab" aria-selected="false">03 · Efek</button><button type="button" class="part" data-editor-tab="keluar" role="tab" aria-selected="false">04 · Keluar</button><button type="button" class="part" data-editor-tab="loop" role="tab" aria-selected="false">05 · Loop</button><button type="button" class="part" data-editor-tab="ekspor" role="tab" aria-selected="false">06 · Ekspor</button></div><div class="timeline-tab-hint" id="timelineTabHint">Pilih bagian untuk melompat ke waktu preview dan membuka kontrol yang sesuai.</div>
   <section class="multi-track-editor" id="multiTrackEditor" aria-label="Multi-track timeline editor">
    <div class="mt-toolbar">
@@ -3134,7 +3140,106 @@ const TROZAL_AI_THEMES=[
 "Low Poly 3D Worlds",
 "Voxel Art & 3D Pixel",
 "Typography Kinetic Experiments"
-];
+,
+"Cinematic Brand Film",
+"Cinematic Title Sequence",
+"Hollywood Film Opener",
+"Epic Trailer Graphics",
+"Luxury Brand Commercial",
+"Premium Product Advertising",
+"High-End Fashion Campaign",
+"Luxury Real Estate Film",
+"Automotive Cinematic Commercial",
+"3D Product Visualization",
+"3D Product Explainer",
+"3D Logo & Identity Reveal",
+"3D Typography Showcase",
+"3D Architectural Visualization",
+"3D Abstract Art Direction",
+"Futuristic Technology Commercial",
+"Futuristic Interface & HUD",
+"Sci-Fi Worldbuilding Motion",
+"Cybernetic Product Launch",
+"AI & Robotics Commercial",
+"Premium Watch Showcase",
+"Jewelry & Precious Materials",
+"Skincare Luxury Campaign",
+"Perfume Advertising Film",
+"Premium Beverage Commercial",
+"Gourmet Food Commercial",
+"Sportswear Campaign Film",
+"Sneaker Launch Commercial",
+"Travel Destination Cinematic",
+"Luxury Hospitality & Resort",
+"Corporate Brand Manifesto",
+"Corporate Storytelling Film",
+"Technology Brand Manifesto",
+"SaaS Launch Film",
+"Mobile Device Launch Film",
+"E-commerce Hero Campaign",
+"Retail Seasonal Campaign",
+"Product Feature Explainer",
+"Product Benefits Motion",
+"Packaging Reveal Commercial",
+"Studio Product Turntable",
+"Photoreal 3D Materials Study",
+"Liquid Metal Product Reveal",
+"Glass Product Showcase",
+"Macro Product Cinematography",
+"Cinematic Particle Atmosphere",
+"Volumetric Light & Smoke",
+"Neon City Cinematic",
+"Futuristic Space Station",
+"Digital Twin Visualization",
+"Premium Minimal Motion System",
+"Luxury Editorial Motion",
+"High-End Brand Typography",
+"Cinematic Data Visualization",
+"3D Medical Visualization",
+"3D Science Explainer",
+"3D Mechanical Exploded View",
+"3D Engine & Machinery Animation",
+"3D Furniture & Interior Showcase",
+"3D Jewelry Turntable",
+"3D Cosmetic Bottle Showcase",
+"3D Sneaker Showcase",
+"3D Vehicle Reveal",
+"3D Character & Mascot Reveal",
+"3D Environment Flythrough",
+"3D Isometric Infographic",
+"3D Liquid Simulation",
+"3D Cloth & Fabric Simulation",
+"3D Particle Logo Reveal",
+"3D Abstract Loop",
+"Commercial Motion Package",
+"Broadcast Commercial Graphics",
+"Event Sponsor Package",
+"Digital Billboard Campaign",
+"Out-of-Home Advertising Motion",
+"Brand Activation Visuals",
+"Product Launch Countdown",
+"Premium Social Ad Creative",
+"Vertical Commercial Reels",
+"Performance Marketing Ad",
+"App Store Promo Video",
+"Fintech Product Commercial",
+"Healthcare Brand Commercial",
+"Education Platform Commercial",
+"Green Technology Commercial",
+"Renewable Energy Brand Film",
+"Architecture Studio Showreel",
+"Interior Design Commercial",
+"Luxury Watch Macro Film",
+"Fashion Film & Editorial",
+"Beauty Editorial Campaign",
+"Automotive Showroom Film",
+"Aviation Brand Film",
+"Marine & Yacht Commercial",
+"Food Cinemagraph & Motion",
+"Beverage Pouring Macro Film",
+"Fragrance Atmosphere Film",
+"Luxury Packaging Reveal",
+"Minimal Product Hero Loop"];
 const TROZAL_THEME_RULES=[
  {re:/chinese|lunar/i,styles:['Premium Luxury','Paper Cutout','Flat Vector Illustration','3D Layered Composition'],specific:['Chinese New Year zodiac animal reveal','Red and gold lantern festival greeting','Lunar New Year couplet and ornament animation','Zodiac wheel and lucky symbol rotation','Firecracker and celebratory light sequence','Traditional blossom and gold pattern reveal']},
  {re:/diwali/i,styles:['Premium Luxury','Bright Playful','Flat Vector Illustration','Paper Cutout'],specific:['Diwali diya lamps lighting sequence','Festival of lights rangoli pattern reveal','Gold ornament and festive greeting','Decorative mandala and candle glow','Diwali celebration card with light trails']},
@@ -3168,6 +3273,11 @@ const TROZAL_THEME_RULES=[
 ];
 
 const TROZAL_THEME_RULES_EXTRA=[
+ {re:/cinematic|hollywood|epic trailer|brand film|film opener|cinematography|volumetric light|macro product|atmosphere film|editorial campaign|showreel/i,styles:['Cinematic Lighting','Film Grain / Texture','Anamorphic Lens Look','Volumetric Light','Deep Contrast','Premium Editorial','Slow Motion Hero','Macro Cinematography','Atmospheric Particles','Wide Cinematic Composition','Elegant Typography','Film Title Treatment','Lens Flare','Color Grading · Teal & Amber'],specific:['Cinematic hero reveal with dramatic light sweep','Anamorphic wide title sequence with film grain','Slow-motion product reveal with macro detail','Volumetric light beams through atmospheric haze','Epic trailer typography with impact transitions','Cinematic environment flythrough with depth','Premium brand manifesto with elegant typography','Atmospheric particle drift and lens flare','Golden-hour product silhouette reveal','Teal-and-amber cinematic color story','Macro material and texture showcase','Dramatic silhouette-to-product reveal','Cinematic logo reveal with light streaks','Film chapter cards and editorial title treatment','Luxury campaign with slow camera push-in','Cinematic closing frame and brand signature']},
+ {re:/luxury|premium|high-end|watch|jewelry|perfume|fragrance|resort|yacht|precious materials/i,styles:['Premium Luxury','Quiet Luxury','Black & Gold Elegance','Champagne Metallic','Minimal Editorial','High-End Product Photography','Macro Detail','Softbox Studio Lighting','Glass & Crystal','Satin / Silk Texture','Elegant Serif Typography','Dark Premium','Warm Neutral Palette','Luxury Cinematic'],specific:['Black-and-gold luxury brand reveal','Quiet luxury editorial typography sequence','Macro watch dial and precision detail showcase','Jewelry sparkle and gemstone refraction reveal','Perfume bottle with glass caustics and soft haze','Champagne metallic logo reveal','Satin fabric and softbox lighting product scene','Premium product on sculptural stone podium','Elegant serif title with generous negative space','Luxury packaging unboxing and reveal','High-end beauty product macro campaign','Warm neutral architectural luxury sequence','Crystal glass reflections and prismatic highlights','Luxury hospitality cinematic establishing shot','Premium brand signature with subtle gold foil']},
+ {re:/3d|three.?dimensional|turntable|exploded view|flythrough|simulation/i,styles:['Photorealistic 3D','3D Studio Render','Isometric 3D','3D Clay Render','Chrome & Metallic','Glass / Refraction','Soft Body / Liquid','Particle Simulation','Wireframe / Technical','Exploded View','Product Turntable','3D Camera Orbit','Depth of Field','Ray-Traced Reflection','Volumetric Environment'],specific:['360-degree 3D product turntable','Exploded product assembly with floating components','Photorealistic 3D hero object reveal','3D logo extrusion and metallic reflections','Glass and crystal refraction product showcase','Liquid metal morph into brand symbol','3D isometric ecosystem explainer','Macro 3D material study with depth of field','3D camera orbit around hero product','Mechanical cutaway and internal component reveal','3D typography extrusion and light sweep','Soft-body liquid simulation around product','Particle system forms a 3D emblem','3D architectural flythrough with camera dolly','Wireframe-to-solid technical product transition','3D sneaker rotating studio showcase','3D cosmetic bottle with realistic glass shader','3D vehicle reveal in dramatic studio','3D abstract sculpture ambient loop','3D exploded infographic with labeled parts']},
+ {re:/futuristic|sci.?fi|cyber|technology|artificial intelligence|robot|digital twin|space station|hud/i,styles:['Futuristic Sci-Fi','Cyberpunk Neon','Holographic Interface','Glassmorphism','HUD / FUI Interface','Neural Network Visualization','Digital Grid','Laser Light Trails','Chrome & Iridescent','Volumetric Sci-Fi','Dark Tech Editorial','Blueprint / Wireframe','Quantum Particle Field','Retro-Futurism'],specific:['Futuristic interface boot-up sequence','Holographic product reveal with scan lines','AI neural network forming a luminous core','Cybernetic HUD with animated data layers','Sci-fi portal opening with volumetric light','Digital twin wireframe-to-solid transformation','Neon city skyline with atmospheric depth','Quantum particle field and energy pulse','Robotics arm precision assembly showcase','Futuristic technology product launch title','Space station cinematic flythrough','Laser grid tunnel with perspective motion','Holographic glass panels and data visualization','Chrome liquid morphing into a tech emblem','Futuristic interface with orbital data rings','Cybersecurity shield with scanning energy','AI processor macro reveal and circuit pathways']},
+ {re:/commercial|advertising|campaign|product launch|product feature|brand activation|billboard|performance marketing|social ad|retail|sponsor package/i,styles:['Commercial Product Hero','Premium Advertising','Bold Campaign Typography','Clean Product Studio','Lifestyle Editorial','Benefit-led Infographic','Dynamic Kinetic Type','Split-screen Comparison','Feature Callout Motion','Retail Promo Graphics','Brand Color Blocking','Studio Lighting','Social-first Vertical Ad','Call-to-Action Reveal'],specific:['Premium product hero with benefit callouts','Three-feature product commercial sequence','Dynamic campaign headline and CTA reveal','Product 360 showcase with clean studio lighting','Before-and-after benefit transformation','Lifestyle scene transitioning into product hero','Retail seasonal offer with kinetic typography','Vertical social ad with bold opening hook','Product materials and craftsmanship close-up','Packaging reveal with brand signature','App feature walkthrough with UI motion','Commercial end card with logo and call to action','Digital billboard campaign with oversized type','Sponsor logo bumper and event package','Product comparison with animated data points','Brand activation teaser with dramatic countdown']},
  {re:new RegExp("generative|prompt engineering|ai & generative|artificial intelligence|ai content","i"),styles:["Futuristic Sci-Fi","Holographic Interface","Glassmorphism","Kinetic Typography","Data-driven Motion","3D Layered Composition","Liquid Chrome","Dark Interface"],specific:["Generative AI neural network reveal","Prompt to image creative workflow","AI assistant interface and smart response","Machine learning model training visualization","AI content creation pipeline","Human and AI collaboration story","Generative particles forming a visual identity","AI tools feature launch sequence"]},
  {re:new RegExp("data science|machine learning|data analytics|big data","i"),styles:["Data Visualization","Scientific Visualization","Dark Interface","Isometric Illustration","Minimal Swiss Design","Futuristic Sci-Fi","Editorial Infographic"],specific:["Machine learning training and prediction flow","Data pipeline from raw data to insight","Neural network nodes and connections","Interactive dashboard KPI reveal","Big data analytics and signal patterns","Predictive analytics chart sequence","Data classification and clustering visualization","AI model accuracy and metric comparison"]},
  {re:new RegExp("ux\\/ui|user experience|product design|interface design|web design","i"),styles:["UI Prototype","Glassmorphism","Minimal Swiss Design","Modern Editorial","Clean Corporate","Soft Gradient","High Fidelity Interface"],specific:["Mobile app onboarding flow","Website hero and responsive layout reveal","UX journey map and user flow","Design system component showcase","Wireframe transforming into polished UI","Dashboard interface micro-interaction","Accessibility and usability explainer","App navigation and feature tour"]},
@@ -3239,15 +3349,27 @@ function trozalApplyTheme(theme,keepCustomSearch=false){
  if($('svgAiPrompt').value.trim())generateSvgAiPrompt();
 }
 function trozalInitThemeCatalog(){
- const select=$('svgAiTheme'),list=$('svgAiThemeSuggestions');const current=select.value||'Brand Identity & Logo';
+ const select=$('svgAiTheme'),list=$('svgAiThemeSuggestions'),search=$('svgAiThemeSearch'),results=$('svgAiThemeResults'),hint=$('svgAiThemeSearchHint');
+ const current=select.value||'Brand Identity & Logo';
  trozalSetSelectOptions(select,TROZAL_AI_THEMES,current);
  list.replaceChildren();TROZAL_AI_THEMES.forEach(t=>{const o=document.createElement('option');o.value=t;list.appendChild(o);});
- $('svgAiThemeSearch').value=current;trozalApplyTheme(current,true);
- select.addEventListener('change',()=>trozalApplyTheme(select.value));
- const resolve=()=>{const q=$('svgAiThemeSearch').value.trim();if(!q)return;const exact=TROZAL_AI_THEMES.find(t=>t.toLowerCase()===q.toLowerCase());trozalApplyTheme(exact||q,true);};
- $('svgAiThemeSearch').addEventListener('change',resolve);
- $('svgAiThemeSearch').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();resolve();}});
- $('svgAiThemeSearch').addEventListener('input',()=>{const q=$('svgAiThemeSearch').value.trim().toLowerCase();if(!q){$('svgAiThemeSearchHint').textContent='Ketik tema, lalu pilih saran atau tekan Enter untuk tema khusus.';return;}const hits=TROZAL_AI_THEMES.filter(t=>t.toLowerCase().includes(q)).slice(0,5);$('svgAiThemeSearchHint').textContent=hits.length?'Saran tema: '+hits.join(' · '):'Tema khusus akan dipakai sebagai tema utama; kategori terkait akan dipilih otomatis.';});
+ search.value=current;trozalApplyTheme(current,true);
+ select.addEventListener('change',()=>{trozalApplyTheme(select.value);results.hidden=true;});
+ const choose=theme=>{trozalApplyTheme(theme);results.hidden=true;search.blur();};
+ const resolve=()=>{const q=search.value.trim();if(!q)return;const exact=TROZAL_AI_THEMES.find(t=>t.toLowerCase()===q.toLowerCase());const starts=TROZAL_AI_THEMES.find(t=>t.toLowerCase().startsWith(q.toLowerCase()));const contains=TROZAL_AI_THEMES.find(t=>t.toLowerCase().includes(q.toLowerCase()));choose(exact||starts||contains||q);};
+ const renderResults=()=>{
+  const q=search.value.trim().toLowerCase();results.replaceChildren();
+  if(!q){results.hidden=true;hint.textContent='Ketik kata kunci, pilih hasil yang muncul, atau tekan Enter untuk tema khusus.';return;}
+  const hits=TROZAL_AI_THEMES.filter(t=>t.toLowerCase().includes(q)).slice(0,12);
+  hits.forEach(theme=>{const btn=document.createElement('button');btn.type='button';btn.className='theme-result';btn.textContent=theme;btn.addEventListener('click',()=>choose(theme));results.appendChild(btn);});
+  results.hidden=!hits.length;
+  hint.textContent=hits.length?hits.length+' saran ditampilkan · '+TROZAL_AI_THEMES.filter(t=>t.toLowerCase().includes(q)).length+' tema cocok. Pilih hasil untuk menerapkan kategori dan subtema.':'Tidak ada tema persis di katalog. Tekan Enter untuk membuat profil tema khusus "'+search.value.trim()+'".';
+ };
+ search.addEventListener('input',renderResults);
+ search.addEventListener('focus',renderResults);
+ search.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();const first=results.querySelector('button');if(first&&results.children.length)choose(first.textContent);else resolve();}else if(e.key==='Escape')results.hidden=true;});
+ document.addEventListener('click',e=>{if(!e.target.closest('#svgMotionModePanel'))results.hidden=true;});
+ const count=$('svgAiThemeCount');if(count)count.textContent=TROZAL_AI_THEMES.length+' tema utama';
 }
 function trozalGetPromptCanvas(){
  const ratio=$('svgAiRatio').value,level=+$('svgAiResolution').value||2160;let width,height,label;
