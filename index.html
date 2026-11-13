@@ -2670,7 +2670,7 @@ document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.que
  let dragged=null;panels.forEach(p=>{p.addEventListener('dragstart',e=>{if(e.target.closest('input,textarea,select,button')){e.preventDefault();return}dragged=p;p.classList.add('workspace-dragging');e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',p.dataset.workspaceKey)});p.addEventListener('dragover',e=>{if(!dragged||dragged===p)return;e.preventDefault();p.classList.add('workspace-drop-target')});p.addEventListener('dragleave',()=>p.classList.remove('workspace-drop-target'));p.addEventListener('drop',e=>{if(!dragged||dragged===p)return;e.preventDefault();p.classList.remove('workspace-drop-target');const r=p.getBoundingClientRect();sidebar.insertBefore(dragged,e.clientY<r.top+r.height/2?p:p.nextSibling);save()});p.addEventListener('dragend',()=>{p.classList.remove('workspace-dragging');panels.forEach(x=>x.classList.remove('workspace-drop-target'));dragged=null;save()});});
  const editor=$('workspaceEditor'),list=$('workspaceEditorList');
  const panelTitle=p=>(p.querySelector('h3')?.innerText||p.id||'Panel').replace(/\\s+/g,' ').trim();
- const renderEditorList=()=>{list.replaceChildren();currentPanels().forEach((p,index)=>{const row=document.createElement('div');row.className='workspace-row';const title=document.createElement('strong');title.textContent=String(index+1).padStart(2,'0')+' · '+panelTitle(p);const up=document.createElement('button');up.type='button';up.textContent='↑';up.title='Pindah ke atas';up.disabled=index===0;up.addEventListener('click',()=>movePanel(index,-1));const down=document.createElement('button');down.type='button';down.textContent='↓';down.title='Pindah ke bawah';down.disabled=index===panels.length-1;down.addEventListener('click',()=>movePanel(index,1));row.append(title,up,down);list.appendChild(row)});};
+ const renderEditorList=()=>{list.replaceChildren();currentPanels().forEach((p,index)=>{const row=document.createElement('div');row.className='workspace-row';const title=document.createElement('strong');title.textContent=String(index+1).padStart(2,'0')+' · '+panelTitle(p);const up=document.createElement('button');up.type='button';up.textContent='↑';up.title='Pindah ke atas';up.setAttribute('aria-label','Pindahkan adegan '+(index+1)+' ke atas');up.disabled=index===0;up.addEventListener('click',()=>movePanel(index,-1));const down=document.createElement('button');down.type='button';down.textContent='↓';down.title='Pindah ke bawah';down.disabled=index===panels.length-1;down.addEventListener('click',()=>movePanel(index,1));row.append(title,up,down);list.appendChild(row)});};
  const movePanel=(index,delta)=>{const ordered=currentPanels(),target=ordered[index],next=ordered[index+delta];if(!target||!next)return;if(delta<0)sidebar.insertBefore(target,next);else sidebar.insertBefore(next,target);save();renderEditorList();$('workspaceEditorStatus').textContent='Urutan panel tersimpan otomatis.'};
  const open=()=>{editor.hidden=false;renderEditorList()};const close=()=>editor.hidden=true;
  const openTools=()=>{tools.hidden=false;$('workspacePanelSearch')?.focus()};const closeTools=()=>tools.hidden=true;
@@ -2735,7 +2735,7 @@ function visualSceneField(label,type,value,options){
 function renderVisualSceneSequence(){
  const host=$('visualSceneList');if(!host)return;host.replaceChildren();
  visualSceneSequence.forEach((item,index)=>{
-  const card=document.createElement('article');card.className='visual-scene-card';card.draggable=true;card.dataset.index=String(index);
+  const card=document.createElement('article');card.className='visual-scene-card';card.draggable=true;card.tabIndex=0;card.setAttribute('role','group');card.dataset.index=String(index);if(!item.id)item.id='scene-'+Date.now()+'-'+index;card.dataset.sceneId=String(item.id);card.setAttribute('aria-label','Adegan '+(index+1)+': '+(String(item.text||'').slice(0,120)||'belum diberi deskripsi')+'. Gunakan Alt+Panah Atas atau Alt+Panah Bawah untuk mengubah urutan.');
   const head=document.createElement('div');head.className='visual-scene-head';
   const grip=document.createElement('span');grip.className='visual-scene-grip';grip.textContent='⠿';grip.title='Seret untuk mengubah urutan';
   const num=document.createElement('span');num.className='visual-scene-number';num.textContent='ADEGAN '+String(index+1).padStart(2,'0');
@@ -2743,9 +2743,9 @@ function renderVisualSceneSequence(){
   const actions=document.createElement('div');actions.className='scene-actions';
   const up=document.createElement('button');up.type='button';up.textContent='↑';up.title='Pindah ke atas';up.disabled=index===0;
   up.addEventListener('click',()=>moveVisualScene(index,index-1));
-  const down=document.createElement('button');down.type='button';down.textContent='↓';down.title='Pindah ke bawah';down.disabled=index===visualSceneSequence.length-1;
+  const down=document.createElement('button');down.type='button';down.textContent='↓';down.title='Pindah ke bawah';down.setAttribute('aria-label','Pindahkan adegan '+(index+1)+' ke bawah');down.disabled=index===visualSceneSequence.length-1;
   down.addEventListener('click',()=>moveVisualScene(index,index+1));
-  const del=document.createElement('button');del.type='button';del.textContent='✕';del.title='Hapus adegan';
+  const del=document.createElement('button');del.type='button';del.textContent='✕';del.title='Hapus adegan';del.setAttribute('aria-label','Hapus adegan '+(index+1));
   del.addEventListener('click',()=>{visualSceneSequence.splice(index,1);renderVisualSceneSequence();});
   actions.append(up,down,del);head.append(grip,num,spacer,actions);card.appendChild(head);
   const description=visualSceneField('DESKRIPSI VISUAL','textarea',item.text);
@@ -2762,7 +2762,7 @@ function renderVisualSceneSequence(){
   const style=visualSceneField('GAYA VISUAL','select',item.style,[['cinematic','Cinematic'],['illustration','2D Illustration'],['neon','Neon / Sci-Fi'],['papercut','Paper Cut']]);
   style.field.addEventListener('change',()=>item.style=style.field.value);
   fields.append(duration.wrap,transition.wrap,camera.wrap,style.wrap);card.appendChild(fields);
-  card.addEventListener('dragstart',e=>{visualSceneDragIndex=index;card.classList.add('dragging');if(e.dataTransfer){e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',String(index));}});
+  card.addEventListener('keydown',e=>{if(!e.altKey||!['ArrowUp','ArrowDown'].includes(e.key))return;e.preventDefault();e.stopPropagation();const target=index+(e.key==='ArrowUp'?-1:1);if(target<0||target>=visualSceneSequence.length)return;moveVisualScene(index,target);const next=host.children[target];if(next){next.focus();next.scrollIntoView({block:'nearest',behavior:'smooth'});}});card.addEventListener('dragstart',e=>{visualSceneDragIndex=index;card.classList.add('dragging');if(e.dataTransfer){e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',String(index));}});
   card.addEventListener('dragend',()=>{visualSceneDragIndex=-1;host.querySelectorAll('.visual-scene-card').forEach(x=>x.classList.remove('dragging','drag-over'));});
   card.addEventListener('dragover',e=>{e.preventDefault();card.classList.add('drag-over');if(e.dataTransfer)e.dataTransfer.dropEffect='move';});
   card.addEventListener('dragleave',()=>card.classList.remove('drag-over'));
@@ -2774,7 +2774,7 @@ function renderVisualSceneSequence(){
 }
 function moveVisualScene(from,to){
  if(from<0||to<0||from>=visualSceneSequence.length||to>=visualSceneSequence.length||from===to)return;
- const moved=visualSceneSequence.splice(from,1)[0];visualSceneSequence.splice(to,0,moved);renderVisualSceneSequence();
+ const moved=visualSceneSequence.splice(from,1)[0];visualSceneSequence.splice(to,0,moved);renderVisualSceneSequence();const host=$('visualSceneList');const target=host?.children[to];if(target){target.focus({preventScroll:true});target.scrollIntoView({block:'nearest',behavior:'smooth'});}
 }
 function buildVisualSceneSequenceFromPrompt(){
  const lines=visualMotionPromptLines();
@@ -2990,7 +2990,40 @@ function buildVisualMotionHtml(){
  '*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080913;display:grid;place-items:center}.stage{position:relative;width:min(100vw,calc(100vh * '+aspect+'));height:min(100vh,calc(100vw / '+aspect+'));aspect-ratio:'+parts[0]+'/'+parts[1]+';overflow:hidden;isolation:isolate;background:#10192b}.scene{position:absolute;inset:0;opacity:0;animation-duration:'+total.toFixed(2)+'s;animation-timing-function:linear;animation-iteration-count:infinite}.art{position:absolute;inset:-5%;width:110%;height:110%;transform-origin:center}.art svg{width:100%;height:100%;display:block}.paper{filter:saturate(.82) contrast(1.05)}.hero{transform-box:fill-box;transform-origin:center;animation:heroFloat 3.8s ease-in-out infinite alternate}.cloud{animation:cloudDrift 17s linear infinite}.star{animation:twinkle 2.8s ease-in-out infinite alternate}.wave{animation:waveDrift 5s ease-in-out infinite alternate;transform-box:fill-box}.wheel{transform-box:fill-box;transform-origin:center;animation:wheelSpin 1.2s linear infinite}.snow{animation:snowFall 5s linear infinite}.ambient{position:absolute;left:var(--x);top:var(--y);width:var(--d);height:var(--d);border-radius:50%;background:'+accent+';box-shadow:0 0 12px '+accent+';opacity:0;animation:floatParticle 5s ease-in-out var(--delay) infinite}.scene:nth-child(even) .ambient{animation-direction:alternate}.stage:after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 45%,#05071388 100%);z-index:5}'+
  '@keyframes heroFloat{0%{transform:translate3d(-1.2%,1.2%,0) rotate(-1deg)}100%{transform:translate3d(1.8%,-2%,0) rotate(1.5deg)}}@keyframes cloudDrift{from{translate:-3% 0}to{translate:5% 0}}@keyframes twinkle{from{opacity:.18}to{opacity:1}}@keyframes waveDrift{from{transform:translateY(9px)}to{transform:translateY(-12px)}}@keyframes wheelSpin{to{transform:rotate(360deg)}}@keyframes snowFall{from{transform:translateY(-30px)}to{transform:translateY(40px)}}@keyframes floatParticle{0%{opacity:0;transform:translateY(24px)}45%{opacity:.8}100%{opacity:0;transform:translateY(-34px)}}'+camCss+
  kfBlocks+'@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-delay:0ms!important}}'+
- '</style></head><body><main class="stage">'+sceneMarkup+'</main>\n</body></html>';
+ '</style></head><body><main class="stage">'+sceneMarkup+'</main>\n
+<!-- TROZAL OLLAMA RANDOM THEME CLICK RECOVERY: independent of catalog binding order. -->
+<script>
+(function(){
+ 'use strict';
+ document.addEventListener('click',function(event){
+  const button=event.target&&event.target.closest?event.target.closest('#svgAiRandomThemeBtn'):null;
+  if(!button)return;
+  event.preventDefault();event.stopImmediatePropagation();
+  const select=document.getElementById('svgAiTheme');
+  const search=document.getElementById('svgAiThemeSearch');
+  const hint=document.getElementById('svgAiThemeSearchHint');
+  const count=document.getElementById('svgAiCatalogCount');
+  if(!select){if(hint)hint.textContent='Kontrol tema tidak ditemukan. Muat ulang halaman.';return;}
+  const sources=[...select.options,...(document.getElementById('svgAiThemeSuggestions')||{options:[]}).options];
+  const fallback=['Brand Identity & Logo','Technology & AI','Cybersecurity','Space Exploration','Luxury Product Commercial','Travel & Tourism','Architecture & Interior','Nature & Wildlife','Automotive','Aviation & Aerospace','Food & Beverage','Fashion Editorial','Sports Broadcast','Scientific Visualization','Smart City','Renewable Energy','Abstract Motion Art','Education & Learning','Healthcare Awareness','Cinematic Title Sequence'];
+  const themes=[...new Set([...sources.map(o=>String(o.value||o.textContent||'').trim()),...fallback])].filter(Boolean);
+  const pool=themes.filter(theme=>theme.toLowerCase()!==String(select.value||'').toLowerCase());
+  if(!pool.length){if(hint)hint.textContent='Katalog tema belum tersedia. Muat ulang halaman lalu coba lagi.';return;}
+  const picked=pool[Math.floor(Math.random()*pool.length)];
+  let option=[...select.options].find(o=>o.value.toLowerCase()===picked.toLowerCase());
+  if(!option){option=document.createElement('option');option.value=picked;option.textContent=picked;select.appendChild(option);}
+  select.value=option.value;
+  if(search)search.value=picked;
+  select.dispatchEvent(new Event('change',{bubbles:true}));
+  if(typeof window.trozalApplyTheme==='function'){
+   try{window.trozalApplyTheme(picked);}catch(error){if(hint)hint.textContent='Tema dipilih, tetapi pembaruan kategori perlu diperiksa: '+(error.message||String(error));}
+  }
+  if(hint)hint.textContent='✦ Tema inspirasi dipilih: '+picked+'. Tema utama, kategori visual, dan subtema diperbarui.';
+  if(count)count.textContent=themes.length+' tema tersedia';
+ },true);
+})();
+</script>
+</body></html>';
  return {html,scenes:items.length,duration:total,ratio};
 }
 $('generateVisualMotionBtn').addEventListener('click',()=>{
@@ -5092,6 +5125,7 @@ $('generateVisualMotionAiBtn')?.addEventListener('click',generateVisualMotionWit
 }
 
 
+.visual-scene-card:focus-visible{outline:2px solid #72c9ef;outline-offset:3px;box-shadow:0 0 0 4px #72c9ef22}.visual-scene-card button:focus-visible,.visual-scene-card input:focus-visible,.visual-scene-card select:focus-visible,.visual-scene-card textarea:focus-visible{outline:2px solid #f5c56b;outline-offset:2px}
 /* TROZAL UI MODES · Professional is the default; Classic preserves the legacy presentation. */
 .ui-layout-switcher{display:flex;align-items:center;gap:4px;padding:3px;border:1px solid #40516a;border-radius:9px;background:#111923;flex:0 0 auto}
 .ui-layout-label{padding:0 6px;color:#91a9c4;font-size:9px;font-weight:900;letter-spacing:1px}
