@@ -4162,16 +4162,18 @@ function wireStudioLayout(){
  sortable(left,'.panel','left-panels',el=>el.querySelector('h3'));
  sortable(right,'.panel','right-panels',el=>el.querySelector('h3'));
  const top=document.querySelector('.topcontrols');if(top)sortable(top,'.control','top-controls',el=>el.querySelector('label'));
- const stageWrap=document.querySelector('.stagewrap'),info=document.querySelector('.stageinfo'),timeline=document.querySelector('.timeline');
- // Core center workspace must remain at the top. Do not restore a stale drag order
- // that can bury Preview / Timeline beneath the animation controls.
- try{localStorage.removeItem('trozal_order_main-panels')}catch(_){}
+ const stageWrap=document.querySelector('.stagewrap'),info=document.querySelector('.stageinfo'),timeline=document.querySelector('.timeline'),topControls=document.querySelector('.topcontrols');
+ // Rebuild the center column in the same order as Browser AI: render controls,
+ // live preview, technical readout, timeline and multi-track editor.
+ try{['trozal_order_main-panels','trozal_order_right-panels'].forEach(k=>localStorage.removeItem(k))}catch(_){}
  if(stageWrap){stageWrap.dataset.layoutId='preview';addHandle(stageWrap,'⠿ Preview')}
  if(info){info.dataset.layoutId='stage-info';addHandle(info,'⠿ Info')}
  if(timeline){timeline.dataset.layoutId='timeline';addHandle(timeline,'⠿ Timeline')}
- if(stageWrap)main.insertBefore(stageWrap,main.firstChild);
+ if(topControls)main.insertBefore(topControls,main.firstChild);
+ if(stageWrap)main.insertBefore(stageWrap,topControls?topControls.nextSibling:main.firstChild);
  if(info&&stageWrap)main.insertBefore(info,stageWrap.nextSibling);
  if(timeline&&info)main.insertBefore(timeline,info.nextSibling);
+ main.scrollTop=0;
  if(stageWrap&&!stageWrap.querySelector('.stage-resize-handle')){
   const h=document.createElement('button');h.type='button';h.className='stage-resize-handle';h.textContent='↕';h.title='Tarik ke bawah/atas untuk mengubah tinggi Preview';stageWrap.appendChild(h);
   let y=0,height=0;
@@ -4907,6 +4909,24 @@ $('generateVisualMotionAiBtn')?.addEventListener('click',generateVisualMotionWit
 
 
 /* TROZAL FIX · Android Chrome desktop-mode: keep both side panels reachable */
+/* FIX · Match Browser AI three-column studio: left tools / center preview / right animation */
+@media (min-width:721px) {
+ .app{
+  display:grid!important;
+  grid-template-columns:minmax(210px,18vw) 8px minmax(0,1fr) 8px minmax(210px,18vw)!important;
+  width:100%!important;max-width:100%!important;min-width:0!important;
+  height:calc(100dvh - 54px)!important;min-height:0!important;overflow:hidden!important;
+ }
+ .app>.sidebar:not(.right){grid-column:1;display:block!important;min-width:0!important;width:auto!important;height:100%!important;max-height:none!important;overflow-y:auto!important;overflow-x:hidden!important}
+ .app>.main{grid-column:3;display:flex!important;flex-direction:column!important;min-width:0!important;width:auto!important;height:100%!important;min-height:0!important;overflow-y:auto!important;overflow-x:hidden!important}
+ .app>.sidebar.right{grid-column:5;display:block!important;min-width:0!important;width:auto!important;height:100%!important;max-height:none!important;overflow-y:auto!important;overflow-x:hidden!important}
+ .app>.layout-resizer[data-edge="left"]{grid-column:2;display:block!important}
+ .app>.layout-resizer[data-edge="right"]{grid-column:4;display:block!important}
+}
+@media (min-width:721px) and (max-width:1050px){
+ .app{grid-template-columns:minmax(170px,19vw) 7px minmax(0,1fr) 7px minmax(170px,19vw)!important}
+}
+
 @media (min-width:721px) and (max-width:1050px) {
   .app {
     display:grid !important;
