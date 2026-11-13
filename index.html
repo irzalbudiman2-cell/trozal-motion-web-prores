@@ -518,6 +518,27 @@ body[data-ui-layout="professional"] .ui-layout-btn:focus-visible{
 
 
 </style>
+<style>
+
+/* TROZAL Ollama — Professional Mode sequencer accessibility polish; presentation only. */
+body[data-ui-layout="professional"] .visual-scene-card{
+ border-radius:11px;
+ box-shadow:0 5px 15px #0003,inset 0 1px #ffffff0b;
+ transition:border-color .18s ease,box-shadow .18s ease;
+}
+body[data-ui-layout="professional"] .visual-scene-card:hover{
+ border-color:#57b7a9;
+ box-shadow:0 7px 18px #0004,inset 0 1px #ffffff0b;
+}
+body[data-ui-layout="professional"] .visual-scene-card:focus-within{
+ border-color:#b1fff1;
+ box-shadow:0 0 0 2px #52d6c433,0 7px 18px #0004;
+}
+@media(prefers-reduced-motion:reduce){
+ body[data-ui-layout="professional"] .visual-scene-card{transition:none}
+}
+
+</style>
 </head>
 <body>
 <script>
