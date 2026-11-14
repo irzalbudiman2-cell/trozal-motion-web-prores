@@ -2885,7 +2885,10 @@ try{
    else if(range.fadeOut>0&&elapsed>range.end)sceneAlpha=Math.max(0,Math.min(1,1-(elapsed-range.end)/range.fadeOut));
   }
   if(sceneAlpha<=0)return;
-  const lm=getLayerMotion(i,elapsed);ctx.save();ctx.globalAlpha=lm.alpha*sceneAlpha;drawContained(pi,lm.x*w/100,lm.y*h/100,lm.rot,lm.scale);ctx.restore();
+  const lm=getLayerMotion(i,elapsed),group=timelineLayerGroups[i]||'',chain=[];let parent=group?timelineGroupParents[group]||'':'';const seen=new Set();while(parent&&!seen.has(parent)){seen.add(parent);chain.unshift(parent);parent=timelineGroupParents[parent]||'';}
+  ctx.save();ctx.globalAlpha=lm.alpha*sceneAlpha;
+  chain.forEach(name=>{const driver=trozalGroupDirectMembers(name)[0];if(driver===undefined)return;const gm=getLayerMotion(driver,elapsed);ctx.translate(gm.x*w/100,gm.y*h/100);ctx.rotate(gm.rot*Math.PI/180);ctx.scale(gm.scale,gm.scale);ctx.globalAlpha*=Math.max(0,Math.min(1,gm.alpha));});
+  drawContained(pi,lm.x*w/100,lm.y*h/100,lm.rot,lm.scale);ctx.restore();
  })}
  else if(svgImg)drawContained(svgImg);else if(img)drawContained(img);else{ctx.fillStyle=currentColor;ctx.beginPath();ctx.arc(0,0,Math.min(ow,oh)/3,0,Math.PI*2);ctx.fill()}
  applyShapeMaskToCanvas(ctx,baseW,baseH,shapeState,elapsed);
