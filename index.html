@@ -3523,6 +3523,8 @@ function trozalThemeProfile(theme){
 }
 function trozalSetSelectOptions(select,items,prefer){select.replaceChildren();[...new Set(items)].forEach((v,i)=>{const o=document.createElement('option');o.textContent=v;o.value=v;if((prefer&&v===prefer)||(!prefer&&i===0))o.selected=true;select.appendChild(o);});}
 let trozalThemeShuffleBag=[];
+// Persistent shuffle-bag state must exist before the first random-theme click.
+var trozalThemeShuffleBag = Array.isArray(window.trozalThemeShuffleBag) ? window.trozalThemeShuffleBag : [];
 function trozalRandomTheme(e){
  if(window.__trozalDebugLog)window.__trozalDebugLog('info','HANDLER trozalRandomTheme dipanggil.');
  if(e){e.preventDefault();e.stopPropagation();}
@@ -3534,6 +3536,7 @@ function trozalRandomTheme(e){
   const themes=Array.isArray(catalogue)?[...new Set(catalogue.filter(Boolean))]:[];
   if(!themes.length){if(status)status.textContent='Katalog tema belum siap. Muat ulang halaman lalu coba lagi.';return false;}
   const current=select?.value||'';
+  if(window.__trozalDebugLog)window.__trozalDebugLog('info','RANDOM THEME state: katalog='+themes.length+' | tema aktif='+current+' | bag awal='+trozalThemeShuffleBag.length);
   // Shuffle-bag selection: every catalogue topic is used once before a new cycle.
   trozalThemeShuffleBag=trozalThemeShuffleBag.filter(t=>themes.includes(t)&&t!==current);
   if(!trozalThemeShuffleBag.length){
@@ -3552,6 +3555,7 @@ function trozalRandomTheme(e){
  }catch(err){
   const message=err&&err.stack?err.stack:(err&&err.message?err.message:String(err));
   if(status)status.textContent='Gagal memilih tema: '+(err&&err.message?err.message:'kesalahan tidak diketahui');
+  if(window.__trozalDebugLog)window.__trozalDebugLog('err','RANDOM THEME exception: '+message);
   console.error('[TROZAL RANDOM THEME] '+message);
  }
  return false;
