@@ -1845,6 +1845,7 @@ function mtSelectLayer(index){
 function refreshTimelineEditor(){
  const editor=$('multiTrackEditor'),ruler=$('mtRuler'),list=$('mtTrackList'),shelf=$('mtMarkerShelf');
  if(!editor||!ruler||!list||!shelf)return;
+ trozalRefreshHierarchySelect();
  const duration=Math.max(.1,+$('duration').value||10),oldScroll=list.scrollTop;
  const step=duration<=10?1:duration<=20?2:5;
  let ticks='';
@@ -1913,13 +1914,13 @@ function wireMultiTrackEditor(){
  $('mtCreateGroup').onclick=()=>{
   const chosen=Object.keys(timelineGroupSelected).filter(k=>timelineGroupSelected[k]&&Number(k)<svgPieces.length).map(Number);
   if(chosen.length<2){setStatus('Pilih minimal dua layer untuk membuat grup.');return;}
-  const name=String($('mtGroupName').value||'').trim().replace(/\\s+/g,' ')||('Grup '+(new Set(Object.values(timelineLayerGroups)).size+1));
+  const name=String($('mtGroupName').value||'').trim().replace(/\s+/g,' ')||('Grup '+(new Set(Object.values(timelineLayerGroups)).size+1));
   if(name.length>28){setStatus('Nama grup maksimal 28 karakter.');return;}
   if(new Set(Object.values(timelineLayerGroups).filter(Boolean)).has(name)){setStatus('Nama grup sudah digunakan. Pilih nama lain.');$('mtGroupName').focus();return;}
   trozalHistoryBegin();chosen.forEach(i=>{timelineLayerGroups[i]=name;delete timelineGroupSelected[i];});refreshTimelineEditor();scheduleAutosave();trozalHistoryCommit('Buat grup '+name);setStatus('Grup "'+name+'" dibuat dari '+chosen.length+' layer.');
  };
  $('mtRenameGroup').onclick=()=>{
-  const old=timelineLayerGroups[selectedLayerIndex],name=String($('mtGroupName').value||'').trim().replace(/\\s+/g,' ');
+  const old=timelineLayerGroups[selectedLayerIndex],name=String($('mtGroupName').value||'').trim().replace(/\s+/g,' ');
   if(!old){setStatus('Pilih layer anggota grup yang akan diganti namanya.');return;}
   if(!name||name.length>28){setStatus('Nama grup baru wajib diisi dan maksimal 28 karakter.');return;}
   if(name===old){setStatus('Nama grup tidak berubah.');return;}
