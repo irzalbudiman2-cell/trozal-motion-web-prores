@@ -296,6 +296,7 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
 .mt-tick{position:absolute;top:0;bottom:0;border-left:1px solid rgba(223,190,123,.18);font-size:8px;color:#b8a77f;padding-left:3px}
 .mt-tick span{position:absolute;top:2px;left:3px;white-space:nowrap}
 .mt-track-list{max-height:205px;overflow:auto;overscroll-behavior:contain;scrollbar-color:#8d6d32 #211e18}
+.mt-group-toolbar{margin:7px 0;align-items:center}.mt-group-toolbar input,.mt-group-toolbar select{max-width:150px;min-width:105px;padding:5px 7px;font-size:9px;background:#101d22;color:#eee;border:1px solid #536d72;border-radius:5px}.mt-group-toolbar button{font-size:9px;padding:5px 7px}.mt-group-pick{width:13px;height:13px;accent-color:#70d9b2;flex:0 0 auto}.mt-group-tag,.mt-hierarchy-tag{font-size:8px;line-height:1.25;padding:2px 4px;border-radius:4px;white-space:nowrap;max-width:76px;overflow:hidden;text-overflow:ellipsis;flex:0 1 auto}.mt-group-tag{background:#21483d;color:#a8f0d1}.mt-hierarchy-tag{border:1px solid #456b83;background:#142a38;color:#9ed9f2}.mt-track-row[data-mt-depth="1"] .mt-track-label{padding-left:12px}.mt-track-row[data-mt-depth="2"] .mt-track-label{padding-left:24px}.mt-track-row[data-mt-depth="3"] .mt-track-label{padding-left:36px}
 .mt-track-row{min-height:34px;border-bottom:1px solid rgba(202,171,112,.11)}
 .mt-track-row.selected .mt-track-label{background:rgba(212,170,75,.12);border-color:#a88035}
 .mt-track-label{height:28px;min-width:0;display:flex;align-items:center;gap:3px;padding:2px 4px;border:1px solid transparent;border-radius:5px}
@@ -754,6 +755,7 @@ body[data-ui-layout="professional"] .visual-scene-card:focus-within{
     <div><strong>Multi-Track Timeline</strong><small id="mtTrackSummary">Komposisi utama · 1 track</small></div>
     <div class="mt-toolbar-actions"><button type="button" id="mtUndo" title="Undo · Ctrl+Z" disabled>↶ Undo</button><button type="button" id="mtRedo" title="Redo · Ctrl+Y" disabled>↷ Redo</button><button type="button" id="mtSnapToggle" aria-pressed="true" title="Snap ke frame, keyframe, marker, dan tepi klip">🧲 Snap ON</button><button type="button" id="mtBuildTracks" title="Pisahkan elemen SVG menjadi track yang dapat diedit">＋ Pecah SVG</button><button type="button" class="primary" id="mtAddMarker">＋ Marker</button><button type="button" id="mtClearMarkers">Hapus Marker</button></div>
    </div>
+   <div class="mt-toolbar-actions mt-group-toolbar"><input id="mtGroupName" type="text" maxlength="28" placeholder="Nama grup / nama baru" aria-label="Nama grup"><button type="button" id="mtCreateGroup">▦ Buat Grup</button><button type="button" id="mtRenameGroup">Ganti Nama</button><select id="mtHierarchyParent" aria-label="Pilih parent grup"><option value="">— Parent —</option></select><button type="button" id="mtSetGroupParent">Jadikan Anak</button><button type="button" id="mtClearGroupParent">Lepas Parent</button><button type="button" id="mtGroupKeyframe">◆ Keyframe Grup</button><button type="button" id="mtToggleGroupVisibility">◉ Visibilitas Grup</button><button type="button" id="mtSelectGroupMembers">Pilih Isi Grup</button><button type="button" id="mtToggleGroupLock">🔒 Kunci Grup</button><button type="button" id="mtSoloGroup">◎ Solo Grup</button><button type="button" id="mtCollapseGroup">▾ Ciutkan Grup</button><button type="button" id="mtCollapseAllGroups">Ciutkan Semua</button><button type="button" id="mtExpandAllGroups">Bentangkan Semua</button><button type="button" id="mtDissolveGroup">Lepas Grup</button></div>
    <div class="mt-ruler-row"><div class="mt-track-name-head">TRACK / LAYER</div><div class="mt-ruler" id="mtRuler"></div></div>
    <div class="mt-track-list" id="mtTrackList"><div class="mt-empty">Muat aset untuk membuat track timeline.</div></div>
    <div class="mt-marker-shelf" id="mtMarkerShelf"><span class="mt-empty-marker">Belum ada marker. Posisikan playhead, lalu klik + Marker.</span></div>
@@ -1256,7 +1258,7 @@ window.TROZAL_AI_THEMES_READY=true;
 <script>
 const $=id=>document.getElementById(id);
 let sourceSvg='', sourceUrl='', sourceType='', files=[], playing=false, raf=0, startAt=0, playhead=0, lastBlob=null, lastDownloadName='animove-render.webm', currentColor='#ffbd45', currentMode='single', svgPieces=[], svgWasSplit=false, svgLayerNames=[], svgLayerHints=[], svgLayerSceneIndices=[], trozalSceneObjectSplitMode=false, preserveSvgColors=false, soloLayerIndex=-1, selectedLayerIndex=-1, layerKeyframes=[];
-let timelineMarkers=[], timelineTrackLocks={}, timelineDragState=null, keyframeGraphDragState=null;
+let timelineMarkers=[], timelineTrackLocks={}, timelineLayerGroups={}, timelineGroupParents={}, timelineGroupSelected={}, timelineGroupCollapsed={}, timelineGroupSoloSnapshot=null, timelineDragState=null, keyframeGraphDragState=null;
 let timelineSnapEnabled=true, motionPathDragState=null, trozalUndoStack=[], trozalUndoIndex=-1, trozalHistoryBusy=false;
 // HTML-to-Motion uses an isolated same-origin document and DOM capture; it is not rasterized through SVG foreignObject.
 let trozalMetadataActiveSource=null;
@@ -1723,8 +1725,9 @@ function renderSplitPieces(t){
    else if(range.fadeIn>0&&t<range.start)sceneAlpha=Math.max(0,Math.min(1,(t-(range.start-range.fadeIn))/range.fadeIn));
    else if(range.fadeOut>0&&t>range.end)sceneAlpha=Math.max(0,Math.min(1,1-(t-range.end)/range.fadeOut));
   }
-  el.style.transform=`translate(${m.x}%,${m.y}%) rotate(${m.rot}deg) scale(${m.scale})`;
-  el.style.opacity=m.alpha*sceneAlpha;el.style.display=visible&&solo&&sceneAlpha>0?'flex':'none';
+  const hierarchyOpacity=trozalLayerHierarchyOpacity(i,t);
+  el.style.transform=trozalLayerHierarchyTransform(i,t,m);
+  el.style.opacity=m.alpha*sceneAlpha*hierarchyOpacity;el.style.display=visible&&solo&&sceneAlpha>0&&hierarchyOpacity>0?'flex':'none';
  });
 }
 function assembleSvg(){svgWasSplit=false;svgPieces=[];svgLayerHints=[];if(sourceSvg)setObjectMarkup(sourceSvg);renderAt(playhead);setStatus('Layer SVG disatukan kembali menjadi objek utuh.')}
@@ -1802,10 +1805,42 @@ function mtSetPlayhead(time){
  $('scrubber').value=String(playhead/duration*1000);
  renderAt(playhead);
 }
+function trozalGroupColor(name){
+ const palette=['#72d6b5','#79b8ff','#d7a2ff','#ffb86b','#f28ba8','#a8d98a','#f0d477','#7edce5','#d5a7a0','#aab4ff'];
+ const value=String(name||'').trim();let hash=2166136261;for(let i=0;i<value.length;i++){hash^=value.charCodeAt(i);hash=Math.imul(hash,16777619);}return palette[(hash>>>0)%palette.length];
+}
+function trozalGroupDescendants(root){const out=new Set([root]);let changed=true;while(changed){changed=false;Object.entries(timelineGroupParents).forEach(([child,parent])=>{if(out.has(parent)&&!out.has(child)){out.add(child);changed=true;}});}return out;}
+function trozalGroupDirectMembers(group){return svgPieces.map((_,i)=>i).filter(i=>timelineLayerGroups[i]===group);}
+function trozalGroupMembers(group){const names=trozalGroupDescendants(group);return svgPieces.map((_,i)=>i).filter(i=>names.has(timelineLayerGroups[i]));}
+function trozalGroupDepth(name){let depth=0,seen=new Set(),parent=timelineGroupParents[name];while(parent&&!seen.has(parent)){seen.add(parent);depth++;parent=timelineGroupParents[parent];}return depth;}
+function trozalIsGroupCollapsedInPath(group){let current=group,seen=new Set();while(current&&!seen.has(current)){if(timelineGroupCollapsed[current])return true;seen.add(current);current=timelineGroupParents[current];}return false;}
+function trozalRefreshHierarchySelect(){const el=$('mtHierarchyParent');if(!el)return;const current=el.value,groups=[...new Set(Object.values(timelineLayerGroups).filter(Boolean))].sort((a,b)=>a.localeCompare(b));el.innerHTML='<option value="">— Parent —</option>'+groups.map(g=>'<option value="'+escapeLayerName(g)+'">'+('　'.repeat(Math.min(5,trozalGroupDepth(g)))+'▦ '+escapeLayerName(g))+'</option>').join('');if(groups.includes(current))el.value=current;}
+function trozalLayerHierarchyTransform(index,t,local){
+ const group=timelineLayerGroups[index];if(!group)return `translate(${local.x}%,${local.y}%) rotate(${local.rot}deg) scale(${local.scale})`;
+ const chain=[];let parent=timelineGroupParents[group],seen=new Set();while(parent&&!seen.has(parent)){seen.add(parent);chain.unshift(parent);parent=timelineGroupParents[parent];}
+ const parts=[];chain.forEach(name=>{const driver=trozalGroupDirectMembers(name)[0];if(driver===undefined)return;const m=getLayerMotion(driver,t);parts.push(`translate(${m.x}%,${m.y}%) rotate(${m.rot}deg) scale(${m.scale})`);});
+ parts.push(`translate(${local.x}%,${local.y}%) rotate(${local.rot}deg) scale(${local.scale})`);return parts.join(' ');
+}
+function trozalLayerHierarchyOpacity(index,t){
+ const group=timelineLayerGroups[index];if(!group)return 1;let opacity=1,parent=timelineGroupParents[group],seen=new Set();
+ while(parent&&!seen.has(parent)){seen.add(parent);const driver=trozalGroupDirectMembers(parent)[0];if(driver!==undefined)opacity*=Math.max(0,Math.min(1,getLayerMotion(driver,t).alpha));parent=timelineGroupParents[parent];}return opacity;
+}
+function addGroupKeyframe(){
+ const i=selectedLayerIndex,group=timelineLayerGroups[i];if(!group){setStatus('Pilih layer anggota grup terlebih dahulu.');return;}
+ const members=trozalGroupDirectMembers(group);if(members.length<2){setStatus('Grup harus memiliki minimal dua layer.');return;}
+ if(members.some(n=>timelineTrackLocks[n])){setStatus('Ada anggota grup yang terkunci. Buka kunci semua anggota sebelum membuat keyframe grup.');return;}
+ const read=(id,d)=>{const el=$(id+i),v=el&&el.value!==''?Number(el.value):d;return Number.isFinite(v)?v:d;};
+ const t=trozalSnapTime($('kfAuto'+i)?.checked?playhead:read('kfTime',playhead),{layer:i}),ease=$('kfEase'+i)?.value||'easeInOut';
+ const bezier={x1:Math.max(0,Math.min(1,read('kfBx1',.25))),y1:Math.max(-2,Math.min(2,read('kfBy1',.1))),x2:Math.max(0,Math.min(1,read('kfBx2',.25))),y2:Math.max(-2,Math.min(2,read('kfBy2',1)))};
+ const frame={t,x:read('kfX',0),y:read('kfY',0),rot:read('kfRot',0),scale:Math.max(.01,Math.min(5,read('kfScale',100)/100)),alpha:Math.max(0,Math.min(1,read('kfAlpha',100)/100)),ease,bezier};
+ trozalHistoryBegin();members.forEach(n=>{layerKeyframes[n]=layerKeyframes[n]||[];const copy={...frame,bezier:{...bezier}},at=layerKeyframes[n].findIndex(k=>Math.abs(k.t-t)<.001);if(at>=0)layerKeyframes[n][at]=copy;else layerKeyframes[n].push(copy);layerKeyframes[n].sort((a,b)=>a.t-b.t);const time=$('kfTime'+n);if(time)time.value=t.toFixed(2);paintLayerKeyframes(n);});
+ renderAt(playhead);scheduleAutosave();trozalHistoryCommit('Keyframe grup '+group);setStatus('Keyframe grup "'+group+'" disimpan untuk '+members.length+' layer pada '+t.toFixed(2)+' detik.');
+}
 function mtSelectLayer(index){
  selectedLayerIndex=index;
  document.querySelectorAll('.layer-control').forEach((card,i)=>card.classList.toggle('selected-layer',i===index));
- document.querySelectorAll('.mt-track-row').forEach((row,i)=>row.classList.toggle('selected',i===index));
+ document.querySelectorAll('.mt-track-row').forEach(row=>row.classList.toggle('selected',Number(row.dataset.mtRow)===index));
+ const group=timelineLayerGroups[index]||'',collapse=$('mtCollapseGroup');if(collapse)collapse.textContent=group&&timelineGroupCollapsed[group]?'▸ Bentangkan Grup':'▾ Ciutkan Grup';
 }
 function refreshTimelineEditor(){
  const editor=$('multiTrackEditor'),ruler=$('mtRuler'),list=$('mtTrackList'),shelf=$('mtMarkerShelf');
@@ -1826,8 +1861,13 @@ function refreshTimelineEditor(){
    const time=mtLayerTimes(i),left=time.start/duration*100,width=Math.max(.6,(time.end-time.start)/duration*100);
    const visible=$('autoLayerVisible'+i)?.checked!==false,locked=!!timelineTrackLocks[i],name=escapeLayerName(svgLayerNames[i]||('Layer '+(i+1)));
    const markers=timelineMarkers.map(m=>'<i class="mt-marker-line" style="left:'+Math.max(0,Math.min(100,Number(m.t)/duration*100))+'%"></i>').join('');
-   return '<div class="mt-track-row '+(selectedLayerIndex===i?'selected':'')+'" data-mt-row="'+i+'">'+
+   const group=timelineLayerGroups[i]||'',parent=group?(timelineGroupParents[group]||''):'',depth=group?trozalGroupDepth(group):0;
+   if(group&&trozalIsGroupCollapsedInPath(group))return '';
+   const hierarchyPath=group?([...(()=>{const path=[],seen=new Set();let p=parent;while(p&&!seen.has(p)){seen.add(p);path.unshift(p);p=timelineGroupParents[p];}return path;})(),group].join(' / ')):'';
+   return '<div class="mt-track-row '+(selectedLayerIndex===i?'selected':'')+'" data-mt-row="'+i+'" data-mt-depth="'+depth+'">'+
     '<div class="mt-track-label">'+
+     '<input type="checkbox" class="mt-group-pick" data-mt-group-pick="'+i+'" aria-label="Pilih layer untuk grup" '+(timelineGroupSelected[i]?'checked':'')+'>'+
+     (group?'<span class="mt-group-tag" style="background:'+trozalGroupColor(group)+'22;color:'+trozalGroupColor(group)+';border:1px solid '+trozalGroupColor(group)+'66" title="Hierarki: '+escapeLayerName(hierarchyPath)+'">▦ '+escapeLayerName(group)+'</span>'+(parent?'<span class="mt-hierarchy-tag" title="Anak dari grup '+escapeLayerName(parent)+'">↳ '+escapeLayerName(parent)+'</span>':''):'')+
      '<button type="button" class="mt-eye" data-mt-eye="'+i+'" title="Tampilkan/sembunyikan layer">'+(visible?'◉':'○')+'</button>'+
      '<button type="button" class="mt-lock '+(locked?'locked':'')+'" data-mt-lock="'+i+'" aria-pressed="'+locked+'" title="Kunci klip di timeline">'+(locked?'🔒':'↔')+'</button>'+
      '<button type="button" class="mt-name" data-mt-select="'+i+'" title="'+name+'">'+name+'</button>'+
@@ -1870,11 +1910,47 @@ function wireMultiTrackEditor(){
   trozalHistoryBegin();const marker={id:'marker-'+Date.now(),t:Number(trozalSnapTime(playhead).toFixed(3)),label:'Marker '+String(timelineMarkers.length+1).padStart(2,'0')};
   timelineMarkers.push(marker);refreshTimelineEditor();scheduleAutosave();setStatus('Marker ditambahkan pada '+marker.t.toFixed(2)+' detik.');trozalHistoryCommit('Tambah marker');
  };
+ $('mtCreateGroup').onclick=()=>{
+  const chosen=Object.keys(timelineGroupSelected).filter(k=>timelineGroupSelected[k]&&Number(k)<svgPieces.length).map(Number);
+  if(chosen.length<2){setStatus('Pilih minimal dua layer untuk membuat grup.');return;}
+  const name=String($('mtGroupName').value||'').trim().replace(/\\s+/g,' ')||('Grup '+(new Set(Object.values(timelineLayerGroups)).size+1));
+  if(name.length>28){setStatus('Nama grup maksimal 28 karakter.');return;}
+  if(new Set(Object.values(timelineLayerGroups).filter(Boolean)).has(name)){setStatus('Nama grup sudah digunakan. Pilih nama lain.');$('mtGroupName').focus();return;}
+  trozalHistoryBegin();chosen.forEach(i=>{timelineLayerGroups[i]=name;delete timelineGroupSelected[i];});refreshTimelineEditor();scheduleAutosave();trozalHistoryCommit('Buat grup '+name);setStatus('Grup "'+name+'" dibuat dari '+chosen.length+' layer.');
+ };
+ $('mtRenameGroup').onclick=()=>{
+  const old=timelineLayerGroups[selectedLayerIndex],name=String($('mtGroupName').value||'').trim().replace(/\\s+/g,' ');
+  if(!old){setStatus('Pilih layer anggota grup yang akan diganti namanya.');return;}
+  if(!name||name.length>28){setStatus('Nama grup baru wajib diisi dan maksimal 28 karakter.');return;}
+  if(name===old){setStatus('Nama grup tidak berubah.');return;}
+  if(new Set(Object.values(timelineLayerGroups).filter(Boolean)).has(name)){setStatus('Nama grup sudah digunakan.');return;}
+  trozalHistoryBegin();Object.keys(timelineLayerGroups).forEach(k=>{if(timelineLayerGroups[k]===old)timelineLayerGroups[k]=name;});
+  if(Object.prototype.hasOwnProperty.call(timelineGroupParents,old)){timelineGroupParents[name]=timelineGroupParents[old];delete timelineGroupParents[old];}
+  Object.keys(timelineGroupParents).forEach(k=>{if(timelineGroupParents[k]===old)timelineGroupParents[k]=name;});
+  refreshTimelineEditor();scheduleAutosave();trozalHistoryCommit('Ganti nama grup');setStatus('Nama grup "'+old+'" diubah menjadi "'+name+'".');
+ };
+ $('mtSetGroupParent').onclick=()=>{
+  const child=timelineLayerGroups[selectedLayerIndex],parent=$('mtHierarchyParent')?.value||'';
+  if(!child||!parent){setStatus('Pilih layer anggota grup dan parent grup.');return;}
+  if(child===parent||trozalGroupDescendants(child).has(parent)){setStatus('Relasi ini akan membuat siklus hierarki. Pilih parent lain.');return;}
+  trozalHistoryBegin();timelineGroupParents[child]=parent;refreshTimelineEditor();scheduleAutosave();trozalHistoryCommit('Atur hierarki grup');setStatus('Grup "'+child+'" menjadi anak dari "'+parent+'".');
+ };
+ $('mtClearGroupParent').onclick=()=>{const child=timelineLayerGroups[selectedLayerIndex];if(!child||!timelineGroupParents[child]){setStatus('Grup terpilih tidak memiliki parent.');return;}trozalHistoryBegin();delete timelineGroupParents[child];refreshTimelineEditor();scheduleAutosave();trozalHistoryCommit('Lepas parent grup');setStatus('Parent grup dilepas; grup kembali menjadi root.');};
+ $('mtGroupKeyframe').onclick=addGroupKeyframe;
+ $('mtToggleGroupVisibility').onclick=()=>{const group=timelineLayerGroups[selectedLayerIndex];if(!group){setStatus('Pilih layer anggota grup.');return;}const members=trozalGroupMembers(group),hide=members.some(i=>$('autoLayerVisible'+i)?.checked!==false);trozalHistoryBegin();members.forEach(i=>{const el=$('autoLayerVisible'+i);if(el)el.checked=!hide;});renderAt(playhead);refreshTimelineEditor();scheduleAutosave();trozalHistoryCommit('Visibilitas grup');setStatus('Visibilitas grup "'+group+'" diperbarui.');};
+ $('mtSelectGroupMembers').onclick=()=>{const group=timelineLayerGroups[selectedLayerIndex];if(!group){setStatus('Pilih layer anggota grup.');return;}const members=trozalGroupMembers(group),all=members.every(i=>!!timelineGroupSelected[i]);Object.keys(timelineGroupSelected).forEach(k=>delete timelineGroupSelected[k]);if(!all)members.forEach(i=>timelineGroupSelected[i]=true);refreshTimelineEditor();setStatus(all?'Pilihan anggota grup dibatalkan.':'Seluruh anggota grup dan turunannya dipilih.');};
+ $('mtToggleGroupLock').onclick=()=>{const group=timelineLayerGroups[selectedLayerIndex];if(!group){setStatus('Pilih layer anggota grup.');return;}const members=trozalGroupMembers(group),lock=members.some(i=>!timelineTrackLocks[i]);trozalHistoryBegin();members.forEach(i=>timelineTrackLocks[i]=lock);refreshTimelineEditor();scheduleAutosave();trozalHistoryCommit('Kunci grup');setStatus('Status kunci '+members.length+' layer grup diperbarui.');};
+ $('mtSoloGroup').onclick=()=>{if(timelineGroupSoloSnapshot){svgPieces.forEach((_,i)=>{const el=$('autoLayerVisible'+i);if(el&&Object.prototype.hasOwnProperty.call(timelineGroupSoloSnapshot,i))el.checked=timelineGroupSoloSnapshot[i];});timelineGroupSoloSnapshot=null;$('mtSoloGroup').textContent='◎ Solo Grup';renderAt(playhead);refreshTimelineEditor();setStatus('Mode Solo Grup dimatikan.');return;}const group=timelineLayerGroups[selectedLayerIndex];if(!group){setStatus('Pilih layer anggota grup.');return;}const members=new Set(trozalGroupMembers(group)),snapshot={};svgPieces.forEach((_,i)=>{const el=$('autoLayerVisible'+i);snapshot[i]=el?el.checked:true;if(el&&!members.has(i))el.checked=false;});timelineGroupSoloSnapshot=snapshot;$('mtSoloGroup').textContent='↩ Pulihkan Solo';renderAt(playhead);refreshTimelineEditor();setStatus('Mode Solo untuk grup "'+group+'" aktif.');};
+ $('mtCollapseGroup').onclick=()=>{const group=timelineLayerGroups[selectedLayerIndex];if(!group){setStatus('Pilih layer anggota grup.');return;}if(timelineGroupCollapsed[group])delete timelineGroupCollapsed[group];else timelineGroupCollapsed[group]=true;refreshTimelineEditor();setStatus('Tampilan grup "'+group+'" diperbarui.');};
+ $('mtCollapseAllGroups').onclick=()=>{const groups=[...new Set([...Object.values(timelineLayerGroups),...Object.keys(timelineGroupParents),...Object.values(timelineGroupParents)].filter(Boolean))];groups.forEach(g=>timelineGroupCollapsed[g]=true);refreshTimelineEditor();setStatus(groups.length+' grup diciutkan.');};
+ $('mtExpandAllGroups').onclick=()=>{timelineGroupCollapsed={};refreshTimelineEditor();setStatus('Semua grup dibentangkan.');};
+ $('mtDissolveGroup').onclick=()=>{const group=timelineLayerGroups[selectedLayerIndex];if(!group){setStatus('Pilih layer dalam grup yang akan dilepas.');return;}const parent=timelineGroupParents[group]||'',children=Object.keys(timelineGroupParents).filter(k=>timelineGroupParents[k]===group);trozalHistoryBegin();svgPieces.forEach((_,i)=>{if(timelineLayerGroups[i]===group)delete timelineLayerGroups[i];});delete timelineGroupParents[group];children.forEach(k=>{if(parent)timelineGroupParents[k]=parent;else delete timelineGroupParents[k];});delete timelineGroupCollapsed[group];refreshTimelineEditor();scheduleAutosave();trozalHistoryCommit('Lepas grup');setStatus('Grup dilepas; '+children.length+' grup anak dipertahankan.');};
  $('mtClearMarkers').onclick=()=>{
   if(!timelineMarkers.length){setStatus('Belum ada marker untuk dihapus.');return;}
   trozalHistoryBegin();timelineMarkers=[];refreshTimelineEditor();scheduleAutosave();setStatus('Semua marker timeline dihapus.');trozalHistoryCommit('Hapus semua marker');
  };
  editor.addEventListener('click',e=>{
+  const pick=e.target.closest('[data-mt-group-pick]');if(pick){const i=Number(pick.dataset.mtGroupPick);timelineGroupSelected[i]=pick.checked;return;}
   const eye=e.target.closest('[data-mt-eye]');
   if(eye){const i=Number(eye.dataset.mtEye),el=$('autoLayerVisible'+i);if(el){trozalHistoryBegin();el.checked=!el.checked;renderAt(playhead);refreshTimelineEditor();scheduleAutosave();trozalHistoryCommit('Visibilitas layer '+(i+1));}return;}
   const lock=e.target.closest('[data-mt-lock]');
@@ -1907,9 +1983,12 @@ function wireMultiTrackEditor(){
   const clip=e.target.closest('[data-mt-clip]');if(!clip)return;
   const i=Number(clip.dataset.mtClip);mtSelectLayer(i);
   if(timelineTrackLocks[i]){setStatus('Track terkunci. Buka kunci sebelum memindahkan atau trim klip.');e.preventDefault();return;}
-  const time=mtLayerTimes(i),edge=e.target.closest('[data-mt-edge]')?.dataset.mtEdge||'move';
+  const time=mtLayerTimes(i),edge=e.target.closest('[data-mt-edge]')?.dataset.mtEdge||'move',group=timelineLayerGroups[i]||'';
+  const groupMembers=edge==='move'&&group?svgPieces.map((_,j)=>j).filter(j=>timelineLayerGroups[j]===group):[i];
+  if(groupMembers.some(j=>timelineTrackLocks[j])){setStatus('Ada anggota grup yang terkunci. Buka kunci semua anggota sebelum menggeser grup.');e.preventDefault();return;}
+  const memberTimes=groupMembers.map(j=>({index:j,...mtLayerTimes(j)}));
   const lane=clip.parentElement,rect=lane.getBoundingClientRect();
-  trozalHistoryBegin();timelineDragState={index:i,edge,pointerX:e.clientX,laneWidth:Math.max(1,rect.width),duration:time.duration,start:time.start,end:time.end,delay:time.delay};
+  trozalHistoryBegin();timelineDragState={index:i,group,groupMembers,memberTimes,edge,pointerX:e.clientX,laneWidth:Math.max(1,rect.width),duration:time.duration,start:time.start,end:time.end,delay:time.delay};
   e.preventDefault();
  });
  window.addEventListener('pointermove',e=>{
@@ -1923,18 +2002,18 @@ function wireMultiTrackEditor(){
    start=trozalClamp(trozalSnapTime(Math.max(drag.delay,Math.min(drag.duration-length,drag.start+delta)),{layer:drag.index}),drag.delay,Math.max(drag.delay,drag.duration-length));
    end=start+length;
   }
-  const startInput=$('autoLayerStart'+drag.index),endInput=$('autoLayerEnd'+drag.index);
-  if(startInput)startInput.value=Math.max(0,start-drag.delay).toFixed(2);
-  if(endInput)endInput.value=end.toFixed(2);
-  const clip=document.querySelector('[data-mt-clip="'+drag.index+'"]');
-  if(clip){clip.style.left=(start/drag.duration*100)+'%';clip.style.width=(Math.max(.6,(end-start)/drag.duration*100))+'%';}
+  const targets=drag.edge==='move'&&drag.groupMembers?.length>1?drag.memberTimes:[{index:drag.index,duration:drag.duration,delay:drag.delay,start:drag.start,end:drag.end}];
+  targets.forEach(member=>{let memberStart=start,memberEnd=end;if(drag.edge==='move'&&drag.groupMembers?.length>1){const length=member.end-member.start;memberStart=trozalClamp(member.start+(start-drag.start),member.delay,Math.max(member.delay,member.duration-length));memberStart=trozalSnapTime(memberStart,{layer:member.index});memberEnd=memberStart+length;}
+   const startInput=$('autoLayerStart'+member.index),endInput=$('autoLayerEnd'+member.index);if(startInput)startInput.value=Math.max(0,memberStart-member.delay).toFixed(2);if(endInput)endInput.value=memberEnd.toFixed(2);
+   const targetClip=document.querySelector('[data-mt-clip="'+member.index+'"]');if(targetClip){targetClip.style.left=(memberStart/member.duration*100)+'%';targetClip.style.width=(Math.max(.6,(memberEnd-memberStart)/member.duration*100))+'%';}
+  });
   renderAt(playhead);
  });
  window.addEventListener('pointerup',()=>{
   if(!timelineDragState)return;
-  const index=timelineDragState.index;timelineDragState=null;
+  const drag=timelineDragState,index=drag.index;timelineDragState=null;
   refreshTimelineEditor();scheduleAutosave();
-  setStatus('Klip layer '+(index+1)+' diperbarui pada timeline.');trozalHistoryCommit('Pindah / trim klip layer '+(index+1));
+  setStatus(drag.edge==='move'&&drag.group?'Grup "'+drag.group+'" digeser bersama.':'Klip layer '+(index+1)+' diperbarui pada timeline.');trozalHistoryCommit(drag.group?'Geser grup '+drag.group:'Pindah / trim klip layer '+(index+1));
  });
  const objectObserver=typeof MutationObserver!=='undefined'?new MutationObserver(()=>refreshTimelineEditor()):null;
  if(objectObserver&&$('object'))objectObserver.observe($('object'),{childList:true});
@@ -1956,7 +2035,7 @@ function trozalSnapTime(value,opts={}){
 function updateSnapButton(){const b=$('mtSnapToggle');if(!b)return;b.textContent=timelineSnapEnabled?'🧲 Snap ON':'🧲 Snap OFF';b.setAttribute('aria-pressed',String(timelineSnapEnabled));b.title=timelineSnapEnabled?'Snap aktif: frame, keyframe, marker, dan tepi klip':'Snap nonaktif'}
 function trozalHistorySnapshot(){
  const controls={};document.querySelectorAll('#autoLayerControls input, #autoLayerControls select').forEach(el=>{if(!el.id)return;controls[el.id]=el.type==='checkbox'?{checked:el.checked}:{value:el.value}});
- return JSON.stringify({layerKeyframes,timelineMarkers,timelineTrackLocks,controls,playhead});
+ return JSON.stringify({layerKeyframes,timelineMarkers,timelineTrackLocks,timelineLayerGroups,timelineGroupParents,timelineGroupCollapsed,controls,playhead});
 }
 function trozalHistoryPush(label){
  if(trozalHistoryBusy)return;const state=trozalHistorySnapshot();if(trozalUndoIndex>=0&&trozalUndoStack[trozalUndoIndex]?.state===state)return;
@@ -1968,7 +2047,7 @@ function trozalHistoryCommit(label){trozalHistoryPush(label||'Perubahan')}
 function updateHistoryButtons(){const u=$('mtUndo'),r=$('mtRedo');if(u)u.disabled=trozalUndoIndex<=0;if(r)r.disabled=trozalUndoIndex<0||trozalUndoIndex>=trozalUndoStack.length-1}
 function trozalRestoreHistory(index){
  if(index<0||index>=trozalUndoStack.length)return;trozalHistoryBusy=true;
- try{const snap=JSON.parse(trozalUndoStack[index].state);layerKeyframes=Array.isArray(snap.layerKeyframes)?snap.layerKeyframes:[];timelineMarkers=Array.isArray(snap.timelineMarkers)?snap.timelineMarkers:[];timelineTrackLocks=snap.timelineTrackLocks||{};
+ try{const snap=JSON.parse(trozalUndoStack[index].state);layerKeyframes=Array.isArray(snap.layerKeyframes)?snap.layerKeyframes:[];timelineMarkers=Array.isArray(snap.timelineMarkers)?snap.timelineMarkers:[];timelineTrackLocks=snap.timelineTrackLocks||{};timelineLayerGroups=snap.timelineLayerGroups||{};timelineGroupParents=snap.timelineGroupParents||{};timelineGroupCollapsed=snap.timelineGroupCollapsed||{};
   Object.entries(snap.controls||{}).forEach(([id,v])=>{const el=$(id);if(!el)return;if('checked'in v)el.checked=!!v.checked;else if('value'in v)el.value=v.value});
   playhead=trozalClamp(Number(snap.playhead)||0,0,+$('duration').value||10);for(let i=0;i<svgPieces.length;i++)paintLayerKeyframes(i);
   renderAt(playhead);refreshTimelineEditor();scheduleAutosave();trozalUndoIndex=index;updateHistoryButtons();setStatus('Undo/Redo: '+(trozalUndoStack[index].label||'perubahan')+' dipulihkan.');
@@ -2878,7 +2957,7 @@ function getProject(){
  const controls={};ids.forEach(k=>{if($(k))controls[k]=$(k).value});
  checks.forEach(k=>{if($(k))controls[k]=$(k).checked});
  const layers=svgPieces.map((piece,i)=>{const l={svg:piece,name:svgLayerNames[i]||('Layer '+(i+1))};['Visible','On','In','Out','Loop','Delay','Start','End','Duration','Speed','Intensity','Scale','Rotation','Direction'].forEach(k=>{const el=$('autoLayer'+k+i);if(el)l[k.toLowerCase()]=el.type==='checkbox'?el.checked:el.value});l.autoKey=!!$('kfAuto'+i)?.checked;return l});
- saveActiveTextLayer();syncActiveMaskFromControls();return {app:'ANIMOVE',version:12,stage:15,visualSceneSequence:Array.isArray(visualSceneSequence)?visualSceneSequence.map(x=>({...x})):[],shapeMaskLayers:shapeMaskLayers.map(x=>({...x})),activeShapeMask,nativeTextLayers:nativeTextLayers.map(x=>({...x})),selectedTextLayerId,timelineSnapEnabled,savedAt:new Date().toISOString(),controls,currentColor,playhead,sourceSvg,sourceType,sourceName:$('objectName').value,svgWasSplit,svgPieces:[...svgPieces],svgLayerNames:[...svgLayerNames],svgLayerHints:[...svgLayerHints],layerKeyframes:layerKeyframes.map(a=>(a||[]).map(k=>({...k}))),timelineMarkers:timelineMarkers.map(m=>({...m})),timelineTrackLocks:{...timelineTrackLocks},layers};
+ saveActiveTextLayer();syncActiveMaskFromControls();return {app:'ANIMOVE',version:12,stage:15,visualSceneSequence:Array.isArray(visualSceneSequence)?visualSceneSequence.map(x=>({...x})):[],shapeMaskLayers:shapeMaskLayers.map(x=>({...x})),activeShapeMask,nativeTextLayers:nativeTextLayers.map(x=>({...x})),selectedTextLayerId,timelineSnapEnabled,savedAt:new Date().toISOString(),controls,currentColor,playhead,sourceSvg,sourceType,sourceName:$('objectName').value,svgWasSplit,svgPieces:[...svgPieces],svgLayerNames:[...svgLayerNames],svgLayerHints:[...svgLayerHints],layerKeyframes:layerKeyframes.map(a=>(a||[]).map(k=>({...k}))),timelineMarkers:timelineMarkers.map(m=>({...m})),timelineTrackLocks:{...timelineTrackLocks},timelineLayerGroups:{...timelineLayerGroups},timelineGroupParents:{...timelineGroupParents},timelineGroupCollapsed:{...timelineGroupCollapsed},layers};
 }
 function applyProject(p){
  if(!p||p.app!=='ANIMOVE')throw new Error('File bukan proyek trozal_MOTION');
@@ -2900,7 +2979,7 @@ function applyProject(p){
  svgLayerHints=Array.isArray(p.svgLayerHints)?p.svgLayerHints.slice():svgPieces.map((piece,i)=>{try{const d=new DOMParser().parseFromString(piece,'image/svg+xml');const n=[...d.documentElement.children].find(x=>!['defs','style','title','desc','metadata'].includes(x.localName));return n?analyzeSvgLayer({node:n,ancestors:[]},i,svgPieces.length):{kind:'detail',entrance:0,loop:0,intensity:0,reason:'Layer dipulihkan; gerakan tetap statis.'}}catch(e){return {kind:'detail',entrance:0,loop:0,intensity:0,reason:'Layer dipulihkan; gerakan tetap statis.'}}});
  svgWasSplit=!!p.svgWasSplit&&svgPieces.length>0;
  timelineMarkers=Array.isArray(p.timelineMarkers)?p.timelineMarkers.map(m=>({id:String(m.id||('marker-'+Date.now())),t:Math.max(0,Number(m.t)||0),label:String(m.label||'Marker')})):[];
- timelineTrackLocks=p.timelineTrackLocks&&typeof p.timelineTrackLocks==='object'?{...p.timelineTrackLocks}:{};timelineSnapEnabled=p.timelineSnapEnabled!==false;updateSnapButton?.();
+ timelineTrackLocks=p.timelineTrackLocks&&typeof p.timelineTrackLocks==='object'?{...p.timelineTrackLocks}:{};timelineLayerGroups=p.timelineLayerGroups&&typeof p.timelineLayerGroups==='object'?{...p.timelineLayerGroups}:{};timelineGroupParents=p.timelineGroupParents&&typeof p.timelineGroupParents==='object'?{...p.timelineGroupParents}:{};timelineGroupCollapsed=p.timelineGroupCollapsed&&typeof p.timelineGroupCollapsed==='object'?{...p.timelineGroupCollapsed}:{};timelineGroupSelected={};timelineGroupSoloSnapshot=null;timelineSnapEnabled=p.timelineSnapEnabled!==false;updateSnapButton?.();
  if(svgWasSplit){
    buildAutoLayerControls();
    layerKeyframes.forEach((a,i)=>paintLayerKeyframes(i));
