@@ -695,7 +695,24 @@ body[data-ui-layout="professional"] .visual-scene-card:focus-within{
   </section>
 
 
-  <section class="panel"><h3><b>●</b> 2. WARNA & LATAR</h3>
+  <section class="panel ai-tools panel-tone-terminal" id="svgTerminalPanel"><h3><b>⌘</b> TERMINAL KODE HTML</h3>
+   <p class="help">Tempel HTML lengkap dari AI. Engine mengimpor elemen HTML dan animasi CSS; JavaScript impor diblokir agar capture lebih konsisten.</p>
+   <label>Paste kode HTML ke terminal</label>
+   <textarea id="aiCodeTerminal" class="terminal" spellcheck="false" placeholder="Tempel dokumen HTML lengkap di sini: <!DOCTYPE html> ..."></textarea>
+   <div class="btnrow"><button class="green" id="pasteCodeFromClipboardBtn">📋 Paste Code</button><button id="clearAiCodeBtn">Bersihkan</button></div>
+   <div class="btnrow"><button class="primary" id="applyAiSvgBtn">▶ Terapkan HTML ke Preview</button></div>
+   <p class="notice">Pemeriksaan HTML mendeteksi struktur tag, CSS yang tidak seimbang, elemen visual kosong, dan JavaScript yang tidak didukung engine impor. Perbaikan lokal dapat merapikan struktur umum; kesalahan logika atau desain tetap perlu diperiksa manual.</p>
+   <div class="html-diagnostic-panel" id="htmlDiagnosticPanel">
+    <h4>HTML ERROR CHECK · PERIKSA & PERBAIKI</h4>
+    <div class="btnrow"><button type="button" id="validateHtmlBtn">Periksa HTML</button><button type="button" class="primary" id="repairHtmlCopyBtn">Perbaiki HTML Error</button></div>
+    <div id="htmlValidationReport" class="html-diagnostic-report" role="status" aria-live="polite">Belum ada pemeriksaan. Tempel HTML lalu tekan “Periksa HTML”.</div>
+    <label>Kolom perbaiki HTML (hasil koreksi)</label><textarea id="htmlRepairOutput" spellcheck="false" placeholder="Hasil HTML yang sudah diperbaiki akan tampil di sini..."></textarea>
+    <div class="btnrow"><button type="button" id="copyRepairedHtmlBtn">Salin HTML Perbaikan</button><button type="button" id="useRepairedHtmlBtn" class="green">Pindahkan ke Terminal</button></div>
+   </div>
+   <p class="notice">Jika tombol Paste Code tidak mendapat izin clipboard, klik terminal lalu tekan Ctrl+V. Terminal menerima dokumen HTML lengkap; bukan kode SVG. HTML bebas.</p>
+   <div class="status" id="aiModeStatus"></div>
+  </section>
+   <section class="panel"><h3><b>●</b> 2. WARNA & LATAR</h3>
    <label>Warna objek (untuk SVG sederhana)</label><div class="swatches" id="swatches">
     <button class="swatch active" data-color="#ffbd45" style="background:#ffbd45"></button><button class="swatch" data-color="#e87824" style="background:#e87824"></button><button class="swatch" data-color="#111827" style="background:#111827"></button><button class="swatch" data-color="#ffffff" style="background:#ffffff"></button><button class="swatch" data-color="#25b878" style="background:#25b878"></button><button class="swatch" data-color="#4c8dff" style="background:#4c8dff"></button><button class="swatch" data-color="#ef6389" style="background:#ef6389"></button>
    </div>
