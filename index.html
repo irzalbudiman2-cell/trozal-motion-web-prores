@@ -539,6 +539,29 @@ body[data-ui-layout="professional"] .visual-scene-card:focus-within{
  body[data-ui-layout="professional"] .visual-scene-card{transition:none}
 }
 
+
+/* Creative direction, scene directors and motion quality controls */
+.browser-art-direction,.browser-motion-blueprint{margin-top:10px;padding:10px;border:1px solid #456b83;border-radius:9px;background:linear-gradient(145deg,rgba(20,42,56,.78),rgba(15,25,35,.92))}
+.browser-art-direction h4,.browser-motion-blueprint h4{margin:0 0 7px;color:#b9e5f5;font-size:11px;letter-spacing:.6px}
+.browser-art-direction .row,.browser-motion-blueprint .row{gap:9px;align-items:flex-end}
+.browser-art-direction .row>div,.browser-motion-blueprint .row>div{min-width:0;flex:1}
+.browser-art-direction select,.browser-motion-blueprint select{width:100%;min-width:0}
+.smart-camera-list,.object-motion-controls{display:grid;gap:8px;margin-top:9px}
+.smart-camera-card,.object-motion-scene{display:grid;gap:7px;padding:9px;border:1px solid #456b83;border-radius:8px;background:rgba(14,29,39,.8)}
+.smart-camera-card strong,.object-motion-scene strong{font-size:10px;color:#c9eaff;line-height:1.45}
+.smart-camera-card p{margin:0;color:#b9c9d1;font-size:10px}
+.smart-camera-card select,.object-motion-scene select{width:100%;min-width:0}
+.object-motion-scene .row{display:flex;align-items:center;gap:8px}
+.object-motion-scene .row label{font-size:9px;white-space:nowrap}
+.object-motion-scene input[type=range]{min-width:60px;flex:1}
+.object-motion-scene output{min-width:36px;text-align:right;font-size:10px;color:#bfe9d8}
+.motion-quality-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:9px}
+.motion-quality-grid button{min-height:34px;font-size:10px}
+.motion-quality-grid button.active{border-color:#8ed6bc;background:#1d4a3d;color:#d9fff0}
+.motion-quality-readout{margin-top:8px;padding:8px;border:1px solid #456b83;border-radius:7px;background:#122431;color:#c7e7f3;font-size:10px;line-height:1.5}
+.mt-group-toolbar{max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;padding-bottom:3px}
+@media(max-width:760px){.browser-art-direction .row,.browser-motion-blueprint .row{display:grid;grid-template-columns:1fr}.motion-quality-grid{grid-template-columns:1fr 1fr}.mt-group-toolbar input,.mt-group-toolbar select{max-width:125px}}
+
 </style>
 </head>
 <body>
