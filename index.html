@@ -3525,39 +3525,61 @@ function trozalSetSelectOptions(select,items,prefer){select.replaceChildren();[.
 // Initialize the shuffle bag once before the random-theme handler is declared.
 let trozalThemeShuffleBag=Array.isArray(window.trozalThemeShuffleBag)?window.trozalThemeShuffleBag:[];
 function trozalRandomTheme(e){
- if(window.__trozalDebugLog)window.__trozalDebugLog('info','HANDLER trozalRandomTheme dipanggil.');
- if(e){e.preventDefault();e.stopPropagation();}
- const status=$('svgAiThemeSearchHint'),count=$('svgAiCatalogCount'),select=$('svgAiTheme');
+ const debug=(level,message)=>{
+  try{if(typeof window.__trozalDebugLog==='function')window.__trozalDebugLog(level,message);}catch(logError){}
+  if(level==='err')try{console.error('[TROZAL RANDOM THEME] '+message);}catch(consoleError){}
+ };
+ let status=null,count=null,select=null;
  try{
-  // The catalogue is a var-backed global to avoid temporal-dead-zone failures
-  // when the mobile page invokes the inline action during delayed initialization.
-  const catalogue=window.TROZAL_AI_THEMES||TROZAL_AI_THEMES;
-  const themes=Array.isArray(catalogue)?[...new Set(catalogue.filter(Boolean))]:[];
-  if(!themes.length){if(status)status.textContent='Katalog tema belum siap. Muat ulang halaman lalu coba lagi.';return false;}
-  const current=select?.value||'';
-  if(window.__trozalDebugLog)window.__trozalDebugLog('info','RANDOM THEME state: katalog='+themes.length+' | tema aktif='+current+' | bag awal='+trozalThemeShuffleBag.length);
-  // Shuffle-bag selection: every catalogue topic is used once before a new cycle.
+  if(e){e.preventDefault();e.stopPropagation();}
+  status=document.getElementById('svgAiThemeSearchHint');
+  count=document.getElementById('svgAiCatalogCount');
+  select=document.getElementById('svgAiTheme');
+  debug('info','HANDLER trozalRandomTheme dipanggil. Elemen: dropdown='+(!!select)+' | hint='+(!!status)+' | counter='+(!!count));
+  if(!select)throw new Error('Elemen dropdown #svgAiTheme tidak ditemukan. Periksa panel AI Motion.');
+  const catalogue=Array.isArray(window.TROZAL_AI_THEMES)?window.TROZAL_AI_THEMES:[];
+  const themes=[...new Set(catalogue.filter(t=>typeof t==='string'&&t.trim()).map(t=>t.trim()))];
+  debug('info','RANDOM THEME state: katalog global='+(Array.isArray(window.TROZAL_AI_THEMES)?'array':'tidak tersedia')+' | jumlah mentah='+(catalogue.length||0)+' | tema unik='+themes.length+' | tema aktif='+select.value+' | bag awal='+(Array.isArray(trozalThemeShuffleBag)?trozalThemeShuffleBag.length:'tidak valid'));
+  if(!themes.length){
+   const message='Katalog tema belum siap/kosong. Global TROZAL_AI_THEMES tidak berisi daftar tema.';
+   if(status)status.textContent=message;
+   debug('err',message+' | document.readyState='+document.readyState+' | script global belum mempublikasikan katalog.');
+   return false;
+  }
+  const current=select.value||'';
+  if(!Array.isArray(trozalThemeShuffleBag))trozalThemeShuffleBag=[];
   trozalThemeShuffleBag=trozalThemeShuffleBag.filter(t=>themes.includes(t)&&t!==current);
   if(!trozalThemeShuffleBag.length){
    trozalThemeShuffleBag=themes.filter(t=>t!==current);
-   for(let i=trozalThemeShuffleBag.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[trozalThemeShuffleBag[i],trozalThemeShuffleBag[j]]=[trozalThemeShuffleBag[j],trozalThemeShuffleBag[i]];}
+   for(let i=trozalThemeShuffleBag.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [trozalThemeShuffleBag[i],trozalThemeShuffleBag[j]]=[trozalThemeShuffleBag[j],trozalThemeShuffleBag[i]];
+   }
   }
   let picked=trozalThemeShuffleBag.shift();
-  const alternatives=themes.filter(t=>t!==current);
-  if(!picked||picked===current||!themes.includes(picked))picked=alternatives[Math.floor(Math.random()*alternatives.length)];
-  if(!picked){if(status)status.textContent='Katalog hanya memiliki satu tema unik; tidak ada tema alternatif.';if(window.__trozalDebugLog)window.__trozalDebugLog('warn','RANDOM THEME dibatalkan: katalog hanya memiliki '+themes.length+' tema.');return false;}
+  if(!picked||picked===current||!themes.includes(picked)){
+   const alternatives=themes.filter(t=>t!==current);
+   picked=alternatives.length?alternatives[Math.floor(Math.random()*alternatives.length)]:null;
+  }
+  if(!picked){
+   const message='Katalog hanya memiliki satu tema unik; tidak ada tema alternatif.';
+   if(status)status.textContent=message;
+   debug('warn',message);
+   return false;
+  }
+  debug('info','RANDOM THEME pilihan dibuat: '+picked);
   trozalApplyTheme(picked);
-  if(select.value!==picked)throw new Error('Tema terpilih tidak berhasil diterapkan ke dropdown. Dipilih: '+picked+'; nilai aktual: '+select.value);
-  if(window.__trozalDebugLog)window.__trozalDebugLog('info','RANDOM THEME berhasil: katalog='+themes.length+' | sebelum='+current+' | sesudah='+picked+' | sisa siklus='+trozalThemeShuffleBag.length);
+  if(select.value!==picked)throw new Error('Tema tidak berhasil diterapkan ke dropdown. Dipilih: '+picked+'; nilai aktual: '+select.value);
   if(count)count.textContent=themes.length+' tema unik tersedia · '+trozalThemeShuffleBag.length+' belum dipakai pada siklus ini';
   if(status)status.textContent='✦ Tema inspirasi dipilih: '+picked+'. Kategori visual dan subtema sudah disesuaikan. Tema tidak diulang sampai siklus katalog selesai.';
+  debug('info','RANDOM THEME berhasil: katalog='+themes.length+' | sebelum='+current+' | sesudah='+picked+' | sisa siklus='+trozalThemeShuffleBag.length);
+  return false;
  }catch(err){
   const message=err&&err.stack?err.stack:(err&&err.message?err.message:String(err));
   if(status)status.textContent='Gagal memilih tema: '+(err&&err.message?err.message:'kesalahan tidak diketahui');
-  if(window.__trozalDebugLog)window.__trozalDebugLog('err','RANDOM THEME exception: '+message);
-  console.error('[TROZAL RANDOM THEME] '+message);
+  debug('err','RANDOM THEME exception: '+message);
+  return false;
  }
- return false;
 }
 function trozalApplyTheme(theme,keepCustomSearch=false){
  const clean=String(theme||'').trim();if(!clean)return;
