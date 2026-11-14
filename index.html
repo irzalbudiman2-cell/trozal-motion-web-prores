@@ -3803,7 +3803,20 @@ function buildSafeHtmlDocument(raw){
  // Do not force a transparent body background: it can erase an imported background.
  // Capture doc.body below so body backgrounds and pseudo-elements remain visible.
  const layoutCss='html,body{box-sizing:border-box;margin:0!important;padding:0!important;width:'+htmlMotionWidth+'px!important;height:'+htmlMotionHeight+'px!important;min-width:'+htmlMotionWidth+'px!important;min-height:'+htmlMotionHeight+'px!important;overflow:hidden!important}#animove-scene{box-sizing:border-box}';
- return '<!doctype html><html'+cleanHtmlAttrs+'><head><meta charset="utf-8"><meta name="viewport" content="width='+htmlMotionWidth+', initial-scale=1">'+headCss+'<style>'+layoutCss+'</style></head><body'+cleanBodyAttrs+'>'+safeRoot.outerHTML+'</body></html>';
+ return '<!doctype html><html'+cleanHtmlAttrs+'><head><meta charset="utf-8"><meta name="viewport" content="width='+htmlMotionWidth+', initial-scale=1">'+headCss+'<style>'+layoutCss+'</style><style>
+/* TROZAL MOBILE DEBUG CONSOLE */
+#trozalDebugFab{position:fixed;z-index:99998;right:12px;bottom:12px;border:1px solid #e1a94d;background:#292318;color:#ffe0a0;border-radius:999px;padding:9px 13px;font-size:11px;font-weight:800;box-shadow:0 5px 18px #0009}
+#trozalDebugFab .count{display:inline-block;min-width:17px;margin-left:5px;padding:1px 5px;border-radius:9px;background:#8d3038;color:#fff}
+#trozalDebugPanel{position:fixed;z-index:99999;left:10px;right:10px;bottom:55px;max-height:min(58vh,440px);display:none;flex-direction:column;border:1px solid #66748b;border-radius:11px;background:#10151e;color:#e8eef8;box-shadow:0 12px 40px #000c;overflow:hidden}
+#trozalDebugPanel.open{display:flex}
+#trozalDebugPanel .debug-head{display:flex;align-items:center;gap:7px;padding:9px;background:#202a39;border-bottom:1px solid #46536a}
+#trozalDebugPanel .debug-head strong{font-size:11px;color:#ffd17a;flex:1}
+#trozalDebugPanel button{font-size:10px;padding:6px 9px}
+#trozalDebugLog{margin:0;padding:9px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;font:10px/1.5 ui-monospace,monospace;min-height:120px}
+#trozalDebugLog .err{color:#ff858b}#trozalDebugLog .warn{color:#ffd17a}#trozalDebugLog .info{color:#a8d5ff}
+@media(min-width:700px){#trozalDebugPanel{left:auto;width:520px;right:14px;bottom:58px}}
+</style>
+</head><body'+cleanBodyAttrs+'>'+safeRoot.outerHTML+'</body></html>';
 }
 function installHtmlCaptureFallbacks(doc,scene){
  // Intentionally preserve the original composition. Earlier fallback code replaced
@@ -5199,6 +5212,76 @@ body[data-ui-layout="classic"] .ui-layout-btn[aria-pressed="true"]{background:#d
   }
  },true);
  fresh.style.pointerEvents='auto';fresh.style.position='relative';fresh.style.zIndex='60';
+})();
+</script>
+<script>
+/* TROZAL MOBILE DEBUG CONSOLE — in-app diagnostics for Ollama Local AI */
+(function(){
+ 'use strict';
+ if(window.__trozalMobileDebugInstalled)return;
+ window.__trozalMobileDebugInstalled=true;
+ const entries=[];const maxEntries=120;let panel,logNode,countNode;
+ const stamp=()=>new Date().toLocaleTimeString();
+ function render(){
+  if(!logNode)return;
+  logNode.replaceChildren();
+  entries.forEach(item=>{const line=document.createElement('div');line.className=item.type;line.textContent='['+item.time+'] '+item.message;logNode.appendChild(line);});
+  logNode.scrollTop=logNode.scrollHeight;
+  if(countNode)countNode.textContent=String(entries.length);
+ }
+ function add(type,message){
+  const text=String(message==null?'':message);
+  entries.push({time:stamp(),type,message:text.slice(0,1800)});
+  if(entries.length>maxEntries)entries.shift();
+  render();
+ }
+ function setup(){
+  if(document.getElementById('trozalDebugFab'))return;
+  const fab=document.createElement('button');fab.id='trozalDebugFab';fab.type='button';fab.textContent='⚠ DEBUG ';
+  countNode=document.createElement('span');countNode.className='count';countNode.textContent='0';fab.appendChild(countNode);
+  panel=document.createElement('section');panel.id='trozalDebugPanel';panel.setAttribute('aria-label','TROZAL runtime diagnostics');
+  const head=document.createElement('div');head.className='debug-head';
+  const title=document.createElement('strong');title.textContent='RUNTIME CONSOLE · Ollama Local AI';
+  const copy=document.createElement('button');copy.type='button';copy.textContent='Salin log';
+  const clear=document.createElement('button');clear.type='button';clear.textContent='Bersihkan';
+  const close=document.createElement('button');close.type='button';close.textContent='Tutup';
+  logNode=document.createElement('pre');logNode.id='trozalDebugLog';
+  head.append(title,copy,clear,close);panel.append(head,logNode);document.body.append(fab,panel);
+  fab.addEventListener('click',()=>panel.classList.toggle('open'));
+  close.addEventListener('click',()=>panel.classList.remove('open'));
+  clear.addEventListener('click',()=>{entries.length=0;add('info','Log dibersihkan. Klik Tema Inspirasi Acak untuk merekam ulang.');});
+  copy.addEventListener('click',()=>{
+   const content=entries.map(x=>'['+x.time+'] '+x.message).join('\n')||'Tidak ada log.';
+   if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(content).then(()=>add('info','Log berhasil disalin.')).catch(()=>fallbackCopy(content));}
+   else fallbackCopy(content);
+  });
+  function fallbackCopy(content){
+   const area=document.createElement('textarea');area.value=content;area.style.position='fixed';area.style.opacity='0';document.body.appendChild(area);area.select();
+   try{document.execCommand('copy');add('info','Perintah salin dijalankan.');}catch(e){add('err','Gagal menyalin log: '+e.message);}
+   area.remove();
+  }
+  add('info','Debug aktif. Buka panel ini, bersihkan log, lalu tekan Tema Inspirasi Acak.');
+ }
+ function boot(){setup();if(!document.getElementById('trozalDebugFab'))setTimeout(boot,250);}
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+ window.addEventListener('error',e=>add('err','WINDOW ERROR: '+(e.message||'unknown')+' | '+(e.filename||'')+':'+(e.lineno||0)+':'+(e.colno||0)+(e.error&&e.error.stack?'\n'+e.error.stack:'')));
+ window.addEventListener('unhandledrejection',e=>{const r=e.reason;add('err','UNHANDLED PROMISE: '+(r&&r.stack?r.stack:(r&&r.message)||r));});
+ const originalError=console.error.bind(console);
+ console.error=function(){try{add('err','console.error: '+Array.from(arguments).map(x=>x&&x.stack?x.stack:(typeof x==='object'?JSON.stringify(x):String(x))).join(' '));}catch(e){add('err','console.error called (format failed)');}return originalError.apply(console,arguments);};
+ document.addEventListener('click',e=>{
+  const target=e.target&&e.target.closest?e.target.closest('#svgAiRandomThemeBtn'):null;
+  if(!target)return;
+  const theme=document.getElementById('svgAiTheme');
+  add('info','CLICK Tema Inspirasi Acak terdeteksi. Tema sebelum klik: '+(theme?theme.value:'select tidak ditemukan'));
+  setTimeout(()=>{
+   const t=document.getElementById('svgAiTheme'),c=document.getElementById('svgAiCategory'),sp=document.getElementById('svgAiSpecific');
+   add('info','HASIL klik: tema='+(t?t.value:'N/A')+' | kategori='+(c?c.value:'N/A')+' | subtema='+(sp?sp.value:'N/A'));
+  },120);
+ },true);
+ document.addEventListener('change',e=>{
+  if(!e.target||!['svgAiTheme','svgAiCategory','svgAiSpecific'].includes(e.target.id))return;
+  add('info','CHANGE '+e.target.id+' = '+e.target.value);
+ },true);
 })();
 </script>
 </body></html>
