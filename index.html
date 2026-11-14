@@ -2916,6 +2916,7 @@ try{
   if(sceneAlpha<=0)return;
   const lm=getLayerMotion(i,elapsed),group=timelineLayerGroups[i]||'',chain=[];let parent=group?timelineGroupParents[group]||'':'';const seen=new Set();while(parent&&!seen.has(parent)){seen.add(parent);chain.unshift(parent);parent=timelineGroupParents[parent]||'';}
   ctx.save();ctx.globalAlpha=lm.alpha*sceneAlpha;
+  const blurMax=Math.max(0,Number($('motionBlurAmount')?.value)||0);if($('motionBlurEnabled')?.checked&&blurMax>0){const previous=getLayerMotion(i,Math.max(0,elapsed-1/Math.max(1,+$('fps').value||30)));const motionDelta=Math.hypot(lm.x-previous.x,lm.y-previous.y)+Math.abs(lm.rot-previous.rot)*.08;const blur=Math.min(blurMax,motionDelta*.12);if(blur>.05)ctx.filter='blur('+blur.toFixed(2)+'px)';}
   chain.forEach(name=>{const driver=trozalGroupDirectMembers(name)[0];if(driver===undefined)return;const gm=getLayerMotion(driver,elapsed);ctx.translate(gm.x*w/100,gm.y*h/100);ctx.rotate(gm.rot*Math.PI/180);ctx.scale(gm.scale,gm.scale);ctx.globalAlpha*=Math.max(0,Math.min(1,gm.alpha));});
   drawContained(pi,lm.x*w/100,lm.y*h/100,lm.rot,lm.scale);ctx.restore();
  })}
