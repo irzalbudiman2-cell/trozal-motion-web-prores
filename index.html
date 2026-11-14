@@ -3525,6 +3525,13 @@ function trozalSetSelectOptions(select,items,prefer){select.replaceChildren();[.
 // Initialize the shuffle bag once before the random-theme handler is declared.
 // Global object state avoids lexical TDZ between classic-script execution contexts.
 window.__trozalThemeShuffleBag=Array.isArray(window.__trozalThemeShuffleBag)?window.__trozalThemeShuffleBag:[];
+function trozalGetThemeCatalogue(){
+ let list=Array.isArray(window.TROZAL_AI_THEMES)?window.TROZAL_AI_THEMES:[];
+ if(!list.length&&typeof TROZAL_AI_THEMES!=='undefined'&&Array.isArray(TROZAL_AI_THEMES))list=TROZAL_AI_THEMES;
+ list=[...new Set(list.filter(t=>typeof t==='string'&&t.trim()).map(t=>t.trim()))];
+ if(list.length)window.TROZAL_AI_THEMES=list;
+ return list;
+}
 function trozalRandomTheme(e){
  if(!Array.isArray(window.__trozalThemeShuffleBag))window.__trozalThemeShuffleBag=[];
  const debug=(level,message)=>{
@@ -3539,7 +3546,7 @@ function trozalRandomTheme(e){
   select=document.getElementById('svgAiTheme');
   debug('info','HANDLER trozalRandomTheme dipanggil. Elemen: dropdown='+(!!select)+' | hint='+(!!status)+' | counter='+(!!count));
   if(!select)throw new Error('Elemen dropdown #svgAiTheme tidak ditemukan. Periksa panel AI Motion.');
-  const catalogue=Array.isArray(window.TROZAL_AI_THEMES)?window.TROZAL_AI_THEMES:[];
+  const catalogue=trozalGetThemeCatalogue();
   const themes=[...new Set(catalogue.filter(t=>typeof t==='string'&&t.trim()).map(t=>t.trim()))];
   debug('info','RANDOM THEME state: katalog global='+(Array.isArray(window.TROZAL_AI_THEMES)?'array':'tidak tersedia')+' | jumlah mentah='+(catalogue.length||0)+' | tema unik='+themes.length+' | tema aktif='+select.value+' | bag awal='+(Array.isArray(window.__trozalThemeShuffleBag)?window.__trozalThemeShuffleBag.length:'tidak valid'));
   if(!themes.length){
@@ -3594,22 +3601,22 @@ function trozalApplyTheme(theme,keepCustomSearch=false){
 /* Random-theme click handling is installed at the end of the document by the runtime diagnostic bridge. */
 function trozalInitThemeCatalog(){
  const select=$('svgAiTheme'),list=$('svgAiThemeSuggestions'),search=$('svgAiThemeSearch'),results=$('svgAiThemeResults'),hint=$('svgAiThemeSearchHint');
- const catalogue=window.TROZAL_AI_THEMES;
- if(!Array.isArray(catalogue)||!catalogue.length){hint.textContent='Katalog tema belum tersedia pada skrip global. Coba muat ulang halaman; jika berulang, laporkan versi browser dan pesan konsol.';return;}
+ const catalogue=trozalGetThemeCatalogue();
+ if(!Array.isArray(catalogue)||!catalogue.length){hint.textContent='Katalog tema tidak dapat dipulihkan dari skrip utama. Periksa error JavaScript sebelum inisialisasi.';if($('svgAiCatalogCount'))$('svgAiCatalogCount').textContent='Katalog tidak tersedia';return;}
  const current=select.value||'Brand Identity & Logo';
  trozalSetSelectOptions(select,catalogue,current);
  list.replaceChildren();catalogue.forEach(t=>{const o=document.createElement('option');o.value=t;list.appendChild(o);});
  search.value=current;trozalApplyTheme(current,true);
- const count=$('svgAiCatalogCount');if(count)count.textContent=TROZAL_AI_THEMES.length+' tema tersedia';
+ const count=$('svgAiCatalogCount');if(count)count.textContent=catalogue.length+' tema tersedia';
  const choose=theme=>{trozalApplyTheme(theme);results.hidden=true;};
  // Random button is handled by a delegated listener independent of catalogue initialization.
  select.addEventListener('change',()=>choose(select.value));
  document.querySelectorAll('[data-theme-pick]').forEach(btn=>btn.addEventListener('click',()=>choose(btn.dataset.themePick)));
- const resolve=()=>{const q=search.value.trim();if(!q)return;const lower=q.toLowerCase();const exact=TROZAL_AI_THEMES.find(t=>t.toLowerCase()===lower);const starts=TROZAL_AI_THEMES.find(t=>t.toLowerCase().startsWith(lower));const contains=TROZAL_AI_THEMES.find(t=>t.toLowerCase().includes(lower));choose(exact||starts||contains||q);};
+ const resolve=()=>{const q=search.value.trim();if(!q)return;const lower=q.toLowerCase();const exact=catalogue.find(t=>t.toLowerCase()===lower);const starts=catalogue.find(t=>t.toLowerCase().startsWith(lower));const contains=catalogue.find(t=>t.toLowerCase().includes(lower));choose(exact||starts||contains||q);};
  const renderResults=()=>{
   const q=search.value.trim().toLowerCase();results.replaceChildren();
   if(!q){results.hidden=true;hint.textContent='Ketik tema, pilih hasil yang muncul, atau tekan Enter untuk tema khusus.';return;}
-  const hits=TROZAL_AI_THEMES.filter(t=>t.toLowerCase().includes(q)).slice(0,12);
+  const hits=catalogue.filter(t=>t.toLowerCase().includes(q)).slice(0,12);
   hits.forEach(theme=>{const btn=document.createElement('button');btn.type='button';btn.className='theme-result';btn.textContent=theme;btn.addEventListener('click',()=>choose(theme));results.appendChild(btn);});
   results.hidden=!hits.length;
   hint.textContent=hits.length?hits.length+' saran ditampilkan. Pilih hasil untuk menerapkan kategori dan subtema.':'Tema khusus: tekan Enter untuk membuat kategori dan subtema otomatis.';
