@@ -5552,78 +5552,67 @@ body[data-ui-layout="classic"] .ui-layout-btn[aria-pressed="true"]{background:#d
  'use strict';
  if(window.__trozalMobileDebugInstalled)return;
  window.__trozalMobileDebugInstalled=true;
- const entries=[];const maxEntries=120;let panel,logNode,countNode;
+ const entries=[];const maxEntries=300;let panel,logNode,countNode;
  const stamp=()=>new Date().toLocaleTimeString();
+ function format(value){
+  try{if(value instanceof Error)return value.stack||value.name+': '+value.message;if(typeof value==='string')return value;if(value===undefined)return 'undefined';if(value===null)return 'null';if(typeof value==='object'){try{return JSON.stringify(value);}catch(_){return Object.prototype.toString.call(value);}}return String(value);}catch(_){return '[unprintable value]';}
+ }
  function render(){
   if(!logNode)return;
   logNode.replaceChildren();
-  entries.forEach(item=>{const line=document.createElement('div');line.className=item.type;line.textContent='['+item.time+'] '+item.message;logNode.appendChild(line);});
-  logNode.scrollTop=logNode.scrollHeight;
-  if(countNode)countNode.textContent=String(entries.length);
+  entries.forEach(item=>{const line=document.createElement('div');line.className=item.type;line.textContent='['+item.time+'] ['+item.category+'] '+item.message;logNode.appendChild(line);});
+  logNode.scrollTop=logNode.scrollHeight;if(countNode)countNode.textContent=String(entries.length);
  }
- function add(type,message){
-  const text=String(message==null?'':message);
-  entries.push({time:stamp(),type,message:text.slice(0,1800)});
-  if(entries.length>maxEntries)entries.shift();
-  render();
+ function add(type,message,category='RUNTIME'){
+  entries.push({time:stamp(),type,category,message:String(message==null?'':message).slice(0,2400)});
+  if(entries.length>maxEntries)entries.shift();render();
  }
- window.__trozalDebugLog=add;
+ window.__trozalDebugLog=(type,message)=>add(type,message,'THEME WORKFLOW');
  function setup(){
   if(document.getElementById('trozalDebugFab'))return;
   const fab=document.createElement('button');fab.id='trozalDebugFab';fab.type='button';fab.textContent='⚠ DEBUG ';
   countNode=document.createElement('span');countNode.className='count';countNode.textContent='0';fab.appendChild(countNode);
   panel=document.createElement('section');panel.id='trozalDebugPanel';panel.setAttribute('aria-label','TROZAL runtime diagnostics');
   const head=document.createElement('div');head.className='debug-head';
-  const title=document.createElement('strong');title.textContent='RUNTIME CONSOLE · Ollama Local AI';
+  const title=document.createElement('strong');title.textContent='RUNTIME DIAGNOSTICS · Ollama Local AI';
   const copy=document.createElement('button');copy.type='button';copy.textContent='Salin log';
   const clear=document.createElement('button');clear.type='button';clear.textContent='Bersihkan';
   const close=document.createElement('button');close.type='button';close.textContent='Tutup';
-  logNode=document.createElement('pre');logNode.id='trozalDebugLog';
-  head.append(title,copy,clear,close);panel.append(head,logNode);document.body.append(fab,panel);
-  fab.addEventListener('click',()=>panel.classList.toggle('open'));
-  close.addEventListener('click',()=>panel.classList.remove('open'));
-  clear.addEventListener('click',()=>{entries.length=0;add('info','Log dibersihkan. Klik Tema Inspirasi Acak untuk merekam ulang.');});
-  copy.addEventListener('click',()=>{
-   const content=entries.map(x=>'['+x.time+'] '+x.message).join('\n')||'Tidak ada log.';
-   if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(content).then(()=>add('info','Log berhasil disalin.')).catch(()=>fallbackCopy(content));}
-   else fallbackCopy(content);
-  });
-  function fallbackCopy(content){
-   const area=document.createElement('textarea');area.value=content;area.style.position='fixed';area.style.opacity='0';document.body.appendChild(area);area.select();
-   try{document.execCommand('copy');add('info','Perintah salin dijalankan.');}catch(e){add('err','Gagal menyalin log: '+e.message);}
-   area.remove();
-  }
-  add('info','Debug aktif. Buka panel ini, bersihkan log, lalu tekan Tema Inspirasi Acak.');
+  logNode=document.createElement('pre');logNode.id='trozalDebugLog';head.append(title,copy,clear,close);panel.append(head,logNode);document.body.append(fab,panel);
+  fab.addEventListener('click',()=>panel.classList.toggle('open'));close.addEventListener('click',()=>panel.classList.remove('open'));
+  clear.addEventListener('click',()=>{entries.length=0;add('info','Log dibersihkan. Klik Tema Inspirasi Acak untuk merekam ulang.','SYSTEM');});
+  copy.addEventListener('click',()=>{const content=entries.map(x=>'['+x.time+'] ['+x.category+'] '+x.message).join('\n')||'Tidak ada log.';if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(content).then(()=>add('info','Log berhasil disalin.','SYSTEM')).catch(()=>fallbackCopy(content));else fallbackCopy(content);});
+  function fallbackCopy(content){const area=document.createElement('textarea');area.value=content;area.style.position='fixed';area.style.opacity='0';document.body.appendChild(area);area.select();try{document.execCommand('copy');add('info','Perintah salin log dijalankan.','SYSTEM');}catch(e){add('err',format(e),'CLIPBOARD');}area.remove();}
+  add('info','Debug aktif: JavaScript, Promise, resource, console, fetch, XHR, dan interaksi UI dipantau.','SYSTEM');
  }
  function boot(){setup();if(!document.getElementById('trozalDebugFab'))setTimeout(boot,250);}
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
- window.addEventListener('error',e=>add('err','WINDOW ERROR: '+(e.message||'unknown')+' | '+(e.filename||'')+':'+(e.lineno||0)+':'+(e.colno||0)+(e.error&&e.error.stack?'\n'+e.error.stack:'')));
- window.addEventListener('unhandledrejection',e=>{const r=e.reason;add('err','UNHANDLED PROMISE: '+(r&&r.stack?r.stack:(r&&r.message)||r));});
- const originalError=console.error.bind(console);
- console.error=function(){try{add('err','console.error: '+Array.from(arguments).map(x=>x&&x.stack?x.stack:(typeof x==='object'?JSON.stringify(x):String(x))).join(' '));}catch(e){add('err','console.error called (format failed)');}return originalError.apply(console,arguments);};
+ window.addEventListener('error',e=>{
+  if(e.target&&e.target!==window){const el=e.target;add('err','Gagal memuat <'+el.tagName.toLowerCase()+'> '+(el.src||el.href||el.currentSrc||'(URL tidak tersedia)'),'RESOURCE LOAD');return;}
+  add('err',(e.message||'Unknown error')+' | '+(e.filename||'(file tidak diketahui)')+':'+(e.lineno||0)+':'+(e.colno||0)+(e.error&&e.error.stack?'\n'+e.error.stack:''),'JAVASCRIPT');
+ },true);
+ window.addEventListener('unhandledrejection',e=>add('err',format(e.reason),'PROMISE REJECTION'));
+ ['error','warn'].forEach(level=>{const original=console[level].bind(console);console[level]=function(){add(level==='error'?'err':'warn',Array.from(arguments).map(format).join(' '),'CONSOLE.'+level.toUpperCase());return original.apply(console,arguments);};});
+ if(typeof window.fetch==='function'&&!window.fetch.__trozalDebugWrapped){
+  const original=window.fetch;const wrapped=function(){const req=arguments[0],url=typeof req==='string'?req:(req&&req.url)||'(URL tidak diketahui)';return original.apply(this,arguments).then(response=>{if(!response.ok)add('err',response.status+' '+response.statusText+' | '+url,'FETCH HTTP');return response;}).catch(error=>{add('err',url+' | '+format(error),'FETCH NETWORK');throw error;});};
+  wrapped.__trozalDebugWrapped=true;try{window.fetch=wrapped;}catch(error){add('warn',format(error),'DEBUG INSTALL');}
+ }
+ if(window.XMLHttpRequest&&!XMLHttpRequest.prototype.__trozalDebugWrapped){
+  const proto=XMLHttpRequest.prototype,meta=new WeakMap(),open=proto.open,send=proto.send;
+  proto.open=function(method,url){meta.set(this,{method:String(method||'GET'),url:String(url||'')});return open.apply(this,arguments);};
+  proto.send=function(){const xhr=this,m=meta.get(xhr)||{method:'XHR',url:'(URL tidak diketahui)'};if(!xhr.__trozalDebugListener){xhr.__trozalDebugListener=true;xhr.addEventListener('loadend',()=>{if(xhr.status>=400)add('err',m.method+' '+xhr.status+' | '+m.url,'XHR HTTP');else if(xhr.status===0)add('err',m.method+' | '+m.url+' | status 0','XHR NETWORK');});xhr.addEventListener('timeout',()=>add('err',m.method+' | '+m.url,'XHR TIMEOUT'));}return send.apply(this,arguments);};
+  try{Object.defineProperty(proto,'__trozalDebugWrapped',{value:true});}catch(_){proto.__trozalDebugWrapped=true;}
+ }
  document.addEventListener('click',e=>{
-  const target=e.target&&e.target.closest?e.target.closest('#svgAiRandomThemeBtn'):null;
-  if(!target)return;
-  const theme=document.getElementById('svgAiTheme');
-  add('info','CLICK Tema Inspirasi Acak terdeteksi. Tema sebelum klik: '+(theme?theme.value:'select tidak ditemukan'));
-  try{
-   if(typeof trozalRandomTheme!=='function')throw new Error('Fungsi trozalRandomTheme tidak tersedia saat tombol diklik.');
-   trozalRandomTheme(e);
-  }catch(error){
-   const message=error&&error.stack?error.stack:String(error);
-   add('err','RANDOM THEME gagal dipanggil: '+message);
-   const hint=document.getElementById('svgAiThemeSearchHint');
-   if(hint)hint.textContent='Gagal menjalankan Tema Inspirasi Acak: '+(error&&error.message?error.message:String(error));
-  }
-  setTimeout(()=>{
-   const t=document.getElementById('svgAiTheme'),c=document.getElementById('svgAiCategory'),sp=document.getElementById('svgAiSpecific');
-   add('info','HASIL klik: tema='+(t?t.value:'N/A')+' | kategori='+(c?c.value:'N/A')+' | subtema='+(sp?sp.value:'N/A'));
-  },120);
+  const el=e.target&&e.target.closest?e.target.closest('button,[role="button"],input[type="button"],input[type="submit"]'):null;
+  if(el){const label=(el.innerText||el.value||el.getAttribute('aria-label')||el.id||el.textContent||'button').trim().replace(/\s+/g,' ').slice(0,100);add('info',(el.id?'#'+el.id+' ':'')+label,'UI CLICK');}
+  const target=e.target&&e.target.closest?e.target.closest('#svgAiRandomThemeBtn'):null;if(!target)return;
+  const theme=document.getElementById('svgAiTheme');add('info','Tema sebelum klik: '+(theme?theme.value:'select tidak ditemukan'),'CLICK Tema Inspirasi Acak');
+  try{if(typeof trozalRandomTheme!=='function')throw new Error('Fungsi trozalRandomTheme tidak tersedia saat tombol diklik.');trozalRandomTheme(e);}catch(error){add('err',format(error),'RANDOM THEME INVOCATION');const hint=document.getElementById('svgAiThemeSearchHint');if(hint)hint.textContent='Gagal menjalankan Tema Inspirasi Acak: '+(error&&error.message?error.message:String(error));}
+  setTimeout(()=>{const t=document.getElementById('svgAiTheme'),c=document.getElementById('svgAiCategory'),sp=document.getElementById('svgAiSpecific');add('info','tema='+(t?t.value:'N/A')+' | kategori='+(c?c.value:'N/A')+' | subtema='+(sp?sp.value:'N/A'),'HASIL KLIK');},120);
  },true);
- document.addEventListener('change',e=>{
-  if(!e.target||!['svgAiTheme','svgAiCategory','svgAiSpecific'].includes(e.target.id))return;
-  add('info','CHANGE '+e.target.id+' = '+e.target.value);
- },true);
+ document.addEventListener('change',e=>{const el=e.target;if(!el||!el.matches||!el.matches('input,select,textarea'))return;const value=el.type==='password'?'[disembunyikan]':String(el.value||'').slice(0,180);add('info',(el.id?'#'+el.id:el.tagName.toLowerCase())+' = '+value,'UI CHANGE');},true);
+ add('info','Pemantau global dipasang. Error sebelum skrip ini dimuat tidak dapat direkam.','SYSTEM');
 })();
 </script>
 </body></html>
