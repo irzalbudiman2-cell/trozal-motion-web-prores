@@ -699,6 +699,11 @@ body[data-ui-layout="professional"] .visual-scene-card:focus-within{
  <h3>◉ SMART CAMERA DIRECTOR</h3><p class="help">Analisis deskripsi setiap scene dan sarankan framing serta gerakan kamera.</p>
  <div id="smartCameraDirectorList" class="smart-camera-list"><p class="help">Susun scene untuk mendapatkan rekomendasi framing.</p></div><div class="status" id="smartCameraDirectorStatus">Periksa hasil preview sebelum render.</div>
 </section>
+<section class="panel ai-tools panel-tone-object" id="objectMotionDirectorPanel">
+ <h3>✦ AI OBJECT MOTION DIRECTOR</h3><p class="help">Pilih choreography dan intensitas gerak untuk setiap scene. Pengaturan diterapkan saat scene diimpor ke Multi-Track.</p>
+ <div id="objectMotionSceneSummary" class="object-motion-summary">Susun scene terlebih dahulu untuk mengatur gerakan objek.</div>
+ <div id="objectMotionControls" class="object-motion-controls"><p class="help">Kontrol per scene akan muncul di sini.</p></div>
+</section>
 <section class="panel ai-tools" id="motionBlurControlPanel">
  <h3>✧ SOFT MOTION BLUR</h3><p class="help">Blur adaptif berbasis perubahan posisi antar-frame. Nonaktif secara default dan diterapkan saat ekspor.</p>
  <label class="row" style="align-items:center;gap:9px"><input type="checkbox" id="motionBlurEnabled"> Aktifkan Motion Blur</label>
@@ -2996,7 +3001,7 @@ function applyProject(p){
  textLayerIdCounter=Math.max(nativeTextLayers.length,...nativeTextLayers.map(x=>Number(String(x.id).replace(/\\D/g,''))||0));
 
  Object.entries(c).forEach(([k,v])=>{if($(k)){if(['shapeMaskEnabled','shapePathReveal','transparentBg','sparkles','shadow','loop','effectOn','visualMotionParticles','visualMotionDepth','motionBlurEnabled'].includes(k))$(k).checked=!!v;else $(k).value=v}});
- visualSceneSequence=Array.isArray(p.visualSceneSequence)?p.visualSceneSequence.slice(0,12).map((x,i)=>({id:String(x.id||('scene-restored-'+i)),text:String(x.text||''),duration:Math.max(.5,Math.min(60,Number(x.duration)||1)),transition:String(x.transition||'crossfade'),camera:String(x.camera||'parallax'),style:String(x.style||'cinematic')})):[];
+ visualSceneSequence=Array.isArray(p.visualSceneSequence)?p.visualSceneSequence.slice(0,12).map((x,i)=>({id:String(x.id||('scene-restored-'+i)),text:String(x.text||''),duration:Math.max(.5,Math.min(60,Number(x.duration)||1)),transition:String(x.transition||'crossfade'),camera:String(x.camera||'parallax'),style:String(x.style||'cinematic'),choreography:String(x.choreography||'auto'),motionIntensity:Math.max(0,Math.min(150,Number(x.motionIntensity??35)))})):[];
  if(typeof renderVisualSceneSequence==='function')renderVisualSceneSequence();
  if(p.currentColor)currentColor=p.currentColor;
  if(shapeMaskLayers.length){loadActiveMaskControls();refreshMaskManager()}else{shapeMaskLayers=[{...shapeMaskState(),name:'Mask 1'}];activeShapeMask=0;refreshMaskManager()}
@@ -3144,7 +3149,7 @@ function visualMotionPromptLines(){
 function visualMotionSceneDefaults(lines){
  const total=Math.max(5,Math.min(60,+$('visualMotionDuration').value||15));
  const dur=Math.max(.5,Math.round((total/Math.max(1,lines.length))*10)/10);
- return lines.slice(0,12).map((text,i)=>({id:'scene-'+Date.now()+'-'+i,text,duration:dur,transition:$('visualMotionTransition').value||'crossfade',camera:$('visualMotionCamera').value||'parallax',style:$('visualMotionStyle').value||'cinematic'}));
+ return lines.slice(0,12).map((text,i)=>({id:'scene-'+Date.now()+'-'+i,text,duration:dur,transition:$('visualMotionTransition').value||'crossfade',camera:$('visualMotionCamera').value||'parallax',style:$('visualMotionStyle').value||'cinematic',choreography:'auto',motionIntensity:35}));
 }
 function visualMotionSceneDurationTotal(){
  return visualSceneSequence.reduce((sum,item)=>sum+Math.max(.5,Math.min(60,Number(item.duration)||1)),0);
@@ -3179,6 +3184,22 @@ function renderSmartCameraDirector(){
   apply.addEventListener('click',()=>{item.camera=suggested;renderVisualSceneSequence();const status=$('smartCameraDirectorStatus');if(status)status.textContent='Rekomendasi kamera scene '+(index+1)+' diterapkan.';});
   select.addEventListener('change',()=>{item.camera=select.value;renderVisualSceneSequence();const status=$('smartCameraDirectorStatus');if(status)status.textContent='Kamera scene '+(index+1)+' diubah.';});
   card.append(title,desc,select,apply);host.appendChild(card);
+ });
+}
+function renderObjectMotionControls(){
+ const host=$('objectMotionControls'),summary=$('objectMotionSceneSummary');if(!host)return;host.replaceChildren();
+ if(summary)summary.textContent=visualSceneSequence.length?visualSceneSequence.length+' scene · atur choreography dan intensitas sebelum impor ke Multi-Track.':'Belum ada scene.';
+ if(!visualSceneSequence.length){const empty=document.createElement('p');empty.className='help';empty.textContent='Susun scene terlebih dahulu untuk mengatur gerakan objek.';host.appendChild(empty);return;}
+ const options=[['auto','Otomatis sesuai kamera'],['cinematic','Cinematic Drift'],['orbit','Product Orbit'],['pulse','Waveform Pulse'],['organic','Organic Wave'],['float','Soft Float'],['reveal','Kinetic Reveal'],['bounce','Dynamic Bounce'],['static','Static Hold']];
+ visualSceneSequence.forEach((item,index)=>{
+  const card=document.createElement('div');card.className='object-motion-scene';
+  const title=document.createElement('strong');title.textContent='SCENE '+String(index+1).padStart(2,'0')+' · '+String(item.text||'').replace(/\s+/g,' ').slice(0,76);
+  const select=document.createElement('select');select.setAttribute('aria-label','Choreography scene '+(index+1));
+  options.forEach(([value,label])=>{const option=document.createElement('option');option.value=value;option.textContent=label;select.appendChild(option);});select.value=item.choreography||'auto';
+  const row=document.createElement('div');row.className='row';const label=document.createElement('label');label.textContent='Intensitas gerakan';const slider=document.createElement('input');slider.type='range';slider.min='0';slider.max='150';slider.step='5';slider.value=String(Math.max(0,Math.min(150,Number(item.motionIntensity??35))));const output=document.createElement('output');output.textContent=slider.value+'%';
+  select.addEventListener('change',()=>{item.choreography=select.value;if(typeof scheduleAutosave==='function')scheduleAutosave();});
+  slider.addEventListener('input',()=>{item.motionIntensity=Number(slider.value);output.textContent=slider.value+'%';if(typeof scheduleAutosave==='function')scheduleAutosave();});
+  row.append(label,slider,output);card.append(title,select,row);host.appendChild(card);
  });
 }
 function visualSceneField(label,type,value,options){
@@ -3230,6 +3251,7 @@ function renderVisualSceneSequence(){
  });
  updateVisualSceneSequenceSummary();
  if(typeof renderSmartCameraDirector==='function')renderSmartCameraDirector();
+ if(typeof renderObjectMotionControls==='function')renderObjectMotionControls();
  if(typeof scheduleAutosave==='function')scheduleAutosave();
 }
 function moveVisualScene(from,to){
@@ -3312,11 +3334,11 @@ function importVisualScenesToNativeTracks(){
    fadeIn:index===0||item.transition==='cut'?0:sceneFadeSeconds,
    fadeOut:index===items.length-1||items[index+1]?.transition==='cut'?0:sceneFadeSeconds
   }));
-  const loopFor={locked:0,pan:11,parallax:23,orbit:17,follow:23};
+  const loopFor={locked:0,pan:11,parallax:23,orbit:17,follow:23},choreographyLoop={cinematic:11,orbit:17,pulse:2,organic:23,float:7,reveal:19,bounce:18,static:0};
   svgLayerHints=svgPieces.map((piece,index)=>{
    const si=svgLayerSceneIndices[index]??-1,item=items[si];
    if(si<0||!item)return svgLayerHints[index]||{kind:'object',entrance:0,loop:0,intensity:35,reason:'Objek SVG independen; atur gerakan sesuai kebutuhan.'};
-   return {kind:'scene-object',entrance:1,loop:loopFor[item.camera]??23,intensity:35,reason:'Objek dari Scene '+(si+1)+' · '+String(item.text||'').replace(/\s+/g,' ').slice(0,90)+' · waktu mengikuti durasi scene.'};
+   return {kind:'scene-object',entrance:1,loop:choreographyLoop[item.choreography]??loopFor[item.camera]??23,intensity:Number(item.motionIntensity??35),reason:'Objek dari Scene '+(si+1)+' · '+String(item.text||'').replace(/\s+/g,' ').slice(0,90)+' · waktu mengikuti durasi scene.'};
   });
   buildAutoLayerControls();
   svgPieces.forEach((piece,index)=>{
@@ -3325,7 +3347,7 @@ function importVisualScenesToNativeTracks(){
    const set=(id,value)=>{const el=$(id+index);if(!el)return;if(el.type==='checkbox')el.checked=!!value;else el.value=String(value)};
    set('Delay',0);set('Start',start.toFixed(2));set('End',end.toFixed(2));
    set('In',1);set('Out',1);set('Duration',Math.min(.55,Math.max(.12,d*.16)).toFixed(2));
-   set('Loop',loopFor[item.camera]??23);set('Intensity',35);set('Scale',100);set('Rotation',0);
+   set('Loop',choreographyLoop[item.choreography]??loopFor[item.camera]??23);set('Intensity',Number(item.motionIntensity??35));set('Scale',100);set('Rotation',0);
    set('On',true);set('Visible',true);set('Direction','normal');
   });
   refreshTimelineEditor();renderAt(0);scheduleAutosave();
