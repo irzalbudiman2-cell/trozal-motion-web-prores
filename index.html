@@ -3160,7 +3160,7 @@ let htmlDiagnosticDebounce=0;$('aiCodeTerminal').addEventListener('input',()=>{c
 
 
 // FIX27 AI topic catalogue and semantic style/subtheme matching.
-const TROZAL_AI_THEMES=[...new Set([
+var TROZAL_AI_THEMES=[...new Set([
 
 'Brand Identity & Logo','Kinetic Typography','Product Commercial','E-commerce & Retail','Social Media Content','YouTube Intro / Outro','Explainer & Educational','Technology & Artificial Intelligence','SaaS & Web App','Mobile App UI','Dashboard & Data Storytelling','Business & Corporate','Finance & Fintech','Healthcare & Wellness','Medical & Pharmaceutical','Science & Research','Education & E-learning','Food & Beverage','Restaurant & Culinary','Beauty & Cosmetics','Fashion & Lifestyle','Travel & Tourism','Architecture & Interior','Real Estate','Automotive & Transportation','Gaming & Esports','Music & Entertainment','Sports & Fitness','Nature & Environment','Wildlife & Conservation','Ocean & Marine Life','Green Energy & Sustainability','Space & Astronomy','Culture & Heritage','Indonesian Culture & Tourism','Festival & Celebration','Ramadan & Eid','Islamic Education & Values','Hajj & Umrah','Christmas & Holiday','Chinese New Year & Lunar Festival','Diwali & Festival of Lights','Halloween & Spooky Season','New Year Countdown','Wedding & Event','News & Editorial','Infographic & Statistics','Maps & Geospatial','Abstract & Experimental','Character & Mascot','Storytelling & Narrative','Public Service Announcement','Microstock Motion Design','Packaging & Label Design','Typography & Fonts','Cybersecurity','Cloud Computing','Robotics & Automation','Blockchain & Web3','Internet of Things','Smart Home','Renewable Energy','Agriculture & Farming','Pet & Animal Care','Parenting & Family','Career & Recruitment','Logistics & Supply Chain','Education Technology','Travel Destination','Coffee & Tea','Bakery & Dessert','Banking & Insurance','Construction & Engineering','Government & Civic Services','Mental Wellness & Mindfulness','Luxury & Premium Brand','Science Fiction & Fantasy','Weather & Climate','Space Exploration','Wedding Photography & Videography',
 "AI & Generative Media",
@@ -3524,7 +3524,10 @@ function trozalRandomTheme(e){
  if(e){e.preventDefault();e.stopPropagation();}
  const status=$('svgAiThemeSearchHint'),count=$('svgAiCatalogCount'),select=$('svgAiTheme');
  try{
-  const themes=Array.isArray(TROZAL_AI_THEMES)?[...new Set(TROZAL_AI_THEMES.filter(Boolean))]:[];
+  // The catalogue is a var-backed global to avoid temporal-dead-zone failures
+  // when the mobile page invokes the inline action during delayed initialization.
+  const catalogue=window.TROZAL_AI_THEMES||TROZAL_AI_THEMES;
+  const themes=Array.isArray(catalogue)?[...new Set(catalogue.filter(Boolean))]:[];
   if(!themes.length){if(status)status.textContent='Katalog tema belum siap. Muat ulang halaman lalu coba lagi.';return false;}
   const current=select?.value||'';
   // Shuffle-bag selection: every catalogue topic is used once before a new cycle.
@@ -3550,6 +3553,7 @@ function trozalApplyTheme(theme,keepCustomSearch=false){
 }
 function trozalInitThemeCatalog(){
  const select=$('svgAiTheme'),list=$('svgAiThemeSuggestions'),search=$('svgAiThemeSearch'),results=$('svgAiThemeResults'),hint=$('svgAiThemeSearchHint');
+ if(!Array.isArray(window.TROZAL_AI_THEMES)||!window.TROZAL_AI_THEMES.length){hint.textContent='Katalog tema belum siap. Coba muat ulang halaman.';return;}
  const current=select.value||'Brand Identity & Logo';
  trozalSetSelectOptions(select,TROZAL_AI_THEMES,current);
  list.replaceChildren();TROZAL_AI_THEMES.forEach(t=>{const o=document.createElement('option');o.value=t;list.appendChild(o);});
