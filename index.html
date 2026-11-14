@@ -3543,7 +3543,11 @@ function trozalRandomTheme(e){
   trozalApplyTheme(picked);
   if(count)count.textContent=themes.length+' tema unik tersedia · '+trozalThemeShuffleBag.length+' belum dipakai pada siklus ini';
   if(status)status.textContent='✦ Tema inspirasi dipilih: '+picked+'. Kategori visual dan subtema sudah disesuaikan. Tema tidak diulang sampai siklus katalog selesai.';
- }catch(err){if(status)status.textContent='Gagal memilih tema: '+(err&&err.message?err.message:'kesalahan tidak diketahui');}
+ }catch(err){
+  const message=err&&err.stack?err.stack:(err&&err.message?err.message:String(err));
+  if(status)status.textContent='Gagal memilih tema: '+(err&&err.message?err.message:'kesalahan tidak diketahui');
+  console.error('[TROZAL RANDOM THEME] '+message);
+ }
  return false;
 }
 function trozalApplyTheme(theme,keepCustomSearch=false){
@@ -3553,6 +3557,24 @@ function trozalApplyTheme(theme,keepCustomSearch=false){
  const profile=trozalThemeProfile(clean);trozalSetSelectOptions($('svgAiCategory'),profile.styles);trozalSetSelectOptions($('svgAiSpecific'),profile.specifics);
  $('svgAiThemeSearchHint').textContent='Tema aktif: '+clean+' · '+profile.styles.length+' gaya visual dan '+profile.specifics.length+' subtema tersedia. Pilihan mengikuti tema utama.';
  if($('svgAiPrompt').value.trim())generateSvgAiPrompt();
+}
+/* Delegated random-theme control: independent from catalogue initialization success. */
+if(!window.__trozalRandomThemeDelegated){
+ window.__trozalRandomThemeDelegated=true;
+ document.addEventListener('click',event=>{
+  const button=event.target&&event.target.closest?event.target.closest('#svgAiRandomThemeBtn'):null;
+  if(!button)return;
+  event.preventDefault();
+  try{
+   if(typeof trozalRandomTheme!=='function')throw new Error('Fungsi trozalRandomTheme belum tersedia');
+   trozalRandomTheme(event);
+  }catch(error){
+   const hint=$('svgAiThemeSearchHint');
+   const message=error&&error.stack?error.stack:String(error);
+   if(hint)hint.textContent='Gagal menjalankan Tema Inspirasi Acak: '+(error&&error.message?error.message:String(error));
+   console.error('[TROZAL RANDOM THEME] '+message);
+  }
+ },true);
 }
 function trozalInitThemeCatalog(){
  const select=$('svgAiTheme'),list=$('svgAiThemeSuggestions'),search=$('svgAiThemeSearch'),results=$('svgAiThemeResults'),hint=$('svgAiThemeSearchHint');
@@ -3564,8 +3586,7 @@ function trozalInitThemeCatalog(){
  search.value=current;trozalApplyTheme(current,true);
  const count=$('svgAiCatalogCount');if(count)count.textContent=TROZAL_AI_THEMES.length+' tema tersedia';
  const choose=theme=>{trozalApplyTheme(theme);results.hidden=true;};
- const randomButton=$( 'svgAiRandomThemeBtn' );
- if(randomButton&&!randomButton.dataset.trozalRandomBound){randomButton.dataset.trozalRandomBound='1';randomButton.addEventListener('click',event=>{event.preventDefault();trozalRandomTheme(event);});}
+ // Random button is handled by a delegated listener independent of catalogue initialization.
  select.addEventListener('change',()=>choose(select.value));
  document.querySelectorAll('[data-theme-pick]').forEach(btn=>btn.addEventListener('click',()=>choose(btn.dataset.themePick)));
  const resolve=()=>{const q=search.value.trim();if(!q)return;const lower=q.toLowerCase();const exact=TROZAL_AI_THEMES.find(t=>t.toLowerCase()===lower);const starts=TROZAL_AI_THEMES.find(t=>t.toLowerCase().startsWith(lower));const contains=TROZAL_AI_THEMES.find(t=>t.toLowerCase().includes(lower));choose(exact||starts||contains||q);};
