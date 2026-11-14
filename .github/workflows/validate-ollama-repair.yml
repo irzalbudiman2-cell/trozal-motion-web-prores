@@ -42,4 +42,16 @@ jobs:
           const required = ['svgTerminalPanel','svgAiThemeSearch','mtCreateGroup','mtSetGroupParent','browserArtDirection','balanceVisualSceneDurationsBtn','smartCameraDirectorPanel','objectMotionDirectorPanel','motionBlurControlPanel','motionQualityDirectorPanel'];
           for (const id of required) if (!html.includes('id="' + id + '"')) throw new Error('Missing required UI: ' + id);
           console.log('Validated ' + scripts.length + ' inline script block(s) and ' + required.length + ' required feature panels.');
+          const wiring = [
+            ['Generate Prompt click handler', html.includes("generateSvgAiPromptBtn').addEventListener('click',generateSvgAiPrompt)")],
+            ['Terminal HTML apply handler', html.includes("applyAiSvgBtn').addEventListener('click',generateMotionSvgLocally)")],
+            ['Theme search input handler', html.includes("search.addEventListener('input'")],
+            ['Random theme delegated click handler', html.includes("closest('#svgAiRandomThemeBtn')") && html.includes("trozalRandomTheme(e)")],
+            ['Ollama Vision analysis handler', html.includes("trozalVisionAnalyzeBtn')?.addEventListener('click',trozalVisionAnalyze)")],
+            ['Ollama Vision connection check handler', html.includes("trozalVisionCheckBtn')?.addEventListener('click',trozalVisionCheck)")]
+          ];
+          for (const [label, present] of wiring) {
+            if (!present) throw new Error('Missing event wiring: ' + label);
+          }
+          console.log('Validated ' + scripts.length + ' inline JavaScript block(s), ' + required.length + ' required feature panels, and ' + wiring.length + ' feature event handlers.');
           NODE
