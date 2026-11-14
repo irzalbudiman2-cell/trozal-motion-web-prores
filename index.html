@@ -3418,6 +3418,9 @@ var TROZAL_AI_THEMES=[...new Set([
 "Luxury Packaging Reveal",
 "Minimal Product Hero Loop"
 ])];
+// Explicitly publish the catalogue for later classic-script blocks and inline handlers.
+window.TROZAL_AI_THEMES=TROZAL_AI_THEMES;
+
 
 const TROZAL_THEME_RULES=[
  {re:/chinese|lunar/i,styles:['Premium Luxury','Paper Cutout','Flat Vector Illustration','3D Layered Composition'],specific:['Chinese New Year zodiac animal reveal','Red and gold lantern festival greeting','Lunar New Year couplet and ornament animation','Zodiac wheel and lucky symbol rotation','Firecracker and celebratory light sequence','Traditional blossom and gold pattern reveal']},
@@ -3553,10 +3556,11 @@ function trozalApplyTheme(theme,keepCustomSearch=false){
 }
 function trozalInitThemeCatalog(){
  const select=$('svgAiTheme'),list=$('svgAiThemeSuggestions'),search=$('svgAiThemeSearch'),results=$('svgAiThemeResults'),hint=$('svgAiThemeSearchHint');
- if(!Array.isArray(window.TROZAL_AI_THEMES)||!window.TROZAL_AI_THEMES.length){hint.textContent='Katalog tema belum siap. Coba muat ulang halaman.';return;}
+ const catalogue=window.TROZAL_AI_THEMES;
+ if(!Array.isArray(catalogue)||!catalogue.length){hint.textContent='Katalog tema belum tersedia pada skrip global. Coba muat ulang halaman; jika berulang, laporkan versi browser dan pesan konsol.';return;}
  const current=select.value||'Brand Identity & Logo';
- trozalSetSelectOptions(select,TROZAL_AI_THEMES,current);
- list.replaceChildren();TROZAL_AI_THEMES.forEach(t=>{const o=document.createElement('option');o.value=t;list.appendChild(o);});
+ trozalSetSelectOptions(select,catalogue,current);
+ list.replaceChildren();catalogue.forEach(t=>{const o=document.createElement('option');o.value=t;list.appendChild(o);});
  search.value=current;trozalApplyTheme(current,true);
  const count=$('svgAiCatalogCount');if(count)count.textContent=TROZAL_AI_THEMES.length+' tema tersedia';
  const choose=theme=>{trozalApplyTheme(theme);results.hidden=true;};
