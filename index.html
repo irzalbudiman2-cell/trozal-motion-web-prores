@@ -3564,23 +3564,7 @@ function trozalApplyTheme(theme,keepCustomSearch=false){
  $('svgAiThemeSearchHint').textContent='Tema aktif: '+clean+' · '+profile.styles.length+' gaya visual dan '+profile.specifics.length+' subtema tersedia. Pilihan mengikuti tema utama.';
  if($('svgAiPrompt').value.trim())generateSvgAiPrompt();
 }
-/* Bind directly to the visible control; avoid document-level delegation races. */
-(function(){
- const button=$('svgAiRandomThemeBtn');
- if(!button||button.dataset.trozalRandomBound==='1')return;
- button.dataset.trozalRandomBound='1';
- button.addEventListener('click',event=>{
-  event.preventDefault();
-  try{trozalRandomTheme(event);}
-  catch(error){
-   const hint=$('svgAiThemeSearchHint');
-   const message=error&&error.stack?error.stack:String(error);
-   if(hint)hint.textContent='Gagal menjalankan Tema Inspirasi Acak: '+(error&&error.message?error.message:String(error));
-   if(window.__trozalDebugLog)window.__trozalDebugLog('error','RANDOM THEME handler gagal: '+message);
-   console.error('[TROZAL RANDOM THEME] '+message);
-  }
- });
-})();
+/* Random-theme click handling is installed at the end of the document by the runtime diagnostic bridge. */
 function trozalInitThemeCatalog(){
  const select=$('svgAiTheme'),list=$('svgAiThemeSuggestions'),search=$('svgAiThemeSearch'),results=$('svgAiThemeResults'),hint=$('svgAiThemeSearchHint');
  const catalogue=window.TROZAL_AI_THEMES;
@@ -5289,6 +5273,15 @@ body[data-ui-layout="classic"] .ui-layout-btn[aria-pressed="true"]{background:#d
   if(!target)return;
   const theme=document.getElementById('svgAiTheme');
   add('info','CLICK Tema Inspirasi Acak terdeteksi. Tema sebelum klik: '+(theme?theme.value:'select tidak ditemukan'));
+  try{
+   if(typeof trozalRandomTheme!=='function')throw new Error('Fungsi trozalRandomTheme tidak tersedia saat tombol diklik.');
+   trozalRandomTheme(e);
+  }catch(error){
+   const message=error&&error.stack?error.stack:String(error);
+   add('err','RANDOM THEME gagal dipanggil: '+message);
+   const hint=document.getElementById('svgAiThemeSearchHint');
+   if(hint)hint.textContent='Gagal menjalankan Tema Inspirasi Acak: '+(error&&error.message?error.message:String(error));
+  }
   setTimeout(()=>{
    const t=document.getElementById('svgAiTheme'),c=document.getElementById('svgAiCategory'),sp=document.getElementById('svgAiSpecific');
    add('info','HASIL klik: tema='+(t?t.value:'N/A')+' | kategori='+(c?c.value:'N/A')+' | subtema='+(sp?sp.value:'N/A'));
