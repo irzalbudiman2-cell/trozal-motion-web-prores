@@ -296,6 +296,7 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
 .mt-tick{position:absolute;top:0;bottom:0;border-left:1px solid rgba(223,190,123,.18);font-size:8px;color:#b8a77f;padding-left:3px}
 .mt-tick span{position:absolute;top:2px;left:3px;white-space:nowrap}
 .mt-track-list{max-height:205px;overflow:auto;overscroll-behavior:contain;scrollbar-color:#8d6d32 #211e18}
+.mt-group-toolbar{margin:7px 0;align-items:center}.mt-group-toolbar input,.mt-group-toolbar select{max-width:150px;min-width:105px;padding:5px 7px;font-size:9px;background:#101d22;color:#eee;border:1px solid #536d72;border-radius:5px}.mt-group-toolbar button{font-size:9px;padding:5px 7px}.mt-group-pick{width:13px;height:13px;accent-color:#70d9b2;flex:0 0 auto}.mt-group-tag,.mt-hierarchy-tag{font-size:8px;line-height:1.25;padding:2px 4px;border-radius:4px;white-space:nowrap;max-width:76px;overflow:hidden;text-overflow:ellipsis;flex:0 1 auto}.mt-group-tag{background:#21483d;color:#a8f0d1}.mt-hierarchy-tag{border:1px solid #456b83;background:#142a38;color:#9ed9f2}.mt-track-row[data-mt-depth="1"] .mt-track-label{padding-left:12px}.mt-track-row[data-mt-depth="2"] .mt-track-label{padding-left:24px}.mt-track-row[data-mt-depth="3"] .mt-track-label{padding-left:36px}
 .mt-track-row{min-height:34px;border-bottom:1px solid rgba(202,171,112,.11)}
 .mt-track-row.selected .mt-track-label{background:rgba(212,170,75,.12);border-color:#a88035}
 .mt-track-label{height:28px;min-width:0;display:flex;align-items:center;gap:3px;padding:2px 4px;border:1px solid transparent;border-radius:5px}
@@ -538,6 +539,29 @@ body[data-ui-layout="professional"] .visual-scene-card:focus-within{
  body[data-ui-layout="professional"] .visual-scene-card{transition:none}
 }
 
+
+/* Creative direction, scene directors and motion quality controls */
+.browser-art-direction,.browser-motion-blueprint{margin-top:10px;padding:10px;border:1px solid #456b83;border-radius:9px;background:linear-gradient(145deg,rgba(20,42,56,.78),rgba(15,25,35,.92))}
+.browser-art-direction h4,.browser-motion-blueprint h4{margin:0 0 7px;color:#b9e5f5;font-size:11px;letter-spacing:.6px}
+.browser-art-direction .row,.browser-motion-blueprint .row{gap:9px;align-items:flex-end}
+.browser-art-direction .row>div,.browser-motion-blueprint .row>div{min-width:0;flex:1}
+.browser-art-direction select,.browser-motion-blueprint select{width:100%;min-width:0}
+.smart-camera-list,.object-motion-controls{display:grid;gap:8px;margin-top:9px}
+.smart-camera-card,.object-motion-scene{display:grid;gap:7px;padding:9px;border:1px solid #456b83;border-radius:8px;background:rgba(14,29,39,.8)}
+.smart-camera-card strong,.object-motion-scene strong{font-size:10px;color:#c9eaff;line-height:1.45}
+.smart-camera-card p{margin:0;color:#b9c9d1;font-size:10px}
+.smart-camera-card select,.object-motion-scene select{width:100%;min-width:0}
+.object-motion-scene .row{display:flex;align-items:center;gap:8px}
+.object-motion-scene .row label{font-size:9px;white-space:nowrap}
+.object-motion-scene input[type=range]{min-width:60px;flex:1}
+.object-motion-scene output{min-width:36px;text-align:right;font-size:10px;color:#bfe9d8}
+.motion-quality-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:9px}
+.motion-quality-grid button{min-height:34px;font-size:10px}
+.motion-quality-grid button.active{border-color:#8ed6bc;background:#1d4a3d;color:#d9fff0}
+.motion-quality-readout{margin-top:8px;padding:8px;border:1px solid #456b83;border-radius:7px;background:#122431;color:#c7e7f3;font-size:10px;line-height:1.5}
+.mt-group-toolbar{max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;padding-bottom:3px}
+@media(max-width:760px){.browser-art-direction .row,.browser-motion-blueprint .row{display:grid;grid-template-columns:1fr}.motion-quality-grid{grid-template-columns:1fr 1fr}.mt-group-toolbar input,.mt-group-toolbar select{max-width:125px}}
+
 </style>
 </head>
 <body>
@@ -626,6 +650,16 @@ body[data-ui-layout="professional"] .visual-scene-card:focus-within{
    <label>Kategori visual (otomatis mengikuti tema)</label><select id="svgAiCategory"><option>Minimal Swiss Design</option><option>Modern Editorial</option><option>Clean Corporate</option><option>Premium Luxury</option><option>Futuristic Sci-Fi</option><option>Cyberpunk Neon</option><option>Glassmorphism</option><option>Liquid / Fluid Design</option><option>3D Layered Composition</option><option>Isometric Illustration</option><option>Flat Vector Illustration</option><option>2D Cartoon</option><option>Claymorphism</option><option>Soft Gradient</option><option>Bold Brutalist</option><option>Retro / Vintage</option><option>Y2K Digital</option><option>Memphis Geometry</option><option>Bauhaus Geometric</option><option>Monochrome</option><option>Duotone</option><option>Pastel Soft</option><option>High Contrast</option><option>Photorealistic Product</option><option>Cinematic Lighting</option><option>Paper Cutout</option><option>Hand-drawn Sketch</option><option>Line Art / Monoline</option><option>Typography-led</option><option>Data Visualization</option><option>UI Prototype</option><option>Organic Nature</option><option>Surreal Abstract</option><option>Pixel Art</option><option>Minimal Iconography</option><option>Mixed Media</option><option>Dark Interface</option><option>Bright Playful</option><option>Editorial Infographic</option></select>
    <label>Kategori spesifik / subtema (relevan dengan tema)</label><select id="svgAiSpecific"><option>Logo reveal with custom emblem</option><option>Logo build from geometric pieces</option><option>Wordmark kinetic reveal</option><option>Brand guideline opener</option><option>Product hero on floating podium</option><option>Product 360 showcase</option><option>Cosmetic bottle luxury reveal</option><option>Food hero with ingredient orbit</option><option>Sneaker / fashion product launch</option><option>Smartphone device showcase</option><option>App onboarding sequence</option><option>Website landing page hero</option><option>SaaS feature explainer</option><option>Animated dashboard KPI</option><option>Data chart growth story</option><option>Financial market overview</option><option>AI neural network visualization</option><option>Robotics and automation</option><option>Cloud computing ecosystem</option><option>Cybersecurity shield sequence</option><option>Medical awareness explainer</option><option>Anatomy / science visualization</option><option>Learning process step-by-step</option><option>Timeline and roadmap</option><option>Before-after transformation</option><option>Process flow diagram</option><option>Comparison infographic</option><option>Statistics counter sequence</option><option>World map data routes</option><option>Travel destination opener</option><option>City / architecture flythrough</option><option>Nature landscape layers</option><option>Ocean and underwater scene</option><option>Wildlife conservation story</option><option>Renewable energy system</option><option>Solar / wind energy explainer</option><option>Sports event opener</option><option>Fitness training sequence</option><option>Esports tournament package</option><option>Music visualizer interface</option><option>Character mascot introduction</option><option>Animated storytelling scene</option><option>Event countdown</option><option>New year celebration</option><option>Ramadan lantern and crescent</option><option>Eid greeting composition</option><option>Wedding invitation motion</option><option>Sale campaign and discount</option><option>App interface micro-interaction</option><option>Notification and UX flow</option><option>Loading / progress animation</option><option>Abstract liquid transition</option><option>Particle field and energy</option><option>Typography quote animation</option><option>News headline package</option><option>Real estate property showcase</option><option>Automotive feature presentation</option><option>Custom specific concept</option></select>
    <label>Detail tambahan (opsional)</label><input type="text" id="svgAiDetails" placeholder="Contoh: ikon lebah, warna emas, latar putih">
+   <section class="browser-art-direction" id="browserArtDirection">
+    <h4>✦ CREATIVE DIRECTION · KONTROL ART DESIGN</h4>
+    <div class="row"><div><label>Palet warna</label><select id="svgAiPalette"><option>Auto mengikuti tema</option><option>Midnight navy & electric cyan</option><option>Black & champagne gold</option><option>Emerald & warm ivory</option><option>Violet & holographic blue</option><option>Teal & cinematic amber</option><option>Monochrome silver</option><option>Coral & sunset gradient</option><option>Earth tone & natural green</option></select></div><div><label>Gerakan kamera</label><select id="svgAiCamera"><option>Auto sesuai konsep</option><option>Slow cinematic push-in</option><option>Orbit 3D around hero object</option><option>Horizontal parallax tracking</option><option>Vertical reveal and tilt</option><option>Macro dolly with depth of field</option><option>Top-down editorial movement</option><option>Locked camera with kinetic layers</option></select></div></div>
+    <div class="row"><div><label>Transisi utama</label><select id="svgAiTransition"><option>Auto sesuai konsep</option><option>Elegant mask reveal</option><option>Light sweep and flare</option><option>Liquid morph transition</option><option>Particle assemble / dissolve</option><option>3D flip and perspective turn</option><option>Whip pan with motion blur</option><option>Typography kinetic cut</option><option>Soft gradient crossfade</option></select></div><div><label>Karakter tipografi</label><select id="svgAiTypography"><option>Auto sesuai tema</option><option>Premium editorial serif</option><option>Modern geometric sans-serif</option><option>Bold condensed display</option><option>Minimal Swiss typography</option><option>Futuristic techno lettering</option><option>Elegant luxury thin serif</option><option>Playful rounded display</option></select></div></div>
+   </section>
+   <section class="browser-motion-blueprint" id="browserMotionBlueprint">
+    <h4>✧ MOTION BLUEPRINT · PAKET CHOREOGRAPHY</h4>
+    <label>Preset choreography</label><select id="svgAiMotionPreset"><option>Auto — adaptif terhadap tema</option><option>Cinematic Reveal</option><option>Luxury Showcase</option><option>Futuristic Interface</option><option>3D Product Orbit</option><option>Waveform & Sound</option><option>Kinetic Typography</option><option>Particle Assembly</option><option>Editorial Storytelling</option><option>Dynamic Brand Launch</option></select>
+    <div class="row"><div><label>Tempo gerakan</label><select id="svgAiMotionTempo"><option>Auto sesuai konsep</option><option>Slow · 0.65×</option><option>Balanced · 1.00×</option><option>Fast · 1.25×</option></select></div><div><label>Intensitas gerakan</label><select id="svgAiMotionIntensity"><option>Auto sesuai konsep</option><option>Subtle · 65%</option><option>Medium · 100%</option><option>Expressive · 135%</option></select></div></div>
+   </section>
     <label>Nama file output (opsional)</label><input type="text" id="svgAiFilename" placeholder="Contoh: Premium_Ramadan_Emerald_Gold">
    <div class="row" style="margin-top:8px"><div><label>Jumlah konsep</label><select id="svgAiConceptCount"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option><option>6</option><option>8</option><option>10</option></select></div><div><label>Durasi prompt</label><select id="svgAiDuration"><option>5 detik</option><option selected>8 detik</option><option>10 detik</option><option>15 detik</option></select></div><div><label>Rasio video</label><select id="svgAiRatio"><option>16:9 landscape</option><option>9:16 vertical</option><option>1:1 square</option><option>4:5 portrait</option></select></div></div>
    <label>Resolusi canvas untuk prompt AI (terpisah dari resolusi render)</label><select id="svgAiResolution"><option value="1080">Full HD (1080p)</option><option value="1440">2K / QHD</option><option value="2160" selected>4K UHD</option><option value="4320">8K UHD</option></select><p class="resolution-hint" id="svgAiResolutionHint">Target canvas: 3840 × 2160 px · 4K UHD</p>
@@ -675,6 +709,7 @@ body[data-ui-layout="professional"] .visual-scene-card:focus-within{
  <h3>▰ VISUAL SCENE SEQUENCER · TIMELINE</h3>
  <p class="help">Atur setiap adegan visual secara terpisah. Urutan dapat diubah dengan drag-and-drop, durasi dapat berbeda, dan setiap adegan memiliki transisi, gerakan kamera, serta gaya visual sendiri.</p>
  <div class="btnrow"><button type="button" class="primary" id="buildVisualSequenceBtn">✦ SUSUN ADEGAN DARI PROMPT</button><button type="button" id="addVisualSceneBtn">＋ TAMBAH ADEGAN</button></div>
+ <div class="btnrow"><button type="button" id="balanceVisualSceneDurationsBtn">⏱ RATakan DURASI ADEGAN</button><span class="status" id="visualSceneDurationBalanceStatus">Pembagian durasi otomatis menjaga total sesuai durasi proyek.</span></div>
  <div class="visual-sequence-summary" id="visualSceneTimelineSummary">Belum ada adegan. Masukkan prompt pada panel ungu lalu susun adegan di sini.</div>
  <div id="visualSceneList" class="visual-scene-list"></div>
  <div class="btnrow"><button type="button" class="primary" id="generateVisualSequenceBtn">▶ GENERATE DARI TIMELINE</button><button type="button" id="importVisualScenesBtn">▣ IMPOR SCENE KE MULTI-TRACK</button></div>
@@ -682,6 +717,24 @@ body[data-ui-layout="professional"] .visual-scene-card:focus-within{
  <p class="help scene-object-help">Mode aktif mencoba memisahkan grup, bentuk, dan elemen SVG. Elemen yang saling bergantung (misalnya bagian tubuh/produk yang tersusun dari banyak path) dapat ikut terpisah; gunakan mode satu grup jika komposisi menjadi tidak utuh.</p>
  <div class="btnrow"><button type="button" id="clearVisualSequenceBtn">Kosongkan Timeline</button></div>
  <p class="notice">Pengaturan pada timeline ini akan dipakai saat membuat HTML visual. Total durasi hasil mengikuti jumlah durasi seluruh adegan, bukan lagi durasi default generator.</p>
+</section>
+<section class="panel ai-tools panel-tone-camera" id="smartCameraDirectorPanel">
+ <h3>◉ SMART CAMERA DIRECTOR</h3><p class="help">Analisis deskripsi setiap scene dan sarankan framing serta gerakan kamera.</p>
+ <div id="smartCameraDirectorList" class="smart-camera-list"><p class="help">Susun scene untuk mendapatkan rekomendasi framing.</p></div><div class="status" id="smartCameraDirectorStatus">Periksa hasil preview sebelum render.</div>
+</section>
+<section class="panel ai-tools panel-tone-object" id="objectMotionDirectorPanel">
+ <h3>✦ AI OBJECT MOTION DIRECTOR</h3><p class="help">Pilih choreography dan intensitas gerak untuk setiap scene. Pengaturan diterapkan saat scene diimpor ke Multi-Track.</p>
+ <div id="objectMotionSceneSummary" class="object-motion-summary">Susun scene terlebih dahulu untuk mengatur gerakan objek.</div>
+ <div id="objectMotionControls" class="object-motion-controls"><p class="help">Kontrol per scene akan muncul di sini.</p></div>
+</section>
+<section class="panel ai-tools" id="motionBlurControlPanel">
+ <h3>✧ SOFT MOTION BLUR</h3><p class="help">Blur adaptif berbasis perubahan posisi antar-frame. Nonaktif secara default dan diterapkan saat ekspor.</p>
+ <label class="row" style="align-items:center;gap:9px"><input type="checkbox" id="motionBlurEnabled"> Aktifkan Motion Blur</label>
+ <div class="row"><label for="motionBlurAmount">Kekuatan blur</label><input id="motionBlurAmount" type="range" min="0" max="12" step="0.5" value="4"><output id="motionBlurAmountValue">4 px</output></div><div class="motion-quality-readout" id="motionBlurReadout">Mode: nonaktif · Tidak mengubah durasi atau FPS ekspor.</div>
+</section>
+<section class="panel ai-tools" id="motionQualityDirectorPanel">
+ <h3>✦ MOTION QUALITY DIRECTOR</h3><p class="help">Preset global untuk menjaga gerakan halus, natural, dinamis, atau dramatis.</p>
+ <div class="motion-quality-grid"><button type="button" data-motion-quality="cinematic">Smooth Cinematic</button><button type="button" data-motion-quality="natural">Natural Movement</button><button type="button" data-motion-quality="dynamic">Dynamic Motion</button><button type="button" data-motion-quality="dramatic">Dramatic Motion</button></div><div class="motion-quality-readout" id="motionQualityReadout">Preset aktif: Custom · Kecepatan 1.00× · Intensitas 100%</div>
 </section>
 <section class="panel ai-tools" id="motionPresetLibrary"><h3><b>✦</b> 6. MOTION PRESET LIBRARY</h3>
    <p class="help">Pilih preset untuk menerapkan gerakan yang sesuai dengan jenis objek. Background dan dekorasi tetap diam; teks dan objek utama mendapat gerakan berbeda.</p>
@@ -695,7 +748,24 @@ body[data-ui-layout="professional"] .visual-scene-card:focus-within{
   </section>
 
 
-  <section class="panel"><h3><b>●</b> 2. WARNA & LATAR</h3>
+  <section class="panel ai-tools panel-tone-terminal" id="svgTerminalPanel"><h3><b>⌘</b> TERMINAL KODE HTML</h3>
+   <p class="help">Tempel HTML lengkap dari AI. Engine mengimpor elemen HTML dan animasi CSS; JavaScript impor diblokir agar capture lebih konsisten.</p>
+   <label>Paste kode HTML ke terminal</label>
+   <textarea id="aiCodeTerminal" class="terminal" spellcheck="false" placeholder="Tempel dokumen HTML lengkap di sini: <!DOCTYPE html> ..."></textarea>
+   <div class="btnrow"><button class="green" id="pasteCodeFromClipboardBtn">📋 Paste Code</button><button id="clearAiCodeBtn">Bersihkan</button></div>
+   <div class="btnrow"><button class="primary" id="applyAiSvgBtn">▶ Terapkan HTML ke Preview</button></div>
+   <p class="notice">Pemeriksaan HTML mendeteksi struktur tag, CSS yang tidak seimbang, elemen visual kosong, dan JavaScript yang tidak didukung engine impor. Perbaikan lokal dapat merapikan struktur umum; kesalahan logika atau desain tetap perlu diperiksa manual.</p>
+   <div class="html-diagnostic-panel" id="htmlDiagnosticPanel">
+    <h4>HTML ERROR CHECK · PERIKSA & PERBAIKI</h4>
+    <div class="btnrow"><button type="button" id="validateHtmlBtn">Periksa HTML</button><button type="button" class="primary" id="repairHtmlCopyBtn">Perbaiki HTML Error</button></div>
+    <div id="htmlValidationReport" class="html-diagnostic-report" role="status" aria-live="polite">Belum ada pemeriksaan. Tempel HTML lalu tekan “Periksa HTML”.</div>
+    <label>Kolom perbaiki HTML (hasil koreksi)</label><textarea id="htmlRepairOutput" spellcheck="false" placeholder="Hasil HTML yang sudah diperbaiki akan tampil di sini..."></textarea>
+    <div class="btnrow"><button type="button" id="copyRepairedHtmlBtn">Salin HTML Perbaikan</button><button type="button" id="useRepairedHtmlBtn" class="green">Pindahkan ke Terminal</button></div>
+   </div>
+   <p class="notice">Jika tombol Paste Code tidak mendapat izin clipboard, klik terminal lalu tekan Ctrl+V. Terminal menerima dokumen HTML lengkap; bukan kode SVG. HTML bebas.</p>
+   <div class="status" id="aiModeStatus"></div>
+  </section>
+   <section class="panel"><h3><b>●</b> 2. WARNA & LATAR</h3>
    <label>Warna objek (untuk SVG sederhana)</label><div class="swatches" id="swatches">
     <button class="swatch active" data-color="#ffbd45" style="background:#ffbd45"></button><button class="swatch" data-color="#e87824" style="background:#e87824"></button><button class="swatch" data-color="#111827" style="background:#111827"></button><button class="swatch" data-color="#ffffff" style="background:#ffffff"></button><button class="swatch" data-color="#25b878" style="background:#25b878"></button><button class="swatch" data-color="#4c8dff" style="background:#4c8dff"></button><button class="swatch" data-color="#ef6389" style="background:#ef6389"></button>
    </div>
@@ -737,6 +807,7 @@ body[data-ui-layout="professional"] .visual-scene-card:focus-within{
     <div><strong>Multi-Track Timeline</strong><small id="mtTrackSummary">Komposisi utama · 1 track</small></div>
     <div class="mt-toolbar-actions"><button type="button" id="mtUndo" title="Undo · Ctrl+Z" disabled>↶ Undo</button><button type="button" id="mtRedo" title="Redo · Ctrl+Y" disabled>↷ Redo</button><button type="button" id="mtSnapToggle" aria-pressed="true" title="Snap ke frame, keyframe, marker, dan tepi klip">🧲 Snap ON</button><button type="button" id="mtBuildTracks" title="Pisahkan elemen SVG menjadi track yang dapat diedit">＋ Pecah SVG</button><button type="button" class="primary" id="mtAddMarker">＋ Marker</button><button type="button" id="mtClearMarkers">Hapus Marker</button></div>
    </div>
+   <div class="mt-toolbar-actions mt-group-toolbar" role="group" aria-label="Kontrol grup dan hierarki Multi-Track"><input id="mtGroupName" type="text" maxlength="28" placeholder="Nama grup / nama baru" aria-label="Nama grup"><button type="button" id="mtCreateGroup">▦ Buat Grup</button><button type="button" id="mtRenameGroup">Ganti Nama</button><select id="mtHierarchyParent" aria-label="Pilih parent grup"><option value="">— Parent —</option></select><button type="button" id="mtSetGroupParent">Jadikan Anak</button><button type="button" id="mtClearGroupParent">Lepas Parent</button><button type="button" id="mtGroupKeyframe">◆ Keyframe Grup</button><button type="button" id="mtToggleGroupVisibility">◉ Visibilitas Grup</button><button type="button" id="mtSelectGroupMembers">Pilih Isi Grup</button><button type="button" id="mtToggleGroupLock">🔒 Kunci Grup</button><button type="button" id="mtSoloGroup">◎ Solo Grup</button><button type="button" id="mtCollapseGroup">▾ Ciutkan Grup</button><button type="button" id="mtCollapseAllGroups">Ciutkan Semua</button><button type="button" id="mtExpandAllGroups">Bentangkan Semua</button><button type="button" id="mtDissolveGroup">Lepas Grup</button></div>
    <div class="mt-ruler-row"><div class="mt-track-name-head">TRACK / LAYER</div><div class="mt-ruler" id="mtRuler"></div></div>
    <div class="mt-track-list" id="mtTrackList"><div class="mt-empty">Muat aset untuk membuat track timeline.</div></div>
    <div class="mt-marker-shelf" id="mtMarkerShelf"><span class="mt-empty-marker">Belum ada marker. Posisikan playhead, lalu klik + Marker.</span></div>
@@ -1239,7 +1310,7 @@ window.TROZAL_AI_THEMES_READY=true;
 <script>
 const $=id=>document.getElementById(id);
 let sourceSvg='', sourceUrl='', sourceType='', files=[], playing=false, raf=0, startAt=0, playhead=0, lastBlob=null, lastDownloadName='animove-render.webm', currentColor='#ffbd45', currentMode='single', svgPieces=[], svgWasSplit=false, svgLayerNames=[], svgLayerHints=[], svgLayerSceneIndices=[], trozalSceneObjectSplitMode=false, preserveSvgColors=false, soloLayerIndex=-1, selectedLayerIndex=-1, layerKeyframes=[];
-let timelineMarkers=[], timelineTrackLocks={}, timelineDragState=null, keyframeGraphDragState=null;
+let timelineMarkers=[], timelineTrackLocks={}, timelineLayerGroups={}, timelineGroupParents={}, timelineGroupSelected={}, timelineGroupCollapsed={}, timelineGroupSoloSnapshot=null, timelineDragState=null, keyframeGraphDragState=null;
 let timelineSnapEnabled=true, motionPathDragState=null, trozalUndoStack=[], trozalUndoIndex=-1, trozalHistoryBusy=false;
 // HTML-to-Motion uses an isolated same-origin document and DOM capture; it is not rasterized through SVG foreignObject.
 let trozalMetadataActiveSource=null;
@@ -1706,8 +1777,9 @@ function renderSplitPieces(t){
    else if(range.fadeIn>0&&t<range.start)sceneAlpha=Math.max(0,Math.min(1,(t-(range.start-range.fadeIn))/range.fadeIn));
    else if(range.fadeOut>0&&t>range.end)sceneAlpha=Math.max(0,Math.min(1,1-(t-range.end)/range.fadeOut));
   }
-  el.style.transform=`translate(${m.x}%,${m.y}%) rotate(${m.rot}deg) scale(${m.scale})`;
-  el.style.opacity=m.alpha*sceneAlpha;el.style.display=visible&&solo&&sceneAlpha>0?'flex':'none';
+  const hierarchyOpacity=trozalLayerHierarchyOpacity(i,t);
+  el.style.transform=trozalLayerHierarchyTransform(i,t,m);
+  el.style.opacity=m.alpha*sceneAlpha*hierarchyOpacity;el.style.display=visible&&solo&&sceneAlpha>0&&hierarchyOpacity>0?'flex':'none';
  });
 }
 function assembleSvg(){svgWasSplit=false;svgPieces=[];svgLayerHints=[];if(sourceSvg)setObjectMarkup(sourceSvg);renderAt(playhead);setStatus('Layer SVG disatukan kembali menjadi objek utuh.')}
@@ -1785,14 +1857,47 @@ function mtSetPlayhead(time){
  $('scrubber').value=String(playhead/duration*1000);
  renderAt(playhead);
 }
+function trozalGroupColor(name){
+ const palette=['#72d6b5','#79b8ff','#d7a2ff','#ffb86b','#f28ba8','#a8d98a','#f0d477','#7edce5','#d5a7a0','#aab4ff'];
+ const value=String(name||'').trim();let hash=2166136261;for(let i=0;i<value.length;i++){hash^=value.charCodeAt(i);hash=Math.imul(hash,16777619);}return palette[(hash>>>0)%palette.length];
+}
+function trozalGroupDescendants(root){const out=new Set([root]);let changed=true;while(changed){changed=false;Object.entries(timelineGroupParents).forEach(([child,parent])=>{if(out.has(parent)&&!out.has(child)){out.add(child);changed=true;}});}return out;}
+function trozalGroupDirectMembers(group){return svgPieces.map((_,i)=>i).filter(i=>timelineLayerGroups[i]===group);}
+function trozalGroupMembers(group){const names=trozalGroupDescendants(group);return svgPieces.map((_,i)=>i).filter(i=>names.has(timelineLayerGroups[i]));}
+function trozalGroupDepth(name){let depth=0,seen=new Set(),parent=timelineGroupParents[name];while(parent&&!seen.has(parent)){seen.add(parent);depth++;parent=timelineGroupParents[parent];}return depth;}
+function trozalIsGroupCollapsedInPath(group){let current=group,seen=new Set();while(current&&!seen.has(current)){if(timelineGroupCollapsed[current])return true;seen.add(current);current=timelineGroupParents[current];}return false;}
+function trozalRefreshHierarchySelect(){const el=$('mtHierarchyParent');if(!el)return;const current=el.value,groups=[...new Set(Object.values(timelineLayerGroups).filter(Boolean))].sort((a,b)=>a.localeCompare(b));el.innerHTML='<option value="">— Parent —</option>'+groups.map(g=>'<option value="'+escapeLayerName(g)+'">'+('　'.repeat(Math.min(5,trozalGroupDepth(g)))+'▦ '+escapeLayerName(g))+'</option>').join('');if(groups.includes(current))el.value=current;}
+function trozalLayerHierarchyTransform(index,t,local){
+ const group=timelineLayerGroups[index];if(!group)return `translate(${local.x}%,${local.y}%) rotate(${local.rot}deg) scale(${local.scale})`;
+ const chain=[];let parent=timelineGroupParents[group],seen=new Set();while(parent&&!seen.has(parent)){seen.add(parent);chain.unshift(parent);parent=timelineGroupParents[parent];}
+ const parts=[];chain.forEach(name=>{const driver=trozalGroupDirectMembers(name)[0];if(driver===undefined)return;const m=getLayerMotion(driver,t);parts.push(`translate(${m.x}%,${m.y}%) rotate(${m.rot}deg) scale(${m.scale})`);});
+ parts.push(`translate(${local.x}%,${local.y}%) rotate(${local.rot}deg) scale(${local.scale})`);return parts.join(' ');
+}
+function trozalLayerHierarchyOpacity(index,t){
+ const group=timelineLayerGroups[index];if(!group)return 1;let opacity=1,parent=timelineGroupParents[group],seen=new Set();
+ while(parent&&!seen.has(parent)){seen.add(parent);const driver=trozalGroupDirectMembers(parent)[0];if(driver!==undefined)opacity*=Math.max(0,Math.min(1,getLayerMotion(driver,t).alpha));parent=timelineGroupParents[parent];}return opacity;
+}
+function addGroupKeyframe(){
+ const i=selectedLayerIndex,group=timelineLayerGroups[i];if(!group){setStatus('Pilih layer anggota grup terlebih dahulu.');return;}
+ const members=trozalGroupDirectMembers(group);if(members.length<2){setStatus('Grup harus memiliki minimal dua layer.');return;}
+ if(members.some(n=>timelineTrackLocks[n])){setStatus('Ada anggota grup yang terkunci. Buka kunci semua anggota sebelum membuat keyframe grup.');return;}
+ const read=(id,d)=>{const el=$(id+i),v=el&&el.value!==''?Number(el.value):d;return Number.isFinite(v)?v:d;};
+ const t=trozalSnapTime($('kfAuto'+i)?.checked?playhead:read('kfTime',playhead),{layer:i}),ease=$('kfEase'+i)?.value||'easeInOut';
+ const bezier={x1:Math.max(0,Math.min(1,read('kfBx1',.25))),y1:Math.max(-2,Math.min(2,read('kfBy1',.1))),x2:Math.max(0,Math.min(1,read('kfBx2',.25))),y2:Math.max(-2,Math.min(2,read('kfBy2',1)))};
+ const frame={t,x:read('kfX',0),y:read('kfY',0),rot:read('kfRot',0),scale:Math.max(.01,Math.min(5,read('kfScale',100)/100)),alpha:Math.max(0,Math.min(1,read('kfAlpha',100)/100)),ease,bezier};
+ trozalHistoryBegin();members.forEach(n=>{layerKeyframes[n]=layerKeyframes[n]||[];const copy={...frame,bezier:{...bezier}},at=layerKeyframes[n].findIndex(k=>Math.abs(k.t-t)<.001);if(at>=0)layerKeyframes[n][at]=copy;else layerKeyframes[n].push(copy);layerKeyframes[n].sort((a,b)=>a.t-b.t);const time=$('kfTime'+n);if(time)time.value=t.toFixed(2);paintLayerKeyframes(n);});
+ renderAt(playhead);scheduleAutosave();trozalHistoryCommit('Keyframe grup '+group);setStatus('Keyframe grup "'+group+'" disimpan untuk '+members.length+' layer pada '+t.toFixed(2)+' detik.');
+}
 function mtSelectLayer(index){
  selectedLayerIndex=index;
  document.querySelectorAll('.layer-control').forEach((card,i)=>card.classList.toggle('selected-layer',i===index));
- document.querySelectorAll('.mt-track-row').forEach((row,i)=>row.classList.toggle('selected',i===index));
+ document.querySelectorAll('.mt-track-row').forEach(row=>row.classList.toggle('selected',Number(row.dataset.mtRow)===index));
+ const group=timelineLayerGroups[index]||'',collapse=$('mtCollapseGroup');if(collapse)collapse.textContent=group&&timelineGroupCollapsed[group]?'▸ Bentangkan Grup':'▾ Ciutkan Grup';
 }
 function refreshTimelineEditor(){
  const editor=$('multiTrackEditor'),ruler=$('mtRuler'),list=$('mtTrackList'),shelf=$('mtMarkerShelf');
  if(!editor||!ruler||!list||!shelf)return;
+ trozalRefreshHierarchySelect();
  const duration=Math.max(.1,+$('duration').value||10),oldScroll=list.scrollTop;
  const step=duration<=10?1:duration<=20?2:5;
  let ticks='';
@@ -1809,8 +1914,13 @@ function refreshTimelineEditor(){
    const time=mtLayerTimes(i),left=time.start/duration*100,width=Math.max(.6,(time.end-time.start)/duration*100);
    const visible=$('autoLayerVisible'+i)?.checked!==false,locked=!!timelineTrackLocks[i],name=escapeLayerName(svgLayerNames[i]||('Layer '+(i+1)));
    const markers=timelineMarkers.map(m=>'<i class="mt-marker-line" style="left:'+Math.max(0,Math.min(100,Number(m.t)/duration*100))+'%"></i>').join('');
-   return '<div class="mt-track-row '+(selectedLayerIndex===i?'selected':'')+'" data-mt-row="'+i+'">'+
+   const group=timelineLayerGroups[i]||'',parent=group?(timelineGroupParents[group]||''):'',depth=group?trozalGroupDepth(group):0;
+   if(group&&trozalIsGroupCollapsedInPath(group))return '';
+   const hierarchyPath=group?([...(()=>{const path=[],seen=new Set();let p=parent;while(p&&!seen.has(p)){seen.add(p);path.unshift(p);p=timelineGroupParents[p];}return path;})(),group].join(' / ')):'';
+   return '<div class="mt-track-row '+(selectedLayerIndex===i?'selected':'')+'" data-mt-row="'+i+'" data-mt-depth="'+depth+'">'+
     '<div class="mt-track-label">'+
+     '<input type="checkbox" class="mt-group-pick" data-mt-group-pick="'+i+'" aria-label="Pilih layer untuk grup" '+(timelineGroupSelected[i]?'checked':'')+'>'+
+     (group?'<span class="mt-group-tag" style="background:'+trozalGroupColor(group)+'22;color:'+trozalGroupColor(group)+';border:1px solid '+trozalGroupColor(group)+'66" title="Hierarki: '+escapeLayerName(hierarchyPath)+'">▦ '+escapeLayerName(group)+'</span>'+(parent?'<span class="mt-hierarchy-tag" title="Anak dari grup '+escapeLayerName(parent)+'">↳ '+escapeLayerName(parent)+'</span>':''):'')+
      '<button type="button" class="mt-eye" data-mt-eye="'+i+'" title="Tampilkan/sembunyikan layer">'+(visible?'◉':'○')+'</button>'+
      '<button type="button" class="mt-lock '+(locked?'locked':'')+'" data-mt-lock="'+i+'" aria-pressed="'+locked+'" title="Kunci klip di timeline">'+(locked?'🔒':'↔')+'</button>'+
      '<button type="button" class="mt-name" data-mt-select="'+i+'" title="'+name+'">'+name+'</button>'+
@@ -1853,11 +1963,47 @@ function wireMultiTrackEditor(){
   trozalHistoryBegin();const marker={id:'marker-'+Date.now(),t:Number(trozalSnapTime(playhead).toFixed(3)),label:'Marker '+String(timelineMarkers.length+1).padStart(2,'0')};
   timelineMarkers.push(marker);refreshTimelineEditor();scheduleAutosave();setStatus('Marker ditambahkan pada '+marker.t.toFixed(2)+' detik.');trozalHistoryCommit('Tambah marker');
  };
+ $('mtCreateGroup').onclick=()=>{
+  const chosen=Object.keys(timelineGroupSelected).filter(k=>timelineGroupSelected[k]&&Number(k)<svgPieces.length).map(Number);
+  if(chosen.length<2){setStatus('Pilih minimal dua layer untuk membuat grup.');return;}
+  const name=String($('mtGroupName').value||'').trim().replace(/\s+/g,' ')||('Grup '+(new Set(Object.values(timelineLayerGroups)).size+1));
+  if(name.length>28){setStatus('Nama grup maksimal 28 karakter.');return;}
+  if(new Set(Object.values(timelineLayerGroups).filter(Boolean)).has(name)){setStatus('Nama grup sudah digunakan. Pilih nama lain.');$('mtGroupName').focus();return;}
+  trozalHistoryBegin();chosen.forEach(i=>{timelineLayerGroups[i]=name;delete timelineGroupSelected[i];});refreshTimelineEditor();scheduleAutosave();trozalHistoryCommit('Buat grup '+name);setStatus('Grup "'+name+'" dibuat dari '+chosen.length+' layer.');
+ };
+ $('mtRenameGroup').onclick=()=>{
+  const old=timelineLayerGroups[selectedLayerIndex],name=String($('mtGroupName').value||'').trim().replace(/\s+/g,' ');
+  if(!old){setStatus('Pilih layer anggota grup yang akan diganti namanya.');return;}
+  if(!name||name.length>28){setStatus('Nama grup baru wajib diisi dan maksimal 28 karakter.');return;}
+  if(name===old){setStatus('Nama grup tidak berubah.');return;}
+  if(new Set(Object.values(timelineLayerGroups).filter(Boolean)).has(name)){setStatus('Nama grup sudah digunakan.');return;}
+  trozalHistoryBegin();Object.keys(timelineLayerGroups).forEach(k=>{if(timelineLayerGroups[k]===old)timelineLayerGroups[k]=name;});
+  if(Object.prototype.hasOwnProperty.call(timelineGroupParents,old)){timelineGroupParents[name]=timelineGroupParents[old];delete timelineGroupParents[old];}
+  Object.keys(timelineGroupParents).forEach(k=>{if(timelineGroupParents[k]===old)timelineGroupParents[k]=name;});
+  refreshTimelineEditor();scheduleAutosave();trozalHistoryCommit('Ganti nama grup');setStatus('Nama grup "'+old+'" diubah menjadi "'+name+'".');
+ };
+ $('mtSetGroupParent').onclick=()=>{
+  const child=timelineLayerGroups[selectedLayerIndex],parent=$('mtHierarchyParent')?.value||'';
+  if(!child||!parent){setStatus('Pilih layer anggota grup dan parent grup.');return;}
+  if(child===parent||trozalGroupDescendants(child).has(parent)){setStatus('Relasi ini akan membuat siklus hierarki. Pilih parent lain.');return;}
+  trozalHistoryBegin();timelineGroupParents[child]=parent;refreshTimelineEditor();scheduleAutosave();trozalHistoryCommit('Atur hierarki grup');setStatus('Grup "'+child+'" menjadi anak dari "'+parent+'".');
+ };
+ $('mtClearGroupParent').onclick=()=>{const child=timelineLayerGroups[selectedLayerIndex];if(!child||!timelineGroupParents[child]){setStatus('Grup terpilih tidak memiliki parent.');return;}trozalHistoryBegin();delete timelineGroupParents[child];refreshTimelineEditor();scheduleAutosave();trozalHistoryCommit('Lepas parent grup');setStatus('Parent grup dilepas; grup kembali menjadi root.');};
+ $('mtGroupKeyframe').onclick=addGroupKeyframe;
+ $('mtToggleGroupVisibility').onclick=()=>{const group=timelineLayerGroups[selectedLayerIndex];if(!group){setStatus('Pilih layer anggota grup.');return;}const members=trozalGroupMembers(group),hide=members.some(i=>$('autoLayerVisible'+i)?.checked!==false);trozalHistoryBegin();members.forEach(i=>{const el=$('autoLayerVisible'+i);if(el)el.checked=!hide;});renderAt(playhead);refreshTimelineEditor();scheduleAutosave();trozalHistoryCommit('Visibilitas grup');setStatus('Visibilitas grup "'+group+'" diperbarui.');};
+ $('mtSelectGroupMembers').onclick=()=>{const group=timelineLayerGroups[selectedLayerIndex];if(!group){setStatus('Pilih layer anggota grup.');return;}const members=trozalGroupMembers(group),all=members.every(i=>!!timelineGroupSelected[i]);Object.keys(timelineGroupSelected).forEach(k=>delete timelineGroupSelected[k]);if(!all)members.forEach(i=>timelineGroupSelected[i]=true);refreshTimelineEditor();setStatus(all?'Pilihan anggota grup dibatalkan.':'Seluruh anggota grup dan turunannya dipilih.');};
+ $('mtToggleGroupLock').onclick=()=>{const group=timelineLayerGroups[selectedLayerIndex];if(!group){setStatus('Pilih layer anggota grup.');return;}const members=trozalGroupMembers(group),lock=members.some(i=>!timelineTrackLocks[i]);trozalHistoryBegin();members.forEach(i=>timelineTrackLocks[i]=lock);refreshTimelineEditor();scheduleAutosave();trozalHistoryCommit('Kunci grup');setStatus('Status kunci '+members.length+' layer grup diperbarui.');};
+ $('mtSoloGroup').onclick=()=>{if(timelineGroupSoloSnapshot){svgPieces.forEach((_,i)=>{const el=$('autoLayerVisible'+i);if(el&&Object.prototype.hasOwnProperty.call(timelineGroupSoloSnapshot,i))el.checked=timelineGroupSoloSnapshot[i];});timelineGroupSoloSnapshot=null;$('mtSoloGroup').textContent='◎ Solo Grup';renderAt(playhead);refreshTimelineEditor();setStatus('Mode Solo Grup dimatikan.');return;}const group=timelineLayerGroups[selectedLayerIndex];if(!group){setStatus('Pilih layer anggota grup.');return;}const members=new Set(trozalGroupMembers(group)),snapshot={};svgPieces.forEach((_,i)=>{const el=$('autoLayerVisible'+i);snapshot[i]=el?el.checked:true;if(el&&!members.has(i))el.checked=false;});timelineGroupSoloSnapshot=snapshot;$('mtSoloGroup').textContent='↩ Pulihkan Solo';renderAt(playhead);refreshTimelineEditor();setStatus('Mode Solo untuk grup "'+group+'" aktif.');};
+ $('mtCollapseGroup').onclick=()=>{const group=timelineLayerGroups[selectedLayerIndex];if(!group){setStatus('Pilih layer anggota grup.');return;}if(timelineGroupCollapsed[group])delete timelineGroupCollapsed[group];else timelineGroupCollapsed[group]=true;refreshTimelineEditor();setStatus('Tampilan grup "'+group+'" diperbarui.');};
+ $('mtCollapseAllGroups').onclick=()=>{const groups=[...new Set([...Object.values(timelineLayerGroups),...Object.keys(timelineGroupParents),...Object.values(timelineGroupParents)].filter(Boolean))];groups.forEach(g=>timelineGroupCollapsed[g]=true);refreshTimelineEditor();setStatus(groups.length+' grup diciutkan.');};
+ $('mtExpandAllGroups').onclick=()=>{timelineGroupCollapsed={};refreshTimelineEditor();setStatus('Semua grup dibentangkan.');};
+ $('mtDissolveGroup').onclick=()=>{const group=timelineLayerGroups[selectedLayerIndex];if(!group){setStatus('Pilih layer dalam grup yang akan dilepas.');return;}const parent=timelineGroupParents[group]||'',children=Object.keys(timelineGroupParents).filter(k=>timelineGroupParents[k]===group);trozalHistoryBegin();svgPieces.forEach((_,i)=>{if(timelineLayerGroups[i]===group)delete timelineLayerGroups[i];});delete timelineGroupParents[group];children.forEach(k=>{if(parent)timelineGroupParents[k]=parent;else delete timelineGroupParents[k];});delete timelineGroupCollapsed[group];refreshTimelineEditor();scheduleAutosave();trozalHistoryCommit('Lepas grup');setStatus('Grup dilepas; '+children.length+' grup anak dipertahankan.');};
  $('mtClearMarkers').onclick=()=>{
   if(!timelineMarkers.length){setStatus('Belum ada marker untuk dihapus.');return;}
   trozalHistoryBegin();timelineMarkers=[];refreshTimelineEditor();scheduleAutosave();setStatus('Semua marker timeline dihapus.');trozalHistoryCommit('Hapus semua marker');
  };
  editor.addEventListener('click',e=>{
+  const pick=e.target.closest('[data-mt-group-pick]');if(pick){const i=Number(pick.dataset.mtGroupPick);timelineGroupSelected[i]=pick.checked;return;}
   const eye=e.target.closest('[data-mt-eye]');
   if(eye){const i=Number(eye.dataset.mtEye),el=$('autoLayerVisible'+i);if(el){trozalHistoryBegin();el.checked=!el.checked;renderAt(playhead);refreshTimelineEditor();scheduleAutosave();trozalHistoryCommit('Visibilitas layer '+(i+1));}return;}
   const lock=e.target.closest('[data-mt-lock]');
@@ -1890,9 +2036,12 @@ function wireMultiTrackEditor(){
   const clip=e.target.closest('[data-mt-clip]');if(!clip)return;
   const i=Number(clip.dataset.mtClip);mtSelectLayer(i);
   if(timelineTrackLocks[i]){setStatus('Track terkunci. Buka kunci sebelum memindahkan atau trim klip.');e.preventDefault();return;}
-  const time=mtLayerTimes(i),edge=e.target.closest('[data-mt-edge]')?.dataset.mtEdge||'move';
+  const time=mtLayerTimes(i),edge=e.target.closest('[data-mt-edge]')?.dataset.mtEdge||'move',group=timelineLayerGroups[i]||'';
+  const groupMembers=edge==='move'&&group?svgPieces.map((_,j)=>j).filter(j=>timelineLayerGroups[j]===group):[i];
+  if(groupMembers.some(j=>timelineTrackLocks[j])){setStatus('Ada anggota grup yang terkunci. Buka kunci semua anggota sebelum menggeser grup.');e.preventDefault();return;}
+  const memberTimes=groupMembers.map(j=>({index:j,...mtLayerTimes(j)}));
   const lane=clip.parentElement,rect=lane.getBoundingClientRect();
-  trozalHistoryBegin();timelineDragState={index:i,edge,pointerX:e.clientX,laneWidth:Math.max(1,rect.width),duration:time.duration,start:time.start,end:time.end,delay:time.delay};
+  trozalHistoryBegin();timelineDragState={index:i,group,groupMembers,memberTimes,edge,pointerX:e.clientX,laneWidth:Math.max(1,rect.width),duration:time.duration,start:time.start,end:time.end,delay:time.delay};
   e.preventDefault();
  });
  window.addEventListener('pointermove',e=>{
@@ -1906,18 +2055,18 @@ function wireMultiTrackEditor(){
    start=trozalClamp(trozalSnapTime(Math.max(drag.delay,Math.min(drag.duration-length,drag.start+delta)),{layer:drag.index}),drag.delay,Math.max(drag.delay,drag.duration-length));
    end=start+length;
   }
-  const startInput=$('autoLayerStart'+drag.index),endInput=$('autoLayerEnd'+drag.index);
-  if(startInput)startInput.value=Math.max(0,start-drag.delay).toFixed(2);
-  if(endInput)endInput.value=end.toFixed(2);
-  const clip=document.querySelector('[data-mt-clip="'+drag.index+'"]');
-  if(clip){clip.style.left=(start/drag.duration*100)+'%';clip.style.width=(Math.max(.6,(end-start)/drag.duration*100))+'%';}
+  const targets=drag.edge==='move'&&drag.groupMembers?.length>1?drag.memberTimes:[{index:drag.index,duration:drag.duration,delay:drag.delay,start:drag.start,end:drag.end}];
+  targets.forEach(member=>{let memberStart=start,memberEnd=end;if(drag.edge==='move'&&drag.groupMembers?.length>1){const length=member.end-member.start;memberStart=trozalClamp(member.start+(start-drag.start),member.delay,Math.max(member.delay,member.duration-length));memberStart=trozalSnapTime(memberStart,{layer:member.index});memberEnd=memberStart+length;}
+   const startInput=$('autoLayerStart'+member.index),endInput=$('autoLayerEnd'+member.index);if(startInput)startInput.value=Math.max(0,memberStart-member.delay).toFixed(2);if(endInput)endInput.value=memberEnd.toFixed(2);
+   const targetClip=document.querySelector('[data-mt-clip="'+member.index+'"]');if(targetClip){targetClip.style.left=(memberStart/member.duration*100)+'%';targetClip.style.width=(Math.max(.6,(memberEnd-memberStart)/member.duration*100))+'%';}
+  });
   renderAt(playhead);
  });
  window.addEventListener('pointerup',()=>{
   if(!timelineDragState)return;
-  const index=timelineDragState.index;timelineDragState=null;
+  const drag=timelineDragState,index=drag.index;timelineDragState=null;
   refreshTimelineEditor();scheduleAutosave();
-  setStatus('Klip layer '+(index+1)+' diperbarui pada timeline.');trozalHistoryCommit('Pindah / trim klip layer '+(index+1));
+  setStatus(drag.edge==='move'&&drag.group?'Grup "'+drag.group+'" digeser bersama.':'Klip layer '+(index+1)+' diperbarui pada timeline.');trozalHistoryCommit(drag.group?'Geser grup '+drag.group:'Pindah / trim klip layer '+(index+1));
  });
  const objectObserver=typeof MutationObserver!=='undefined'?new MutationObserver(()=>refreshTimelineEditor()):null;
  if(objectObserver&&$('object'))objectObserver.observe($('object'),{childList:true});
@@ -1939,7 +2088,7 @@ function trozalSnapTime(value,opts={}){
 function updateSnapButton(){const b=$('mtSnapToggle');if(!b)return;b.textContent=timelineSnapEnabled?'🧲 Snap ON':'🧲 Snap OFF';b.setAttribute('aria-pressed',String(timelineSnapEnabled));b.title=timelineSnapEnabled?'Snap aktif: frame, keyframe, marker, dan tepi klip':'Snap nonaktif'}
 function trozalHistorySnapshot(){
  const controls={};document.querySelectorAll('#autoLayerControls input, #autoLayerControls select').forEach(el=>{if(!el.id)return;controls[el.id]=el.type==='checkbox'?{checked:el.checked}:{value:el.value}});
- return JSON.stringify({layerKeyframes,timelineMarkers,timelineTrackLocks,controls,playhead});
+ return JSON.stringify({layerKeyframes,timelineMarkers,timelineTrackLocks,timelineLayerGroups,timelineGroupParents,timelineGroupCollapsed,controls,playhead});
 }
 function trozalHistoryPush(label){
  if(trozalHistoryBusy)return;const state=trozalHistorySnapshot();if(trozalUndoIndex>=0&&trozalUndoStack[trozalUndoIndex]?.state===state)return;
@@ -1951,7 +2100,7 @@ function trozalHistoryCommit(label){trozalHistoryPush(label||'Perubahan')}
 function updateHistoryButtons(){const u=$('mtUndo'),r=$('mtRedo');if(u)u.disabled=trozalUndoIndex<=0;if(r)r.disabled=trozalUndoIndex<0||trozalUndoIndex>=trozalUndoStack.length-1}
 function trozalRestoreHistory(index){
  if(index<0||index>=trozalUndoStack.length)return;trozalHistoryBusy=true;
- try{const snap=JSON.parse(trozalUndoStack[index].state);layerKeyframes=Array.isArray(snap.layerKeyframes)?snap.layerKeyframes:[];timelineMarkers=Array.isArray(snap.timelineMarkers)?snap.timelineMarkers:[];timelineTrackLocks=snap.timelineTrackLocks||{};
+ try{const snap=JSON.parse(trozalUndoStack[index].state);layerKeyframes=Array.isArray(snap.layerKeyframes)?snap.layerKeyframes:[];timelineMarkers=Array.isArray(snap.timelineMarkers)?snap.timelineMarkers:[];timelineTrackLocks=snap.timelineTrackLocks||{};timelineLayerGroups=snap.timelineLayerGroups||{};timelineGroupParents=snap.timelineGroupParents||{};timelineGroupCollapsed=snap.timelineGroupCollapsed||{};
   Object.entries(snap.controls||{}).forEach(([id,v])=>{const el=$(id);if(!el)return;if('checked'in v)el.checked=!!v.checked;else if('value'in v)el.value=v.value});
   playhead=trozalClamp(Number(snap.playhead)||0,0,+$('duration').value||10);for(let i=0;i<svgPieces.length;i++)paintLayerKeyframes(i);
   renderAt(playhead);refreshTimelineEditor();scheduleAutosave();trozalUndoIndex=index;updateHistoryButtons();setStatus('Undo/Redo: '+(trozalUndoStack[index].label||'perubahan')+' dipulihkan.');
@@ -2788,7 +2937,11 @@ try{
    else if(range.fadeOut>0&&elapsed>range.end)sceneAlpha=Math.max(0,Math.min(1,1-(elapsed-range.end)/range.fadeOut));
   }
   if(sceneAlpha<=0)return;
-  const lm=getLayerMotion(i,elapsed);ctx.save();ctx.globalAlpha=lm.alpha*sceneAlpha;drawContained(pi,lm.x*w/100,lm.y*h/100,lm.rot,lm.scale);ctx.restore();
+  const lm=getLayerMotion(i,elapsed),group=timelineLayerGroups[i]||'',chain=[];let parent=group?timelineGroupParents[group]||'':'';const seen=new Set();while(parent&&!seen.has(parent)){seen.add(parent);chain.unshift(parent);parent=timelineGroupParents[parent]||'';}
+  ctx.save();ctx.globalAlpha=lm.alpha*sceneAlpha;
+  const blurMax=Math.max(0,Number($('motionBlurAmount')?.value)||0);if($('motionBlurEnabled')?.checked&&blurMax>0){const previous=getLayerMotion(i,Math.max(0,elapsed-1/Math.max(1,+$('fps').value||30)));const motionDelta=Math.hypot(lm.x-previous.x,lm.y-previous.y)+Math.abs(lm.rot-previous.rot)*.08;const blur=Math.min(blurMax,motionDelta*.12);if(blur>.05)ctx.filter='blur('+blur.toFixed(2)+'px)';}
+  chain.forEach(name=>{const driver=trozalGroupDirectMembers(name)[0];if(driver===undefined)return;const gm=getLayerMotion(driver,elapsed);ctx.translate(gm.x*w/100,gm.y*h/100);ctx.rotate(gm.rot*Math.PI/180);ctx.scale(gm.scale,gm.scale);ctx.globalAlpha*=Math.max(0,Math.min(1,gm.alpha));});
+  drawContained(pi,lm.x*w/100,lm.y*h/100,lm.rot,lm.scale);ctx.restore();
  })}
  else if(svgImg)drawContained(svgImg);else if(img)drawContained(img);else{ctx.fillStyle=currentColor;ctx.beginPath();ctx.arc(0,0,Math.min(ow,oh)/3,0,Math.PI*2);ctx.fill()}
  applyShapeMaskToCanvas(ctx,baseW,baseH,shapeState,elapsed);
@@ -2856,12 +3009,12 @@ $('exportFrames').onclick=exportCurrentFramePng;
  }
 })();
 function getProject(){
- const ids=['shapeMaskType','shapeMaskMode','shapeMaskSize','shapeMaskRotation','shapeMaskX','shapeMaskY','shapePathColor','shapePathWidth','shapePathData','objectName','duration','fps','resolution','proresMode','animation','speed','intensity','scale','posX','posY','rotation','opacity','bgMode','customBg','effectPreset','effectIntensity','effectColor','particleCount','particleSpeed','format','quality','mp4Crf','renderSpeedMode','textLayerContent','textLayerFont','textLayerWeight','textLayerSize','textLayerColor','textLayerAlign','textLayerTracking','textLayerX','textLayerY','textLayerStart','textLayerDuration','textLayerAnimation','visualMotionPrompt','visualMotionRatio','visualMotionDuration','visualMotionStyle','visualMotionCamera','visualMotionTransition','visualMotionAccent','metadataPlatform','metadataSubject','metadataTitle','metadataDescription','metadataCategory','metadataKeywords'];
- const checks=['shapeMaskEnabled','shapePathReveal','transparentBg','sparkles','shadow','loop','effectOn','textLayerEnabled','visualMotionParticles','visualMotionDepth'];
+ const ids=['shapeMaskType','shapeMaskMode','shapeMaskSize','shapeMaskRotation','shapeMaskX','shapeMaskY','shapePathColor','shapePathWidth','shapePathData','objectName','duration','fps','resolution','proresMode','animation','speed','intensity','scale','posX','posY','rotation','opacity','bgMode','customBg','effectPreset','effectIntensity','effectColor','particleCount','particleSpeed','format','quality','mp4Crf','renderSpeedMode','textLayerContent','textLayerFont','textLayerWeight','textLayerSize','textLayerColor','textLayerAlign','textLayerTracking','textLayerX','textLayerY','textLayerStart','textLayerDuration','textLayerAnimation','visualMotionPrompt','visualMotionRatio','visualMotionDuration','visualMotionStyle','visualMotionCamera','visualMotionTransition','visualMotionAccent','motionBlurAmount','metadataPlatform','metadataSubject','metadataTitle','metadataDescription','metadataCategory','metadataKeywords'];
+ const checks=['shapeMaskEnabled','shapePathReveal','transparentBg','sparkles','shadow','loop','effectOn','textLayerEnabled','visualMotionParticles','visualMotionDepth','motionBlurEnabled'];
  const controls={};ids.forEach(k=>{if($(k))controls[k]=$(k).value});
  checks.forEach(k=>{if($(k))controls[k]=$(k).checked});
  const layers=svgPieces.map((piece,i)=>{const l={svg:piece,name:svgLayerNames[i]||('Layer '+(i+1))};['Visible','On','In','Out','Loop','Delay','Start','End','Duration','Speed','Intensity','Scale','Rotation','Direction'].forEach(k=>{const el=$('autoLayer'+k+i);if(el)l[k.toLowerCase()]=el.type==='checkbox'?el.checked:el.value});l.autoKey=!!$('kfAuto'+i)?.checked;return l});
- saveActiveTextLayer();syncActiveMaskFromControls();return {app:'ANIMOVE',version:12,stage:15,visualSceneSequence:Array.isArray(visualSceneSequence)?visualSceneSequence.map(x=>({...x})):[],shapeMaskLayers:shapeMaskLayers.map(x=>({...x})),activeShapeMask,nativeTextLayers:nativeTextLayers.map(x=>({...x})),selectedTextLayerId,timelineSnapEnabled,savedAt:new Date().toISOString(),controls,currentColor,playhead,sourceSvg,sourceType,sourceName:$('objectName').value,svgWasSplit,svgPieces:[...svgPieces],svgLayerNames:[...svgLayerNames],svgLayerHints:[...svgLayerHints],layerKeyframes:layerKeyframes.map(a=>(a||[]).map(k=>({...k}))),timelineMarkers:timelineMarkers.map(m=>({...m})),timelineTrackLocks:{...timelineTrackLocks},layers};
+ saveActiveTextLayer();syncActiveMaskFromControls();return {app:'ANIMOVE',version:12,stage:15,visualSceneSequence:Array.isArray(visualSceneSequence)?visualSceneSequence.map(x=>({...x})):[],shapeMaskLayers:shapeMaskLayers.map(x=>({...x})),activeShapeMask,nativeTextLayers:nativeTextLayers.map(x=>({...x})),selectedTextLayerId,timelineSnapEnabled,savedAt:new Date().toISOString(),controls,currentColor,playhead,sourceSvg,sourceType,sourceName:$('objectName').value,svgWasSplit,svgPieces:[...svgPieces],svgLayerNames:[...svgLayerNames],svgLayerHints:[...svgLayerHints],layerKeyframes:layerKeyframes.map(a=>(a||[]).map(k=>({...k}))),timelineMarkers:timelineMarkers.map(m=>({...m})),timelineTrackLocks:{...timelineTrackLocks},timelineLayerGroups:{...timelineLayerGroups},timelineGroupParents:{...timelineGroupParents},timelineGroupCollapsed:{...timelineGroupCollapsed},layers};
 }
 function applyProject(p){
  if(!p||p.app!=='ANIMOVE')throw new Error('File bukan proyek trozal_MOTION');
@@ -2871,8 +3024,8 @@ function applyProject(p){
  selectedTextLayerId=nativeTextLayers.some(x=>x.id===p.selectedTextLayerId)?p.selectedTextLayerId:nativeTextLayers[0].id;
  textLayerIdCounter=Math.max(nativeTextLayers.length,...nativeTextLayers.map(x=>Number(String(x.id).replace(/\\D/g,''))||0));
 
- Object.entries(c).forEach(([k,v])=>{if($(k)){if(['shapeMaskEnabled','shapePathReveal','transparentBg','sparkles','shadow','loop','effectOn','visualMotionParticles','visualMotionDepth'].includes(k))$(k).checked=!!v;else $(k).value=v}});
- visualSceneSequence=Array.isArray(p.visualSceneSequence)?p.visualSceneSequence.slice(0,12).map((x,i)=>({id:String(x.id||('scene-restored-'+i)),text:String(x.text||''),duration:Math.max(.5,Math.min(60,Number(x.duration)||1)),transition:String(x.transition||'crossfade'),camera:String(x.camera||'parallax'),style:String(x.style||'cinematic')})):[];
+ Object.entries(c).forEach(([k,v])=>{if($(k)){if(['shapeMaskEnabled','shapePathReveal','transparentBg','sparkles','shadow','loop','effectOn','visualMotionParticles','visualMotionDepth','motionBlurEnabled'].includes(k))$(k).checked=!!v;else $(k).value=v}});
+ visualSceneSequence=Array.isArray(p.visualSceneSequence)?p.visualSceneSequence.slice(0,12).map((x,i)=>({id:String(x.id||('scene-restored-'+i)),text:String(x.text||''),duration:Math.max(.5,Math.min(60,Number(x.duration)||1)),transition:String(x.transition||'crossfade'),camera:String(x.camera||'parallax'),style:String(x.style||'cinematic'),choreography:String(x.choreography||'auto'),motionIntensity:Math.max(0,Math.min(150,Number(x.motionIntensity??35)))})):[];
  if(typeof renderVisualSceneSequence==='function')renderVisualSceneSequence();
  if(p.currentColor)currentColor=p.currentColor;
  if(shapeMaskLayers.length){loadActiveMaskControls();refreshMaskManager()}else{shapeMaskLayers=[{...shapeMaskState(),name:'Mask 1'}];activeShapeMask=0;refreshMaskManager()}
@@ -2883,7 +3036,7 @@ function applyProject(p){
  svgLayerHints=Array.isArray(p.svgLayerHints)?p.svgLayerHints.slice():svgPieces.map((piece,i)=>{try{const d=new DOMParser().parseFromString(piece,'image/svg+xml');const n=[...d.documentElement.children].find(x=>!['defs','style','title','desc','metadata'].includes(x.localName));return n?analyzeSvgLayer({node:n,ancestors:[]},i,svgPieces.length):{kind:'detail',entrance:0,loop:0,intensity:0,reason:'Layer dipulihkan; gerakan tetap statis.'}}catch(e){return {kind:'detail',entrance:0,loop:0,intensity:0,reason:'Layer dipulihkan; gerakan tetap statis.'}}});
  svgWasSplit=!!p.svgWasSplit&&svgPieces.length>0;
  timelineMarkers=Array.isArray(p.timelineMarkers)?p.timelineMarkers.map(m=>({id:String(m.id||('marker-'+Date.now())),t:Math.max(0,Number(m.t)||0),label:String(m.label||'Marker')})):[];
- timelineTrackLocks=p.timelineTrackLocks&&typeof p.timelineTrackLocks==='object'?{...p.timelineTrackLocks}:{};timelineSnapEnabled=p.timelineSnapEnabled!==false;updateSnapButton?.();
+ timelineTrackLocks=p.timelineTrackLocks&&typeof p.timelineTrackLocks==='object'?{...p.timelineTrackLocks}:{};timelineLayerGroups=p.timelineLayerGroups&&typeof p.timelineLayerGroups==='object'?{...p.timelineLayerGroups}:{};timelineGroupParents=p.timelineGroupParents&&typeof p.timelineGroupParents==='object'?{...p.timelineGroupParents}:{};timelineGroupCollapsed=p.timelineGroupCollapsed&&typeof p.timelineGroupCollapsed==='object'?{...p.timelineGroupCollapsed}:{};timelineGroupSelected={};timelineGroupSoloSnapshot=null;timelineSnapEnabled=p.timelineSnapEnabled!==false;updateSnapButton?.();
  if(svgWasSplit){
    buildAutoLayerControls();
    layerKeyframes.forEach((a,i)=>paintLayerKeyframes(i));
@@ -2981,13 +3134,14 @@ document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.que
  const renderEditorList=()=>{list.replaceChildren();currentPanels().forEach((p,index)=>{const row=document.createElement('div');row.className='workspace-row';const title=document.createElement('strong');title.textContent=String(index+1).padStart(2,'0')+' · '+panelTitle(p);const up=document.createElement('button');up.type='button';up.textContent='↑';up.title='Pindah ke atas';up.setAttribute('aria-label','Pindahkan adegan '+(index+1)+' ke atas');up.disabled=index===0;up.addEventListener('click',()=>movePanel(index,-1));const down=document.createElement('button');down.type='button';down.textContent='↓';down.title='Pindah ke bawah';down.disabled=index===panels.length-1;down.addEventListener('click',()=>movePanel(index,1));row.append(title,up,down);list.appendChild(row)});};
  const movePanel=(index,delta)=>{const ordered=currentPanels(),target=ordered[index],next=ordered[index+delta];if(!target||!next)return;if(delta<0)sidebar.insertBefore(target,next);else sidebar.insertBefore(next,target);save();renderEditorList();$('workspaceEditorStatus').textContent='Urutan panel tersimpan otomatis.'};
  const open=()=>{editor.hidden=false;renderEditorList()};const close=()=>editor.hidden=true;
+ window.__trozalOpenWorkspaceEditor=open;
  const openTools=()=>{tools.hidden=false;$('workspacePanelSearch')?.focus()};const closeTools=()=>tools.hidden=true;
  $('helpBtn').onclick=openTools;$('workspaceToolsClose').onclick=closeTools;$('resetLayoutBtn').onclick=open;$('workspaceEditorClose').onclick=close;$('workspaceEditorDone').onclick=close;
- $('workspaceEditorReset').onclick=()=>{restoreDefault();renderEditorList();$('workspaceEditorStatus').textContent='Susunan panel awal berhasil dipulihkan.'};$('workspaceResetLayout').onclick=()=>{$('resetLayoutBtn').click()};
- $('resetBtn').onclick=()=>{if(!confirm('Reset workspace ke susunan awal? Proyek, aset, metadata, dan fitur tidak dihapus.'))return;restoreDefault();close();setStatus('Workspace dikembalikan ke susunan awal. Data proyek tetap aman.')};
+ $('workspaceEditorReset').onclick=()=>{restoreDefault();renderEditorList();$('workspaceEditorStatus').textContent='Susunan panel awal berhasil dipulihkan.'};$('workspaceResetLayout').onclick=()=>{$('resetBtn').click()};
+ $('resetBtn').onclick=()=>{if(!confirm('Reset seluruh tata letak workspace ke susunan awal? Proyek, aset, metadata, dan fitur tidak dihapus.'))return;try{['trozal_ollama_workspace_layout_v1','trozal_layout_widths','trozal_order_left-panels','trozal_order_right-panels','trozal_order_top-controls','trozal_order_main-panels'].forEach(k=>localStorage.removeItem(k))}catch(_){}location.reload()};
  $('workspacePanelSearch').addEventListener('input',()=>{const q=$('workspacePanelSearch').value.trim().toLowerCase(),matches=panels.filter(p=>(p.innerText||'').toLowerCase().includes(q));$('workspaceSearchResults').textContent=q?(matches.length?matches.map(p=>(p.querySelector('h3')?.innerText||p.id||'Panel').trim().replace(/\\s+/g,' ')).join('\\n'):'Tidak ada panel yang cocok.'):'Ketik kata kunci untuk menemukan panel.';panels.forEach(p=>{p.style.outline=q&&(p.innerText||'').toLowerCase().includes(q)?'2px solid #f3bd59':''})});
  const check=async(url,id,label)=>{const node=$(id);node.textContent='Memeriksa...';try{const response=await fetch(url,{method:'GET',cache:'no-store'});if(!response.ok)throw new Error('HTTP '+response.status);let detail='Terhubung · HTTP '+response.status;if(url.includes('/api/tags')){const data=await response.json();detail+=' · '+(data.models?.length||0)+' model terdeteksi';}node.textContent=detail;}catch(e){node.textContent='Belum terhubung: '+(e.message||'gagal mengakses layanan')+'. Pastikan layanan berjalan dan CORS mengizinkan akses.'}};
- $('workspaceCheckOllama').onclick=()=>check('http://127.0.0.1:11434/api/tags','workspaceOllamaStatus','Ollama');$('workspaceCheckBridge').onclick=()=>check('http://127.0.0.1:11435/health','workspaceBridgeStatus','Bridge');
+ $('workspaceCheckOllama').onclick=()=>check('http://127.0.0.1:11435/api/tags','workspaceOllamaStatus','Ollama via Bridge');$('workspaceCheckBridge').onclick=()=>check('http://127.0.0.1:11435/','workspaceBridgeStatus','Bridge');
  tools.addEventListener('click',e=>{if(e.target===tools)closeTools()});editor.addEventListener('click',e=>{if(e.target===editor)close()});document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!tools.hidden)closeTools();if(!editor.hidden)close()}});restore();
 })();
 $('animation').onchange=()=>renderAt(playhead);$('loop').onchange=()=>renderAt(playhead);['speed','intensity','scale','posX','posY','rotation','opacity'].forEach(id=>$(id).addEventListener('input',()=>renderAt(playhead)));$('parts').addEventListener('change',()=>renderAt(playhead));['effectPreset','effectIntensity','effectColor','effectOn','sparkles','shadow','particleCount','particleSpeed'].forEach(id=>$(id).addEventListener('input',()=>renderAt(playhead)));
@@ -3019,7 +3173,7 @@ function visualMotionPromptLines(){
 function visualMotionSceneDefaults(lines){
  const total=Math.max(5,Math.min(60,+$('visualMotionDuration').value||15));
  const dur=Math.max(.5,Math.round((total/Math.max(1,lines.length))*10)/10);
- return lines.slice(0,12).map((text,i)=>({id:'scene-'+Date.now()+'-'+i,text,duration:dur,transition:$('visualMotionTransition').value||'crossfade',camera:$('visualMotionCamera').value||'parallax',style:$('visualMotionStyle').value||'cinematic'}));
+ return lines.slice(0,12).map((text,i)=>({id:'scene-'+Date.now()+'-'+i,text,duration:dur,transition:$('visualMotionTransition').value||'crossfade',camera:$('visualMotionCamera').value||'parallax',style:$('visualMotionStyle').value||'cinematic',choreography:'auto',motionIntensity:35}));
 }
 function visualMotionSceneDurationTotal(){
  return visualSceneSequence.reduce((sum,item)=>sum+Math.max(.5,Math.min(60,Number(item.duration)||1)),0);
@@ -3029,6 +3183,48 @@ function updateVisualSceneSequenceSummary(){
  const total=visualMotionSceneDurationTotal();
  const count=visualSceneSequence.length;
  el.textContent=count?count+' adegan · '+total.toFixed(1)+' detik total · '+visualSceneSequence.map((x,i)=>(i+1)+': '+(Number(x.duration)||0).toFixed(1)+'s').join('  /  '):'Belum ada adegan. Klik “Susun Adegan dari Prompt” untuk membuat timeline.';
+}
+function balanceVisualSceneDurations(){
+ if(!visualSceneSequence.length){const status=$('visualSceneDurationBalanceStatus');if(status)status.textContent='Susun atau tambahkan adegan terlebih dahulu.';return;}
+ const target=Math.max(5,Math.min(60,Number($('visualMotionDuration')?.value)||15)),totalTicks=Math.round(target*100),base=Math.floor(totalTicks/visualSceneSequence.length),remainder=totalTicks-base*visualSceneSequence.length;
+ if(base<50){const status=$('visualSceneDurationBalanceStatus');if(status)status.textContent='Terlalu banyak adegan untuk durasi proyek. Kurangi jumlah adegan atau tambah durasi.';return;}
+ visualSceneSequence.forEach((scene,index)=>{scene.duration=(base+(index<remainder?1:0))/100;});
+ renderVisualSceneSequence();const status=$('visualSceneDurationBalanceStatus');if(status)status.textContent=visualSceneSequence.length+' adegan diratakan · total tepat '+(totalTicks/100).toFixed(2)+' detik.';
+}
+$('balanceVisualSceneDurationsBtn')?.addEventListener('click',balanceVisualSceneDurations);
+function renderSmartCameraDirector(){
+ const host=$('smartCameraDirectorList');if(!host)return;host.replaceChildren();
+ if(!visualSceneSequence.length){const empty=document.createElement('p');empty.className='help';empty.textContent='Susun scene untuk mendapatkan rekomendasi framing.';host.appendChild(empty);return;}
+ const options=[['parallax','Parallax'],['pan','Pan'],['orbit','Orbit'],['follow','Follow'],['locked','Static']];
+ visualSceneSequence.forEach((item,index)=>{
+  const text=String(item.text||'').toLowerCase();let framing='Medium shot',reason='Seimbangkan objek utama dan lingkungan.',suggested='parallax';
+  if(/landscape|pemandangan|kota|gedung|gunung|hutan|pantai|panorama|wide|luas/.test(text)){framing='Wide shot';reason='Tampilkan konteks ruang dan kedalaman lingkungan.';suggested='pan';}
+  else if(/wajah|mata|detail|close.?up|makro|macro|tekstur|produk|logo|perhiasan/.test(text)){framing='Close-up';reason='Prioritaskan detail objek utama.';suggested='follow';}
+  else if(/berlari|mengejar|terbang|pesawat|mobil|kendaraan|berjalan|aksi|melompat|bergerak cepat/.test(text)){framing='Tracking shot';reason='Ikuti arah gerak subjek agar tetap menjadi fokus.';suggested='follow';}
+  else if(/mengitari|orbit|mengelilingi|360|berputar/.test(text)){framing='Orbit / 3D';reason='Gerak melingkar memberi kesan volume.';suggested='orbit';}
+  const card=document.createElement('div');card.className='smart-camera-card';const title=document.createElement('strong');title.textContent='SCENE '+String(index+1).padStart(2,'0')+' · '+framing;const desc=document.createElement('p');desc.textContent=reason;
+  const select=document.createElement('select');select.setAttribute('aria-label','Gerakan kamera scene '+(index+1));options.forEach(([value,label])=>{const option=document.createElement('option');option.value=value;option.textContent=label;select.appendChild(option);});select.value=item.camera||suggested;
+  const apply=document.createElement('button');apply.type='button';apply.textContent='Gunakan rekomendasi: '+options.find(x=>x[0]===suggested)[1];
+  apply.addEventListener('click',()=>{item.camera=suggested;renderVisualSceneSequence();const status=$('smartCameraDirectorStatus');if(status)status.textContent='Rekomendasi kamera scene '+(index+1)+' diterapkan.';});
+  select.addEventListener('change',()=>{item.camera=select.value;renderVisualSceneSequence();const status=$('smartCameraDirectorStatus');if(status)status.textContent='Kamera scene '+(index+1)+' diubah.';});
+  card.append(title,desc,select,apply);host.appendChild(card);
+ });
+}
+function renderObjectMotionControls(){
+ const host=$('objectMotionControls'),summary=$('objectMotionSceneSummary');if(!host)return;host.replaceChildren();
+ if(summary)summary.textContent=visualSceneSequence.length?visualSceneSequence.length+' scene · atur choreography dan intensitas sebelum impor ke Multi-Track.':'Belum ada scene.';
+ if(!visualSceneSequence.length){const empty=document.createElement('p');empty.className='help';empty.textContent='Susun scene terlebih dahulu untuk mengatur gerakan objek.';host.appendChild(empty);return;}
+ const options=[['auto','Otomatis sesuai kamera'],['cinematic','Cinematic Drift'],['orbit','Product Orbit'],['pulse','Waveform Pulse'],['organic','Organic Wave'],['float','Soft Float'],['reveal','Kinetic Reveal'],['bounce','Dynamic Bounce'],['static','Static Hold']];
+ visualSceneSequence.forEach((item,index)=>{
+  const card=document.createElement('div');card.className='object-motion-scene';
+  const title=document.createElement('strong');title.textContent='SCENE '+String(index+1).padStart(2,'0')+' · '+String(item.text||'').replace(/\s+/g,' ').slice(0,76);
+  const select=document.createElement('select');select.setAttribute('aria-label','Choreography scene '+(index+1));
+  options.forEach(([value,label])=>{const option=document.createElement('option');option.value=value;option.textContent=label;select.appendChild(option);});select.value=item.choreography||'auto';
+  const row=document.createElement('div');row.className='row';const label=document.createElement('label');label.textContent='Intensitas gerakan';const slider=document.createElement('input');slider.type='range';slider.min='0';slider.max='150';slider.step='5';slider.value=String(Math.max(0,Math.min(150,Number(item.motionIntensity??35))));const output=document.createElement('output');output.textContent=slider.value+'%';
+  select.addEventListener('change',()=>{item.choreography=select.value;if(typeof scheduleAutosave==='function')scheduleAutosave();});
+  slider.addEventListener('input',()=>{item.motionIntensity=Number(slider.value);output.textContent=slider.value+'%';if(typeof scheduleAutosave==='function')scheduleAutosave();});
+  row.append(label,slider,output);card.append(title,select,row);host.appendChild(card);
+ });
 }
 function visualSceneField(label,type,value,options){
  const wrap=document.createElement('div'),lab=document.createElement('label'),field=document.createElement(type==='textarea'?'textarea':type==='select'?'select':'input');
@@ -3078,6 +3274,8 @@ function renderVisualSceneSequence(){
   host.appendChild(card);
  });
  updateVisualSceneSequenceSummary();
+ if(typeof renderSmartCameraDirector==='function')renderSmartCameraDirector();
+ if(typeof renderObjectMotionControls==='function')renderObjectMotionControls();
  if(typeof scheduleAutosave==='function')scheduleAutosave();
 }
 function moveVisualScene(from,to){
@@ -3160,11 +3358,11 @@ function importVisualScenesToNativeTracks(){
    fadeIn:index===0||item.transition==='cut'?0:sceneFadeSeconds,
    fadeOut:index===items.length-1||items[index+1]?.transition==='cut'?0:sceneFadeSeconds
   }));
-  const loopFor={locked:0,pan:11,parallax:23,orbit:17,follow:23};
+  const loopFor={locked:0,pan:11,parallax:23,orbit:17,follow:23},choreographyLoop={cinematic:11,orbit:17,pulse:2,organic:23,float:7,reveal:19,bounce:18,static:0};
   svgLayerHints=svgPieces.map((piece,index)=>{
    const si=svgLayerSceneIndices[index]??-1,item=items[si];
    if(si<0||!item)return svgLayerHints[index]||{kind:'object',entrance:0,loop:0,intensity:35,reason:'Objek SVG independen; atur gerakan sesuai kebutuhan.'};
-   return {kind:'scene-object',entrance:1,loop:loopFor[item.camera]??23,intensity:35,reason:'Objek dari Scene '+(si+1)+' · '+String(item.text||'').replace(/\s+/g,' ').slice(0,90)+' · waktu mengikuti durasi scene.'};
+   return {kind:'scene-object',entrance:1,loop:choreographyLoop[item.choreography]??loopFor[item.camera]??23,intensity:Number(item.motionIntensity??35),reason:'Objek dari Scene '+(si+1)+' · '+String(item.text||'').replace(/\s+/g,' ').slice(0,90)+' · waktu mengikuti durasi scene.'};
   });
   buildAutoLayerControls();
   svgPieces.forEach((piece,index)=>{
@@ -3173,7 +3371,7 @@ function importVisualScenesToNativeTracks(){
    const set=(id,value)=>{const el=$(id+index);if(!el)return;if(el.type==='checkbox')el.checked=!!value;else el.value=String(value)};
    set('Delay',0);set('Start',start.toFixed(2));set('End',end.toFixed(2));
    set('In',1);set('Out',1);set('Duration',Math.min(.55,Math.max(.12,d*.16)).toFixed(2));
-   set('Loop',loopFor[item.camera]??23);set('Intensity',35);set('Scale',100);set('Rotation',0);
+   set('Loop',choreographyLoop[item.choreography]??loopFor[item.camera]??23);set('Intensity',Number(item.motionIntensity??35));set('Scale',100);set('Rotation',0);
    set('On',true);set('Visible',true);set('Direction','normal');
   });
   refreshTimelineEditor();renderAt(0);scheduleAutosave();
@@ -3939,6 +4137,7 @@ function trozalUpdatePromptResolution(){const c=trozalGetPromptCanvas();$('svgAi
 const svgAiTemplateText=()=>{
  const theme=$('svgAiTheme').value,cat=$('svgAiCategory').value,specific=$('svgAiSpecific').value,details=$('svgAiDetails').value.trim(),dur=$('svgAiDuration').value,ratio=$('svgAiRatio').value;
  const count=+$('svgAiConceptCount').value||3;
+ const palette=$('svgAiPalette')?.value||'Auto mengikuti tema',camera=$('svgAiCamera')?.value||'Auto sesuai konsep',transition=$('svgAiTransition')?.value||'Auto sesuai konsep',typography=$('svgAiTypography')?.value||'Auto sesuai tema',motionPreset=$('svgAiMotionPreset')?.value||'Auto — adaptif terhadap tema',motionTempo=$('svgAiMotionTempo')?.value||'Auto sesuai konsep',motionIntensity=$('svgAiMotionIntensity')?.value||'Auto sesuai konsep';
  const autoName=trozalSafeFileName(($('svgAiFilename')?.value||'').trim()||(`${theme}_${specific}`),'trozal-motion');
  const canvas=trozalGetPromptCanvas();const dims=canvas.text;
  return `ROLE
@@ -3949,6 +4148,13 @@ Main theme: ${theme}
 Visual category: ${cat}
 Specific concept / subtheme: ${specific}
 User art direction: ${details||'Use your creative judgment; make the concept specific, polished, and original.'}
+Creative direction — color palette: ${palette}
+Creative direction — camera movement: ${camera}
+Creative direction — primary transition: ${transition}
+Creative direction — typography: ${typography}
+Motion blueprint choreography: ${motionPreset}
+Motion tempo: ${motionTempo}
+Motion intensity: ${motionIntensity}
 Number of distinct concepts requested: ${count}
 Duration target per concept: ${dur}
 Aspect ratio: ${ratio}
@@ -3992,8 +4198,20 @@ QUALITY CHECK
 Before output, verify each document is valid HTML, has balanced tags, includes all CSS internally, contains no SVG markup, and renders without external assets. Return exactly ${count} distinct HTML documents.
 `;
 };
+const motionQualityPresets={cinematic:{speed:.65,intensity:72,label:'Smooth Cinematic'},natural:{speed:.85,intensity:88,label:'Natural Movement'},dynamic:{speed:1.15,intensity:112,label:'Dynamic Motion'},dramatic:{speed:.58,intensity:132,label:'Dramatic Motion'}};
+document.querySelectorAll('[data-motion-quality]').forEach(button=>button.addEventListener('click',()=>{
+ const preset=motionQualityPresets[button.dataset.motionQuality];if(!preset)return;
+ $('speed').value=String(preset.speed);$('intensity').value=String(preset.intensity);
+ $('speed').dispatchEvent(new Event('input',{bubbles:true}));$('intensity').dispatchEvent(new Event('input',{bubbles:true}));
+ document.querySelectorAll('[data-motion-quality]').forEach(x=>x.classList.toggle('active',x===button));
+ const readout=$('motionQualityReadout');if(readout)readout.textContent='Preset aktif: '+preset.label+' · Kecepatan '+preset.speed.toFixed(2)+'× · Intensitas '+preset.intensity+'%';renderAt(playhead);
+}));
+['speed','intensity'].forEach(id=>$(id)?.addEventListener('input',()=>{const readout=$('motionQualityReadout');if(readout)readout.textContent='Preset aktif: Custom · Kecepatan '+(+$('speed').value).toFixed(2)+'× · Intensitas '+$('intensity').value+'%';document.querySelectorAll('[data-motion-quality]').forEach(x=>x.classList.remove('active'));}));
+$('motionBlurAmount')?.addEventListener('input',()=>{const out=$('motionBlurAmountValue');if(out)out.textContent=$('motionBlurAmount').value+' px';});
+$('motionBlurEnabled')?.addEventListener('change',()=>{const out=$('motionBlurReadout');if(out)out.textContent=$('motionBlurEnabled').checked?'Mode: aktif · Blur adaptif mengikuti perubahan gerak layer saat ekspor.':'Mode: nonaktif · Tidak mengubah durasi atau FPS ekspor.';});
 function setSvgAiPromptStatus(t){$('svgAiPromptStatus').textContent=t}
 function generateSvgAiPrompt(){ $('svgAiPrompt').value=svgAiTemplateText();setSvgAiPromptStatus('Prompt berhasil dibuat. Periksa atau edit prompt sebelum disalin ke AI.'); }
+['svgAiPalette','svgAiCamera','svgAiTransition','svgAiTypography','svgAiMotionPreset','svgAiMotionTempo','svgAiMotionIntensity'].forEach(id=>$(id)?.addEventListener('change',()=>{if($('svgAiPrompt').value.trim())generateSvgAiPrompt()}));
 async function copyTextToClipboard(textValue,successMessage){
  try{await navigator.clipboard.writeText(textValue);setSvgAiPromptStatus(successMessage);return true}
  catch(e){const ta=$('svgAiPrompt');ta.value=textValue;ta.focus();ta.select();try{const ok=document.execCommand('copy');setSvgAiPromptStatus(ok?successMessage:'Clipboard tidak diizinkan. Prompt dipilih; tekan Ctrl+C.');return ok}catch(err){setSvgAiPromptStatus('Prompt ditampilkan dan dipilih. Tekan Ctrl+C untuk menyalin.');return false}}
@@ -4727,10 +4945,7 @@ function wireStudioLayout(){
   const finish=()=>{try{localStorage.setItem('trozal_layout_widths',JSON.stringify({left:parseFloat(getComputedStyle(app).getPropertyValue('--trozal-left'))||290,right:parseFloat(getComputedStyle(app).getPropertyValue('--trozal-right'))||290,preview:app.style.getPropertyValue('--trozal-preview-height')||'48vh'}))}catch(_){}};
   h.addEventListener('pointerup',finish);h.addEventListener('pointercancel',finish);
  }
- const reset=$('resetLayoutBtn');if(reset)reset.onclick=()=>{
-  try{['trozal_layout_widths','trozal_order_left-panels','trozal_order_right-panels','trozal_order_top-controls','trozal_order_main-panels'].forEach(k=>localStorage.removeItem(k))}catch(_){}
-  app.style.removeProperty('--trozal-left');app.style.removeProperty('--trozal-right');app.style.removeProperty('--trozal-preview-height');if(stageWrap)stageWrap.style.height='';location.reload();
- };
+ const reset=$('resetLayoutBtn');if(reset)reset.onclick=()=>{if(typeof window.__trozalOpenWorkspaceEditor==='function')window.__trozalOpenWorkspaceEditor();};
 }
 
 wireStudioLayout();
