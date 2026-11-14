@@ -3781,7 +3781,10 @@ window.TROZAL_THEME_RULES_EXTRA=window.TROZAL_THEME_RULES_EXTRA||[
 ];
 function trozalThemeProfile(theme){
  const t=String(theme||'').trim();
+ const trace=(message)=>{try{if(typeof window.__trozalDebugLog==='function')window.__trozalDebugLog('info','THEME PROFILE '+message);}catch(_){}};
  const profiles=[
+  {re:/sound wave|audio visualizer|waveform|audiogram|audio branding|podcast|sound design|music visualizer/i,styles:['Audio-Reactive Motion','Waveform Visualization','Frequency Spectrum','Rhythmic Geometry','Sound-Driven Typography','Dark Studio Visuals','Neon Audio Graphics','Minimal Data Visualization'],specifics:['Equalizer bars and frequency spectrum animation','Audio waveform reveal with rhythmic pulse','Sound-reactive particles forming a title','Podcast audiogram with waveform and captions','Circular audio spectrum with smooth rotation','Beat-synced geometric choreography','Music track identity and waveform reveal','Frequency bands with animated data labels']},
+  {re:/premium minimal|minimal motion system|minimalist motion|minimal brand system|quiet minimal/i,styles:['Premium Minimalism','Swiss Grid Motion','Restrained Editorial','Monochrome Geometry','Precision Typography','Soft Neutral Palette','Minimal 3D Forms','Elegant Transition Design'],specifics:['Minimal geometric choreography with precise easing','Premium title reveal using generous negative space','Monochrome form study with subtle depth','Typography-led brand opener with restrained movement','Soft light sweep across a minimal hero object','Grid-based layout transition and clean end card','Minimal 3D object reveal with controlled camera','Seamless ambient motion system']},
   {re:/luxury|premium|editorial|jewelry|jewellery|watch|fragrance|perfume|haute couture/i,styles:['Luxury Editorial','Premium Minimalism','High-End Art Direction','Elegant Typography','Cinematic Gold Lighting','Macro Material Detail','Refined Grid Composition','Editorial Contrast','Metallic Accent Design','Luxury Motion System'],specifics:['Luxury hero title with restrained gold accents','Editorial product reveal with macro material detail','Premium brand manifesto and signature typography','Elegant campaign opener with cinematic light sweep','Jewelry or watch close-up with precision reflections','Luxury packaging reveal and tactile material study','High-fashion editorial layout with dramatic negative space','Premium brand emblem reveal','Minimal luxury product showcase','Refined editorial chapter transitions']},
   {re:/fashion|apparel|runway|lookbook|sneaker|sportswear|garment|textile|clothing/i,styles:['Fashion Editorial','Runway Motion Direction','Avant-Garde Typography','Lookbook Grid System','Fabric & Textile Detail','High-Contrast Studio','Minimal Fashion Layout','Dynamic Cutout Composition','Luxury Campaign Style','Kinetic Type Styling'],specifics:['Runway-inspired collection reveal','Editorial lookbook with animated image panels','Fabric texture macro and flowing textile transition','Sneaker or apparel hero spin','Seasonal fashion campaign opener','Kinetic typography for collection name','Model-free garment silhouette showcase','Fashion moodboard to campaign reveal','Colorway comparison and product detail','Luxury fashion brand signature sequence']},
   {re:/beauty|cosmetic|skincare|make.?up|personal care|perfume|fragrance/i,styles:['Beauty Campaign Aesthetic','Soft Diffused Lighting','Pearlescent Gradient','Clean Clinical Luxury','Macro Liquid Texture','Elegant Serif Typography','Pastel Editorial','Glass & Translucency','Premium Product Stage','Organic Fluid Motion'],specifics:['Beauty product hero with soft light bloom','Serum droplet macro and liquid ripple','Skincare ingredient story with clean labels','Perfume bottle reveal with glass refraction','Before-and-after benefit storytelling','Premium beauty campaign title sequence','Cream texture sweep and macro detail','Ingredient-to-product transformation','Minimal skincare routine explainer','Pearlescent logo and packaging reveal']},
@@ -3805,9 +3808,10 @@ function trozalThemeProfile(theme){
   {re:/wedding|valentine|birthday|baby shower|mother.?s day|father.?s day|graduation|christmas|halloween|new year|celebration|festival/i,styles:['Celebration Editorial','Elegant Event Typography','Soft Glow & Bokeh','Premium Invitation Design','Festive Color Composition','Ornamental Motion','Warm Cinematic Lighting','Floral & Particle Accents','Modern Greeting Graphics','Event Title Sequence'],specifics:['Animated event invitation opener','Elegant date and venue reveal','Festive greeting with ornamental motion','Celebration countdown sequence','Floral and bokeh title reveal','Wedding save-the-date motion','Graduation milestone highlight','Birthday title and confetti reveal','Seasonal campaign opener','Event highlight and end card']}
  ];
  const match=profiles.find(p=>p.re.test(t));
- if(match)return {styles:match.styles,specifics:match.specifics};
+ if(match){trace('matched semantic rule for "'+t+'" -> '+match.styles[0]+' ('+match.styles.length+' styles / '+match.specifics.length+' subthemes)');return {styles:match.styles,specifics:match.specifics};}
  const rule=(window.TROZAL_THEME_RULES_EXTRA||[]).find(r=>r.re.test(t))||(window.TROZAL_THEME_RULES||[]).find(r=>r.re.test(t));
- if(rule)return {styles:rule.styles,specifics:rule.specific};
+ if(rule){trace('matched legacy rule for "'+t+'" -> '+rule.styles[0]);return {styles:rule.styles,specifics:rule.specific};}
+ trace('fallback profile used for "'+t+'"; no semantic or legacy rule matched');
  return {styles:['Theme-led Art Direction','Modern Editorial','Cinematic Lighting','Clean Information Design','3D Layered Composition','Kinetic Typography','Soft Gradient','Geometric Motion','Premium Minimalism','Atmospheric Visuals'],specifics:[t+' signature hero sequence',t+' visual identity reveal',t+' feature showcase',t+' process explainer',t+' key visual composition',t+' campaign opener',t+' cinematic transition',t+' data and storytelling sequence','Animated brand or topic identity','Seamless themed motion loop']};
 }
 function trozalSetSelectOptions(select,items,prefer){select.replaceChildren();[...new Set(items)].forEach((v,i)=>{const o=document.createElement('option');o.textContent=v;o.value=v;if((prefer&&v===prefer)||(!prefer&&i===0))o.selected=true;select.appendChild(o);});}
@@ -3865,8 +3869,9 @@ function trozalRandomTheme(e){
    debug('warn',message);
    return false;
   }
-  debug('info','RANDOM THEME pilihan dibuat: '+picked);
+  debug('info','RANDOM THEME pilihan dibuat: '+picked+' | current category='+((document.getElementById('svgAiCategory')||{}).value||'N/A')+' | current subtheme='+((document.getElementById('svgAiSpecific')||{}).value||'N/A'));
   trozalApplyTheme(picked);
+  debug('info','RANDOM THEME hasil penerapan: theme='+select.value+' | category='+((document.getElementById('svgAiCategory')||{}).value||'N/A')+' | subtheme='+((document.getElementById('svgAiSpecific')||{}).value||'N/A')+' | category options='+((document.getElementById('svgAiCategory')||{}).options?.length||0)+' | subtheme options='+((document.getElementById('svgAiSpecific')||{}).options?.length||0));
   if(select.value!==picked)throw new Error('Tema tidak berhasil diterapkan ke dropdown. Dipilih: '+picked+'; nilai aktual: '+select.value);
   if(count)count.textContent=themes.length+' tema unik tersedia · '+window.__trozalThemeShuffleBag.length+' belum dipakai pada siklus ini';
   if(status)status.textContent='✦ Tema inspirasi dipilih: '+picked+'. Kategori visual dan subtema sudah disesuaikan. Tema tidak diulang sampai siklus katalog selesai.';
@@ -3881,10 +3886,15 @@ function trozalRandomTheme(e){
 }
 function trozalApplyTheme(theme,keepCustomSearch=false){
  const clean=String(theme||'').trim();if(!clean)return;
+ const debug=(level,message)=>{try{if(typeof window.__trozalDebugLog==='function')window.__trozalDebugLog(level,'THEME APPLY '+message);}catch(_){}};
  const select=$('svgAiTheme');let opt=[...select.options].find(o=>o.value.toLowerCase()===clean.toLowerCase());if(!opt){opt=document.createElement('option');opt.value=clean;opt.textContent=clean;select.appendChild(opt);}select.value=opt.value;
  if(!keepCustomSearch)$('svgAiThemeSearch').value=clean;
- const profile=trozalThemeProfile(clean);trozalSetSelectOptions($('svgAiCategory'),profile.styles);trozalSetSelectOptions($('svgAiSpecific'),profile.specifics);
+ const profile=trozalThemeProfile(clean);
+ const category=$('svgAiCategory'),specific=$('svgAiSpecific');
+ trozalSetSelectOptions(category,profile.styles);trozalSetSelectOptions(specific,profile.specifics);
  $('svgAiThemeSearchHint').textContent='Tema aktif: '+clean+' · '+profile.styles.length+' gaya visual dan '+profile.specifics.length+' subtema tersedia. Pilihan mengikuti tema utama.';
+ debug('info','theme="'+clean+'" | category options='+category.options.length+' | selected category="'+category.value+'" | subtheme options='+specific.options.length+' | selected subtheme="'+specific.value+'"');
+ if(!category.value||!specific.value)debug('err','dropdown category/subtheme empty after apply');
  if($('svgAiPrompt').value.trim())generateSvgAiPrompt();
 }
 /* Random-theme click handling is installed at the end of the document by the runtime diagnostic bridge. */
