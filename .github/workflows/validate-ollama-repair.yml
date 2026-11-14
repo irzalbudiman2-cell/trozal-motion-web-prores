@@ -1,0 +1,45 @@
+name: Validate OLLAMA Repair
+
+on:
+  push:
+    branches:
+      - ollama-repair-cb774c0-2026-11-15
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-inline-javascript:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout OLLAMA repair branch
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Validate inline JavaScript syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs = require('fs');
+          const { spawnSync } = require('child_process');
+          const html = fs.readFileSync('index.html', 'utf8');
+          const scripts = [...html.matchAll(/<script\\b[^>]*>([\\s\\S]*?)<\\/script\\s*>/gi)];
+          if (!scripts.length) throw new Error('No inline script blocks found.');
+          scripts.forEach((match, index) => {
+            const file = '/tmp/trozal-ollama-inline-' + index + '.js';
+            fs.writeFileSync(file, match[1], 'utf8');
+            const result = spawnSync(process.execPath, ['--check', file], { encoding: 'utf8' });
+            if (result.status !== 0) {
+              process.stderr.write('Syntax error in inline script ' + (index + 1) + '\\n');
+              process.stderr.write(result.stderr || result.stdout || '');
+              process.exit(1);
+            }
+          });
+          const required = ['svgTerminalPanel','svgAiThemeSearch','mtCreateGroup','mtSetGroupParent','browserArtDirection','balanceVisualSceneDurationsBtn','smartCameraDirectorPanel','objectMotionDirectorPanel','motionBlurControlPanel','motionQualityDirectorPanel'];
+          for (const id of required) if (!html.includes('id="' + id + '"')) throw new Error('Missing required UI: ' + id);
+          console.log('Validated ' + scripts.length + ' inline script block(s) and ' + required.length + ' required feature panels.');
+          NODE
