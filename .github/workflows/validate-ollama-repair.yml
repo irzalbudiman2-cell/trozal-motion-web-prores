@@ -5,6 +5,7 @@ on:
     branches:
       - ollama-repair-cb774c0-2026-11-15
       - ollama-semantic-object-groups-2026-11-15
+      - feature/theme-intelligence-floating-render-20261115
   workflow_dispatch:
 
 permissions:

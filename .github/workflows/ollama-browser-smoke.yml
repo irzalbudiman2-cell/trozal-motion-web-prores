@@ -5,6 +5,7 @@ on:
     branches:
       - ollama-repair-cb774c0-2026-11-15
       - ollama-semantic-object-groups-2026-11-15
+      - feature/theme-intelligence-floating-render-20261115
   workflow_dispatch:
 
 permissions:
@@ -168,6 +169,13 @@ jobs:
             process.exit(1);
           });
           NODE
+
+      - name: Validate theme categories and AI prompt alignment in Chromium
+        run: node tests/theme-concept-alignment.browser.cjs
+      - name: Audit all catalogue themes and domain-specific AI prompts
+        run: node tests/theme-catalogue-coverage.browser.cjs
+      - name: Compare render throughput with pointer over and away from progress panel
+        run: node tests/render-pointer-independence.browser.cjs
 
       - name: Stop local app server
         if: always()
