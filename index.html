@@ -2712,7 +2712,7 @@ function trozalSetRenderPreviewLock(locked){
    try{
     doc.querySelectorAll('img').forEach(img=>{
      const src=String(img.currentSrc||img.src||'');
-     if(!/\\.gif(?:[?#]|$)|^data:image\\/gif/i.test(src)||!img.complete||!img.naturalWidth)return;
+     if(!/\.gif(?:[?#]|$)|^data:image\/gif/i.test(src)||!img.complete||!img.naturalWidth)return;
      try{
       const frozen=doc.createElement('canvas');frozen.width=img.naturalWidth;frozen.height=img.naturalHeight;
       frozen.getContext('2d').drawImage(img,0,0);
