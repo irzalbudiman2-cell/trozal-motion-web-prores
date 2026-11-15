@@ -1506,7 +1506,7 @@ function splitSvgIntoPieces(silent=false){
    if(item.base)return;
    const parent=[...(item.ancestors||[])].reverse().find(el=>el.getAttribute('data-object')||el.getAttribute('data-name')||el.getAttribute('aria-label')||el.getAttribute('inkscape:label'));
    if(!parent)return;
-   const label=String(parent.getAttribute('data-object')||parent.getAttribute('data-name')||parent.getAttribute('aria-label')||parent.getAttribute('inkscape:label')||'').replace(/\\s+/g,' ').trim();
+   const label=String(parent.getAttribute('data-object')||parent.getAttribute('data-name')||parent.getAttribute('aria-label')||parent.getAttribute('inkscape:label')||'').replace(/\s+/g,' ').trim();
    if(!label)return;
    if(!semanticBuckets.has(parent))semanticBuckets.set(parent,{label,members:[]});
    semanticBuckets.get(parent).members.push(i);
@@ -1516,7 +1516,7 @@ function splitSvgIntoPieces(silent=false){
    if(bucket.members.length<2)continue;
    const sceneIndex=svgLayerSceneIndices[bucket.members[0]]??-1;
    const prefix=sceneIndex>=0?'Scene '+String(sceneIndex+1).padStart(2,'0')+' · ':'';
-   const raw=(prefix+bucket.label).replace(/\\s+/g,' ').trim();
+   const raw=(prefix+bucket.label).replace(/\s+/g,' ').trim();
    const base=Array.from(raw||'Objek').slice(0,28).join('');let name=base,suffix=2;
    while(usedSemanticNames.has(name)){
     const tail=' '+suffix++;name=Array.from(base).slice(0,Math.max(1,28-tail.length)).join('')+tail;
