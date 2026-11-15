@@ -45,6 +45,7 @@ const { chromium } = require('playwright');
     assert.match(visibleSpec, /Cinematic Winter Lighting/);
     assert.match(visibleSpec, /Christmas & Holiday/);
     assert.match(visibleSpec, /ikon lebah kecil, aksen emas, latar putih/);
+    await page.locator('#svgAiCategory').selectOption({ label: 'Paper Cutout Holiday Illustration' });
 
     await page.locator('#generateSvgAiPromptBtn').click();
     const holidayPrompt = await page.locator('#svgAiPrompt').inputValue();
