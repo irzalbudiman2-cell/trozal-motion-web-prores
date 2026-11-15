@@ -129,7 +129,7 @@ Acceptance checks:
 
 ## Phase 6 — Prompt-to-Visual & Visual Scene Sequencer
 
-**Status: Procedural generator, editable sequencer, grouped native-scene tracks and initial object-level SVG tracks committed; browser QA and deeper scene-object controls remain in development.**
+**Status: Procedural generator, editable sequencer, grouped native-scene tracks, object-level SVG tracks, automatic semantic SVG object groups and synchronized group keyframes implemented; browser QA and deeper scene-object controls remain in development.**
 
 Implemented:
 - Prompt-to-Visual panel with its own purple feature color, separate from other editor panels.
@@ -143,17 +143,20 @@ Implemented:
 - Generated visual HTML can be sent through the existing HTML import/preview path.
 - **Import to Multi-Track:** each sequencer scene can be imported as one grouped native SVG layer/track, with its own start/end time, fade entrance/exit and camera-style motion mapped to existing layer controls.
 - Optional **Object-Level Split** mode recursively separates drawable SVG elements inside each generated scene into independently selectable native tracks. Each extracted track inherits its source scene's start/end time and camera loop preset; the default grouped-scene mode remains available as a composition-safe fallback.
+- When split SVG elements share an explicit semantic parent label (`data-object`, `data-name`, `aria-label`, or `inkscape:label`), their separate editable tracks are automatically collected into a named logical object group. Group visibility, lock, Solo, selection and synchronized keyframes operate on the grouped tracks; group membership and keyframes remain saveable in project JSON.
 - Prompt, visual settings and scene sequence are persisted in project JSON and autosave.
 
 Current limitations:
 - Scene artwork is procedural SVG selected from keyword-driven visual templates. This is not an external generative image/video model and does not produce photorealistic AI footage.
 - Prompt understanding is keyword/template based; unsupported subjects may fall back to a generic illustration.
 - Object-Level Split is structural SVG decomposition, not semantic object recognition. It can separate pieces that visually belong together (for example, a character or product built from multiple paths); switch back to grouped-scene mode when a composition must remain intact. The current limit is 60 native tracks per import.
+- Automatic logical grouping only uses explicit semantic labels on SVG ancestor groups. SVGs without those labels still require manual Multi-Track grouping; the feature does not infer object boundaries from pixels or geometry.
 - Native track motion is applied at scene/group level; generated HTML's full internal CSS effects are not all converted to native keyframes.
 - Browser preview and frame-render parity for all generated CSS transitions and camera effects still require visual testing.
 
 Next development:
-- Add logical object grouping/selection so related SVG paths can be selected and transformed as one object while retaining per-part editability. Current increment adds semantic parent labels to layer names when SVG groups provide `data-object`, `data-name`, `aria-label`, or `inkscape:label`; synchronized group transforms and group-level keyframes are still pending.
+- Add scene thumbnails and playhead synchronization in the sequencer.
+- Add scene-specific native keyframe tracks for objects and camera movement.
 - Add scene thumbnails and playhead synchronization in the sequencer.
 - Add scene-specific native keyframe tracks for objects and camera movement.
 - Integrate a server-side AI image/video provider only after provider selection, secure key handling and usage controls are designed.
