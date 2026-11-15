@@ -1,52 +1,69 @@
-# TROZAL LOCAL VISION
+# TROZAL LOCAL VISION — DIRECT WEB
 
 ## Tujuan
 
-Membuat metadata dari piksel gambar hasil preview/render, bukan dari prompt teks, nama file, atau rencana scene. Analisis berjalan lokal di PC pengguna melalui Ollama; tidak memerlukan OpenAI API key dan tidak mengirim gambar ke layanan AI cloud.
+Menganalisis piksel dari Preview/render aktual menggunakan model Ollama yang berjalan di PC pengguna. Website GitHub Pages menghubungi API Ollama secara langsung melalui browser ke `http://127.0.0.1:11434`.
+
+**Tidak diperlukan TROZAL Bridge, server proxy lokal, file BAT, API key, atau layanan AI berbayar.** Ollama sendiri tetap harus terpasang dan berjalan di Windows.
 
 ## Target perangkat
 
 - Windows 10/11
 - RAM 16 GB
-- NVIDIA GTX 1660 Super (umumnya 6 GB VRAM)
-- Model awal: `qwen3-vl:2b` (sekitar 1.9 GB unduhan)
-- Model alternatif: `qwen3-vl:4b` (sekitar 3.3 GB; lebih berat)
+- NVIDIA GTX 1660 Super
+- Model ringan awal: `qwen3-vl:2b`
+- Model lebih berat: `qwen3-vl:4b` atau model Vision lain yang kompatibel
 
-Gunakan 2B sebagai default untuk perangkat dengan VRAM 6 GB. Model 4B dapat dicoba kemudian jika penggunaan memori dan kecepatannya masih nyaman. Dukungan akselerasi NVIDIA memerlukan driver yang kompatibel; jika GPU tidak digunakan penuh, Ollama dapat membagi beban ke CPU/RAM.
+Mulai dari model 2B untuk menjaga penggunaan VRAM. Model 4B dapat dicoba jika performa dan memori masih memadai.
 
-## Instalasi
+## Konfigurasi satu kali di Windows (tanpa BAT)
 
-1. Install Ollama: https://ollama.com/download/windows
-2. Pastikan model tersedia:
+1. Install Ollama dari https://ollama.com/download/windows.
+2. Buka Command Prompt atau PowerShell dan pasang model yang dibutuhkan, misalnya:
    ```powershell
    ollama pull qwen3-vl:2b
    ```
-3. Jalankan Ollama seperti biasa. Tidak perlu mengatur `OLLAMA_ORIGINS` untuk mode Bridge lokal.
-4. Unduh/jalankan `TROZAL_OLLAMA_BRIDGE_START.bat` dari folder repo.
-5. Bridge akan mengambil versi TROZAL MOTION terbaru dan otomatis membuka `http://127.0.0.1:11435/`.
-6. Gunakan tab TROZAL MOTION lokal yang terbuka dari Bridge. Jangan gunakan tab GitHub Pages untuk fitur AI lokal jika ingin menghindari izin Loopback Chrome.
+3. Tekan Start dan cari **Edit environment variables for your account**.
+4. Pada bagian **User variables**, klik **New**.
+5. Isi:
+   - Variable name: `OLLAMA_ORIGINS`
+   - Variable value: `https://irzalbudiman2-cell.github.io`
+6. Klik OK sampai semua jendela tertutup.
+7. Klik ikon Ollama di system tray, pilih **Quit**, lalu jalankan Ollama kembali dari Start Menu.
 
-## Koneksi lokal
-
-Bridge menyajikan halaman TROZAL dan meneruskan endpoint `/api/tags` serta `/api/chat` ke Ollama. Karena halaman dan API berjalan pada origin loopback yang sama, browser tidak perlu mengizinkan halaman publik GitHub Pages mengakses loopback. Biarkan jendela Bridge tetap terbuka selama penggunaan.
+Gunakan origin persis seperti di atas, tanpa slash di akhir. Jangan gunakan `*` karena itu akan mengizinkan origin website lain.
 
 ## Cara menggunakan
 
-- Hentikan playback terlebih dahulu.
-- Klik **Analisis Visual Sebenarnya**. Jika tidak memilih gambar manual, TROZAL mencoba menangkap tiga frame preview pada 0%, 50%, dan 85% durasi.
-- Alternatif: pilih hingga empat screenshot PNG/JPG/WebP untuk analisis.
-- AI mengisi judul, deskripsi, kategori, dan keyword dari gambar yang dikirim.
-- Periksa dan koreksi metadata sebelum menambahkannya ke batch atau mengekspor.
+1. Buka https://irzalbudiman2-cell.github.io/trozal-motion-web-prores/.
+2. Pastikan aplikasi Ollama berjalan di Windows.
+3. Klik **Cek Ollama** pada panel AI yang ingin digunakan.
+4. Jika Chrome meminta izin akses jaringan lokal / **Loopback network**, pilih **Allow**.
+5. Jika pernah menolak izin, buka Site settings untuk situs GitHub Pages TROZAL dan ubah **Loopback network** menjadi **Allow**, lalu reload.
+6. Pilih model yang sudah terpasang dan jalankan Generate atau Analisis Visual.
+
+## Koneksi langsung
+
+- Daftar model: `GET http://127.0.0.1:11434/api/tags`
+- Chat / generasi: `POST http://127.0.0.1:11434/api/chat`
+- Generator fallback: `POST http://127.0.0.1:11434/api/generate`
+- Origin browser yang diizinkan: `https://irzalbudiman2-cell.github.io`
+
+Website tidak mengirim prompt atau gambar ke backend TROZAL. Browser mengirim permintaan langsung ke Ollama lokal di komputer yang sama. Jangan membuka akses Ollama ke jaringan publik dan jangan mengubah `OLLAMA_HOST` menjadi `0.0.0.0` untuk kebutuhan ini.
 
 ## Privasi dan keamanan
 
-- Browser menggunakan Bridge lokal `http://127.0.0.1:11435`; Bridge meneruskan permintaan ke Ollama `http://127.0.0.1:11434`.
-- Tidak ada API key, backend cloud, atau biaya per request.
-- Gambar yang dipilih atau ditangkap diproses oleh model Ollama lokal.
+- Prompt, gambar, dan respons model diproses oleh Ollama lokal.
+- CORS dibatasi ke satu origin GitHub Pages TROZAL; jangan gunakan wildcard.
+- Izin Loopback Chrome hanya diperlukan agar halaman HTTPS dapat mengakses layanan loopback di PC.
+- Ollama harus tetap aktif selama fitur AI digunakan.
 
-## Batasan
+## Batasan dan troubleshooting
 
-- Analisis visual AI dapat salah mengenali detail; hasil wajib diperiksa manusia.
-- Pengambilan frame preview menggunakan renderer DOM-to-image yang sudah digunakan aplikasi. Konten eksternal atau elemen tertentu mungkin tidak tertangkap sempurna; gunakan screenshot manual jika hasil tangkapan tidak sesuai.
-- Preview yang sedang diputar harus dihentikan sebelum capture otomatis.
-- Jika Ollama/CORS/model belum siap, fitur metadata lama tetap tersedia.
+- Jika muncul `Failed to fetch`, periksa apakah Ollama berjalan, `OLLAMA_ORIGINS` sudah benar, dan Ollama sudah direstart setelah variabel dibuat.
+- Jika respons CORS ditolak, pastikan nilai origin tidak mengandung slash akhir dan cocok dengan alamat website yang dibuka.
+- Jika Chrome memblokir akses, izinkan **Loopback network** pada Site settings situs TROZAL.
+- Jika `/api/tags` berhasil tetapi model tidak tersedia, unduh model dengan `ollama pull nama-model`.
+- Analisis Vision membutuhkan model multimodal yang mendukung gambar. Model teks saja tidak cukup.
+- Hentikan playback sebelum capture otomatis. Jika frame Preview tidak tertangkap dengan benar, pilih screenshot PNG/JPG/WebP secara manual.
+- Hasil AI dapat keliru; tinjau judul, deskripsi, kategori, dan keyword sebelum ekspor.
