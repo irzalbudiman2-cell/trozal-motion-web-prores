@@ -4903,7 +4903,7 @@ function wireStudioLayout(){
  const sortable=(container,items,key,handles)=>{
   if(!container)return;const nodes=[...container.querySelectorAll(items)].filter(el=>el.parentElement===container);
   nodes.forEach((el,i)=>{
-   el.dataset.layoutId=el.dataset.layoutId||key+'-'+(el.id||el.querySelector('h3,strong')?.textContent||i).toLowerCase().replace(/[^a-z0-9]+/g,'-').slice(0,50);
+   el.dataset.layoutId=el.dataset.layoutId||key+'-'+String(el.id||el.querySelector('h3,strong')?.textContent||i).toLowerCase().replace(/[^a-z0-9]+/g,'-').slice(0,50);
    const grip=handles(el);if(grip){
     grip.draggable=true;grip.title='Tarik untuk memindahkan kotak ini';
     grip.addEventListener('dragstart',e=>{el.dataset.layoutDragging='1';e.dataTransfer?.setData('text/plain',el.dataset.layoutId);if(e.dataTransfer)e.dataTransfer.effectAllowed='move'});
