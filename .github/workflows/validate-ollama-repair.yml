@@ -7,6 +7,7 @@ on:
       - ollama-semantic-object-groups-2026-11-15
       - ollama-download-progress-2026-11-15
       - ollama-render-pointer-independent-2026-11-15
+      - ollama-theme-concept-alignment-2026-11-15
   workflow_dispatch:
 
 permissions:
@@ -66,6 +67,8 @@ jobs:
           if (!html.includes('progressNow-lastProgressPaintAt>=120')) throw new Error('Render progress updates are not throttled independently from frame rendering');
           if (!html.includes('#renderProgress.is-running .render-progress-fill{transition:none!important;}')) throw new Error('Running progress bar still animates between progress samples');
           if (!html.includes('pointer-events:none;user-select:none')) throw new Error('Progress monitor still responds to pointer hit testing');
+          if (!html.includes('Festive Editorial Design') || !html.includes('Employee onboarding journey')) throw new Error('Theme-specific Christmas / HR category profiles are missing');
+          if (!html.includes('window.trozalBuildThemeCreativeBrief') || !html.includes('THEME-SPECIFIC CREATIVE BLUEPRINT')) throw new Error('Detailed theme brief is not connected to AI prompt generation');
           const bridge = fs.readFileSync('TROZAL_OLLAMA_BRIDGE.ps1', 'utf8');
           const starter = fs.readFileSync('TROZAL_OLLAMA_BRIDGE_START.bat', 'utf8');
           const bridgeChecks = [
