@@ -27,15 +27,15 @@ Mulai dari model 2B untuk menjaga penggunaan VRAM. Model 4B dapat dicoba jika pe
 4. Pada bagian **User variables**, klik **New**.
 5. Isi:
    - Variable name: `OLLAMA_ORIGINS`
-   - Variable value: `https://irzalbudiman2-cell.github.io`
+   - Variable value: `https://irzalbudiman2-cell.github.io,https://trozal-motion-web-prores.vercel.app,https://trozal-motion-web-prores-git-ollama-direct-web-7718e1-trozal-id.vercel.app`
 6. Klik OK sampai semua jendela tertutup.
 7. Klik ikon Ollama di system tray, pilih **Quit**, lalu jalankan Ollama kembali dari Start Menu.
 
-Gunakan origin persis seperti di atas, tanpa slash di akhir. Jangan gunakan `*` karena itu akan mengizinkan origin website lain.
+Daftar tersebut mengizinkan GitHub Pages, domain Vercel utama, dan preview Vercel yang sedang diuji. Setiap origin harus persis berupa scheme + host, tanpa slash di akhir. Daftar dipisahkan koma **tanpa spasi**. Jangan gunakan `*` karena itu akan mengizinkan origin website lain. URL preview dapat berubah ketika deployment baru dibuat; tambahkan host preview terbaru jika berbeda.
 
 ## Cara menggunakan
 
-1. Buka https://irzalbudiman2-cell.github.io/trozal-motion-web-prores/.
+1. Buka salah satu situs TROZAL yang origin-nya sudah diizinkan, termasuk preview saat ini: https://trozal-motion-web-prores-git-ollama-direct-web-7718e1-trozal-id.vercel.app.
 2. Pastikan aplikasi Ollama berjalan di Windows.
 3. Klik **Cek Ollama** pada panel AI yang ingin digunakan.
 4. Jika Chrome meminta izin akses jaringan lokal / **Loopback network**, pilih **Allow**.
@@ -47,14 +47,14 @@ Gunakan origin persis seperti di atas, tanpa slash di akhir. Jangan gunakan `*` 
 - Daftar model: `GET http://127.0.0.1:11434/api/tags`
 - Chat / generasi: `POST http://127.0.0.1:11434/api/chat`
 - Generator fallback: `POST http://127.0.0.1:11434/api/generate`
-- Origin browser yang diizinkan: `https://irzalbudiman2-cell.github.io`
+- Origin browser yang diizinkan: `https://irzalbudiman2-cell.github.io`, `https://trozal-motion-web-prores.vercel.app`, dan `https://trozal-motion-web-prores-git-ollama-direct-web-7718e1-trozal-id.vercel.app` (sesuaikan bila URL preview berubah).
 
 Website tidak mengirim prompt atau gambar ke backend TROZAL. Browser mengirim permintaan langsung ke Ollama lokal di komputer yang sama. Jangan membuka akses Ollama ke jaringan publik dan jangan mengubah `OLLAMA_HOST` menjadi `0.0.0.0` untuk kebutuhan ini.
 
 ## Privasi dan keamanan
 
 - Prompt, gambar, dan respons model diproses oleh Ollama lokal.
-- CORS dibatasi ke satu origin GitHub Pages TROZAL; jangan gunakan wildcard.
+- CORS dibatasi ke origin TROZAL yang dipakai; jangan gunakan wildcard.
 - Izin Loopback Chrome hanya diperlukan agar halaman HTTPS dapat mengakses layanan loopback di PC.
 - Ollama harus tetap aktif selama fitur AI digunakan.
 
