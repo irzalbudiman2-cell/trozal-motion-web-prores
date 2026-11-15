@@ -22,7 +22,7 @@ if errorlevel 1 (
   exit /b 1
 )
 
-set "BRIDGE_URL=https://raw.githubusercontent.com/irzalbudiman2-cell/trozal-motion-web-prores/ollama-repair-cb774c0-2026-11-15/TROZAL_OLLAMA_BRIDGE.ps1"
+set "BRIDGE_URL=https://raw.githubusercontent.com/irzalbudiman2-cell/trozal-motion-web-prores/main/TROZAL_OLLAMA_BRIDGE.ps1"
 set "BRIDGE_FILE=%~dp0TROZAL_OLLAMA_BRIDGE.ps1"
 set "BRIDGE_TEMP=%~dp0TROZAL_OLLAMA_BRIDGE.ps1.download"
 
