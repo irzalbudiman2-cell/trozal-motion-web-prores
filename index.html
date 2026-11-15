@@ -5732,12 +5732,12 @@ async function trozalMetadataAnalyzeSource(kind){
   trozalMetadataSourceStatus('② Mengambil tiga frame dari Preview aktual…');
   let images=await trozalVisionCapturePreviewFrames();
   if(images.length!==3)throw new Error('Capture Preview tidak lengkap ('+images.length+'/3 frame).');
-  trozalMetadataSourceStatus('③ Menghubungi Ollama Bridge dan memeriksa model Vision…');
+  trozalMetadataSourceStatus('③ Menghubungi Ollama langsung dan memeriksa model Vision…');
   const tagsUrl=trozalVisionBaseUrl()+'/api/tags';
   const tags=await fetch(tagsUrl,{method:'GET',mode:'cors',credentials:'omit',cache:'no-store',targetAddressSpace:'loopback'});
   if(!tags.ok){
    let detail='';try{detail=(await tags.text()).slice(0,500)}catch(_){}
-   throw new Error('GET '+tagsUrl+' mengembalikan HTTP '+tags.status+(detail?' · '+detail:'')+'. Periksa log jendela Bridge.');
+   throw new Error('GET '+tagsUrl+' mengembalikan HTTP '+tags.status+(detail?' · '+detail:'')+'. Periksa Ollama dan konfigurasi CORS.');
   }
   const tagData=await tags.json(),models=(tagData.models||[]).map(m=>String(m.name||''));
   const preferred=$('trozalVisionModel')?.value||'qwen3.5:4b';
@@ -5818,7 +5818,7 @@ async function trozalVisionCheck(){
   const response=await fetch(trozalVisionBaseUrl()+'/api/tags',{method:'GET',mode:'cors',credentials:'omit',cache:'no-store',targetAddressSpace:'loopback'});
   if(!response.ok)throw new Error('Ollama merespons HTTP '+response.status);
   const data=await response.json();
-  if(!Array.isArray(data.models))throw new Error('Respons Bridge tidak berisi daftar model Ollama.');
+  if(!Array.isArray(data.models))throw new Error('Respons Ollama tidak berisi daftar model.');
   const models=data.models,select=$('trozalVisionModel'),available=models.map(m=>String(m.name||'')).filter(Boolean);
   if(select)[...select.options].forEach(option=>{option.dataset.installed=available.some(name=>name===option.value||name.startsWith(option.value+':'))?'1':'0'});
   const preferred=available.find(name=>name==='qwen3.5:4b')||available.find(name=>name.startsWith('qwen3.5:4b'))||available.find(name=>name==='qwen3-vl:2b')||available.find(name=>name.startsWith('qwen3-vl:2b'));
