@@ -34,6 +34,18 @@ const { chromium } = require('playwright');
     assert.match(holidayBrief, /Christmas|holiday/i);
     assert.match(holidayBrief, /Gift box/i);
 
+    const holidayAutoSpec = page.locator('#svgAiAutoSpec');
+    await page.locator('#svgAiDetails').fill('ikon lebah kecil, aksen emas, latar putih');
+    let visibleSpec = await holidayAutoSpec.innerText();
+    assert.match(visibleSpec, /Christmas & Holiday/);
+    assert.match(visibleSpec, /Paper Cutout Holiday Illustration/);
+    assert.match(visibleSpec, /ikon lebah kecil, aksen emas, latar putih/);
+    await page.locator('#svgAiCategory').selectOption({ label: 'Cinematic Winter Lighting' });
+    visibleSpec = await holidayAutoSpec.innerText();
+    assert.match(visibleSpec, /Cinematic Winter Lighting/);
+    assert.match(visibleSpec, /Christmas & Holiday/);
+    assert.match(visibleSpec, /ikon lebah kecil, aksen emas, latar putih/);
+
     await page.locator('#generateSvgAiPromptBtn').click();
     const holidayPrompt = await page.locator('#svgAiPrompt').inputValue();
     assert.match(holidayPrompt, /Main theme: Christmas & Holiday/);
@@ -43,6 +55,9 @@ const { chromium } = require('playwright');
     assert.match(holidayPrompt, /Paper Cutout Holiday Illustration/);
     assert.match(holidayPrompt, /cardstock|cut edges/i);
     assert.match(holidayPrompt, /Never introduce employee onboarding/i);
+    assert.match(holidayPrompt, /THEME- AND CATEGORY-SPECIFIC CREATIVE SPECIFICATION/);
+    assert.match(holidayPrompt, /ikon lebah kecil, aksen emas, latar putih/);
+    assert.match(holidayPrompt, /USER DETAIL INTEGRATION RULE/);
 
     await page.locator('#svgAiTheme').selectOption({ label: 'Career & Recruitment' });
     await page.waitForFunction(() =>
@@ -50,6 +65,11 @@ const { chromium } = require('playwright');
     );
     const hrSpecifics = await page.locator('#svgAiSpecific option').allTextContents();
     assert.ok(hrSpecifics.includes('Employee onboarding journey'));
+    const hrAutoSpec = await page.locator('#svgAiAutoSpec').innerText();
+    assert.match(hrAutoSpec, /Career & Recruitment/);
+    assert.match(hrAutoSpec, /Employee onboarding journey/);
+    assert.match(hrAutoSpec, /ikon lebah kecil, aksen emas, latar putih/,
+      'User additions must remain present when the main theme changes');
     assert.ok(!hrSpecifics.includes('Christmas tree ornament assembly'),
       'Career/Recruitment must not inherit Christmas subthemes');
 
