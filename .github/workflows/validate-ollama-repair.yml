@@ -1,0 +1,73 @@
+name: Validate OLLAMA Repair
+
+on:
+  push:
+    branches:
+      - ollama-repair-cb774c0-2026-11-15
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-inline-javascript:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout OLLAMA repair branch
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Validate inline JavaScript syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs = require('fs');
+          const { spawnSync } = require('child_process');
+          const html = fs.readFileSync('index.html', 'utf8');
+          const scripts = [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script\s*>/gi)];
+          if (!scripts.length) throw new Error('No inline script blocks found.');
+          scripts.forEach((match, index) => {
+            const file = '/tmp/trozal-ollama-inline-' + index + '.js';
+            fs.writeFileSync(file, match[1], 'utf8');
+            const result = spawnSync(process.execPath, ['--check', file], { encoding: 'utf8' });
+            if (result.status !== 0) {
+              process.stderr.write('Syntax error in inline script ' + (index + 1) + '\n');
+              process.stderr.write(result.stderr || result.stdout || '');
+              process.exit(1);
+            }
+          });
+          const required = ['svgTerminalPanel','svgAiThemeSearch','mtCreateGroup','mtSetGroupParent','browserArtDirection','balanceVisualSceneDurationsBtn','smartCameraDirectorPanel','objectMotionDirectorPanel','motionBlurControlPanel','motionQualityDirectorPanel'];
+          for (const id of required) if (!html.includes('id="' + id + '"')) throw new Error('Missing required UI: ' + id);
+          console.log('Validated ' + scripts.length + ' inline script block(s) and ' + required.length + ' required feature panels.');
+          const wiring = [
+            ['Generate Prompt click handler', html.includes("generateSvgAiPromptBtn').addEventListener('click',generateSvgAiPrompt)")],
+            ['Terminal HTML apply handler', html.includes("applyAiSvgBtn').addEventListener('click',generateMotionSvgLocally)")],
+            ['Theme search input handler', html.includes("search.addEventListener('input'")],
+            ['Random theme delegated click handler', html.includes("closest('#svgAiRandomThemeBtn')") && html.includes("trozalRandomTheme(e)")],
+            ['Ollama Vision analysis handler', html.includes("trozalVisionAnalyzeBtn')?.addEventListener('click',trozalVisionAnalyze)")],
+            ['Ollama Vision connection check handler', html.includes("trozalVisionCheckBtn')?.addEventListener('click',trozalVisionCheck)")]
+          ];
+          for (const [label, present] of wiring) {
+            if (!present) throw new Error('Missing event wiring: ' + label);
+          }
+          console.log('Validated ' + scripts.length + ' inline JavaScript block(s), ' + required.length + ' required feature panels, and ' + wiring.length + ' feature event handlers.');
+
+          const bridge = fs.readFileSync('TROZAL_OLLAMA_BRIDGE.ps1', 'utf8');
+          const starter = fs.readFileSync('TROZAL_OLLAMA_BRIDGE_START.bat', 'utf8');
+          const bridgeChecks = [
+            ['GitHub Pages origin allowed', bridge.includes('"https://irzalbudiman2-cell.github.io"')],
+            ['RawGitHack preview origin allowed', bridge.includes('"https://raw.githack.com"')],
+            ['CORS origin is checked against allowlist', bridge.includes('$allowedOrigins -contains $requestOrigin')],
+            ['Private Network Access preflight header', bridge.includes('Access-Control-Allow-Private-Network')],
+            ['Bridge serves repair-branch app', bridge.includes('$repairBranch = "ollama-repair-cb774c0-2026-11-15"')],
+            ['Starter downloads repair-branch bridge', starter.includes('/ollama-repair-cb774c0-2026-11-15/TROZAL_OLLAMA_BRIDGE.ps1')],
+            ['Starter does not download bridge from main', !starter.includes('/main/TROZAL_OLLAMA_BRIDGE.ps1')]
+          ];
+          for (const [label, present] of bridgeChecks) {
+            if (!present) throw new Error('Ollama Bridge configuration check failed: ' + label);
+          }
+          console.log('Validated ' + bridgeChecks.length + ' Ollama Bridge configuration checks.');
+          NODE

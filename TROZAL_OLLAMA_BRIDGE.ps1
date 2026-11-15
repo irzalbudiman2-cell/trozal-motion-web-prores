@@ -1,5 +1,5 @@
 $ErrorActionPreference = "Stop"
-$origin = "https://irzalbudiman2-cell.github.io"
+$allowedOrigins = @("https://irzalbudiman2-cell.github.io", "https://raw.githack.com")
 $listen = "http://127.0.0.1:11435/"
 $ollama = "http://127.0.0.1:11434"
 $listener = New-Object System.Net.HttpListener
@@ -8,7 +8,8 @@ Add-Type -AssemblyName System.Net.Http
 $client = [System.Net.Http.HttpClient]::new()
 # Local model generation can take several minutes on mid-range GPUs.
 $client.Timeout = [TimeSpan]::FromMinutes(10)
-$appUrl = "https://raw.githubusercontent.com/irzalbudiman2-cell/trozal-motion-web-prores/main/index.html"
+$repairBranch = "ollama-repair-cb774c0-2026-11-15"
+$appUrl = "https://raw.githubusercontent.com/irzalbudiman2-cell/trozal-motion-web-prores/$repairBranch/index.html"
 $appHtml = $null
 try {
   Write-Host "Mengambil TROZAL MOTION versi terbaru..." -ForegroundColor Cyan
@@ -18,7 +19,9 @@ try {
   Start-Process $listen
   Write-Host ""
   Write-Host "TROZAL OLLAMA BRIDGE AKTIF" -ForegroundColor Green
-  Write-Host "Browser : $listen" 
+  Write-Host "Browser : $listen"
+  Write-Host "Preview : $appUrl"
+  Write-Host "CORS    : $($allowedOrigins -join ", ")"
   Write-Host "TROZAL  : buka alamat Browser di atas (mode lokal tanpa izin Chrome loopback lintas situs)." -ForegroundColor Yellow
   Write-Host "Ollama  : $ollama"
   Write-Host "Jangan tutup jendela ini selama TROZAL MOTION digunakan."
@@ -28,15 +31,19 @@ try {
     $req = $ctx.Request
     $res = $ctx.Response
     Write-Host ("[{0}] {1} {2}" -f (Get-Date -Format "HH:mm:ss"), $req.HttpMethod, $req.Url.AbsolutePath) -ForegroundColor DarkGray
-    $res.Headers["Access-Control-Allow-Origin"] = $origin
-    $res.Headers["Vary"] = "Origin"
-    $res.Headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
-    $res.Headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
-    $res.Headers["Access-Control-Allow-Private-Network"] = "true"
-    $res.Headers["Access-Control-Max-Age"] = "600"
+    $requestOrigin = $req.Headers["Origin"]
+    $originAllowed = -not [string]::IsNullOrWhiteSpace($requestOrigin) -and ($allowedOrigins -contains $requestOrigin)
+    if ($originAllowed) {
+      $res.Headers["Access-Control-Allow-Origin"] = $requestOrigin
+      $res.Headers["Vary"] = "Origin"
+      $res.Headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+      $res.Headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+      $res.Headers["Access-Control-Allow-Private-Network"] = "true"
+      $res.Headers["Access-Control-Max-Age"] = "600"
+    }
     try {
       if ($req.HttpMethod -eq "OPTIONS") {
-        $res.StatusCode = 204
+        if (-not $originAllowed) { $res.StatusCode = 403 } else { $res.StatusCode = 204 }
       } elseif ($req.HttpMethod -eq "GET" -and $req.Url.AbsolutePath -eq "/favicon.ico") {
         $res.StatusCode = 204
       } elseif ($req.HttpMethod -eq "GET" -and $req.Url.AbsolutePath -in @("/", "/index.html")) {
@@ -83,6 +90,7 @@ try {
         $res.ContentType = "application/json; charset=utf-8"
         $res.OutputStream.Write($bytes, 0, $bytes.Length)
       } else {
+        if ($requestOrigin -and -not $originAllowed) { throw "Origin tidak diizinkan: $requestOrigin" }
         $method = if ($req.HttpMethod -eq "GET") { [Net.Http.HttpMethod]::Get } elseif ($req.HttpMethod -eq "POST") { [Net.Http.HttpMethod]::Post } else { $null }
         if ($null -eq $method) { throw "Method not allowed" }
         $message = [System.Net.Http.HttpRequestMessage]::new($method, ($ollama + $req.Url.AbsolutePath))
