@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - ollama-repair-cb774c0-2026-11-15
+      - ollama-semantic-object-groups-2026-11-15
   workflow_dispatch:
 
 permissions:
@@ -48,7 +49,10 @@ jobs:
             ['Theme search input handler', html.includes("search.addEventListener('input'")],
             ['Random theme delegated click handler', html.includes("closest('#svgAiRandomThemeBtn')") && html.includes("trozalRandomTheme(e)")],
             ['Ollama Vision analysis handler', html.includes("trozalVisionAnalyzeBtn')?.addEventListener('click',trozalVisionAnalyze)")],
-            ['Ollama Vision connection check handler', html.includes("trozalVisionCheckBtn')?.addEventListener('click',trozalVisionCheck)")]
+            ['Ollama Vision connection check handler', html.includes("trozalVisionCheckBtn')?.addEventListener('click',trozalVisionCheck)")],
+            ['Semantic SVG object grouping', html.includes('const semanticBuckets=new Map()') && html.includes('semanticGroupCount')],
+            ['Group keyframe synchronization', html.includes('members.forEach(n=>{layerKeyframes[n]')],
+            ['Group state project persistence', html.includes('timelineLayerGroups:{...timelineLayerGroups}') && html.includes('timelineLayerGroups=p.timelineLayerGroups')]
           ];
           for (const [label, present] of wiring) {
             if (!present) throw new Error('Missing event wiring: ' + label);
