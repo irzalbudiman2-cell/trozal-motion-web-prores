@@ -4561,7 +4561,7 @@ window.trozalUpdateThemeBrief = function() {
  const host=document.getElementById('svgAiThemeBrief');
  if(host)host.textContent=brief.summary;
  const specHost=document.getElementById('svgAiAutoSpec');
- if(specHost)specHost.textContent=brief.summary+'\n\nDETAIL TAMBAHAN PENGGUNA:\n'+(details||'Belum ada detail tambahan. Jangan menghilangkan atau mengganti spesifikasi otomatis; gunakan arahan kreatif sesuai tema dan kategori.')+'\n\nATURAN PENGGABUNGAN:\nDetail tambahan adalah batasan atau penekanan tambahan. Pertahankan tujuan tema, subjek utama, aset relevan, palet, komposisi, alur gerak, dan batasan domain di atas.';
+ if(specHost)specHost.textContent=brief.summary+'\n\nSPESIFIKASI LENGKAP TEMA + KATEGORI:\n'+brief.prompt+'\n\nDETAIL TAMBAHAN PENGGUNA:\n'+(details||'Belum ada detail tambahan. Jangan menghilangkan atau mengganti spesifikasi otomatis; gunakan arahan kreatif sesuai tema dan kategori.')+'\n\nATURAN PENGGABUNGAN:\nDetail tambahan adalah batasan atau penekanan tambahan. Pertahankan tujuan tema, subjek utama, aset relevan, palet, komposisi, alur gerak, dan batasan domain di atas.';
  return brief;
 };
 function trozalThemeProfile(theme){
