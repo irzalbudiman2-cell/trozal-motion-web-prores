@@ -2,13 +2,15 @@ $ErrorActionPreference = "Stop"
 $allowedOrigins = @("https://irzalbudiman2-cell.github.io", "https://raw.githack.com")
 $listen = "http://127.0.0.1:11435/"
 $ollama = "http://127.0.0.1:11434"
+# Avoid duplicate listeners when Windows starts the task more than once.
+try { if (Get-NetTCPConnection -LocalPort 11435 -State Listen -ErrorAction SilentlyContinue) { Write-Host "Bridge sudah aktif pada port 11435."; exit 0 } } catch {}
 $listener = New-Object System.Net.HttpListener
 $listener.Prefixes.Add($listen)
 Add-Type -AssemblyName System.Net.Http
 $client = [System.Net.Http.HttpClient]::new()
 # Local model generation can take several minutes on mid-range GPUs.
 $client.Timeout = [TimeSpan]::FromMinutes(10)
-$repairBranch = "ollama-repair-cb774c0-2026-11-15"
+$repairBranch = "main"
 $appUrl = "https://raw.githubusercontent.com/irzalbudiman2-cell/trozal-motion-web-prores/$repairBranch/index.html"
 $appHtml = $null
 try {
@@ -16,13 +18,12 @@ try {
   $appHtml = $client.GetStringAsync($appUrl).GetAwaiter().GetResult()
   if ([string]::IsNullOrWhiteSpace($appHtml)) { throw "Gagal mengambil index.html TROZAL MOTION dari GitHub." }
   $listener.Start()
-  Start-Process $listen
   Write-Host ""
   Write-Host "TROZAL OLLAMA BRIDGE AKTIF" -ForegroundColor Green
   Write-Host "Browser : $listen"
   Write-Host "Preview : $appUrl"
   Write-Host "CORS    : $($allowedOrigins -join ", ")"
-  Write-Host "TROZAL  : buka alamat Browser di atas (mode lokal tanpa izin Chrome loopback lintas situs)." -ForegroundColor Yellow
+  Write-Host "TROZAL  : buka GitHub Pages; Bridge ini hanya menyediakan koneksi API lokal." -ForegroundColor Yellow
   Write-Host "Ollama  : $ollama"
   Write-Host "Jangan tutup jendela ini selama TROZAL MOTION digunakan."
   Write-Host "Tekan Ctrl+C untuk berhenti."
