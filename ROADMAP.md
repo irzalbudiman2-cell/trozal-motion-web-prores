@@ -157,8 +157,6 @@ Current limitations:
 Next development:
 - Add scene thumbnails and playhead synchronization in the sequencer.
 - Add scene-specific native keyframe tracks for objects and camera movement.
-- Add scene thumbnails and playhead synchronization in the sequencer.
-- Add scene-specific native keyframe tracks for objects and camera movement.
 - Integrate a server-side AI image/video provider only after provider selection, secure key handling and usage controls are designed.
 
 Acceptance checks:
