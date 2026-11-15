@@ -990,6 +990,17 @@ body[data-ui-layout="professional"] .visual-scene-card:focus-within{
    <label>Deskripsi visual yang benar-benar terlihat (prioritas utama)</label><textarea id="metadataSubject" rows="3" placeholder="Contoh: Sebuah cincin berlian berputar perlahan di atas kain beludru hitam. Tuliskan hanya yang benar-benar tampak pada hasil akhir."></textarea>
    <p class="help">Isi kolom ini setelah memeriksa preview atau hasil render. Prompt AI dan rencana scene hanya menunjukkan niat pembuatan, bukan bukti bahwa objek benar-benar muncul.</p>
    <div id="metadataEvidence" class="metadata-evidence">Belum dianalisis. Sistem akan memisahkan deskripsi terverifikasi, prompt/rencana, dan teks SVG/HTML.</div>
+   <section class="metadata-evidence" id="ollamaModelManagerPanel" style="margin:12px 0;border:1px solid #4c9cc2;background:linear-gradient(145deg,rgba(18,66,88,.55),rgba(10,28,40,.72));border-radius:10px;padding:12px">
+    <div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+     <div style="font-weight:900;color:#a7e7ff">✦ OLLAMA SMART MODEL MANAGER</div>
+     <button type="button" id="ollamaModelRefreshBtn">↻ Deteksi Model</button>
+    </div>
+    <p class="help" style="margin:7px 0">Mendeteksi model lokal, kemampuan resmi model, ukuran file, dan status model yang sedang dimuat. Koneksi tetap langsung ke komputer ini.</p>
+    <div id="ollamaModelManagerStatus" class="help" role="status" aria-live="polite">Belum diperiksa · Klik Deteksi Model untuk membaca /api/tags, /api/show, dan /api/ps.</div>
+    <div id="ollamaModelManagerSummary" class="ollama-model-summary" aria-live="polite"></div>
+    <div id="ollamaModelManagerList" class="ollama-model-list"><div class="ollama-model-empty">Daftar model akan muncul setelah pemeriksaan.</div></div>
+    <p class="help" style="margin:8px 0 0">Pilihan model di AI Scene Composer dan Local Vision akan diperbarui dari model yang benar-benar terpasang. Kemampuan yang tidak dapat diverifikasi akan ditandai, bukan dianggap kompatibel.</p>
+   </section>
    <section class="metadata-evidence" id="trozalLocalVisionPanel" style="margin-top:12px;border:1px solid #269b75;background:rgba(20,150,105,.07)">
     <div style="font-weight:800;color:#38c995;margin-bottom:6px">✦ TROZAL LOCAL VISION · AI BERDASARKAN GAMBAR</div>
     <p class="help">Analisis dilakukan oleh model lokal di PC Anda. Gambar preview tidak dikirim ke OpenAI atau layanan cloud.</p>
@@ -5739,14 +5750,18 @@ async function trozalMetadataAnalyzeSource(kind){
    let detail='';try{detail=(await tags.text()).slice(0,500)}catch(_){}
    throw new Error('GET '+tagsUrl+' mengembalikan HTTP '+tags.status+(detail?' · '+detail:'')+'. Periksa Ollama dan konfigurasi CORS.');
   }
-  const tagData=await tags.json(),models=(tagData.models||[]).map(m=>String(m.name||''));
-  const preferred=$('trozalVisionModel')?.value||'qwen3.5:4b';
+  const tagData=await tags.json();
+  if(!Array.isArray(tagData.models))throw new Error('Daftar model Ollama tidak valid.');
+  const manager=await window.trozalOllamaRefreshModels({silent:true});
+  if(!manager)throw new Error('Smart Model Manager gagal membaca kemampuan model dari Ollama.');
+  const preferred=$('trozalVisionModel')?.value||'';
+  const visionRecords=manager.models.filter(item=>item.capabilities.includes('vision')||!item.capabilitiesKnown);
   const candidateModels=[...new Set([
-   models.find(n=>n===preferred)||models.find(n=>n.startsWith(preferred+':')),
-   models.find(n=>/^qwen3\.5:4b/.test(n)),
-   models.find(n=>/^qwen3-vl:2b/.test(n))
+   visionRecords.find(item=>item.name===preferred)?.name,
+   ...visionRecords.filter(item=>item.capabilities.includes('vision')).map(item=>item.name),
+   ...visionRecords.filter(item=>!item.capabilitiesKnown).map(item=>item.name)
   ].filter(Boolean))];
-  if(!candidateModels.length)throw new Error('Model Vision belum terpasang. Disarankan: ollama pull qwen3.5:4b atau ollama pull qwen3-vl:2b');
+  if(!candidateModels.length)throw new Error('Tidak ada model yang terdeteksi mendukung Vision. Pilih model dengan capability vision di Smart Model Manager.');
   // Reduce the three preview frames before inference to lower VRAM/RAM pressure.
   images=await Promise.all(images.map(async value=>trozalVisionResizeImage('data:image/png;base64,'+value,960)));
   let model=candidateModels[0];
@@ -5968,7 +5983,13 @@ async function trozalVisionAnalyze(){
  const button=$('trozalVisionAnalyzeBtn');if(!button||button.disabled)return;
  button.disabled=true;button.textContent='Menganalisis…';
  try{
-  const model=$('trozalVisionModel')?.value||'qwen3-vl:2b';
+  const model=$('trozalVisionModel')?.value||'';
+  const manager=await window.trozalOllamaRefreshModels({silent:true});
+  if(!manager)throw new Error('Tidak dapat memeriksa model. Klik Deteksi Model dan periksa koneksi Ollama.');
+  const modelRecord=manager.models.find(item=>item.name===model);
+  if(!modelRecord)throw new Error('Model '+(model||'(belum dipilih)')+' tidak ditemukan pada Ollama lokal.');
+  if(modelRecord.capabilitiesKnown&&!modelRecord.capabilities.includes('vision'))throw new Error('Model '+model+' tidak melaporkan capability Vision. Pilih model dengan capability vision pada Smart Model Manager.');
+  if(!modelRecord.capabilitiesKnown)trozalVisionSetStatus('Peringatan: kemampuan Vision model belum dapat diverifikasi melalui /api/show. Mencoba analisis dengan model yang dipilih…');
   const selected=[...($('trozalVisionImages')?.files||[])].slice(0,4);
   let images=[];
   if(selected.length){
@@ -6057,6 +6078,11 @@ async function generateVisualMotionWithLocalAi(){
   const model=$('visualMotionAiModel').value,check=await visualMotionAiCheck();
   if(!check)throw new Error('Ollama tidak dapat dihubungi.');
   if(!check.found)throw new Error('Model '+model+' belum terpasang. Jalankan: ollama pull '+model);
+  const manager=await window.trozalOllamaRefreshModels({silent:true});
+  if(!manager)throw new Error('Tidak dapat membaca detail model dari Ollama.');
+  const modelRecord=manager.models.find(item=>item.name===model);
+  if(!modelRecord)throw new Error('Model '+model+' tidak ditemukan dalam daftar model lokal.');
+  if(modelRecord.capabilitiesKnown&&!modelRecord.capabilities.includes('completion'))throw new Error('Model '+model+' tidak melaporkan capability completion. Pilih model Text/Generate.');
   const ratio=$('visualMotionRatio').value,duration=Math.max(3,Math.min(60,+$('visualMotionDuration').value||15));
   const style=$('visualMotionStyle').value,accent=$('visualMotionAccent').value,camera=$('visualMotionCamera').value,transition=$('visualMotionTransition').value;
   const system='You are a senior motion-graphics art director and SVG animation engineer. Return ONLY a complete standalone HTML5 document, no markdown. Create a polished, richly detailed, coherent scene that faithfully depicts the brief. Use SVG vector illustration, not generic icon placeholders. Structure the scene into at least 5 independently addressable semantic <g> layers with unique descriptive ids: background, environment, main subject, secondary objects, foreground/atmosphere. Animate at least 3 appropriate groups independently using CSS keyframes and transform-origin; use natural, subtle movement. Use gradients, layered shapes, carefully controlled highlights/shadows and depth. Preserve the requested aspect ratio and keep all important objects inside the viewBox. Include complete inline CSS and SVG. No JavaScript, external assets, remote URLs, external fonts, iframe, canvas, scripts or embedded media. Avoid text overlays unless the brief requires visible signage. Ensure the SVG and HTML are fully closed and syntactically complete. Keep output compact enough to finish in one response. Do not explain anything; output only code.';
@@ -6227,6 +6253,24 @@ body[data-ui-layout="professional"] .stagewrap{background:radial-gradient(ellips
 body[data-ui-layout="classic"] .ui-layout-btn[aria-pressed="true"]{background:#d8a94d;border-color:#f0c76f;color:#20190c}
 @media(max-width:1050px){.ui-layout-switcher{order:4}.topright{flex-wrap:wrap}}
 @media(max-width:720px){.ui-layout-switcher{width:100%;justify-content:flex-end}.ui-layout-label{margin-right:auto}.ui-layout-btn{min-height:36px}.topbar{height:auto;min-height:42px}}
+/* OLLAMA SMART MODEL MANAGER */
+#ollamaModelManagerPanel{color:#e8f7ff;box-shadow:0 8px 24px #03131c88,inset 0 1px #d7f5ff12}
+#ollamaModelManagerPanel button{border:1px solid #3c85a8;background:linear-gradient(135deg,#153c52,#102a3b);color:#e7f8ff;border-radius:7px;padding:6px 10px;font-size:10px;font-weight:800}
+#ollamaModelManagerPanel button:hover{border-color:#8cddff;background:#1a526b}
+.ollama-model-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin:9px 0}
+.ollama-model-stat{padding:7px 5px;border:1px solid #2c6682;border-radius:7px;background:#0b2636;text-align:center;min-width:0}
+.ollama-model-stat b{display:block;color:#a9e7ff;font-size:16px;font-variant-numeric:tabular-nums}
+.ollama-model-stat span{display:block;color:#a9c8d8;font-size:9px;line-height:1.25}
+.ollama-model-list{display:grid;gap:7px;max-height:330px;overflow:auto;padding-right:2px}
+.ollama-model-card{padding:9px;border:1px solid #2b627d;border-radius:8px;background:linear-gradient(145deg,#102f40,#0b202e);min-width:0}
+.ollama-model-card-head{display:flex;gap:8px;align-items:flex-start;justify-content:space-between}
+.ollama-model-name{font-size:11px;font-weight:850;color:#e6f8ff;overflow-wrap:anywhere}
+.ollama-model-meta{font-size:9px;color:#a9c8d8;line-height:1.45;margin-top:4px;overflow-wrap:anywhere}
+.ollama-model-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+.ollama-model-tag{font-size:8px;border:1px solid #386e89;border-radius:99px;padding:2px 6px;color:#c5ecfb;background:#102d3d}
+.ollama-model-tag.is-loaded{border-color:#3ca77a;color:#a8f1c9;background:#10382c}
+.ollama-model-empty{padding:10px;border:1px dashed #386e89;border-radius:7px;color:#a9c8d8;font-size:10px;text-align:center}
+@media(max-width:520px){.ollama-model-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.ollama-model-list{max-height:260px}}
 </style>
 <script>
 (function(){
@@ -6321,6 +6365,203 @@ body[data-ui-layout="classic"] .ui-layout-btn[aria-pressed="true"]{background:#d
  },true);
  document.addEventListener('change',e=>{const el=e.target;if(!el||!el.matches||!el.matches('input,select,textarea'))return;const value=el.type==='password'?'[disembunyikan]':String(el.value||'').slice(0,180);add('info',(el.id?'#'+el.id:el.tagName.toLowerCase())+' = '+value,'UI CHANGE');},true);
  add('info','Pemantau global dipasang. Error sebelum skrip ini dimuat tidak dapat direkam.','SYSTEM');
+})();
+</script>
+<script>
+/* TROZAL OLLAMA SMART MODEL MANAGER · Direct Web only */
+(function(){
+ 'use strict';
+ const BASE='http://127.0.0.1:11434';
+ const state={connected:false,models:[],running:[],updatedAt:0,psAvailable:false};
+ const byId=id=>document.getElementById(id);
+ const permission=async()=>{try{const item=await navigator.permissions.query({name:'loopback-network'});return item.state;}catch(_){return 'tidak diketahui';}};
+ function bytes(value){
+  const n=Number(value);if(!Number.isFinite(n)||n<=0)return '—';
+  const units=['B','KB','MB','GB','TB'];let size=n,index=0;
+  while(size>=1024&&index<units.length-1){size/=1024;index++;}
+  return size.toFixed(index>=3?2:1)+' '+units[index];
+ }
+ function safeText(node,value){if(node)node.textContent=String(value==null?'':value);}
+ function setStatus(message,isError){
+  const node=byId('ollamaModelManagerStatus');safeText(node,message);
+  if(node)node.style.color=isError?'#ff9b9b':'#a9e7ff';
+ }
+ async function request(path,body,timeoutMs){
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),timeoutMs||15000);
+  try{
+   const options={method:body?'POST':'GET',mode:'cors',credentials:'omit',cache:'no-store',targetAddressSpace:'loopback',signal:controller.signal};
+   if(body){options.headers={'Content-Type':'application/json'};options.body=JSON.stringify(body);}
+   const response=await fetch(BASE+path,options);
+   const payload=await response.json().catch(()=>({}));
+   if(!response.ok)throw new Error(path+' HTTP '+response.status+': '+String(payload.error||response.statusText||'request gagal'));
+   return payload;
+  }finally{clearTimeout(timer);}
+ }
+ function capabilityLabel(record){
+  if(!record.capabilitiesKnown)return 'Belum diverifikasi';
+  if(!record.capabilities.length)return 'Tidak ada capability yang dilaporkan';
+  const labels={completion:'Text / Generate',vision:'Vision',tools:'Tool Calling',embedding:'Embedding',thinking:'Thinking',audio:'Audio'};
+  return record.capabilities.map(value=>labels[value]||value).join(' · ');
+ }
+ function renderSummary(){
+  const target=byId('ollamaModelManagerSummary');if(!target)return;
+  const loaded=state.running.length,vision=state.models.filter(m=>m.capabilities.includes('vision')).length,text=state.models.filter(m=>m.capabilities.includes('completion')).length;
+  target.replaceChildren();
+  [['MODEL',state.models.length],['SEDANG DIMUAT',loaded],['TEXT / GENERATE',text],['VISION',vision]].forEach(pair=>{
+   const card=document.createElement('div');card.className='ollama-model-stat';
+   const value=document.createElement('b');value.textContent=String(pair[1]);
+   const label=document.createElement('span');label.textContent=pair[0];
+   card.append(value,label);target.append(card);
+  });
+ }
+ function renderList(){
+  const target=byId('ollamaModelManagerList');if(!target)return;
+  target.replaceChildren();
+  if(!state.models.length){const empty=document.createElement('div');empty.className='ollama-model-empty';empty.textContent='Belum ada model lokal. Pasang model dengan perintah ollama pull NAMA_MODEL.';target.append(empty);return;}
+  state.models.forEach(record=>{
+   const card=document.createElement('article');card.className='ollama-model-card';
+   const head=document.createElement('div');head.className='ollama-model-card-head';
+   const name=document.createElement('div');name.className='ollama-model-name';name.textContent=record.name;
+   const size=document.createElement('div');size.className='ollama-model-meta';size.textContent=bytes(record.size);
+   head.append(name,size);
+   const meta=document.createElement('div');meta.className='ollama-model-meta';
+   const bits=[record.parameterSize,record.family,record.quantization].filter(Boolean);
+   meta.textContent=(bits.length?bits.join(' · ')+' · ':'')+capabilityLabel(record);
+   const tags=document.createElement('div');tags.className='ollama-model-tags';
+   record.capabilities.forEach(cap=>{
+    const tag=document.createElement('span');tag.className='ollama-model-tag';tag.textContent=cap;tags.append(tag);
+   });
+   if(!record.capabilitiesKnown){const tag=document.createElement('span');tag.className='ollama-model-tag';tag.textContent='show belum tersedia';tags.append(tag);}
+   if(record.running){
+    const tag=document.createElement('span');tag.className='ollama-model-tag is-loaded';tag.textContent='SEDANG DIMUAT';
+    tags.append(tag);
+    const mem=document.createElement('span');mem.className='ollama-model-tag is-loaded';
+    mem.textContent='Memori aktif '+bytes(record.running.size_vram||record.running.size);
+    tags.append(mem);
+   }
+   card.append(head,meta,tags);target.append(card);
+  });
+ }
+ function populateSelect(id,task){
+  const select=byId(id);if(!select)return;
+  const previous=select.value;
+  const candidates=state.models.filter(record=>{
+   if(!record.capabilitiesKnown)return true;
+   if(task==='vision')return record.capabilities.includes('vision');
+   return record.capabilities.includes('completion');
+  });
+  select.replaceChildren();
+  if(!candidates.length){
+   const option=document.createElement('option');option.value='';option.textContent=task==='vision'?'Tidak ada model dengan capability Vision':'Tidak ada model dengan capability Text/Generate';option.disabled=true;option.selected=true;select.append(option);select.disabled=true;return;
+  }
+  select.disabled=false;
+  candidates.forEach(record=>{
+   const option=document.createElement('option');option.value=record.name;
+   const sizeLabel=record.parameterSize||bytes(record.size);
+   const stateLabel=record.running?' · aktif':(!record.capabilitiesKnown?' · kemampuan belum diverifikasi':'');
+   option.textContent=record.name+' · '+sizeLabel+stateLabel;
+   select.append(option);
+  });
+  if(candidates.some(item=>item.name===previous))select.value=previous;
+  else{
+   const preferred=candidates.find(item=>task==='vision'&&item.capabilities.includes('vision'))||
+     candidates.find(item=>/qwen3\.5:4b/i.test(item.name))||candidates[0];
+   select.value=preferred.name;
+  }
+ }
+ function render(){
+  renderSummary();renderList();populateSelect('visualMotionAiModel','text');populateSelect('trozalVisionModel','vision');
+ }
+ async function inspectModel(model){
+  try{
+   const data=await request('/api/show',{model:model.name,verbose:false},12000);
+   const details=data.details||{},info=data.model_info||{};
+   const capabilities=Array.isArray(data.capabilities)?data.capabilities.map(String):[];
+   const architecture=info['general.architecture']||'';
+   return Object.assign({},model,{
+    capabilities,capabilitiesKnown:Array.isArray(data.capabilities),
+    parameterSize:details.parameter_size||'',
+    family:details.family||architecture||'',
+    quantization:details.quantization_level||'',
+    showError:''
+   });
+  }catch(error){
+   return Object.assign({},model,{capabilities:[],capabilitiesKnown:false,parameterSize:model.details?.parameter_size||'',family:model.details?.family||'',quantization:model.details?.quantization_level||'',showError:error.message||String(error)});
+  }
+ }
+ async function refresh(options){
+  options=options||{};
+  if(!options.force&&state.connected&&Date.now()-state.updatedAt<20000)return state;
+  if(!options.silent)setStatus('Mengambil daftar model, kemampuan, dan status pemakaian dari Ollama…',false);
+  try{
+   const tags=await request('/api/tags');
+   if(!Array.isArray(tags.models))throw new Error('Respons /api/tags tidak berisi array models.');
+   let running=[];
+   try{const ps=await request('/api/ps');running=Array.isArray(ps.models)?ps.models:[];state.psAvailable=true;}
+   catch(_){state.psAvailable=false;}
+   const base=tags.models.map(item=>({
+    name:String(item.name||'').trim(),size:Number(item.size)||0,modifiedAt:item.modified_at||'',
+    details:item.details||{},capabilities:[],capabilitiesKnown:false,running:null
+   })).filter(item=>item.name);
+   const inspected=[];
+   for(let i=0;i<base.length;i+=3){
+    const batch=await Promise.all(base.slice(i,i+3).map(inspectModel));
+    inspected.push(...batch);
+   }
+   inspected.forEach(item=>{
+    item.running=running.find(active=>String(active.name||active.model||'')===item.name)||null;
+   });
+   state.connected=true;state.models=inspected;state.running=running;state.updatedAt=Date.now();
+   render();
+   const loopback=await permission();
+   const psNote=state.psAvailable?'':' · status pemuatan model tidak tersedia pada API ini';
+   setStatus('TERHUBUNG · '+state.models.length+' model terpasang · '+state.running.length+' sedang dimuat · Loopback: '+loopback+psNote,false);
+   return state;
+  }catch(error){
+   state.connected=false;state.models=[];state.running=[];state.updatedAt=Date.now();render();
+   setStatus('KONEKSI GAGAL · '+(error.message||String(error))+'. Pastikan Ollama aktif, OLLAMA_ORIGINS benar, dan izin Loopback network Chrome = Allow.',true);
+   if(!options.silent)console.warn('TROZAL Ollama Model Manager:',error);
+   return null;
+  }
+ }
+ window.trozalOllamaRefreshModels=refresh;
+ window.trozalOllamaModelManager=state;
+ const refreshButton=byId('ollamaModelRefreshBtn');
+ if(refreshButton)refreshButton.addEventListener('click',async()=>{
+  refreshButton.disabled=true;const old=refreshButton.textContent;refreshButton.textContent='Memeriksa…';
+  try{await refresh({force:true});}finally{refreshButton.disabled=false;refreshButton.textContent=old;}
+ });
+ function replaceCheckButton(id,kind){
+  const old=byId(id);if(!old)return;
+  const button=old.cloneNode(true);old.replaceWith(button);
+  button.addEventListener('click',async()=>{
+   button.disabled=true;const oldText=button.textContent;button.textContent='Memeriksa…';
+   try{
+    const result=await refresh({force:true});
+    if(!result)throw new Error('Koneksi ke Ollama gagal. Periksa status Model Manager.');
+    if(kind==='scene'){
+     const selected=byId('visualMotionAiModel')?.value||'';
+     const rec=result.models.find(item=>item.name===selected);
+     const message='OLLAMA TERHUBUNG · '+result.models.length+' model · '+(rec?'Model '+rec.name+' tersedia ('+capabilityLabel(rec)+').':'Tidak ada model Text/Generate yang kompatibel.');
+     if(typeof visualMotionAiStatus==='function')visualMotionAiStatus(message,!rec|| (rec.capabilitiesKnown&&!rec.capabilities.includes('completion')));
+     else safeText(byId('visualMotionAiStatus'),message);
+    }else{
+     const selected=byId('trozalVisionModel')?.value||'';
+     const rec=result.models.find(item=>item.name===selected);
+     const visionCount=result.models.filter(item=>item.capabilities.includes('vision')).length;
+     const message='OLLAMA TERHUBUNG · '+result.models.length+' model · '+visionCount+' model Vision terverifikasi · '+(rec?'Pilihan: '+rec.name+' ('+capabilityLabel(rec)+').':'Tidak ada model Vision yang tersedia.');
+     if(typeof trozalVisionSetConnection==='function')trozalVisionSetConnection(message,!!rec&&(!rec.capabilitiesKnown||rec.capabilities.includes('vision')));
+     if(typeof trozalVisionSetStatus==='function')trozalVisionSetStatus(rec?(rec.capabilitiesKnown&&!rec.capabilities.includes('vision')?'Model ini tidak mendukung Vision. Pilih model dengan capability vision.':capabilityLabel(rec)):'Pasang model Vision lokal, lalu deteksi ulang.');
+    }
+   }catch(error){
+    const message='GAGAL · '+(error.message||String(error));
+    if(kind==='scene'&&typeof visualMotionAiStatus==='function')visualMotionAiStatus(message,true);
+    if(kind==='vision'&&typeof trozalVisionSetConnection==='function')trozalVisionSetConnection(message,false);
+   }finally{button.disabled=false;button.textContent=oldText;}
+  });
+ }
+ replaceCheckButton('visualMotionAiCheckBtn','scene');
+ replaceCheckButton('trozalVisionCheckBtn','vision');
 })();
 </script>
 </body></html>
