@@ -40,9 +40,9 @@ TROZAL MOTION can analyze actual preview frames using an Ollama model running on
 
 1. Install Ollama for Windows: https://ollama.com/download/windows
 2. Install a local model, for example `ollama pull qwen3-vl:2b`.
-3. Add a Windows user environment variable named `OLLAMA_ORIGINS` with the exact value `https://irzalbudiman2-cell.github.io`.
+3. Add a Windows user environment variable named `OLLAMA_ORIGINS` with the comma-separated origins `https://irzalbudiman2-cell.github.io,https://trozal-motion-web-prores.vercel.app,https://trozal-motion-web-prores-git-ollama-direct-web-7718e1-trozal-id.vercel.app` (no spaces, no trailing slashes).
 4. Quit Ollama from the system tray and start it again so it inherits the new variable.
-5. Open the GitHub Pages site, allow Chrome's **Loopback network** access when prompted, and click **Cek Ollama**.
+5. Open the GitHub Pages site or the current [Vercel preview](https://trozal-motion-web-prores-git-ollama-direct-web-7718e1-trozal-id.vercel.app), allow Chrome's **Loopback network** access when prompted, and click **Cek Ollama**. Add a newly generated Vercel preview origin to `OLLAMA_ORIGINS` when its hostname changes.
 
 See [TROZAL_LOCAL_VISION.md](TROZAL_LOCAL_VISION.md) for the manual Windows setup and troubleshooting. Do not use a wildcard origin (`*`); allow only the trusted TROZAL site. Metadata is an AI draft and should be reviewed before export.
 
