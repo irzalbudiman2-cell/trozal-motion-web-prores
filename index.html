@@ -2681,6 +2681,51 @@ function visualMotionPreviewSync(seconds){
 $('visualMotionPreview')?.addEventListener('load',visualMotionPreviewLoaded);
 visualMotionPreviewSetRatio();
 
+function trozalSetRenderPreviewLock(locked){
+ const key='__trozalRenderPreviewLockState';
+ if(locked){
+  if(window[key]?.active)return;
+  const state={active:true,media:[],animations:[],styles:[]};
+  const docs=[];
+  try{if(htmlMotionIframe?.contentDocument)docs.push(htmlMotionIframe.contentDocument)}catch(_){}
+  try{if($('visualMotionPreview')?.contentDocument)docs.push($('visualMotionPreview').contentDocument)}catch(_){}
+  docs.push(document);
+  const seenMedia=new Set(),seenAnimations=new Set();
+  docs.forEach(doc=>{
+   try{
+    doc.querySelectorAll('video,audio').forEach(media=>{
+     if(seenMedia.has(media))return;seenMedia.add(media);
+     const item={media,wasPlaying:!media.paused,muted:media.muted,volume:media.volume,currentTime:media.currentTime};
+     state.media.push(item);
+     try{media.pause()}catch(_){}
+    });
+   }catch(_){}
+   try{
+    doc.getAnimations({subtree:true}).forEach(animation=>{
+     if(seenAnimations.has(animation))return;seenAnimations.add(animation);
+     const item={animation,wasRunning:animation.playState==='running'};
+     state.animations.push(item);
+     try{animation.pause()}catch(_){}
+    });
+   }catch(_){}
+   try{
+    const style=doc.createElement('style');style.setAttribute('data-trozal-render-preview-lock','true');
+    style.textContent='*,*::before,*::after{animation-play-state:paused!important;transition:none!important;caret-color:transparent!important}';
+    (doc.head||doc.documentElement)?.appendChild(style);state.styles.push(style);
+   }catch(_){}
+  });
+  window[key]=state;
+  return;
+ }
+ const state=window[key];if(!state)return;
+ state.styles.forEach(style=>{try{style.remove()}catch(_){}});
+ state.animations.forEach(item=>{if(item.wasRunning)try{item.animation.play()}catch(_){}});
+ state.media.forEach(item=>{
+  const media=item.media;
+  try{media.muted=item.muted;media.volume=item.volume;if(item.wasPlaying){const p=media.play();if(p?.catch)p.catch(()=>{})}}catch(_){}
+ });
+ delete window[key];
+}
 function renderAt(t,syncPreview=true){
  playhead=Math.max(0,Math.min(+$('duration').value,t));
  if(syncPreview)visualMotionPreviewSync(playhead);
@@ -2969,10 +3014,10 @@ const plannedFrames=Math.max(1,Math.round(d*fps)),plannedPixelFrames=w*h*planned
 const qualityMbps=$('quality').value==='max'?80:$('quality').value==='high'?45:18;const bitrate=Math.round(Math.max(350000,Math.min(100000000,qualityMbps*1000000)));let rec=frameSequenceMode?null:new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:bitrate});let chunks=[],pngZip=frameSequenceMode?new JSZip():null;if(rec){rec.onerror=e=>{console.error('MediaRecorder error',e);finishRender();setStatus('Render gagal. Coba resolusi atau kualitas lebih rendah.');setExportStatus('Render gagal; periksa dukungan codec dan memori browser.');setRenderProgress(100,'Render gagal','error')};rec.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};rec.onstop=()=>{if(trozalRenderCancelRequested)return;lastBlob=new Blob(chunks,{type:mime});const url=URL.createObjectURL(lastBlob),link=document.createElement('a');link.href=url;link.download=activeRenderBaseName+(mime.includes('mp4')?'.mp4':'.webm');lastDownloadName=link.download;link.click();setTimeout(()=>URL.revokeObjectURL(url),30000);$('downloadVideo').disabled=false;const actualMB=lastBlob.size/1024/1024;setExportStatus('Selesai: '+actualMB.toFixed(1)+' MB · '+(mime.includes('mp4')?'MP4':'WebM')+' · '+totalFrames+' frame'+(actualMB>targetMB?' · melebihi target; turunkan preset kualitas atau resolusi':''));setStatus('Render video selesai dan unduhan dimulai.')}};
 activeRenderBaseName=getCurrentRenderBaseName();
  const cancelRenderButton=$('cancelRenderBtn');if(cancelRenderButton){cancelRenderButton.style.display='block';cancelRenderButton.disabled=false;}
- trozalRenderCancelHandler=()=>{if(trozalRenderCancelRequested)return;trozalRenderCancelRequested=true;$('stage')?.classList.remove('rendering-preview-paused');renderAt(renderPreviewHoldTime);try{if(rec&&rec.state!=='inactive')rec.stop();}catch(_){}try{if(stream)stream.getTracks().forEach(track=>track.stop());}catch(_){}$('renderBtn').disabled=false;$('renderBtn').textContent='▶ Render';if(cancelRenderButton){cancelRenderButton.style.display='none';cancelRenderButton.disabled=false;}trozalRenderCancelHandler=null;setStatus('Render dibatalkan. File parsial tidak disimpan.');setExportStatus('Render dibatalkan oleh pengguna. Tidak ada file parsial yang diunduh.');setRenderProgress(0,'Render dibatalkan','error');};
- const renderPreviewHoldTime=playhead;playing=false;cancelAnimationFrame(raf);$('playBtn').textContent='▶ Putar';$('stage')?.classList.add('rendering-preview-paused');$('renderBtn').disabled=true;$('renderBtn').textContent='Rendering…';setRenderProgress(1,'Menyiapkan render','running');setExportStatus('Menyiapkan render '+w+'×'+h+' · '+d+' detik · '+fps+' FPS · mode '+(turboMode?'TURBO':'Normal'));setStatus('Menyiapkan render '+w+'×'+h+' · '+d+' detik · '+fps+' FPS · mode '+(turboMode?'TURBO':'Normal')+'. Jangan tutup tab.');
-let img=null,svgImg=null,svgPieceImgs=[];try{if(htmlMotionSource){/* HTML DOM is captured per frame below. */}else if(svgWasSplit&&svgPieces.length){for(const piece of svgPieces){const safePiece=await trozalInlineSvgAssets(piece);const pi=await trozalLoadCanvasImage(URL.createObjectURL(new Blob([safePiece],{type:'image/svg+xml'})));svgPieceImgs.push(pi)}}else if(sourceSvg){const safeSvg=await trozalInlineSvgAssets(sourceSvg);svgImg=await trozalLoadCanvasImage(URL.createObjectURL(new Blob([safeSvg],{type:'image/svg+xml'})))}else{let im=$('object').querySelector('img');if(im){img=await trozalLoadCanvasImage(im.currentSrc||im.src)}}}catch(assetError){$('renderBtn').disabled=false;$('renderBtn').textContent='▶ Render';$('stage')?.classList.remove('rendering-preview-paused');setStatus('Render dihentikan sebelum frame dibuat: '+(assetError?.message||assetError));setExportStatus('Render gagal: perbaiki aset eksternal/CORS, lalu render ulang.');setRenderProgress(0,'Gagal memuat aset','error');console.error('trozal_MOTION asset/CORS error:',assetError);return}
-let frame=0,totalFrames=Math.max(1,Math.round(d*fps)),step=1000/fps,renderClockStart=performance.now();window.__trozalRenderMetrics={active:true,width:w,height:h,fps,duration:d,totalFrames,format:wanted.toUpperCase(),startedAt:renderClockStart,lastUpdateAt:renderClockStart,lastPercent:0,speed:0};async function finishRender(){if(trozalRenderCancelRequested)return;trozalRenderCancelHandler=null;const cancelButton=$('cancelRenderBtn');if(cancelButton)cancelButton.style.display='none';$('stage')?.classList.remove('rendering-preview-paused');renderAt(renderPreviewHoldTime);if(rec&&rec.state!=='inactive')rec.stop();if(stream)stream.getTracks().forEach(track=>track.stop());$('renderBtn').disabled=false;$('renderBtn').textContent='▶ Render';setRenderProgress(100,'Frame selesai · menyiapkan ekspor','running');if(frameSequenceMode){if(wanted==='mp4'){ $('renderBtn').disabled=true;$('renderBtn').textContent='Encoding MP4…';try{await encodeMovWithWasm(pngZip,totalFrames,fps,w,h,'mp4');$('renderBtn').disabled=false;$('renderBtn').textContent='▶ Render';return}catch(mp4Error){$('renderBtn').disabled=false;$('renderBtn').textContent='▶ Render';console.error('MP4 H.264 encoding failed:',mp4Error);setExportStatus('MP4 GAGAL — '+(mp4Error?.message||mp4Error));setStatus('MP4 belum dibuat. Periksa koneksi FFmpeg.wasm atau coba resolusi lebih rendah.');setRenderProgress(100,'Gagal membuat MP4','error');return}}
+ trozalRenderCancelHandler=()=>{if(trozalRenderCancelRequested)return;trozalRenderCancelRequested=true;$('stage')?.classList.remove('rendering-preview-paused');renderAt(renderPreviewHoldTime);trozalSetRenderPreviewLock(false);try{if(rec&&rec.state!=='inactive')rec.stop();}catch(_){}try{if(stream)stream.getTracks().forEach(track=>track.stop());}catch(_){}$('renderBtn').disabled=false;$('renderBtn').textContent='▶ Render';if(cancelRenderButton){cancelRenderButton.style.display='none';cancelRenderButton.disabled=false;}trozalRenderCancelHandler=null;setStatus('Render dibatalkan. File parsial tidak disimpan.');setExportStatus('Render dibatalkan oleh pengguna. Tidak ada file parsial yang diunduh.');setRenderProgress(0,'Render dibatalkan','error');};
+ const renderPreviewHoldTime=playhead;playing=false;cancelAnimationFrame(raf);$('playBtn').textContent='▶ Putar';trozalSetRenderPreviewLock(true);$('stage')?.classList.add('rendering-preview-paused');$('renderBtn').disabled=true;$('renderBtn').textContent='Rendering…';setRenderProgress(1,'Menyiapkan render','running');setExportStatus('Menyiapkan render '+w+'×'+h+' · '+d+' detik · '+fps+' FPS · mode '+(turboMode?'TURBO':'Normal'));setStatus('Menyiapkan render '+w+'×'+h+' · '+d+' detik · '+fps+' FPS · mode '+(turboMode?'TURBO':'Normal')+'. Jangan tutup tab.');
+let img=null,svgImg=null,svgPieceImgs=[];try{if(htmlMotionSource){/* HTML DOM is captured per frame below. */}else if(svgWasSplit&&svgPieces.length){for(const piece of svgPieces){const safePiece=await trozalInlineSvgAssets(piece);const pi=await trozalLoadCanvasImage(URL.createObjectURL(new Blob([safePiece],{type:'image/svg+xml'})));svgPieceImgs.push(pi)}}else if(sourceSvg){const safeSvg=await trozalInlineSvgAssets(sourceSvg);svgImg=await trozalLoadCanvasImage(URL.createObjectURL(new Blob([safeSvg],{type:'image/svg+xml'})))}else{let im=$('object').querySelector('img');if(im){img=await trozalLoadCanvasImage(im.currentSrc||im.src)}}}catch(assetError){$('renderBtn').disabled=false;$('renderBtn').textContent='▶ Render';$('stage')?.classList.remove('rendering-preview-paused');trozalSetRenderPreviewLock(false);setStatus('Render dihentikan sebelum frame dibuat: '+(assetError?.message||assetError));setExportStatus('Render gagal: perbaiki aset eksternal/CORS, lalu render ulang.');setRenderProgress(0,'Gagal memuat aset','error');console.error('trozal_MOTION asset/CORS error:',assetError);return}
+let frame=0,totalFrames=Math.max(1,Math.round(d*fps)),step=1000/fps,renderClockStart=performance.now();window.__trozalRenderMetrics={active:true,width:w,height:h,fps,duration:d,totalFrames,format:wanted.toUpperCase(),startedAt:renderClockStart,lastUpdateAt:renderClockStart,lastPercent:0,speed:0};async function finishRender(){if(trozalRenderCancelRequested)return;trozalRenderCancelHandler=null;const cancelButton=$('cancelRenderBtn');if(cancelButton)cancelButton.style.display='none';$('stage')?.classList.remove('rendering-preview-paused');renderAt(renderPreviewHoldTime);trozalSetRenderPreviewLock(false);if(rec&&rec.state!=='inactive')rec.stop();if(stream)stream.getTracks().forEach(track=>track.stop());$('renderBtn').disabled=false;$('renderBtn').textContent='▶ Render';setRenderProgress(100,'Frame selesai · menyiapkan ekspor','running');if(frameSequenceMode){if(wanted==='mp4'){ $('renderBtn').disabled=true;$('renderBtn').textContent='Encoding MP4…';try{await encodeMovWithWasm(pngZip,totalFrames,fps,w,h,'mp4');$('renderBtn').disabled=false;$('renderBtn').textContent='▶ Render';return}catch(mp4Error){$('renderBtn').disabled=false;$('renderBtn').textContent='▶ Render';console.error('MP4 H.264 encoding failed:',mp4Error);setExportStatus('MP4 GAGAL — '+(mp4Error?.message||mp4Error));setStatus('MP4 belum dibuat. Periksa koneksi FFmpeg.wasm atau coba resolusi lebih rendah.');setRenderProgress(100,'Gagal membuat MP4','error');return}}
 if(movMode){
  $('renderBtn').disabled=true;$('renderBtn').textContent='Encoding ProRes…';
  try{
@@ -3072,7 +3117,7 @@ async function draw(){
   console.error('trozal_MOTION render frame error:',err);
   try{if(rec&&rec.state!=='inactive')rec.stop()}catch(e){}
   try{if(stream)stream.getTracks().forEach(track=>track.stop())}catch(e){}
-  $('renderBtn').disabled=false;$('renderBtn').textContent='▶ Render';$('stage')?.classList.remove('rendering-preview-paused');renderAt(renderPreviewHoldTime);
+  $('renderBtn').disabled=false;$('renderBtn').textContent='▶ Render';$('stage')?.classList.remove('rendering-preview-paused');renderAt(renderPreviewHoldTime);trozalSetRenderPreviewLock(false);
   setStatus('Rendering gagal: '+(err?.message||String(err)));
   setExportStatus('Render gagal pada frame '+frame+': '+(err?.message||String(err)));setRenderProgress(Math.round(frame/Math.max(1,totalFrames)*100),'Render gagal','error');
  }
