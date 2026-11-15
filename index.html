@@ -719,7 +719,9 @@ body[data-ui-layout="professional"] .visual-scene-card:focus-within{
     <label class="inline-check"><input type="checkbox" id="visualMotionParticles" checked> Partikel / atmosfer</label>
     <label class="inline-check"><input type="checkbox" id="visualMotionDepth" checked> Layer kedalaman</label>
    </div>
-   <div class="metadata-evidence" style="margin:10px 0;border-color:#9262ca;background:#1a1030"><b style="color:#d8b7ff">AI GENERATOR LOKAL</b><div class="row" style="gap:8px;align-items:center;margin-top:7px"><select id="visualMotionAiModel" aria-label="Model AI pembuat adegan" style="flex:1"><option value="qwen3.5:4b">Qwen3.5 4B · disarankan untuk membuat SVG</option><option value="qwen3-vl:2b">Qwen3-VL 2B · ringan / cadangan</option><option value="qwen3-vl:4b">Qwen3-VL 4B · vision lebih detail</option></select><button type="button" id="visualMotionAiCheckBtn">Cek Ollama</button></div><div id="visualMotionAiStatus" class="help" aria-live="polite">AI lokal belum diperiksa. Pastikan Ollama dan model sudah terpasang.</div><button type="button" class="primary" id="generateVisualMotionAiBtn" style="width:100%;margin-top:8px">✦ GENERATE DENGAN AI LOKAL</button><p class="help">AI akan membuat komposisi SVG multi-objek dan animasi CSS. Tidak memakai API berbayar. Hasil perlu diperiksa; kualitas bergantung pada kemampuan model lokal.</p></div><details style="margin:8px 0"><summary style="cursor:pointer">Mode cadangan: generator SVG prosedural lama</summary><p class="help">Mode ini memakai template dan kata kunci, bukan AI generatif. Gunakan jika Ollama sedang tidak tersedia.</p><button type="button" id="generateVisualMotionBtn">◈ GENERATE SVG PROSEDURAL</button></details><button type="button" id="resetVisualMotionBtn">Reset Prompt & Hasil</button>
+   <div class="metadata-evidence" style="margin:10px 0;border-color:#9262ca;background:#1a1030"><b style="color:#d8b7ff">AI GENERATOR LOKAL</b><div class="row" style="gap:8px;align-items:center;margin-top:7px"><select id="visualMotionAiModel" aria-label="Model AI pembuat adegan" style="flex:1"><option value="qwen3.5:4b">Qwen3.5 4B · disarankan untuk membuat SVG</option><option value="qwen3-vl:2b">Qwen3-VL 2B · ringan / cadangan</option><option value="qwen3-vl:4b">Qwen3-VL 4B · vision lebih detail</option></select><button type="button" id="visualMotionAiCheckBtn">Cek Ollama</button></div><div id="visualMotionAiStatus" class="help" aria-live="polite">AI lokal belum diperiksa. Pastikan Ollama dan model sudah terpasang.</div><button type="button" class="primary" id="generateVisualMotionAiBtn" style="width:100%;margin-top:8px">✦ GENERATE DENGAN AI LOKAL</button>
+<button type="button" id="cancelVisualMotionAiBtn" style="display:none;width:100%;margin-top:6px;background:#8e2835;border-color:#d55a69;color:#fff">■ BATALKAN GENERASI</button>
+<div class="ollama-stream-metrics" id="visualMotionStreamingMetrics" role="status" aria-live="polite">Streaming belum dimulai · hasil akan muncul bertahap di kolom HTML.</div><p class="help">AI akan membuat komposisi SVG multi-objek dan animasi CSS. Tidak memakai API berbayar. Hasil perlu diperiksa; kualitas bergantung pada kemampuan model lokal.</p></div><details style="margin:8px 0"><summary style="cursor:pointer">Mode cadangan: generator SVG prosedural lama</summary><p class="help">Mode ini memakai template dan kata kunci, bukan AI generatif. Gunakan jika Ollama sedang tidak tersedia.</p><button type="button" id="generateVisualMotionBtn">◈ GENERATE SVG PROSEDURAL</button></details><button type="button" id="resetVisualMotionBtn">Reset Prompt & Hasil</button>
    <div class="status" id="visualMotionStatus">Masukkan prompt visual untuk membuat adegan gambar bergerak.</div>
    <label>LIVE COMPOSER PREVIEW · DRAF SEBELUM DIIMPOR</label>
    <iframe id="visualMotionPreview" title="TROZAL AI Scene Composer synchronized draft preview" sandbox="allow-same-origin" style="display:block;width:100%;height:300px;border:1px solid #8452c7;border-radius:9px;background:#090615"></iframe>
@@ -1014,6 +1016,7 @@ body[data-ui-layout="professional"] .visual-scene-card:focus-within{
     <small class="help">Pilih hingga 4 screenshot PNG/JPG/WebP. Jika tidak memilih gambar, TROZAL akan mencoba menangkap 3 frame langsung dari Preview pada waktu 0%, 50%, dan 85%.</small>
     <div class="row" style="margin-top:8px;flex-wrap:wrap">
      <button type="button" class="primary" id="trozalVisionAnalyzeBtn">✦ ANALISIS VISUAL SEBENARNYA</button>
+<button type="button" id="trozalVisionCancelBtn" style="display:none;background:#8e2835;border-color:#d55a69;color:#fff">■ BATALKAN ANALISIS</button>
      <button type="button" id="trozalVisionClearImagesBtn">Hapus gambar pilihan</button>
     </div>
     <div id="trozalVisionStatus" class="help" aria-live="polite">Siap menunggu Ollama dan model lokal.</div>
@@ -5907,35 +5910,36 @@ async function trozalVisionRequestJson(model, images, prompt) {
   {format:'json',numPredict:4096,prompt:strictPrompt},
   {format:undefined,numPredict:4096,prompt:strictPrompt}
  ];
+ const controller=trozalVisionActiveController||new AbortController();
  for(let attempt=0;attempt<attempts.length;attempt++){
-  const spec=attempts[attempt],controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),8*60*1000);
+  const spec=attempts[attempt];
+  if(controller.signal.aborted)throw new DOMException('Analisis Vision dibatalkan','AbortError');
   try{
-   const body={model,messages:[{role:'user',content:spec.prompt,images}],think:false,stream:false,options:{temperature:0.02,num_ctx:8192,num_predict:spec.numPredict},keep_alive:'10m'};
+   const body={model,messages:[{role:'user',content:spec.prompt,images}],think:false,options:{temperature:0.02,num_ctx:8192,num_predict:spec.numPredict},keep_alive:'10m'};
    if(spec.format)body.format=spec.format;
-   const response=await fetch(trozalVisionBaseUrl()+'/api/chat',{method:'POST',mode:'cors',credentials:'omit',headers:{'Content-Type':'application/json'},targetAddressSpace:'loopback',signal:controller.signal,body:JSON.stringify(body)});
-   let data={};try{data=await response.json();}catch(_){}
-   if(!response.ok)throw new Error('Ollama /api/chat HTTP '+response.status+': '+String(data.error||'respons kosong'));
-   const content=String(data.message?.content||data.response||'').trim();
-   if(!content){
-    const reason=String(data.done_reason||data.message?.done_reason||'tidak tersedia');
-    const evalCount=Number(data.eval_count||data.message?.eval_count||0);
-    const thinking=String(data.message?.thinking||'').length;
-    throw new Error('Model '+model+' mengirim content kosong (done_reason: '+reason+', eval_count: '+evalCount+', batas output: '+spec.numPredict+', karakter thinking: '+thinking+'). Pilih Qwen3.5 4B Vision atau model Vision lain; jangan hanya menaikkan token.');
-   }
+   const result=await trozalOllamaStreamRequest(trozalVisionBaseUrl()+'/api/chat',body,{
+    controller,timeoutMs:480000,
+    onProgress:state=>{
+     trozalVisionSetStatus('Menerima hasil Vision bertahap · percobaan '+(attempt+1)+'/'+attempts.length+' · '+trozalStreamFormatMetrics(state));
+    }
+   });
+   const content=String(result.content||'').trim();
    try{
     const parsed=trozalVisionCleanJson(content);
     const usable=String(parsed.title||'').trim()||String(parsed.description||'').trim()||String(parsed.visual_summary||'').trim()||(Array.isArray(parsed.visible_objects)&&parsed.visible_objects.length);
     if(!usable)throw new Error('JSON Vision valid tetapi seluruh isi metadata kosong.');
-    return {parsed,data,content};
-   }catch(parseError){throw new Error('Respons Vision tidak dapat dipakai: '+parseError.message+' · cuplikan: '+content.slice(0,180));}
+    return {parsed,data:result,content};
+   }catch(parseError){throw new Error('Respons Vision belum dapat dipakai: '+parseError.message+' · cuplikan: '+content.slice(0,180));}
   }catch(error){
    lastError=error;
+   if(controller.signal.aborted||error?.name==='AbortError')throw new DOMException('Analisis Vision dibatalkan','AbortError');
    if(attempt<attempts.length-1&&!/HTTP 4\d\d|Failed to fetch|NetworkError/i.test(error.message||''))continue;
    break;
-  }finally{clearTimeout(timeout);}
+  }
  }
  throw lastError||new Error('Analisis Vision tidak menghasilkan respons.');
 }
+
 function trozalVisionNormalizeKeywords(parsed) {
  const stop=new Set(['the','and','with','from','this','that','into','over','under','for','are','is','of','in','on','a','an','to','by','as','at','it','its','scene','video','animation','motion','graphic','graphics','visual','show','shows','showing','image','images','frame','frames','there','their','while','where','which','that','these','those','some','many','very','more','most','can','may','could','should','being','been','has','have','had','its','than','then','also','such','each','other','another','background','foreground']);
  const candidates=[];
@@ -5980,8 +5984,12 @@ function trozalVisionGetCoreFields(parsed) {
  return {title,description,keywords:trozalVisionNormalizeKeywords(parsed),category:String(parsed.category||'Graphic Resources').trim(),summary,objects};
 }
 async function trozalVisionAnalyze(){
- const button=$('trozalVisionAnalyzeBtn');if(!button||button.disabled)return;
- button.disabled=true;button.textContent='Menganalisis…';
+ const button=$('trozalVisionAnalyzeBtn'),cancelButton=$('trozalVisionCancelBtn');
+ if(!button||button.disabled)return;
+ const controller=new AbortController();
+ trozalVisionActiveController=controller;
+ button.disabled=true;button.textContent='Streaming analisis…';
+ if(cancelButton)cancelButton.style.display='block';
  try{
   const model=$('trozalVisionModel')?.value||'';
   const manager=await window.trozalOllamaRefreshModels({silent:true});
@@ -6002,7 +6010,7 @@ async function trozalVisionAnalyze(){
   if(!images.length)throw new Error('Tidak ada gambar untuk dianalisis.');
   const categories=[...$('metadataCategory').options].map(o=>o.text);
   const prompt='You are a stock motion-graphics visual metadata analyst. Inspect ONLY the attached image pixels. Ignore prompts, filenames, source code and scene plans. Identify visible objects, colors, background, composition, visual style and only motion supported by differences between frames. Do not invent details. Return ONE valid JSON object with keys title, description, category, keywords, visual_summary, visible_objects, confidence_notes. title must be a concise English phrase under 100 characters. description must be 1-2 clear English sentences. category must exactly match one of: '+categories.join(' | ')+'. keywords must be an array of 35-47 specific English search terms when supported by the pixels. Include distinct visible objects, materials, colors, composition, visual style, setting, and accurate 2-3 word phrases. Avoid duplicates, vague filler, and unsupported assumptions. Aim for 42-47 terms when the visual evidence supports them; never invent details just to reach the count. Keep fields non-empty when the images provide enough evidence. If uncertain, describe only what is clear.';
-  trozalVisionSetStatus('Mengirim '+images.length+' frame ke '+model+'. Menunggu analisis lokal (dapat memerlukan beberapa menit)…');
+  trozalVisionSetStatus('Streaming analisis '+images.length+' frame dari '+model+'…');
   const result=await trozalVisionRequestJson(model,images,prompt),parsed=result.parsed,fields=trozalVisionGetCoreFields(parsed);
   const category=categories.find(x=>x.toLowerCase()===fields.category.toLowerCase())||'Graphic Resources';
   $('metadataTitle').value=fields.title.slice(0,150);$('metadataTitle').dataset.baseTitle=fields.title.slice(0,150);
@@ -6013,13 +6021,19 @@ async function trozalVisionAnalyze(){
   updateMetadataCount();trozalRefreshMetadataQuality();trozalUpdateMetadataPlatformValidation();
   if(typeof trozalMetadataRenderReview==='function'){trozalMetadataApproved?.clear?.();trozalMetadataRenderReview();}
   scheduleAutosave();
-  trozalVisionSetStatus('SELESAI · Judul, deskripsi, kategori, dan '+fields.keywords.length+' keyword berhasil diisi dari '+images.length+' gambar.');
+  trozalVisionSetStatus('SELESAI · Judul, deskripsi, kategori, dan '+fields.keywords.length+' keyword berhasil diisi dari '+images.length+' gambar melalui streaming.');
  }catch(error){
-  const msg=error?.name==='AbortError'?'Waktu analisis melebihi 8 menit. Periksa Ollama dan beban model.':(error?.message||String(error));
-  trozalVisionSetStatus('ANALISIS GAGAL · '+msg,true);
+  const cancelled=controller.signal.aborted||error?.name==='AbortError';
+  const msg=cancelled?'Analisis dibatalkan.':'Analisis gagal: '+(error?.message||String(error));
+  trozalVisionSetStatus(msg,true);
   console.error('TROZAL Ollama Vision:',error);
- }finally{button.disabled=false;button.textContent='✦ ANALISIS VISUAL SEBENARNYA';}
+ }finally{
+  trozalVisionActiveController=null;
+  button.disabled=false;button.textContent='✦ ANALISIS VISUAL SEBENARNYA';
+  if(cancelButton)cancelButton.style.display='none';
+ }
 }
+
 $('trozalVisionCheckBtn')?.addEventListener('click',trozalVisionCheck);
 $('trozalVisionAnalyzeBtn')?.addEventListener('click',trozalVisionAnalyze);
 $('trozalVisionClearImagesBtn')?.addEventListener('click',()=>{$('trozalVisionImages').value='';trozalVisionSetStatus('Gambar pilihan dibersihkan. Analisis berikutnya akan mengambil frame dari Preview.')});
@@ -6069,11 +6083,104 @@ function visualMotionAiExtractCode(raw){
  if(!parsed.querySelector('svg'))throw new Error('Struktur SVG tidak valid.');
  return code;
 }
+/* OLLAMA STREAMING ENGINE · NDJSON, progress metrics, cancel and safe cleanup */
+let trozalSceneActiveController=null;
+let trozalVisionActiveController=null;
+function trozalStreamFormatMetrics(state){
+ const elapsed=Math.max(.001,(performance.now()-state.startedAt)/1000);
+ const charsPerSecond=Math.round(state.content.length/elapsed);
+ const parts=[state.content.length.toLocaleString()+' karakter',elapsed.toFixed(1)+' dtk',charsPerSecond.toLocaleString()+' karakter/dtk'];
+ if(state.evalCount>0&&state.evalDuration>0){
+  const tokensPerSecond=state.evalCount/(state.evalDuration/1e9);
+  if(Number.isFinite(tokensPerSecond))parts.push(tokensPerSecond.toFixed(1)+' token/dtk');
+ }
+ return parts.join(' · ');
+}
+async function trozalOllamaStreamRequest(url,body,options){
+ options=options||{};
+ const controller=options.controller||new AbortController();
+ const timeoutMs=options.timeoutMs||600000;
+ const startedAt=performance.now();
+ const state={startedAt,content:'',thinking:'',evalCount:0,evalDuration:0,promptEvalCount:0,done:false};
+ const timeout=setTimeout(()=>controller.abort(new DOMException('Ollama streaming timeout','TimeoutError')),timeoutMs);
+ try{
+  const payload=Object.assign({},body,{stream:true});
+  const response=await fetch(url,{
+   method:'POST',mode:'cors',credentials:'omit',cache:'no-store',
+   headers:{'Content-Type':'application/json'},
+   targetAddressSpace:'loopback',
+   signal:controller.signal,
+   body:JSON.stringify(payload)
+  });
+  if(!response.ok){
+   let detail='';try{const errorData=await response.json();detail=String(errorData.error||'')}catch(_){}
+   throw new Error('Ollama '+url.split('/').pop()+' HTTP '+response.status+(detail?': '+detail:''));
+  }
+  if(!response.body||typeof response.body.getReader!=='function'){
+   throw new Error('Browser tidak menyediakan stream reader untuk respons Ollama.');
+  }
+  const reader=response.body.getReader(),decoder=new TextDecoder();
+  let pending='';
+  const consumeLine=line=>{
+   const trimmed=String(line||'').trim();
+   if(!trimmed)return;
+   let data;
+   try{data=JSON.parse(trimmed)}catch(error){throw new Error('Baris streaming NDJSON tidak valid: '+error.message+' · '+trimmed.slice(0,120))}
+   if(data.error)throw new Error(String(data.error));
+   const delta=String(data.message?.content||data.response||data.message?.tool_calls?.[0]?.function?.arguments||'');
+   if(delta)state.content+=delta;
+   const thought=String(data.message?.thinking||'');
+   if(thought)state.thinking+=thought;
+   if(Number.isFinite(Number(data.eval_count)))state.evalCount=Number(data.eval_count);
+   if(Number.isFinite(Number(data.eval_duration)))state.evalDuration=Number(data.eval_duration);
+   if(Number.isFinite(Number(data.prompt_eval_count)))state.promptEvalCount=Number(data.prompt_eval_count);
+   if(data.done===true)state.done=true;
+   if(typeof options.onProgress==='function')options.onProgress(state,data);
+  };
+  while(true){
+   if(controller.signal.aborted)throw new DOMException('Streaming dibatalkan pengguna','AbortError');
+   const result=await reader.read();
+   if(result.done)break;
+   pending+=decoder.decode(result.value,{stream:true});
+   let newline;
+   while((newline=pending.indexOf('\n'))>=0){
+    const line=pending.slice(0,newline);
+    pending=pending.slice(newline+1);
+    consumeLine(line);
+   }
+  }
+  pending+=decoder.decode();
+  if(pending.trim())consumeLine(pending);
+  if(!state.content.trim())throw new Error('Ollama mengakhiri stream tanpa mengirim content. done='+state.done+', eval_count='+state.evalCount+'.');
+  if(typeof options.onComplete==='function')options.onComplete(state);
+  return {content:state.content,thinking:state.thinking,evalCount:state.evalCount,evalDuration:state.evalDuration,promptEvalCount:state.promptEvalCount,elapsedMs:performance.now()-startedAt,done:state.done};
+ }catch(error){
+  if(controller.signal.aborted||error?.name==='AbortError'){
+   const cancelled=controller.signal.reason?.name!=='TimeoutError';
+   if(cancelled)throw new DOMException('Permintaan Ollama dibatalkan','AbortError');
+   throw new Error('Ollama streaming melewati batas waktu '+Math.round(timeoutMs/60000)+' menit.');
+  }
+  throw error;
+ }finally{clearTimeout(timeout);}
+}
+function trozalStreamProgress(id,state,label){
+ const node=$(id);if(!node)return;
+ node.textContent=label+' · '+trozalStreamFormatMetrics(state);
+}
+function trozalStreamCancel(controller){
+ if(controller&&!controller.signal.aborted)controller.abort();
+}
+
 async function generateVisualMotionWithLocalAi(){
- const btn=$('generateVisualMotionAiBtn');if(btn.disabled)return;
+ const btn=$('generateVisualMotionAiBtn'),cancelBtn=$('cancelVisualMotionAiBtn');
+ if(!btn||btn.disabled)return;
  const brief=$('visualMotionPrompt').value.trim();
  if(!brief){visualMotionAiStatus('Tulis brief visual terlebih dahulu.');return;}
+ const controller=new AbortController();
+ trozalSceneActiveController=controller;
  btn.disabled=true;btn.textContent='AI SEDANG MENYUSUN ADEGAN…';
+ if(cancelBtn)cancelBtn.style.display='block';
+ const progressId='visualMotionStreamingMetrics';
  try{
   const model=$('visualMotionAiModel').value,check=await visualMotionAiCheck();
   if(!check)throw new Error('Ollama tidak dapat dihubungi.');
@@ -6086,39 +6193,61 @@ async function generateVisualMotionWithLocalAi(){
   const ratio=$('visualMotionRatio').value,duration=Math.max(3,Math.min(60,+$('visualMotionDuration').value||15));
   const style=$('visualMotionStyle').value,accent=$('visualMotionAccent').value,camera=$('visualMotionCamera').value,transition=$('visualMotionTransition').value;
   const system='You are a senior motion-graphics art director and SVG animation engineer. Return ONLY a complete standalone HTML5 document, no markdown. Create a polished, richly detailed, coherent scene that faithfully depicts the brief. Use SVG vector illustration, not generic icon placeholders. Structure the scene into at least 5 independently addressable semantic <g> layers with unique descriptive ids: background, environment, main subject, secondary objects, foreground/atmosphere. Animate at least 3 appropriate groups independently using CSS keyframes and transform-origin; use natural, subtle movement. Use gradients, layered shapes, carefully controlled highlights/shadows and depth. Preserve the requested aspect ratio and keep all important objects inside the viewBox. Include complete inline CSS and SVG. No JavaScript, external assets, remote URLs, external fonts, iframe, canvas, scripts or embedded media. Avoid text overlays unless the brief requires visible signage. Ensure the SVG and HTML are fully closed and syntactically complete. Keep output compact enough to finish in one response. Do not explain anything; output only code.';
-  const user='VISUAL BRIEF: '+brief+'\\nAspect ratio: '+ratio+'. Target duration: '+duration+' seconds. Visual style: '+style+'. Accent: '+accent+'. Camera direction: '+camera+'. Scene transition preference: '+transition+'. Produce a single coherent scene with distinct SVG groups/layers and CSS motion. Set animation duration to match '+duration+' seconds and make the animation loop smoothly when appropriate.';
-  visualMotionAiStatus('Mengirim brief ke '+model+' pada komputer lokal. Proses dapat memerlukan beberapa menit…');
-  const endpoint=trozalVisionBaseUrl();
-  const requestOptions={temperature:.25,num_ctx:8192,num_predict:8192};
+  const user='VISUAL BRIEF: '+brief+'\nAspect ratio: '+ratio+'. Target duration: '+duration+' seconds. Visual style: '+style+'. Accent: '+accent+'. Camera direction: '+camera+'. Scene transition preference: '+transition+'. Produce a single coherent scene with distinct SVG groups/layers and CSS motion. Set animation duration to match '+duration+' seconds and make the animation loop smoothly when appropriate.';
+  const endpoint=trozalVisionBaseUrl(),requestOptions={temperature:.25,num_ctx:8192,num_predict:8192};
   const requests=[
-   {url:endpoint+'/api/chat',body:{model,messages:[{role:'system',content:system},{role:'user',content:user}],think:false,stream:false,options:requestOptions,keep_alive:'10m'}},
-   {url:endpoint+'/api/generate',body:{model,prompt:system+'\n\n'+user,think:false,stream:false,raw:false,options:requestOptions,keep_alive:'10m'}}
+   {url:endpoint+'/api/chat',body:{model,messages:[{role:'system',content:system},{role:'user',content:user}],think:false,options:requestOptions,keep_alive:'10m'},label:'Chat'},
+   {url:endpoint+'/api/generate',body:{model,prompt:system+'\n\n'+user,think:false,raw:false,options:requestOptions,keep_alive:'10m'},label:'Generate'}
   ];
-  let rawCode='',responseInfo=[],data=null;
-  for(let requestIndex=0;requestIndex<requests.length;requestIndex++){
-   const request=requests[requestIndex];
-   visualMotionAiStatus(requestIndex===0?'Meminta kode SVG melalui Ollama Chat…':'Chat tidak memberi kode. Mencoba jalur Ollama Generate…');
-   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),10*60*1000);
+  let streamed=null,lastError=null;
+  for(let index=0;index<requests.length;index++){
+   if(controller.signal.aborted)throw new DOMException('Permintaan Ollama dibatalkan','AbortError');
+   const request=requests[index];
+   visualMotionAiStatus((index===0?'Streaming dari Ollama Chat':'Chat tidak menghasilkan kode valid. Streaming fallback Ollama Generate')+' · '+model+'…');
    try{
-    const response=await fetch(request.url,{method:'POST',headers:{'Content-Type':'application/json'},targetAddressSpace:'loopback',signal:controller.signal,body:JSON.stringify(request.body)});
-    data=await response.json().catch(()=>({}));
-    if(!response.ok){responseInfo.push(request.url.split('/').pop()+' HTTP '+response.status+': '+String(data.error||''));continue;}
-    rawCode=String(data.message?.content||data.response||data.message?.tool_calls?.[0]?.function?.arguments||'').trim();
-    if(rawCode)break;
-    responseInfo.push(request.url.split('/').pop()+' kosong (done_reason: '+String(data.done_reason||data.message?.done_reason||'tidak tersedia')+', eval_count: '+String(data.eval_count||data.message?.eval_count||0)+')');
-   }catch(requestError){responseInfo.push(request.url.split('/').pop()+': '+(requestError?.name==='AbortError'?'timeout 10 menit':requestError.message||String(requestError)));}
-   finally{clearTimeout(timer);}
+    streamed=await trozalOllamaStreamRequest(request.url,request.body,{
+     controller,timeoutMs:600000,
+     onProgress:state=>{
+      const output=$('visualMotionOutput');
+      if(output)output.value=state.content;
+      trozalStreamProgress(progressId,state,'Menerima '+request.label);
+      visualMotionAiStatus('AI sedang menghasilkan HTML/SVG secara bertahap · '+trozalStreamFormatMetrics(state));
+     }
+    });
+    if(streamed.content.trim())break;
+   }catch(error){
+    lastError=error;
+    if(controller.signal.aborted||error?.name==='AbortError')throw error;
+    // A 404 or other explicit HTTP error on /api/chat can use the /api/generate fallback.
+    if(index===0)continue;
+    throw error;
+   }
   }
-  if(!rawCode)throw new Error('Ollama tidak mengirim kode pada jalur Chat maupun Generate. '+responseInfo.join(' · ')+'. Pastikan model Qwen3.5 4B terpasang, bukan model Vision 2B, lalu periksa RAM/GPU dan log Ollama.');
-  const code=visualMotionAiExtractCode(rawCode);
+  if(!streamed||!streamed.content.trim())throw lastError||new Error('Ollama tidak mengirim kode pada jalur Chat maupun Generate.');
+  const code=visualMotionAiExtractCode(streamed.content);
   $('visualMotionOutput').value=code;$('visualMotionPreview').srcdoc=code;
   visualMotionPreviewDoc=null;visualMotionPreviewAnimations=[];
-  visualMotionAiStatus('Berhasil · HTML/SVG AI dibuat ('+code.length.toLocaleString()+' karakter). Periksa Preview, lalu kirim ke Preview TROZAL. Hasil AI tetap perlu pemeriksaan visual.');
-  $('visualMotionStatus').textContent='AI Scene Composer selesai. Preview komposer dibuat dari kode hasil model lokal. Klik “Kirim ke Preview TROZAL” untuk melihat hasil akhir pada renderer utama.';
- }catch(e){visualMotionAiStatus('Gagal membuat adegan: '+(e?.message||String(e)),true);}
- finally{btn.disabled=false;btn.textContent='✦ GENERATE DENGAN AI LOKAL';}
+  const throughput=streamed.evalCount&&streamed.evalDuration?((streamed.evalCount/(streamed.evalDuration/1e9)).toFixed(1)+' token/dtk'):(streamed.content.length/Math.max(.001,streamed.elapsedMs/1000)).toFixed(0)+' karakter/dtk';
+  visualMotionAiStatus('BERHASIL · HTML/SVG dibuat bertahap ('+code.length.toLocaleString()+' karakter) · '+throughput+'. Periksa Preview, lalu kirim ke Preview TROZAL.');
+  $('visualMotionStatus').textContent='AI Scene Composer selesai melalui Ollama Direct Web. Klik “Kirim ke Preview TROZAL” untuk melihat hasil akhir pada renderer utama.';
+  const metric=$(progressId);if(metric)metric.textContent='Selesai · '+code.length.toLocaleString()+' karakter · '+throughput;
+ }catch(error){
+  if(controller.signal.aborted||error?.name==='AbortError'){
+   visualMotionAiStatus('GENERASI DIBATALKAN · Proses Ollama dihentikan. Output parsial tetap tersedia untuk diperiksa.',true);
+   $('visualMotionStatus').textContent='Generasi AI dibatalkan. Kode parsial tetap tersimpan di kolom output, tetapi belum diterapkan ke Preview.';
+  }else{
+   visualMotionAiStatus('Gagal membuat adegan: '+(error?.message||String(error)),true);
+  }
+ }finally{
+  trozalSceneActiveController=null;
+  btn.disabled=false;btn.textContent='✦ GENERATE DENGAN AI LOKAL';
+  if(cancelBtn)cancelBtn.style.display='none';
+ }
 }
+
 $('visualMotionAiCheckBtn')?.addEventListener('click',visualMotionAiCheck);
+$('cancelVisualMotionAiBtn')?.addEventListener('click',()=>trozalStreamCancel(trozalSceneActiveController));
+$('trozalVisionCancelBtn')?.addEventListener('click',()=>trozalStreamCancel(trozalVisionActiveController));
 $('generateVisualMotionAiBtn')?.addEventListener('click',generateVisualMotionWithLocalAi);
 
 </script>
@@ -6271,6 +6400,9 @@ body[data-ui-layout="classic"] .ui-layout-btn[aria-pressed="true"]{background:#d
 .ollama-model-tag.is-loaded{border-color:#3ca77a;color:#a8f1c9;background:#10382c}
 .ollama-model-empty{padding:10px;border:1px dashed #386e89;border-radius:7px;color:#a9c8d8;font-size:10px;text-align:center}
 @media(max-width:520px){.ollama-model-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.ollama-model-list{max-height:260px}}
+/* OLLAMA DIRECT WEB · STREAMING METRICS */
+.ollama-stream-metrics{margin-top:7px;padding:7px 9px;border:1px solid #57467a;border-radius:7px;background:#171329;color:#cbb8ec;font-size:10px;line-height:1.45;overflow-wrap:anywhere}
+#cancelVisualMotionAiBtn:focus-visible,#trozalVisionCancelBtn:focus-visible{outline:2px solid #ffbd45;outline-offset:2px}
 </style>
 <script>
 (function(){
