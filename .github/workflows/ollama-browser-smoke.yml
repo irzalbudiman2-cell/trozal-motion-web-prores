@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - ollama-repair-cb774c0-2026-11-15
+      - ollama-semantic-object-groups-2026-11-15
   workflow_dispatch:
 
 permissions:
@@ -53,6 +54,69 @@ jobs:
             await page.goto('http://127.0.0.1:4173/index.html', { waitUntil: 'domcontentloaded' });
             await page.waitForTimeout(1200);
 
+            // Exercise semantic SVG grouping using explicit parent metadata.
+            const semanticSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80">
+              <g data-object="Robot" transform="translate(5 5)">
+                <path data-part="Head" d="M20 5h30v20H20z" fill="#e85d5d"/>
+                <path data-part="Body" d="M25 28h20v30H25z" fill="#5577dd"/>
+              </g>
+              <rect id="Floor" x="5" y="65" width="100" height="5" fill="#444"/>
+            </svg>`;
+            await page.locator('#fileInput').setInputFiles({
+              name: 'semantic-robot.svg',
+              mimeType: 'image/svg+xml',
+              buffer: Buffer.from(semanticSvg)
+            });
+            await page.waitForFunction(() => document.querySelectorAll('#mtTrackList .mt-group-tag').length === 2);
+            assert.equal(await page.locator('#mtTrackList [data-mt-row]').count(), 3, 'SVG parts should remain separate editable tracks');
+            await page.locator('#mtTrackList [data-mt-select="0"]').click();
+            await page.locator('#mtToggleGroupVisibility').click();
+            await page.waitForFunction(() =>
+              document.querySelector('#autoLayerVisible0')?.checked === false &&
+              document.querySelector('#autoLayerVisible1')?.checked === false
+            );
+            await page.locator('#mtToggleGroupVisibility').click();
+
+            await page.locator('#mtToggleGroupLock').click();
+            let groupLocks = await page.evaluate(() => getProject().timelineTrackLocks);
+            assert.equal(groupLocks['0'], true, 'Group lock should lock the first member');
+            assert.equal(groupLocks['1'], true, 'Group lock should lock the second member');
+            await page.locator('#mtToggleGroupLock').click();
+
+            await page.locator('#kfX0').fill('18');
+            await page.locator('#kfTime0').fill('0.8');
+            await page.locator('#mtGroupKeyframe').click();
+            let groupState = await page.evaluate(() => {
+              const project = getProject();
+              return {
+                groups: project.timelineLayerGroups,
+                first: project.layerKeyframes[0],
+                second: project.layerKeyframes[1]
+              };
+            });
+            assert.equal(groupState.groups['0'], 'Robot', 'Semantic parent label should become a named group');
+            assert.equal(groupState.groups['1'], 'Robot', 'Related paths should share the same logical group');
+            assert.deepEqual(groupState.first, groupState.second, 'Group keyframe should synchronize member keyframes');
+
+            await page.locator('#mtSelectGroupMembers').click();
+            assert.equal(await page.locator('#mtTrackList [data-mt-group-pick="0"]').isChecked(), true);
+            assert.equal(await page.locator('#mtTrackList [data-mt-group-pick="1"]').isChecked(), true);
+
+            await page.evaluate(() => {
+              const snapshot = getProject();
+              applyProject(snapshot);
+            });
+            groupState = await page.evaluate(() => {
+              const project = getProject();
+              return {
+                groups: project.timelineLayerGroups,
+                first: project.layerKeyframes[0],
+                second: project.layerKeyframes[1]
+              };
+            });
+            assert.equal(groupState.groups['0'], 'Robot', 'Semantic group should survive project save/reopen');
+            assert.deepEqual(groupState.first, groupState.second, 'Synchronized group keyframes should survive project save/reopen');
+
             const required = [
               'svgTerminalPanel', 'aiCodeTerminal', 'applyAiSvgBtn',
               'svgAiThemeSearch', 'svgAiRandomThemeBtn', 'svgAiPrompt',
@@ -94,7 +158,9 @@ jobs:
               checkedElements: required.length,
               generatedPromptLength,
               randomThemeChanged: beforeTheme !== afterTheme,
-              exercised: ['Pusat Utilitas', 'Tata Letak', 'Generate Prompt', 'Tema Inspirasi Acak', 'Timeline Putar/Stop']
+              semanticObjectGroup: 'PASS',
+              groupLockVisibilityKeyframesAndPersistence: 'PASS',
+              exercised: ['Semantic SVG object grouping', 'Group visibility/lock/selection/keyframes/persistence', 'Pusat Utilitas', 'Tata Letak', 'Generate Prompt', 'Tema Inspirasi Acak', 'Timeline Putar/Stop']
             }, null, 2));
             await browser.close();
           })().catch(error => {
