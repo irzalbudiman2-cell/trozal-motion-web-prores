@@ -34,7 +34,7 @@ if errorlevel 1 (
 )
 
 set "PS_EXE=%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe"
-set "TASK_ACTION=%PS_EXE% -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File ^"%TARGET_PS%^""
+set "TASK_ACTION=^"%PS_EXE%^" -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File ^"%TARGET_PS%^""
 schtasks.exe /Create /TN "%TASK_NAME%" /SC ONLOGON /RL LIMITED /TR "%TASK_ACTION%" /F
 if errorlevel 1 (
   echo [GAGAL] Tidak dapat membuat Scheduled Task.
