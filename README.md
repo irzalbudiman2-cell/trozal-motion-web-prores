@@ -34,17 +34,17 @@ The app only reports ProRes as successful after FFprobe verifies the codec, prof
 
 The FFmpeg core is downloaded by the browser from this repository's GitHub Pages origin on first use. It runs in the user's browser; frames are not uploaded to a paid rendering service. 4K or long renders can require substantial browser memory.
 
-## Local AI Vision metadata (no paid API)
+## Local AI Vision metadata (direct browser connection)
 
-TROZAL MOTION can analyze actual preview frames using a local Ollama model. The recommended starting model for a 16 GB RAM / GTX 1660 Super PC is `qwen3-vl:2b`. No OpenAI API key is required and image analysis runs on the user's computer.
+TROZAL MOTION can analyze actual preview frames using an Ollama model running on the same Windows PC. The website connects directly to `http://127.0.0.1:11434`; there is no TROZAL Bridge, local proxy, or BAT launcher.
 
 1. Install Ollama for Windows: https://ollama.com/download/windows
-2. Run `TROZAL_LOCAL_VISION_SETUP.bat` from this repository. It configures the GitHub Pages origin and downloads `qwen3-vl:2b`.
-3. Quit Ollama from the system tray and restart it.
-4. Open the site, expand the TROZAL LOCAL VISION panel, and click **Cek Ollama**.
-5. Click **Analisis Visual Sebenarnya** to analyze three preview frames, or select up to four screenshots.
+2. Install a local model, for example `ollama pull qwen3-vl:2b`.
+3. Add a Windows user environment variable named `OLLAMA_ORIGINS` with the comma-separated origins `https://irzalbudiman2-cell.github.io,https://trozal-motion-web-prores.vercel.app,https://trozal-motion-web-prores-git-ollama-direct-web-7718e1-trozal-id.vercel.app` (no spaces, no trailing slashes).
+4. Quit Ollama from the system tray and start it again so it inherits the new variable.
+5. Open the GitHub Pages site or the current [Vercel preview](https://trozal-motion-web-prores-git-ollama-direct-web-7718e1-trozal-id.vercel.app), allow Chrome's **Loopback network** access when prompted, and click **Cek Ollama**. Add a newly generated Vercel preview origin to `OLLAMA_ORIGINS` when its hostname changes.
 
-See [TROZAL_LOCAL_VISION.md](TROZAL_LOCAL_VISION.md) for setup, privacy, and troubleshooting details. Metadata is an AI draft and should be reviewed before export.
+See [TROZAL_LOCAL_VISION.md](TROZAL_LOCAL_VISION.md) for the manual Windows setup and troubleshooting. Do not use a wildcard origin (`*`); allow only the trusted TROZAL site. Metadata is an AI draft and should be reviewed before export.
 
 ## Licensing
 
