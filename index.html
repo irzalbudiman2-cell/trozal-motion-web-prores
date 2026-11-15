@@ -429,6 +429,7 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
 #metadataOptimizerPanel select{background:#211707;color:#fff5e3;border:1px solid #8b6425;border-radius:7px;padding:7px;width:100%}
 
 
+.theme-auto-spec{margin:8px 0 12px;padding:11px 12px;border:1px solid #5c8c72;border-radius:9px;background:linear-gradient(145deg,#10291f,#101c20);color:#e3f5e9}.theme-auto-spec h4{margin:0 0 6px;color:#b8e8c8;font-size:11px;letter-spacing:.05em}.theme-auto-spec .help{margin:0 0 8px;color:#bdd7c8;font-size:10px}.theme-auto-spec #svgAiAutoSpec{font-size:10px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere;max-height:260px;overflow:auto}
 /* Ollama render preview lock indicator */
 .stage.rendering-preview-paused::after{content:'PREVIEW DIJEDA · RENDER BERJALAN';position:absolute;z-index:90;left:50%;top:12px;transform:translateX(-50%);padding:7px 12px;border:1px solid #f2c36d;border-radius:7px;background:#241b0ee8;color:#ffe2a3;font-size:10px;font-weight:900;letter-spacing:.06em;pointer-events:none;white-space:nowrap;box-shadow:0 3px 14px #0008}
 #ollamaRenderAdvisor{background:linear-gradient(145deg,#49351a,#2a2117 62%,#382718);border:1px solid #c28c3c;box-shadow:0 8px 22px #140d05aa}#ollamaRenderAdvisor h3{color:#ffe0a5}#ollamaRenderAdvisor .help{color:#f1d9b4}.ollama-render-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:8px 0}.ollama-render-stats>div{padding:7px;border:1px solid #8f682e;border-radius:7px;background:#241a10}.ollama-render-stats b{display:block;color:#f6c976;font-size:9px;text-transform:uppercase}.ollama-render-stats span{display:block;color:#fff0d3;font-size:11px;margin-top:3px}
@@ -665,9 +666,15 @@ body[data-ui-layout="professional"] .visual-scene-card:focus-within{
    <label>Search tema AI</label><input id="svgAiThemeSearch" type="text" list="svgAiThemeSuggestions" autocomplete="off" placeholder="Cari tema: Cybersecurity, Ramadan, Space, Coffee..."><datalist id="svgAiThemeSuggestions"></datalist><div id="svgAiThemeResults" class="theme-search-results" hidden></div><div class="theme-quick-picks"><button type="button" data-theme-pick="Cinematic Brand Film">Cinematic</button><button type="button" data-theme-pick="Futuristic Technology Commercial">Futuristic</button><button type="button" data-theme-pick="Luxury Brand Commercial">Premium</button><button type="button" data-theme-pick="3D Product Visualization">3D</button><button type="button" data-theme-pick="Commercial Motion Package">Commercial</button></div><div class="row" style="display:flex;gap:7px;margin:6px 0 10px"><button type="button" id="svgAiRandomThemeBtn" class="secondary">✦ Tema inspirasi acak</button><span class="help" id="svgAiCatalogCount">Memuat katalog tema…</span></div><p class="theme-search-hint" id="svgAiThemeSearchHint">Cari tema atau ketik tema khusus. Kategori visual dan subtema akan disesuaikan otomatis.</p>
    <label>Tema utama</label><select id="svgAiTheme"><option>Brand Identity & Logo</option></select>
    <label>Kategori visual (otomatis mengikuti tema)</label><select id="svgAiCategory"><option>Minimal Swiss Design</option><option>Modern Editorial</option><option>Clean Corporate</option><option>Premium Luxury</option><option>Futuristic Sci-Fi</option><option>Cyberpunk Neon</option><option>Glassmorphism</option><option>Liquid / Fluid Design</option><option>3D Layered Composition</option><option>Isometric Illustration</option><option>Flat Vector Illustration</option><option>2D Cartoon</option><option>Claymorphism</option><option>Soft Gradient</option><option>Bold Brutalist</option><option>Retro / Vintage</option><option>Y2K Digital</option><option>Memphis Geometry</option><option>Bauhaus Geometric</option><option>Monochrome</option><option>Duotone</option><option>Pastel Soft</option><option>High Contrast</option><option>Photorealistic Product</option><option>Cinematic Lighting</option><option>Paper Cutout</option><option>Hand-drawn Sketch</option><option>Line Art / Monoline</option><option>Typography-led</option><option>Data Visualization</option><option>UI Prototype</option><option>Organic Nature</option><option>Surreal Abstract</option><option>Pixel Art</option><option>Minimal Iconography</option><option>Mixed Media</option><option>Dark Interface</option><option>Bright Playful</option><option>Editorial Infographic</option></select>
-   <label>Kategori spesifik / subtema (relevan dengan tema)</label><select id="svgAiSpecific"><option>Logo reveal with custom emblem</option><option>Logo build from geometric pieces</option><option>Wordmark kinetic reveal</option><option>Brand guideline opener</option><option>Product hero on floating podium</option><option>Product 360 showcase</option><option>Cosmetic bottle luxury reveal</option><option>Food hero with ingredient orbit</option><option>Sneaker / fashion product launch</option><option>Smartphone device showcase</option><option>App onboarding sequence</option><option>Website landing page hero</option><option>SaaS feature explainer</option><option>Animated dashboard KPI</option><option>Data chart growth story</option><option>Financial market overview</option><option>AI neural network visualization</option><option>Robotics and automation</option><option>Cloud computing ecosystem</option><option>Cybersecurity shield sequence</option><option>Medical awareness explainer</option><option>Anatomy / science visualization</option><option>Learning process step-by-step</option><option>Timeline and roadmap</option><option>Before-after transformation</option><option>Process flow diagram</option><option>Comparison infographic</option><option>Statistics counter sequence</option><option>World map data routes</option><option>Travel destination opener</option><option>City / architecture flythrough</option><option>Nature landscape layers</option><option>Ocean and underwater scene</option><option>Wildlife conservation story</option><option>Renewable energy system</option><option>Solar / wind energy explainer</option><option>Sports event opener</option><option>Fitness training sequence</option><option>Esports tournament package</option><option>Music visualizer interface</option><option>Character mascot introduction</option><option>Animated storytelling scene</option><option>Event countdown</option><option>New year celebration</option><option>Ramadan lantern and crescent</option><option>Eid greeting composition</option><option>Wedding invitation motion</option><option>Sale campaign and discount</option><option>App interface micro-interaction</option><option>Notification and UX flow</option><option>Loading / progress animation</option><option>Abstract liquid transition</option><option>Particle field and energy</option><option>Typography quote animation</option><option>News headline package</option><option>Real estate property showcase</option><option>Automotive feature presentation</option><option>Custom specific concept</option></select>
+
    <div id="svgAiThemeBrief" role="status" aria-live="polite" style="margin:7px 0 10px;padding:9px 10px;border:1px solid #355b47;border-radius:8px;background:#0a2219;color:#d8eee0;font-size:10px;line-height:1.55;white-space:pre-line">Pilih tema untuk melihat tujuan konsep, subjek utama, dan arahan visual.</div>
    <label>Detail tambahan (opsional)</label><input type="text" id="svgAiDetails" placeholder="Contoh: ikon lebah, warna emas, latar putih">
+   <section class="theme-auto-spec" id="svgAiAutoSpecPanel" aria-live="polite">
+    <h4>✦ SPESIFIKASI TEMA OTOMATIS · DINAMIS</h4>
+    <p class="help">Arahan ini dibuat dari kombinasi tema utama dan kategori visual. Detail tambahan Anda digabungkan sebagai instruksi pelengkap, bukan pengganti spesifikasi.</p>
+    <div id="svgAiAutoSpec" role="status">Pilih tema dan kategori untuk membentuk spesifikasi visual.</div>
+   </section>
+   <label>Kategori spesifik / subtema (relevan dengan tema)</label><select id="svgAiSpecific"><option>Logo reveal with custom emblem</option><option>Logo build from geometric pieces</option><option>Wordmark kinetic reveal</option><option>Brand guideline opener</option><option>Product hero on floating podium</option><option>Product 360 showcase</option><option>Cosmetic bottle luxury reveal</option><option>Food hero with ingredient orbit</option><option>Sneaker / fashion product launch</option><option>Smartphone device showcase</option><option>App onboarding sequence</option><option>Website landing page hero</option><option>SaaS feature explainer</option><option>Animated dashboard KPI</option><option>Data chart growth story</option><option>Financial market overview</option><option>AI neural network visualization</option><option>Robotics and automation</option><option>Cloud computing ecosystem</option><option>Cybersecurity shield sequence</option><option>Medical awareness explainer</option><option>Anatomy / science visualization</option><option>Learning process step-by-step</option><option>Timeline and roadmap</option><option>Before-after transformation</option><option>Process flow diagram</option><option>Comparison infographic</option><option>Statistics counter sequence</option><option>World map data routes</option><option>Travel destination opener</option><option>City / architecture flythrough</option><option>Nature landscape layers</option><option>Ocean and underwater scene</option><option>Wildlife conservation story</option><option>Renewable energy system</option><option>Solar / wind energy explainer</option><option>Sports event opener</option><option>Fitness training sequence</option><option>Esports tournament package</option><option>Music visualizer interface</option><option>Character mascot introduction</option><option>Animated storytelling scene</option><option>Event countdown</option><option>New year celebration</option><option>Ramadan lantern and crescent</option><option>Eid greeting composition</option><option>Wedding invitation motion</option><option>Sale campaign and discount</option><option>App interface micro-interaction</option><option>Notification and UX flow</option><option>Loading / progress animation</option><option>Abstract liquid transition</option><option>Particle field and energy</option><option>Typography quote animation</option><option>News headline package</option><option>Real estate property showcase</option><option>Automotive feature presentation</option><option>Custom specific concept</option></select>
    <section class="browser-art-direction" id="browserArtDirection">
     <h4>✦ CREATIVE DIRECTION · KONTROL ART DESIGN</h4>
     <div class="row"><div><label>Palet warna</label><select id="svgAiPalette"><option>Auto mengikuti tema</option><option>Midnight navy & electric cyan</option><option>Black & champagne gold</option><option>Emerald & warm ivory</option><option>Violet & holographic blue</option><option>Teal & cinematic amber</option><option>Monochrome silver</option><option>Coral & sunset gradient</option><option>Earth tone & natural green</option></select></div><div><label>Gerakan kamera</label><select id="svgAiCamera"><option>Auto sesuai konsep</option><option>Slow cinematic push-in</option><option>Orbit 3D around hero object</option><option>Horizontal parallax tracking</option><option>Vertical reveal and tilt</option><option>Macro dolly with depth of field</option><option>Top-down editorial movement</option><option>Locked camera with kinetic layers</option></select></div></div>
@@ -2685,7 +2692,7 @@ function trozalSetRenderPreviewLock(locked){
  const key='__trozalRenderPreviewLockState';
  if(locked){
   if(window[key]?.active)return;
-  const state={active:true,media:[],animations:[],styles:[]};
+  const state={active:true,media:[],animations:[],styles:[],gifFrames:[]};
   const docs=[];
   try{if(htmlMotionIframe?.contentDocument)docs.push(htmlMotionIframe.contentDocument)}catch(_){}
   try{if($('visualMotionPreview')?.contentDocument)docs.push($('visualMotionPreview').contentDocument)}catch(_){}
@@ -2697,7 +2704,22 @@ function trozalSetRenderPreviewLock(locked){
      if(seenMedia.has(media))return;seenMedia.add(media);
      const item={media,wasPlaying:!media.paused,muted:media.muted,volume:media.volume,currentTime:media.currentTime};
      state.media.push(item);
-     try{media.pause()}catch(_){}
+     try{media.pause();media.autoplay=false;media.removeAttribute('autoplay')}catch(_){}
+    });
+   }catch(_){}
+   // Animated GIFs are not controlled by CSS animation-play-state. Replace only GIF
+   // preview nodes with a canvas snapshot during export, then restore the original node.
+   try{
+    doc.querySelectorAll('img').forEach(img=>{
+     const src=String(img.currentSrc||img.src||'');
+     if(!/\\.gif(?:[?#]|$)|^data:image\\/gif/i.test(src)||!img.complete||!img.naturalWidth)return;
+     try{
+      const frozen=doc.createElement('canvas');frozen.width=img.naturalWidth;frozen.height=img.naturalHeight;
+      frozen.getContext('2d').drawImage(img,0,0);
+      frozen.className=img.className;frozen.id=img.id;frozen.style.cssText=img.style.cssText;
+      frozen.setAttribute('aria-label',img.alt||'Frozen animated preview');
+      img.parentNode?.replaceChild(frozen,img);state.gifFrames.push({img,frozen});
+     }catch(_){}
     });
    }catch(_){}
    try{
@@ -2719,6 +2741,7 @@ function trozalSetRenderPreviewLock(locked){
  }
  const state=window[key];if(!state)return;
  state.styles.forEach(style=>{try{style.remove()}catch(_){}});
+ state.gifFrames.forEach(item=>{try{if(item.frozen.parentNode)item.frozen.parentNode.replaceChild(item.img,item.frozen)}catch(_){}});
  state.animations.forEach(item=>{if(item.wasRunning)try{item.animation.play()}catch(_){}});
  state.media.forEach(item=>{
   const media=item.media;
@@ -4533,9 +4556,12 @@ window.trozalUpdateThemeBrief = function() {
  const theme=document.getElementById('svgAiTheme')?.value||'';
  const category=document.getElementById('svgAiCategory')?.value||'';
  const specific=document.getElementById('svgAiSpecific')?.value||'';
+ const details=document.getElementById('svgAiDetails')?.value.trim()||'';
  const brief=window.trozalBuildThemeCreativeBrief(theme,category,specific);
  const host=document.getElementById('svgAiThemeBrief');
  if(host)host.textContent=brief.summary;
+ const specHost=document.getElementById('svgAiAutoSpec');
+ if(specHost)specHost.textContent=brief.summary+'\n\nDETAIL TAMBAHAN PENGGUNA:\n'+(details||'Belum ada detail tambahan. Jangan menghilangkan atau mengganti spesifikasi otomatis; gunakan arahan kreatif sesuai tema dan kategori.')+'\n\nATURAN PENGGABUNGAN:\nDetail tambahan adalah batasan atau penekanan tambahan. Pertahankan tujuan tema, subjek utama, aset relevan, palet, komposisi, alur gerak, dan batasan domain di atas.';
  return brief;
 };
 function trozalThemeProfile(theme){
@@ -4673,6 +4699,7 @@ function trozalApplyTheme(theme,keepCustomSearch=false){
  $('svgAiThemeSearchHint').textContent='Tema aktif: '+clean+' · '+profile.styles.length+' gaya visual dan '+profile.specifics.length+' subtema tersedia. Pilihan mengikuti tema utama.';
  debug('info','theme="'+clean+'" | category options='+category.options.length+' | selected category="'+category.value+'" | subtheme options='+specific.options.length+' | selected subtheme="'+specific.value+'"');
  if(!category.value||!specific.value)debug('err','dropdown category/subtheme empty after apply');
+ if(typeof window.trozalUpdateThemeBrief==='function')window.trozalUpdateThemeBrief();
  if($('svgAiPrompt').value.trim())generateSvgAiPrompt();
 }
 /* Random-theme click handling is installed at the end of the document by the runtime diagnostic bridge. */
@@ -4716,6 +4743,7 @@ function trozalUpdatePromptResolution(){const c=trozalGetPromptCanvas();$('svgAi
 
 const svgAiTemplateText=()=>{
  const theme=$('svgAiTheme').value,cat=$('svgAiCategory').value,specific=$('svgAiSpecific').value,details=$('svgAiDetails').value.trim(),dur=$('svgAiDuration').value,ratio=$('svgAiRatio').value;
+ const themeSpec=typeof window.trozalUpdateThemeBrief==='function'?window.trozalUpdateThemeBrief():window.trozalBuildThemeCreativeBrief(theme,cat,specific);
  const count=+$('svgAiConceptCount').value||3;
  const palette=$('svgAiPalette')?.value||'Auto mengikuti tema',camera=$('svgAiCamera')?.value||'Auto sesuai konsep',transition=$('svgAiTransition')?.value||'Auto sesuai konsep',typography=$('svgAiTypography')?.value||'Auto sesuai tema',motionPreset=$('svgAiMotionPreset')?.value||'Auto — adaptif terhadap tema',motionTempo=$('svgAiMotionTempo')?.value||'Auto sesuai konsep',motionIntensity=$('svgAiMotionIntensity')?.value||'Auto sesuai konsep';
  const autoName=trozalSafeFileName(($('svgAiFilename')?.value||'').trim()||(`${theme}_${specific}`),'trozal-motion');
@@ -4727,7 +4755,11 @@ PROJECT BRIEF
 Main theme: ${theme}
 Visual category: ${cat}
 Specific concept / subtheme: ${specific}
-User art direction: ${details||'Use your creative judgment; make the concept specific, polished, and original.'}
+User art direction (additional constraints; must be combined, never replace the theme blueprint): ${details||'No extra user constraints supplied. Follow the complete theme/category specification below.'}
+THEME- AND CATEGORY-SPECIFIC CREATIVE SPECIFICATION — PRESERVE EVERY SECTION
+${themeSpec.prompt}
+USER DETAIL INTEGRATION RULE
+Treat user art direction as additive constraints. Do not remove, weaken, or replace the main theme intent, selected category grammar, hero subject, domain vocabulary, palette/material direction, composition, motion sequence, or exclusions. Resolve conflicts by keeping the theme identity and adapting only the compatible visual details.
 Creative direction — color palette: ${palette}
 Creative direction — camera movement: ${camera}
 Creative direction — primary transition: ${transition}
@@ -5036,14 +5068,14 @@ $('generateSvgAiPromptBtn').addEventListener('click',generateSvgAiPrompt);
 $('copySvgAiTemplateBtn').addEventListener('click',()=>{if(!$('svgAiPrompt').value.trim())generateSvgAiPrompt();copyTextToClipboard($('svgAiPrompt').value,'Template prompt disalin. Tempel ke AI dengan Ctrl+V.');});
 $('pastePromptToAiBtn').addEventListener('click',()=>{if(!$('svgAiPrompt').value.trim())generateSvgAiPrompt();copyTextToClipboard($('svgAiPrompt').value,'Prompt siap ditempel ke AI. Buka AI pilihan Anda lalu tekan Ctrl+V.');});
 // Theme select is wired by trozalInitThemeCatalog() so category/subtheme follow the selected topic.
-$('svgAiCategory').addEventListener('change',()=>{if($('svgAiPrompt').value.trim())generateSvgAiPrompt()});
-$('svgAiSpecific').addEventListener('change',()=>{if($('svgAiPrompt').value.trim())generateSvgAiPrompt()});
-$('svgAiDetails').addEventListener('change',()=>{if($('svgAiPrompt').value.trim())generateSvgAiPrompt()});
+$('svgAiCategory').addEventListener('change',()=>{if(typeof window.trozalUpdateThemeBrief==='function')window.trozalUpdateThemeBrief();if($('svgAiPrompt').value.trim())generateSvgAiPrompt()});
+$('svgAiSpecific').addEventListener('change',()=>{if(typeof window.trozalUpdateThemeBrief==='function')window.trozalUpdateThemeBrief();if($('svgAiPrompt').value.trim())generateSvgAiPrompt()});
+$('svgAiDetails').addEventListener('input',()=>{if(typeof window.trozalUpdateThemeBrief==='function')window.trozalUpdateThemeBrief();if($('svgAiPrompt').value.trim())generateSvgAiPrompt()});
 $('svgAiFilename').addEventListener('change',()=>{if($('svgAiPrompt').value.trim())generateSvgAiPrompt()});
 $('svgAiConceptCount').addEventListener('change',()=>{if($('svgAiPrompt').value.trim())generateSvgAiPrompt()});
 $('svgAiDuration').addEventListener('change',()=>{if($('svgAiPrompt').value.trim())generateSvgAiPrompt()});
 $('svgAiRatio').addEventListener('change',()=>{if($('svgAiPrompt').value.trim())generateSvgAiPrompt()});
-trozalInitThemeCatalog();trozalUpdatePromptResolution();trozalInitFloatingRenderMonitor();
+trozalInitThemeCatalog();trozalUpdateThemeBrief();trozalUpdatePromptResolution();trozalInitFloatingRenderMonitor();
 $('svgAiRatio').addEventListener('change',()=>{trozalUpdatePromptResolution();if($('svgAiPrompt').value.trim())generateSvgAiPrompt()});
 $('svgAiResolution').addEventListener('change',()=>{trozalUpdatePromptResolution();if($('svgAiPrompt').value.trim())generateSvgAiPrompt()});
 
