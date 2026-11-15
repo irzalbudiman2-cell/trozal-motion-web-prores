@@ -632,7 +632,7 @@ body[data-ui-layout="professional"] .visual-scene-card:focus-within{
  <p class="help">Cari panel dan periksa kesiapan lingkungan lokal tanpa mengubah proyek.</p>
  <label for="workspacePanelSearch">Cari panel / fitur</label><input id="workspacePanelSearch" type="search" placeholder="Contoh: metadata, render, Ollama, timeline...">
  <div class="workspace-tool-grid"><div class="workspace-tool-card"><strong>Koneksi Ollama</strong><p class="help">Periksa API lokal Ollama di port 11434.</p><button id="workspaceCheckOllama" type="button">Periksa Ollama</button><div class="workspace-tool-status" id="workspaceOllamaStatus">Belum diperiksa.</div></div>
- <div class="workspace-tool-card"><strong>Bridge Lokal</strong><p class="help">Periksa layanan TROZAL Bridge di port 11435.</p><button id="workspaceCheckBridge" type="button">Periksa Bridge</button><div class="workspace-tool-status" id="workspaceBridgeStatus">Belum diperiksa.</div></div>
+ <div class="workspace-tool-card"><strong>Koneksi Browser</strong><p class="help">Website terhubung langsung ke Ollama di port 11434 tanpa Bridge.</p><div class="workspace-tool-status">Butuh izin CORS Ollama dan Loopback Chrome.</div></div>
  <div class="workspace-tool-card"><strong>Workspace</strong><p class="help">Kelola susunan panel dan pengaturan tampilan.</p><button id="workspaceResetLayout" type="button">Pulihkan tata letak awal</button></div>
  <div class="workspace-tool-card"><strong>Tips render</strong><p class="help">Untuk mengurangi beban, uji dahulu 1080p/30 FPS sebelum ekspor 4K atau 60 FPS. Pastikan aset lokal sudah dimuat.</p></div></div>
  <div class="workspace-tool-status" id="workspaceSearchResults" style="margin-top:10px">Ketik kata kunci untuk menemukan panel.</div>
@@ -726,7 +726,7 @@ body[data-ui-layout="professional"] .visual-scene-card:focus-within{
    <label>HTML VISUAL MOTION · SIAP DIIMPOR KE TROZAL</label>
    <textarea id="visualMotionOutput" spellcheck="false" placeholder="Dokumen HTML berisi komposisi SVG dan animasi visual akan tampil di sini…" style="min-height:220px"></textarea>
    <div class="btnrow"><button type="button" id="copyVisualMotionBtn">Salin HTML</button><button type="button" class="green" id="previewVisualMotionBtn">▶ Kirim ke Preview TROZAL</button></div>
-   <p class="notice">AI Scene Composer menggunakan Ollama di komputer Anda melalui konektor lokal TROZAL. Jalankan TROZAL_OLLAMA_BRIDGE_START.bat terlebih dahulu dan biarkan jendelanya terbuka. Kode hasil AI divalidasi agar tidak memuat JavaScript, iframe, atau resource eksternal sebelum preview. Untuk revisi, ubah brief visual lalu generate ulang.</p>
+   <p class="notice">AI Scene Composer menggunakan Ollama di komputer Anda melalui koneksi browser langsung. Jalankan Ollama di Windows. Website mengakses API lokal Ollama langsung; Bridge dan BAT tidak diperlukan. Kode hasil AI divalidasi agar tidak memuat JavaScript, iframe, atau resource eksternal sebelum preview. Untuk revisi, ubah brief visual lalu generate ulang.</p>
   </section>
 
 
@@ -997,7 +997,7 @@ body[data-ui-layout="professional"] .visual-scene-card:focus-within{
      <button type="button" id="trozalVisionCheckBtn">↻ Cek Ollama</button>
      <select id="trozalVisionModel" aria-label="Model AI Vision" style="flex:1;min-width:150px"><option value="qwen3.5:4b">Qwen3.5 4B · disarankan (Vision)</option><option value="qwen3-vl:2b">Qwen3-VL 2B · cadangan ringan</option><option value="qwen3-vl:4b">Qwen3-VL 4B · lebih berat</option></select>
     </div>
-    <div id="trozalVisionConnection" class="help" aria-live="polite">Belum terhubung · Ollama lokal: http://127.0.0.1:11435</div>
+    <div id="trozalVisionConnection" class="help" aria-live="polite">Belum terhubung · Ollama langsung: http://127.0.0.1:11434</div>
     <label style="margin-top:8px">Gambar bukti (opsional)</label>
     <input type="file" id="trozalVisionImages" accept="image/png,image/jpeg,image/webp" multiple>
     <small class="help">Pilih hingga 4 screenshot PNG/JPG/WebP. Jika tidak memilih gambar, TROZAL akan mencoba menangkap 3 frame langsung dari Preview pada waktu 0%, 50%, dan 85%.</small>
@@ -3326,7 +3326,7 @@ document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.que
  $('resetBtn').onclick=()=>{if(!confirm('Reset seluruh tata letak workspace ke susunan awal? Proyek, aset, metadata, dan fitur tidak dihapus.'))return;try{['trozal_ollama_workspace_layout_v1','trozal_layout_widths','trozal_order_left-panels','trozal_order_right-panels','trozal_order_top-controls','trozal_order_main-panels'].forEach(k=>localStorage.removeItem(k))}catch(_){}location.reload()};
  $('workspacePanelSearch').addEventListener('input',()=>{const q=$('workspacePanelSearch').value.trim().toLowerCase(),matches=panels.filter(p=>(p.innerText||'').toLowerCase().includes(q));$('workspaceSearchResults').textContent=q?(matches.length?matches.map(p=>(p.querySelector('h3')?.innerText||p.id||'Panel').trim().replace(/\\s+/g,' ')).join('\\n'):'Tidak ada panel yang cocok.'):'Ketik kata kunci untuk menemukan panel.';panels.forEach(p=>{p.style.outline=q&&(p.innerText||'').toLowerCase().includes(q)?'2px solid #f3bd59':''})});
  const check=async(url,id,label)=>{const node=$(id);node.textContent='Memeriksa...';try{const response=await fetch(url,{method:'GET',cache:'no-store'});if(!response.ok)throw new Error('HTTP '+response.status);let detail='Terhubung · HTTP '+response.status;if(url.includes('/api/tags')){const data=await response.json();detail+=' · '+(data.models?.length||0)+' model terdeteksi';}node.textContent=detail;}catch(e){node.textContent='Belum terhubung: '+(e.message||'gagal mengakses layanan')+'. Pastikan layanan berjalan dan CORS mengizinkan akses.'}};
- $('workspaceCheckOllama').onclick=()=>check('http://127.0.0.1:11435/api/tags','workspaceOllamaStatus','Ollama via Bridge');$('workspaceCheckBridge').onclick=()=>check('http://127.0.0.1:11435/','workspaceBridgeStatus','Bridge');
+ $('workspaceCheckOllama').onclick=()=>check('http://127.0.0.1:11434/api/tags','workspaceOllamaStatus','Ollama langsung');
  tools.addEventListener('click',e=>{if(e.target===tools)closeTools()});editor.addEventListener('click',e=>{if(e.target===editor)close()});document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!tools.hidden)closeTools();if(!editor.hidden)close()}});restore();
 })();
 $('animation').onchange=()=>renderAt(playhead);$('loop').onchange=()=>renderAt(playhead);['speed','intensity','scale','posX','posY','rotation','opacity'].forEach(id=>$(id).addEventListener('input',()=>renderAt(playhead)));$('parts').addEventListener('change',()=>renderAt(playhead));['effectPreset','effectIntensity','effectColor','effectOn','sparkles','shadow','particleCount','particleSpeed'].forEach(id=>$(id).addEventListener('input',()=>renderAt(playhead)));
@@ -5692,11 +5692,8 @@ function trozalMetadataSanitizeSource(code){
   .replace(/<!--([\s\S]*?)-->/g,' ')
   .replace(/\s+/g,' ').trim().slice(0,26000);
 }
-/* Resolve Bridge URL at call time; never rely on a stale/undefined global. */
-function trozalVisionBaseUrl(){
- const host=String(window.location.hostname||location.hostname||'');
- return (host==='127.0.0.1'||host==='localhost')?window.location.origin:'http://127.0.0.1:11435';
-}
+/* Direct browser connection to the Ollama server on this same PC. */
+function trozalVisionBaseUrl(){ return 'http://127.0.0.1:11434'; }
 var TROZAL_VISION_BASE=trozalVisionBaseUrl();
 var TROZAL_VISION_ORIGIN='https://irzalbudiman2-cell.github.io';
 async function trozalMetadataAnalyzeSource(kind){
@@ -5812,14 +5809,14 @@ function trozalVisionSetConnection(message,isReady=false){
  const el=$('trozalVisionConnection');if(el){el.textContent=message;el.style.color=isReady?'#38c995':'#e3b66c';}
 }
 async function trozalVisionCheck(){
- trozalVisionSetConnection('Memeriksa Bridge dan izin Loopback Network…');
+ trozalVisionSetConnection('Memeriksa Ollama langsung di komputer ini…');
  const permissionPromise=(async()=>{
   try{const p=await navigator.permissions.query({name:'loopback-network'});return p.state;}
   catch(_){return 'tidak didukung oleh Permissions API';}
  })();
  try{
   const response=await fetch(trozalVisionBaseUrl()+'/api/tags',{method:'GET',mode:'cors',credentials:'omit',cache:'no-store',targetAddressSpace:'loopback'});
-  if(!response.ok)throw new Error('Bridge merespons HTTP '+response.status);
+  if(!response.ok)throw new Error('Ollama merespons HTTP '+response.status);
   const data=await response.json();
   if(!Array.isArray(data.models))throw new Error('Respons Bridge tidak berisi daftar model Ollama.');
   const models=data.models,select=$('trozalVisionModel'),available=models.map(m=>String(m.name||'')).filter(Boolean);
@@ -5829,7 +5826,7 @@ async function trozalVisionCheck(){
   const vision=available.filter(name=>/qwen3(?:\.5|-vl)|llava|gemma.*vision/i.test(name));
   const permissionState=await permissionPromise;
   trozalVisionSetConnection('TERHUBUNG · '+models.length+' model terpasang · Loopback: '+permissionState+(vision.length?' · Vision: '+vision.join(', '):' · Model Vision belum terpasang'),true);
-  trozalVisionSetStatus(vision.length?'Bridge dan Ollama siap. Model Vision tersedia: '+vision.join(', '):'Bridge aktif, tetapi belum ada model Vision yang cocok. Model terpasang: '+available.join(', '));
+  trozalVisionSetStatus(vision.length?'Ollama siap. Model Vision tersedia: '+vision.join(', '):'Ollama aktif, tetapi belum ada model Vision yang cocok. Model terpasang: '+available.join(', '));
   return {models:available,permissionState};
  }catch(error){
   const permissionState=await permissionPromise;
@@ -5839,7 +5836,7 @@ async function trozalVisionCheck(){
    ?'IZIN LOOPBACK DITOLAK: buka Site settings situs TROZAL dan ubah Loopback network menjadi Allow.'
    :/failed to fetch|networkerror|load failed/i.test(reason)
     ?'Chrome memblokir fetch. Periksa izin Loopback network (bukan hanya Local network), lalu reload.'
-    :'Pastikan jendela TROZAL Ollama Bridge tetap terbuka.';
+    :'Pastikan aplikasi Ollama berjalan di Windows dan OLLAMA_ORIGINS mengizinkan situs TROZAL.';
   trozalVisionSetStatus(hint+' Endpoint: '+trozalVisionBaseUrl()+'/api/tags',true);
   return null;
  }
@@ -6014,36 +6011,21 @@ function visualMotionAiStatus(message,isError=false){
  const el=$('visualMotionAiStatus');if(el){el.textContent=message;el.style.color=isError?'#ff9292':'#c9b6e8';}
 }
 async function visualMotionAiCheck(){
- visualMotionAiStatus('Memeriksa Bridge dan izin Loopback Network…');
- const endpoint='http://127.0.0.1:11435/api/tags';
- // Start the permission query and the fetch together; do not await either
- // before fetch, so the network request remains tied to the button click.
- const permissionPromise=(async()=>{
-  try{const p=await navigator.permissions.query({name:'loopback-network'});return p.state;}
-  catch(_){return 'tidak didukung oleh Permissions API';}
- })();
+ visualMotionAiStatus('Memeriksa koneksi langsung ke Ollama (127.0.0.1:11434)…');
+ const endpoint=trozalVisionBaseUrl()+'/api/tags';
  try{
   const response=await fetch(endpoint,{method:'GET',mode:'cors',credentials:'omit',cache:'no-store',targetAddressSpace:'loopback'});
-  if(!response.ok)throw new Error('Bridge merespons HTTP '+response.status);
+  if(!response.ok)throw new Error('Ollama merespons HTTP '+response.status);
   const data=await response.json();
-  if(!Array.isArray(data.models))throw new Error('Respons Bridge tidak berisi daftar model.');
-  const models=data.models.map(x=>String(x.name||'')).filter(Boolean);
-  const chosen=$('visualMotionAiModel')?.value||'qwen3-vl:2b';
+  if(!Array.isArray(data.models))throw new Error('Respons Ollama tidak berisi daftar model.');
+  const models=data.models.map(x=>String(x.name||'')).filter(Boolean),chosen=$('visualMotionAiModel')?.value||'qwen3.5:4b';
   const found=models.some(n=>n===chosen||n.startsWith(chosen+':'));
-  const permissionState=await permissionPromise;
-  visualMotionAiStatus('OLLAMA TERHUBUNG · '+models.length+' model terdeteksi · '+(found?'Model '+chosen+' tersedia.':'Model '+chosen+' belum terpasang. Model: '+models.join(', '))+'. Izin Loopback: '+permissionState+'.');
-  return {models,found,permissionState};
+  visualMotionAiStatus('OLLAMA TERHUBUNG LANGSUNG · '+models.length+' model terdeteksi · '+(found?'Model '+chosen+' tersedia.':'Model '+chosen+' belum terpasang. Model: '+models.join(', '))+'.');
+  return {models,found};
  }catch(e){
-  const permissionState=await permissionPromise;
   const reason=(e?.name?e.name+': ':'')+(e?.message||String(e));
-  let hint='Pastikan Bridge tetap terbuka.';
-  if(permissionState==='denied'){
-   hint='IZIN LOOPBACK DITOLAK. Buka Site settings untuk https://irzalbudiman2-cell.github.io, ubah Loopback network menjadi Allow, lalu reload.';
-  }else if(/failed to fetch|networkerror|load failed/i.test(reason)){
-   hint='Fetch diblokir browser. Periksa izin Loopback network (bukan hanya Local network), lalu coba lagi.';
-  }
-  visualMotionAiStatus('KONEKSI GAGAL · '+reason+' · Izin Loopback: '+permissionState+'. '+hint,true);
-  return null;
+  const advice=/failed to fetch|networkerror|load failed/i.test(reason)?'Periksa OLLAMA_ORIGINS pada Windows (izinkan https://irzalbudiman2-cell.github.io), restart Ollama, lalu izinkan Loopback network untuk situs TROZAL di Chrome.':'Pastikan Ollama berjalan dan model sudah terpasang.';
+  visualMotionAiStatus('KONEKSI LANGSUNG GAGAL · '+reason+'. '+advice,true);return null;
  }
 }
 function visualMotionAiExtractCode(raw){
@@ -6080,7 +6062,7 @@ async function generateVisualMotionWithLocalAi(){
   const system='You are a senior motion-graphics art director and SVG animation engineer. Return ONLY a complete standalone HTML5 document, no markdown. Create a polished, richly detailed, coherent scene that faithfully depicts the brief. Use SVG vector illustration, not generic icon placeholders. Structure the scene into at least 5 independently addressable semantic <g> layers with unique descriptive ids: background, environment, main subject, secondary objects, foreground/atmosphere. Animate at least 3 appropriate groups independently using CSS keyframes and transform-origin; use natural, subtle movement. Use gradients, layered shapes, carefully controlled highlights/shadows and depth. Preserve the requested aspect ratio and keep all important objects inside the viewBox. Include complete inline CSS and SVG. No JavaScript, external assets, remote URLs, external fonts, iframe, canvas, scripts or embedded media. Avoid text overlays unless the brief requires visible signage. Ensure the SVG and HTML are fully closed and syntactically complete. Keep output compact enough to finish in one response. Do not explain anything; output only code.';
   const user='VISUAL BRIEF: '+brief+'\\nAspect ratio: '+ratio+'. Target duration: '+duration+' seconds. Visual style: '+style+'. Accent: '+accent+'. Camera direction: '+camera+'. Scene transition preference: '+transition+'. Produce a single coherent scene with distinct SVG groups/layers and CSS motion. Set animation duration to match '+duration+' seconds and make the animation loop smoothly when appropriate.';
   visualMotionAiStatus('Mengirim brief ke '+model+' pada komputer lokal. Proses dapat memerlukan beberapa menit…');
-  const endpoint='http://127.0.0.1:11435';
+  const endpoint=trozalVisionBaseUrl();
   const requestOptions={temperature:.25,num_ctx:8192,num_predict:8192};
   const requests=[
    {url:endpoint+'/api/chat',body:{model,messages:[{role:'system',content:system},{role:'user',content:user}],think:false,stream:false,options:requestOptions,keep_alive:'10m'}},
@@ -6115,113 +6097,12 @@ $('generateVisualMotionAiBtn')?.addEventListener('click',generateVisualMotionWit
 
 </script>
 <script>
-/* TROZAL LNA CONNECTIVITY GUARD
-   Rebind visible Ollama check buttons and use Chrome's documented
-   permission-first, explicit-user-gesture flow for loopback access. */
+/* TROZAL DIRECT OLLAMA CONNECTIVITY GUARD — no local bridge. */
 (function(){
- 'use strict';
- const URL=((location.hostname==='127.0.0.1'||location.hostname==='localhost')?location.origin:'http://127.0.0.1:11435')+'/api/tags';
- const ORIGIN='https://irzalbudiman2-cell.github.io';
- function status(kind,message,isError){
-  const ids=kind==='vision'?['trozalVisionConnection','trozalVisionStatus']:['visualMotionAiStatus'];
-  ids.forEach(id=>{const el=document.getElementById(id);if(el){el.textContent=message;el.style.color=isError?'#ff8b8b':'#72e6b2';}});
- }
- function buttonFor(id){
-  const old=document.getElementById(id);
-  if(!old)return null;
-  const fresh=old.cloneNode(true);
-  old.replaceWith(fresh);
-  return fresh;
- }
- async function readPermission(){
-  if(!navigator.permissions||!navigator.permissions.query)return 'unsupported';
-  try{
-   const p=await navigator.permissions.query({name:'loopback-network'});
-   return p.state;
-  }catch(_){return 'unsupported';}
- }
- function modelSummary(kind,data){
-  const models=(data.models||[]).map(x=>String(x.name||'')).filter(Boolean);
-  const chosen=(document.getElementById(kind==='vision'?'trozalVisionModel':'visualMotionAiModel')||{}).value||'qwen3-vl:2b';
-  const found=models.some(n=>n===chosen||n.startsWith(chosen+':'));
-  if(kind==='vision'){
-   const select=document.getElementById('trozalVisionModel');
-   if(select)[...select.options].forEach(o=>o.dataset.installed=models.some(n=>n===o.value||n.startsWith(o.value+':'))?'1':'0');
-   status(kind,'TERHUBUNG · '+models.length+' model terpasang · '+(found?'Model '+chosen+' tersedia.':'Model '+chosen+' belum terpasang.')+' · '+models.join(', '),false);
-   const detail=document.getElementById('trozalVisionStatus');
-   if(detail)detail.textContent='Bridge dan Ollama siap digunakan untuk Local Vision.';
-  }else{
-   status(kind,'OLLAMA TERHUBUNG · '+models.length+' model terpasang · '+(found?'Model '+chosen+' tersedia.':'Model '+chosen+' belum terpasang.')+' · '+models.join(', '),false);
-  }
-  return {models,found};
- }
- async function requestBridge(kind,button){
-  status(kind,'Meminta akses ke Ollama lokal melalui 127.0.0.1:11435…',false);
-  button.disabled=true;
-  try{
-   // This fetch is initiated directly by the explicit second click when permission was "prompt".
-   const response=await fetch(URL,{
-    method:'GET',mode:'cors',credentials:'omit',cache:'no-store',targetAddressSpace:'loopback'
-   });
-   if(!response.ok)throw new Error('HTTP '+response.status);
-   const data=await response.json();
-   if(!Array.isArray(data.models))throw new Error('Respons Bridge tidak valid (models bukan array).');
-   button.dataset.lnaStep='check';
-   button.textContent=kind==='vision'?'↻ Cek Ollama':'Cek Ollama';
-   modelSummary(kind,data);
-   return data;
-  }catch(error){
-   const reason=(error&&error.name?error.name+': ':'')+(error&&error.message?error.message:String(error));
-   const permission=await readPermission();
-   let advice='Pastikan jendela TROZAL Ollama Bridge masih terbuka.';
-   if(permission==='denied')advice='Izin Loopback sedang BLOCK. Buka pengaturan situs Chrome dan ubah Loopback network menjadi Allow.';
-   else if(/failed to fetch|networkerror|load failed/i.test(reason))advice='Chrome menolak fetch ke loopback. Pastikan izin Loopback network untuk situs TROZAL = Allow; Local network saja tidak cukup.';
-   status(kind,'KONEKSI GAGAL · '+reason+' · Izin loopback: '+permission+'. '+advice,true);
-   button.dataset.lnaStep='check';
-   button.textContent=kind==='vision'?'↻ Cek Ollama':'Cek Ollama';
-   return null;
-  }finally{button.disabled=false;}
- }
- async function onCheck(kind,button){
-  if(button.dataset.lnaStep==='request'){
-   await requestBridge(kind,button);
-   return;
-  }
-  status(kind,'Memeriksa izin Loopback Network Chrome…',false);
-  const permission=await readPermission();
-  if(permission==='denied'){
-   button.dataset.lnaStep='check';
-   status(kind,'IZIN LOOPBACK DITOLAK. Buka pengaturan situs Chrome untuk https://irzalbudiman2-cell.github.io, cari Loopback network, ubah ke Allow, lalu muat ulang halaman.',true);
-   return;
-  }
-  if(permission==='prompt'){
-   button.dataset.lnaStep='request';
-   button.textContent='IZINKAN AKSES LOOPBACK';
-   status(kind,'Chrome belum memberi izin Loopback. Klik tombol “IZINKAN AKSES LOOPBACK” sekali lagi untuk memulai permintaan koneksi. Jika Chrome menampilkan dialog izin jaringan lokal, pilih Allow.',false);
-   return;
-  }
-  if(permission==='granted'||permission==='unsupported'){
-   // With permission already granted, fetch is safe. On browsers that
-   // don't expose the permission name, this explicit click is the fallback.
-   await requestBridge(kind,button);
-   return;
-  }
-  status(kind,'Status izin Loopback tidak dikenal ('+permission+'). Klik lagi untuk mencoba koneksi.',true);
-  button.dataset.lnaStep='request';
-  button.textContent='COBA KONEKSI';
- }
- const scene=buttonFor('visualMotionAiCheckBtn');
- if(scene)scene.addEventListener('click',()=>onCheck('scene',scene));
- const vision=buttonFor('trozalVisionCheckBtn');
- if(vision)vision.addEventListener('click',()=>onCheck('vision',vision));
- // Expose a common check routine for the Generate button's preflight.
- window.trozalBridgeCheckFromScene=async function(){
-  const b=document.getElementById('visualMotionAiCheckBtn');
-  if(!b)return null;
-  if(b.dataset.lnaStep==='request'){return await requestBridge('scene',b);}
-  await onCheck('scene',b);
-  return null;
- };
+ 'use strict';const URL='http://127.0.0.1:11434/api/tags';
+ function status(kind,message,isError){const ids=kind==='vision'?['trozalVisionConnection','trozalVisionStatus']:['visualMotionAiStatus'];ids.forEach(id=>{const el=document.getElementById(id);if(el){el.textContent=message;el.style.color=isError?'#ff8b8b':'#72e6b2';}});}
+ function bind(id,kind){const old=document.getElementById(id);if(!old)return;const button=old.cloneNode(true);old.replaceWith(button);button.addEventListener('click',async()=>{button.disabled=true;status(kind,'Menghubungi Ollama langsung melalui 127.0.0.1:11434…',false);try{const response=await fetch(URL,{method:'GET',mode:'cors',credentials:'omit',cache:'no-store',targetAddressSpace:'loopback'});if(!response.ok)throw new Error('HTTP '+response.status);const data=await response.json();if(!Array.isArray(data.models))throw new Error('Respons /api/tags tidak valid.');const models=data.models.map(x=>String(x.name||'')).filter(Boolean),select=document.getElementById(kind==='vision'?'trozalVisionModel':'visualMotionAiModel'),chosen=select?.value||'qwen3.5:4b',found=models.some(n=>n===chosen||n.startsWith(chosen+':'));if(kind==='vision'){const vision=models.filter(n=>/qwen3(?:\\.5|-vl)|llava|gemma.*vision/i.test(n));status(kind,'OLLAMA TERHUBUNG LANGSUNG · '+models.length+' model · '+(vision.length?'Vision: '+vision.join(', '):'Model Vision belum terpasang.'),false);const detail=document.getElementById('trozalVisionStatus');if(detail)detail.textContent='Koneksi langsung aktif. Tidak menggunakan Bridge.';}else status(kind,'OLLAMA TERHUBUNG LANGSUNG · '+models.length+' model · '+(found?'Model '+chosen+' tersedia.':'Model '+chosen+' belum terpasang.')+' · '+models.join(', '),false);}catch(error){const reason=(error?.name?error.name+': ':'')+(error?.message||String(error));status(kind,'KONEKSI GAGAL · '+reason+'. Pastikan Ollama berjalan, OLLAMA_ORIGINS mengizinkan https://irzalbudiman2-cell.github.io, dan izin Loopback network Chrome = Allow.',true);}finally{button.disabled=false;}});}
+ bind('visualMotionAiCheckBtn','scene');bind('trozalVisionCheckBtn','vision');
 })();
 </script>
 
