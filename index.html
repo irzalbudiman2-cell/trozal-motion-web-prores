@@ -1498,9 +1498,34 @@ function splitSvgIntoPieces(silent=false){
    const groupName=semanticParent?(semanticParent.getAttribute('data-object')||semanticParent.getAttribute('data-name')||semanticParent.getAttribute('aria-label')||semanticParent.getAttribute('inkscape:label')):'';
    return sceneLabel+(groupName&&groupName!==nodeName?groupName+' › ':'')+nodeName;
   });
+  // Turn explicit SVG object-group semantics into editable timeline groups.
+  // Each drawable remains its own SVG track; only the shared parent relationship is grouped.
+  timelineLayerGroups={};timelineGroupParents={};timelineGroupCollapsed={};timelineGroupSelected={};timelineTrackLocks={};timelineGroupSoloSnapshot=null;
+  const semanticBuckets=new Map();
+  selectedLeaves.forEach((item,i)=>{
+   if(item.base)return;
+   const parent=[...(item.ancestors||[])].reverse().find(el=>el.getAttribute('data-object')||el.getAttribute('data-name')||el.getAttribute('aria-label')||el.getAttribute('inkscape:label'));
+   if(!parent)return;
+   const label=String(parent.getAttribute('data-object')||parent.getAttribute('data-name')||parent.getAttribute('aria-label')||parent.getAttribute('inkscape:label')||'').replace(/\\s+/g,' ').trim();
+   if(!label)return;
+   if(!semanticBuckets.has(parent))semanticBuckets.set(parent,{label,members:[]});
+   semanticBuckets.get(parent).members.push(i);
+  });
+  let semanticGroupCount=0;const usedSemanticNames=new Set();
+  for(const bucket of semanticBuckets.values()){
+   if(bucket.members.length<2)continue;
+   const sceneIndex=svgLayerSceneIndices[bucket.members[0]]??-1;
+   const prefix=sceneIndex>=0?'Scene '+String(sceneIndex+1).padStart(2,'0')+' · ':'';
+   const raw=(prefix+bucket.label).replace(/\\s+/g,' ').trim();
+   const base=Array.from(raw||'Objek').slice(0,28).join('');let name=base,suffix=2;
+   while(usedSemanticNames.has(name)){
+    const tail=' '+suffix++;name=Array.from(base).slice(0,Math.max(1,28-tail.length)).join('')+tail;
+   }
+   usedSemanticNames.add(name);bucket.members.forEach(i=>{timelineLayerGroups[i]=name;});semanticGroupCount++;
+  }
   svgLayerHints=selectedLeaves.map((it,i)=>it.base?{kind:'background',entrance:0,loop:0,intensity:0,reason:'Layer dasar utuh menjaga gambar tetap tersambung saat region bergerak.'}:analyzeSvgLayer(it,i,Math.min(60,selectedLeaves.length)));
-  svgWasSplit=true;buildAutoLayerControls();renderSplitPieces(playhead);applyColor();
-  if(!silent)setStatus('Analisis AI lokal selesai: '+svgPieces.length+' layer diklasifikasikan. Latar/dekorasi dijaga statis; objek dan teks diberi gerakan selektif.');scheduleAutosave?.();return true;
+  svgWasSplit=true;buildAutoLayerControls();renderSplitPieces(playhead);applyColor();refreshTimelineEditor();
+  if(!silent)setStatus('SVG dipisah menjadi '+svgPieces.length+' track; '+semanticGroupCount+' grup objek dikenali dari label grup SVG. Setiap bagian tetap dapat diedit sendiri.');scheduleAutosave?.();return true;
  }catch(e){svgWasSplit=false;svgPieces=[];if(!silent)setStatus('Gagal memisahkan SVG: '+e.message);return false}
 }
 function buildAutoLayerControls(){
