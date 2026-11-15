@@ -1,0 +1,64 @@
+name: OLLAMA Smart Model Manager Validation
+
+on:
+  push:
+    branches:
+      - feature/ollama-smart-model-manager-2026-11-15
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser-model-manager:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install Chromium test runtime
+        run: |
+          npm install --no-save --no-package-lock playwright
+          npx playwright install --with-deps chromium
+      - name: Validate inline JavaScript syntax
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const { spawnSync } = require('child_process');
+          const html = fs.readFileSync('index.html', 'utf8');
+          const scripts = [...html.matchAll(/<script\\b[^>]*>([\\s\\S]*?)<\\/script\\s*>/gi)];
+          if (!scripts.length) throw new Error('No inline script blocks found.');
+          scripts.forEach((match, index) => {
+            const file = '/tmp/trozal-manager-' + index + '.js';
+            fs.writeFileSync(file, match[1], 'utf8');
+            const result = spawnSync(process.execPath, ['--check', file], { encoding: 'utf8' });
+            if (result.status !== 0) {
+              process.stderr.write('Syntax error in inline script ' + (index + 1) + '\\n');
+              process.stderr.write(result.stderr || result.stdout || '');
+              process.exit(1);
+            }
+          });
+          const required = ['ollamaModelManagerPanel','ollamaModelRefreshBtn','ollamaModelManagerStatus','visualMotionAiModel','trozalVisionModel','trozalOllamaRefreshModels'];
+          for (const item of required) if (!html.includes(item)) throw new Error('Missing manager element or API: ' + item);
+          console.log('Validated ' + scripts.length + ' inline JavaScript blocks and ' + required.length + ' manager requirements.');
+          NODE
+      - name: Start static app server
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/trozal-manager-http.log 2>&1 &
+          echo $! > /tmp/trozal-manager-http.pid
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:4173/index.html >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/trozal-manager-http.log
+          exit 1
+      - name: Test dynamic model discovery and capability routing
+        run: node tests/ollama-model-manager.browser.cjs
+      - name: Stop static app server
+        if: always()
+        run: |
+          if [ -f /tmp/trozal-manager-http.pid ]; then kill "$(cat /tmp/trozal-manager-http.pid)" || true; fi
