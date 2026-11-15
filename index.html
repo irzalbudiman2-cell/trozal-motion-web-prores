@@ -1364,6 +1364,7 @@ function trozalInitFloatingRenderMonitor(){
 function trozalFormatClock(seconds){if(!Number.isFinite(seconds)||seconds<0)return '—';const s=Math.floor(seconds);return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
 function trozalUpdateFloatingRenderMonitor(percent,label,state){
  const m=window.__trozalRenderMetrics,panel=document.getElementById('trozalFloatingRender');if(!panel)return;
+ if(m&&(state==='success'||state==='error'))m.active=false;
  const running=!!(m&&m.active),p=Math.max(0,Math.min(100,Number(percent)||0));
  if(running||state==='success'||state==='error')panel.classList.add('is-visible');
  if(!running&&state==='idle')return;
