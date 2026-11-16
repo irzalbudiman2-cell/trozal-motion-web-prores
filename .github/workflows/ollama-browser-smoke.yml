@@ -11,6 +11,7 @@ on:
       - feature/ollama-smart-model-manager-2026-11-15
       - feature/ollama-streaming-generation-2026-11-16
       - feature/ollama-adaptive-render-advisor-2026-11-16
+      - feature/ollama-hybrid-canvas-bitrate-health-fix-2026-11-16
       - feature/ollama-scene-composer-scene-intelligence-2026-11-16
   workflow_dispatch:
 
@@ -32,7 +33,7 @@ jobs:
 
       - name: Install browser test runtime
         run: |
-          npm install --no-save --no-package-lock playwright
+          npm install --no-save --no-package-lock playwright jszip
           npx playwright install --with-deps chromium
 
       - name: Start local app server
@@ -45,6 +46,11 @@ jobs:
           done
           cat /tmp/ollama-http.log
           exit 1
+
+      - name: Verify Hybrid Canvas, bitrate, Ollama and GPU health regression guards
+        run: |
+          node tests/hybrid-canvas-bitrate-health.test.cjs
+          node tests/hybrid-canvas-bitrate-health.browser.cjs
 
       - name: Exercise OLLAMA UI in Chromium
         run: |
