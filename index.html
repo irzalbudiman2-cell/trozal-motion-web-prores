@@ -6086,8 +6086,9 @@ async function trozalReadOllamaStream(response,onProgress){
    const lines=buffer.split(/\r?\n/);buffer=lines.pop()||'';
    for(const line of lines){
     if(!line.trim())continue;
-    let item;try{item=JSON.parse(line);}catch(_){continue;}
-    lastData=item;lineCount++;
+    lineCount++;
+    let item;try{item=JSON.parse(line);}catch(error){throw new Error('Respons NDJSON Ollama tidak valid pada baris '+lineCount+': '+(error?.message||String(error)));}
+    lastData=item;
     if(item.error)throw new Error(String(item.error));
     const piece=String(item.message?.content||item.response||'');
     if(piece){content+=piece;onProgress(content,{lineCount,item});}
@@ -6095,12 +6096,12 @@ async function trozalReadOllamaStream(response,onProgress){
   }
   buffer+=decoder.decode();
   if(buffer.trim()){
-   try{
-    const item=JSON.parse(buffer);lastData=item;
-    if(item.error)throw new Error(String(item.error));
-    const piece=String(item.message?.content||item.response||'');
-    if(piece){content+=piece;onProgress(content,{lineCount:lineCount+1,item});}
-   }catch(e){if(e instanceof SyntaxError){}else throw e;}
+   let item;
+   try{item=JSON.parse(buffer);}catch(error){throw new Error('Baris terakhir stream Ollama terpotong/tidak valid: '+(error?.message||String(error)));}
+   lastData=item;
+   if(item.error)throw new Error(String(item.error));
+   const piece=String(item.message?.content||item.response||'');
+   if(piece){content+=piece;onProgress(content,{lineCount:lineCount+1,item});}
   }
   return {data:lastData,content};
  }catch(error){
