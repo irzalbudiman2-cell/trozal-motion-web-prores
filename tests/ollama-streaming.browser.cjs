@@ -26,6 +26,12 @@ const assert = require('node:assert/strict');
   assert.equal(result.evalCount, 42);
   assert.equal(result.progress.length, 3, 'Each streamed NDJSON content chunk should update progress');
   assert.equal(result.progress.at(-1).done, true);
+  const malformed = await page.evaluate(async () => {
+    const stream = new ReadableStream({ start(controller) { controller.enqueue(new TextEncoder().encode('{not-json}\\n')); controller.close(); } });
+    try { await trozalReadOllamaStream(new Response(stream), () => {}); return ''; }
+    catch (error) { return error.message; }
+  });
+  assert.match(malformed, /NDJSON Ollama tidak valid pada baris 1/);
   assert.deepEqual(errors, []);
   console.log(JSON.stringify({ result: 'PASS', streamedChunks: result.progress.length, finalLength: result.content.length }));
   await browser.close();
