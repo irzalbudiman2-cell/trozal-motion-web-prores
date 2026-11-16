@@ -50,8 +50,8 @@ assert.match(appSource, /trozalReadOllamaStream\(response,\(partial,meta\)=>\s*\
   const partialFailure = await page.evaluate(async () => {
     const encoder = new TextEncoder();
     const stream = new ReadableStream({ start(controller) {
-      controller.enqueue(encoder.encode(JSON.stringify({ message: { content: '<svg>partial' }, done: false }) + '\\n'));
-      controller.enqueue(encoder.encode('{broken-json}\\n'));
+      controller.enqueue(encoder.encode(JSON.stringify({ message: { content: '<svg>partial' }, done: false }) + '\n'));
+      controller.enqueue(encoder.encode('{broken-json}\n'));
       controller.close();
     }});
     const updates = [];
@@ -62,7 +62,7 @@ assert.match(appSource, /trozalReadOllamaStream\(response,\(partial,meta\)=>\s*\
   assert.deepEqual(partialFailure.updates, ['<svg>partial'], 'Already streamed partial code must remain available when a later record fails');
   const modelError = await page.evaluate(async () => {
     const stream = new ReadableStream({ start(controller) {
-      controller.enqueue(new TextEncoder().encode(JSON.stringify({ error: 'model not found' }) + '\\n'));
+      controller.enqueue(new TextEncoder().encode(JSON.stringify({ error: 'model not found' }) + '\n'));
       controller.close();
     }});
     try { await trozalReadOllamaStream(new Response(stream), () => {}); return ''; }
