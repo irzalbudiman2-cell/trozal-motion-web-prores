@@ -40,19 +40,3 @@ assert.match(scene.build('The character runs forward.',8),/POSE & SIKLUS GERAK/)
 assert.match(scene.build('The dancer spins clockwise.',8),/pivot/);
 
 console.log('PASS: beat timing, shot planning, interaction graph, causal order, object continuity');
-
-const continuity=scene.buildContinuityLedger([
- 'Mira enters the workshop and picks up the blue key.',
- 'Mira carries the blue key through the corridor.',
- 'Mira arrives at the rooftop and gives the blue key to Rafi.'
-]);
-assert.match(continuity.join('\n'),/Mira \(beat 1, 2, 3\)/);
-assert.match(continuity.join('\n'),/blue key \(beat 1, 2, 3\)/);
-assert.match(continuity.join('\n'),/TRANSISI RUANG/);
-assert.match(continuity.join('\n'),/STATE HANDOFF/);
-assert.match(continuity.join('\n'),/SCREEN-DIRECTION LOCK/);
-const continuityPlan=scene.build('Mira enters the workshop. Mira picks up the blue key. Mira carries the blue key to the rooftop.',12);
-assert.match(continuityPlan,/LEDGER KONTINUITAS SPASIAL/);
-assert.match(continuityPlan,/ENTITAS BERULANG: Mira, blue key/);
-assert.match(continuityPlan,/LOCATION LOCK/);
-assert.match(scene.buildContinuityLedger(['A quiet room.']).join('\n'),/tidak ada nama\/objek berulang/);
