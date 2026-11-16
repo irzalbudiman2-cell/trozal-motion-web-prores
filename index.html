@@ -6069,6 +6069,46 @@ function visualMotionAiExtractCode(raw){
  if(!parsed.querySelector('svg'))throw new Error('Struktur SVG tidak valid.');
  return code;
 }
+async function trozalReadOllamaStream(response,onProgress){
+ if(!response.body||!response.body.getReader){
+  const data=await response.json().catch(()=>({}));
+  const content=String(data.message?.content||data.response||'');
+  if(content)onProgress(content);
+  return {data,content};
+ }
+ const reader=response.body.getReader(),decoder=new TextDecoder();
+ let buffer='',content='',lastData={},lineCount=0;
+ try{
+  while(true){
+   const part=await reader.read();
+   if(part.done)break;
+   buffer+=decoder.decode(part.value,{stream:true});
+   const lines=buffer.split(/\r?\n/);buffer=lines.pop()||'';
+   for(const line of lines){
+    if(!line.trim())continue;
+    lineCount++;
+    let item;try{item=JSON.parse(line);}catch(error){throw new Error('Respons NDJSON Ollama tidak valid pada baris '+lineCount+': '+(error?.message||String(error)));}
+    lastData=item;
+    if(item.error)throw new Error(String(item.error));
+    const piece=String(item.message?.content||item.response||'');
+    if(piece){content+=piece;onProgress(content,{lineCount,item});}
+   }
+  }
+  buffer+=decoder.decode();
+  if(buffer.trim()){
+   let item;
+   try{item=JSON.parse(buffer);}catch(error){throw new Error('Baris terakhir stream Ollama terpotong/tidak valid: '+(error?.message||String(error)));}
+   lastData=item;
+   if(item.error)throw new Error(String(item.error));
+   const piece=String(item.message?.content||item.response||'');
+   if(piece){content+=piece;onProgress(content,{lineCount:lineCount+1,item});}
+  }
+  return {data:lastData,content};
+ }catch(error){
+  try{await reader.cancel();}catch(_){}
+  throw error;
+ }
+}
 async function generateVisualMotionWithLocalAi(){
  const btn=$('generateVisualMotionAiBtn');if(btn.disabled)return;
  const brief=$('visualMotionPrompt').value.trim();
@@ -6100,10 +6140,16 @@ async function generateVisualMotionWithLocalAi(){
    visualMotionAiStatus(requestIndex===0?'Meminta kode SVG melalui Ollama Chat…':'Chat tidak memberi kode. Mencoba jalur Ollama Generate…');
    const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),10*60*1000);
    try{
+    request.body.stream=true;
     const response=await fetch(request.url,{method:'POST',headers:{'Content-Type':'application/json'},targetAddressSpace:'loopback',signal:controller.signal,body:JSON.stringify(request.body)});
-    data=await response.json().catch(()=>({}));
-    if(!response.ok){responseInfo.push(request.url.split('/').pop()+' HTTP '+response.status+': '+String(data.error||''));continue;}
-    rawCode=String(data.message?.content||data.response||data.message?.tool_calls?.[0]?.function?.arguments||'').trim();
+    if(!response.ok){data=await response.json().catch(()=>({}));responseInfo.push(request.url.split('/').pop()+' HTTP '+response.status+': '+String(data.error||''));continue;}
+    const streamed=await trozalReadOllamaStream(response,(partial,meta)=>{
+     $('visualMotionOutput').value=partial;
+     const chars=partial.length.toLocaleString(),chunks=meta?.lineCount||1;
+     visualMotionAiStatus('Menerima keluaran Ollama '+(requestIndex===0?'Chat':'Generate')+'… '+chars+' karakter · '+chunks+' potongan'+(meta?.item?.done?' · menyelesaikan respons':''));
+    });
+    data=streamed.data;
+    rawCode=String(streamed.content||data.message?.content||data.response||data.message?.tool_calls?.[0]?.function?.arguments||'').trim();
     if(rawCode)break;
     responseInfo.push(request.url.split('/').pop()+' kosong (done_reason: '+String(data.done_reason||data.message?.done_reason||'tidak tersedia')+', eval_count: '+String(data.eval_count||data.message?.eval_count||0)+')');
    }catch(requestError){responseInfo.push(request.url.split('/').pop()+': '+(requestError?.name==='AbortError'?'timeout 10 menit':requestError.message||String(requestError)));}
