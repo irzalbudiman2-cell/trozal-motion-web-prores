@@ -233,6 +233,8 @@ jobs:
           })().catch(e => { console.error(e); process.exit(1); });
           NODE
 
+      - name: Validate MP4 bitrate and original-content policy
+        run: node tests/mp4-bitrate-original-policy.test.cjs
       - name: Validate scene intelligence beat planning and continuity guidance
         run: node tests/scene-intelligence.test.cjs
       - name: Validate adaptive render advisor recommendations and safe apply
