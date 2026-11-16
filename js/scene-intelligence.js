@@ -76,6 +76,46 @@
    'lingkungan tetap stabil kecuali brief menyebut reaksi atau interaksi';
   return {pose,path,pivot,interaction,environment,locomotion,rotation,jump,limb};
  }
+ function continuityEntities(line){
+  const s=String(line||''),found=[];
+  const properStop=new Set(['the','a','an','then','finally','after','before','when','while','one','two','camera','wide','close','medium','shot','scene','beat','di','ke','dari','pada','setelah','sebelum','kemudian','akhirnya','lalu']);
+  for(const m of s.matchAll(/\b([A-Z][a-zÀ-ÿ]+(?:\s+[A-Z][a-zÀ-ÿ]+){0,2})\b/g)){
+   const value=m[1].trim(),first=value.split(/\s+/)[0].toLowerCase();
+   if(!properStop.has(first)&&value.length>2)found.push(value);
+  }
+  const objectPattern=/\b(?:the|a|an|this|that|these|those|si|sang|sebuah|seorang|objek|benda)\s+([a-zÀ-ÿ][a-zÀ-ÿ0-9-]*(?:\s+[a-zÀ-ÿ][a-zÀ-ÿ0-9-]*){0,2})/gi;
+  for(const m of s.matchAll(objectPattern)){
+   const value=m[1].trim();
+   if(value.length>2&&!properStop.has(value.toLowerCase()))found.push(value);
+  }
+  return [...new Map(found.map(value=>[value.toLowerCase(),value])).values()];
+ }
+ function buildContinuityLedger(beats){
+  const mentions=new Map(),perBeat=beats.map((line,index)=>{
+   const entities=continuityEntities(line);
+   entities.forEach(entity=>{
+    const key=entity.toLowerCase();
+    if(!mentions.has(key))mentions.set(key,{label:entity,beats:[]});
+    mentions.get(key).beats.push(index+1);
+   });
+   return {line,entities};
+  });
+  const recurring=[...mentions.values()].filter(item=>item.beats.length>1);
+  const rows=perBeat.map((item,index)=>{
+   const shared=item.entities.filter(entity=>recurring.some(entry=>entry.label.toLowerCase()===entity.toLowerCase()));
+   const transition=/\b(?:enters?|arrives?|travels?\s+to|moves?\s+to|leaves?|returns?\s+to|goes?\s+to|walks?\s+into|flies?\s+to|berpindah|memasuki|tiba\s+di|menuju|keluar\s+dari|kembali\s+ke|pergi\s+ke)\b/i.test(item.line);
+   return (index+1)+'. HANDOFF: wariskan pose akhir, posisi layar, arah hadap, objek yang sedang dipegang, pencahayaan, dan relasi jarak dari beat sebelumnya; ubah hanya yang disebut oleh aksi beat ini.'
+    +(shared.length?'\\n   ENTITAS BERULANG: '+shared.join(', ')+' — pertahankan identitas, bentuk, warna, ukuran relatif, dan orientasi yang konsisten.':'')
+    +(transition?'\\n   TRANSISI RUANG: brief memberi isyarat perpindahan; buat establishing cue lokasi baru dan jelaskan perpindahan subjek secara visual sebelum melanjutkan aksi.':'\\n   RUANG: jangan pindahkan lokasi, kamera, atau posisi objek secara mendadak tanpa petunjuk dalam brief.');
+  });
+  const recurringLine=recurring.length
+   ?'KUNCI ENTITAS LINTAS BEAT: '+recurring.map(item=>item.label+' (beat '+item.beats.join(', ')+')').join('; ')+'.'
+   :'KUNCI ENTITAS LINTAS BEAT: tidak ada nama/objek berulang yang terdeteksi secara pasti; pertahankan subjek utama berdasarkan konteks brief tanpa mengarang identitas baru.';
+  return ['LEDGER KONTINUITAS SPASIAL & KEADAAN:',...rows,recurringLine,
+   'STATE HANDOFF: setiap beat mewarisi keadaan akhir beat sebelumnya. Objek yang tidak disentuh tetap pada posisi terakhir; objek yang dipindahkan harus memiliki lintasan; objek yang diberikan/diambil harus berpindah kepemilikan setelah kontak.',
+   'SCREEN-DIRECTION LOCK: pertahankan arah kiri/kanan, eyeline, sumbu aksi 180°, skala karakter, dan hubungan foreground-background antar-shot; jika sumbu kamera berubah, tampilkan shot penghubung.',
+   'LOCATION LOCK: perubahan lokasi hanya terjadi jika brief menyatakannya. Saat lokasi berubah, pertahankan identitas karakter dan properti yang dibawa, tetapi perbarui establishing background, perspektif, pencahayaan, dan ambience secara terencana.'];
+ }
  function build(brief,duration){
   const beats=splitBeats(brief),seconds=Math.max(3,Math.min(60,Number(duration)||15));
   if(!beats.length)return 'Belum ada brief. Tulis subjek, aksi, lingkungan, dan perubahan adegan untuk melihat rencana.';
@@ -86,8 +126,8 @@
    rows.push('   POSE & SIKLUS GERAK: '+motion.pose+'\n   TRAJEKTORI: '+motion.path+'\n   PIVOT / ANCHOR: '+motion.pivot+'\n   KONTAK: '+motion.interaction+'\n   RESPONS LINGKUNGAN: '+motion.environment);
    if(relation)relations.push((relations.length+1)+'. '+relation.type+' | AKTOR: '+relation.actor+' | AKSI: '+relation.verb+' | TARGET: '+relation.target+'\n   SEBAB / KONTAK: '+relation.cause+'\n   AKIBAT / RESPONS: '+relation.effect);
   });
-  const interactionSection=relations.length?['GRAF INTERAKSI OBJEK (hubungan yang terdeteksi):',...relations,'URUTAN KAUSAL: pemicu/niat → pendekatan → kontak/aksi → reaksi target → keadaan akhir. Jangan tampilkan akibat sebelum penyebabnya.']:['GRAF INTERAKSI OBJEK: belum ada relasi aktor-target yang cukup eksplisit. Jangan mengarang interaksi; pertahankan aksi sesuai brief.'];
-  return ['RINGKASAN: '+beats.length+' beat naratif · '+seconds+' detik · shot dan gerak kamera dipilih dari aksi pada tiap beat',...rows,...interactionSection,'KUNCI KONTINUITAS: pertahankan identitas, siluet, bentuk, warna, skala, arah gerak, dan posisi relatif subjek utama antar-beat kecuali brief menyebut perubahan.','KEDALAMAN: pisahkan foreground, midground, dan background; gunakan parallax hanya jika ada layer yang benar-benar berbeda jarak. Jaga subjek utama tetap terbaca dan tidak tertutup dekorasi.','LOGIKA KAMERA: satu motivasi kamera per beat. Jangan menggabungkan pan, zoom, orbit, dan shake secara acak. Gerakan kamera harus membantu aksi atau mengarahkan perhatian.','PACING: sisakan waktu untuk antisipasi, aksi, dan settle/hold; jangan memotong momen penemuan atau impact.','TRANSISI: hubungkan beat dengan arah gerak, komposisi, atau match cut yang konsisten; pergantian lokasi harus didukung brief.','BATAS KREATIF: jangan menambahkan tokoh, properti, lokasi, atau peristiwa baru yang tidak tersirat dalam brief.'].join('\n');
+  const continuitySection=buildContinuityLedger(beats);\n  const interactionSection=relations.length?['GRAF INTERAKSI OBJEK (hubungan yang terdeteksi):',...relations,'URUTAN KAUSAL: pemicu/niat → pendekatan → kontak/aksi → reaksi target → keadaan akhir. Jangan tampilkan akibat sebelum penyebabnya.']:['GRAF INTERAKSI OBJEK: belum ada relasi aktor-target yang cukup eksplisit. Jangan mengarang interaksi; pertahankan aksi sesuai brief.'];
+  return ['RINGKASAN: '+beats.length+' beat naratif · '+seconds+' detik · shot dan gerak kamera dipilih dari aksi pada tiap beat',...rows,...interactionSection,...continuitySection,'KUNCI KONTINUITAS: pertahankan identitas, siluet, bentuk, warna, skala, arah gerak, dan posisi relatif subjek utama antar-beat kecuali brief menyebut perubahan.','KEDALAMAN: pisahkan foreground, midground, dan background; gunakan parallax hanya jika ada layer yang benar-benar berbeda jarak. Jaga subjek utama tetap terbaca dan tidak tertutup dekorasi.','LOGIKA KAMERA: satu motivasi kamera per beat. Jangan menggabungkan pan, zoom, orbit, dan shake secara acak. Gerakan kamera harus membantu aksi atau mengarahkan perhatian.','PACING: sisakan waktu untuk antisipasi, aksi, dan settle/hold; jangan memotong momen penemuan atau impact.','TRANSISI: hubungkan beat dengan arah gerak, komposisi, atau match cut yang konsisten; pergantian lokasi harus didukung brief.','BATAS KREATIF: jangan menambahkan tokoh, properti, lokasi, atau peristiwa baru yang tidak tersirat dalam brief.'].join('\n');
  }
  function mountPreview(){
   const prompt=document.getElementById('visualMotionPrompt'),duration=document.getElementById('visualMotionDuration'),panel=document.getElementById('trozalSceneUnderstandingPanel'),output=document.getElementById('trozalSceneUnderstandingOutput');
@@ -95,7 +135,7 @@
   const update=()=>{output.textContent=build(prompt.value,duration.value);};
   prompt.addEventListener('input',update);duration.addEventListener('change',update);update();
  }
- const api={splitBeats,classify,inferInteraction,inferMotion,build,mountPreview};root.TROZAL_SCENE_INTELLIGENCE=api;
+ const api={splitBeats,classify,inferInteraction,inferMotion,continuityEntities,buildContinuityLedger,build,mountPreview};root.TROZAL_SCENE_INTELLIGENCE=api;
  if(typeof module!=='undefined'&&module.exports)module.exports=api;
  if(typeof document!=='undefined'){if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mountPreview,{once:true});else mountPreview();}
 })(typeof window!=='undefined'?window:globalThis);
