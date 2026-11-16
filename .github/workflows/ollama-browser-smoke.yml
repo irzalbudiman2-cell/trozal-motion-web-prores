@@ -10,6 +10,7 @@ on:
       - feature/theme-intelligence-floating-render-20261115
       - feature/ollama-smart-model-manager-2026-11-15
       - feature/ollama-streaming-generation-2026-11-16
+      - feature/ollama-adaptive-render-advisor-2026-11-16
   workflow_dispatch:
 
 permissions:
@@ -231,6 +232,8 @@ jobs:
           })().catch(e => { console.error(e); process.exit(1); });
           NODE
 
+      - name: Validate adaptive render advisor recommendations and safe apply
+        run: node tests/render-advisor.browser.cjs
       - name: Validate incremental Ollama NDJSON streaming
         run: node tests/ollama-streaming.browser.cjs
       - name: Guard central workspace and export capabilities
