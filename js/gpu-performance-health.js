@@ -6,7 +6,7 @@
  const cards=(items)=>{const host=byId('gpuPerformanceHealthStats');if(!host)return;host.replaceChildren();items.forEach(([label,value])=>{const card=document.createElement('div'),b=document.createElement('b'),span=document.createElement('span');b.textContent=label;span.textContent=value;card.append(b,span);host.append(card);});};
  async function check(){
   setText('gpuPerformanceHealthStatus','Memeriksa WebGPU, WebGL2, Canvas2D, dan beban proyek…');
-  const nav=navigator,canvas=document.createElement('canvas'),gl=canvas.getContext('webgl2')||canvas.getContext('webgl'),ctx=canvas.getContext('2d');
+  const nav=navigator,canvas=document.createElement('canvas'),canvas2d=document.createElement('canvas'),gl=canvas.getContext('webgl2')||canvas.getContext('webgl'),ctx=canvas2d.getContext('2d');
   let webgpu='Tidak tersedia',adapter=null;
   try{
    if(nav.gpu&&typeof nav.gpu.requestAdapter==='function'){
@@ -25,7 +25,7 @@
   const hybrid=window.TrozalHybridCanvasRenderer?.getStatus?.();
   cards([
    ['WebGPU',webgpu],
-   ['WebGL2 / WebGL',gl?(gl instanceof WebGL2RenderingContext?'WebGL2':'WebGL'):'Tidak tersedia'],
+   ['WebGL2 / WebGL',gl?((typeof WebGL2RenderingContext!=='undefined'&&gl instanceof WebGL2RenderingContext)?'WebGL2':'WebGL'):'Tidak tersedia'],
    ['Canvas2D',ctx?'Tersedia':'Tidak tersedia'],
    ['CPU threads',threads?String(threads):'Tidak dilaporkan'],
    ['RAM terdeteksi',ram?ram+' GB (indikatif)':'Tidak dilaporkan'],
