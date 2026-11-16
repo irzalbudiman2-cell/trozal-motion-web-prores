@@ -8,7 +8,8 @@ on:
       - ollama-repair-cb774c0-2026-11-15
       - ollama-semantic-object-groups-2026-11-15
       - feature/theme-intelligence-floating-render-20261115
-      - feature/ollama-smart-model-manager-2026-11-15\n      - feature/ollama-streaming-generation-2026-11-16
+      - feature/ollama-smart-model-manager-2026-11-15
+      - feature/ollama-streaming-generation-2026-11-16
   workflow_dispatch:
 
 permissions:
