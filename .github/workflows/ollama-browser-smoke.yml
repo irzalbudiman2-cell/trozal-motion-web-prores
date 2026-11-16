@@ -12,6 +12,7 @@ on:
       - feature/ollama-streaming-generation-2026-11-16
       - feature/ollama-adaptive-render-advisor-2026-11-16
       - feature/ollama-scene-composer-scene-intelligence-2026-11-16
+      - feature/ollama-hybrid-canvas-renderer-2026-11-16
   workflow_dispatch:
 
 permissions:
@@ -32,7 +33,7 @@ jobs:
 
       - name: Install browser test runtime
         run: |
-          npm install --no-save --no-package-lock playwright
+          npm install --no-save --no-package-lock playwright jszip
           npx playwright install --with-deps chromium
 
       - name: Start local app server
@@ -45,6 +46,11 @@ jobs:
           done
           cat /tmp/ollama-http.log
           exit 1
+
+      - name: Verify adaptive hybrid Canvas benchmark and PNG export
+        run: |
+          node tests/hybrid-canvas-renderer.test.cjs
+          node tests/hybrid-canvas-renderer.browser.cjs
 
       - name: Exercise OLLAMA UI in Chromium
         run: |
