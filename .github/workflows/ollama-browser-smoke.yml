@@ -218,13 +218,13 @@ jobs:
             await page.goto('http://127.0.0.1:4173/index.html', { waitUntil: 'domcontentloaded' });
             await page.waitForSelector('#motionSpeedCalibrate');
             await page.locator('#scrubber').evaluate(el => { el.value='250'; el.dispatchEvent(new Event('input',{bubbles:true})); });
-            const before = await page.evaluate(() => window.playhead);
+            const before = Number(await page.locator('#scrubber').inputValue());
             await page.locator('#motionSpeedCalibrate').click();
             await page.waitForFunction(() => /Preview .* FPS \/ target .* frame terlewat/.test(document.getElementById('motionSpeedCalibrationStatus')?.textContent || ''), { timeout: 8000 });
             const status = await page.locator('#motionSpeedCalibrationStatus').innerText();
             assert.match(status, /FPS \/ target/, 'Calibration should report measured and target FPS');
             assert.match(status, /frame terlewat/, 'Calibration should estimate dropped frames');
-            const after = await page.evaluate(() => window.playhead);
+            const after = Number(await page.locator('#scrubber').inputValue());
             assert.ok(Math.abs(after-before) < 0.03, 'Calibration should restore the original playhead position');
             assert.deepEqual(errors, [], 'Unexpected browser page errors');
             await browser.close();
