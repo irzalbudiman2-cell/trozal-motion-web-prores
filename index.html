@@ -5979,7 +5979,7 @@ function trozalVisionCleanJson(text){
   const ch=raw[i];
   if(inString){
    if(escaped){escaped=false;continue;}
-   if(ch==='\\\\'){escaped=true;continue;}
+   if(ch==='\\'){escaped=true;continue;}
    if(ch==='"')inString=false;
    continue;
   }
