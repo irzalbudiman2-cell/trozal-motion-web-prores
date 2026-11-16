@@ -6,7 +6,7 @@ on:
       - ollama-repair-cb774c0-2026-11-15
       - ollama-semantic-object-groups-2026-11-15
       - feature/theme-intelligence-floating-render-20261115
-      - feature/ollama-smart-model-manager-2026-11-15
+      - feature/ollama-smart-model-manager-2026-11-15\n      - feature/ollama-streaming-generation-2026-11-16
   workflow_dispatch:
 
 permissions:
@@ -171,7 +171,7 @@ jobs:
           });
           NODE
 
-      - name: Validate theme categories and AI prompt alignment in Chromium
+      - name: Validate incremental Ollama NDJSON streaming\n        run: node tests/ollama-streaming.browser.cjs\n\n      - name: Validate theme categories and AI prompt alignment in Chromium
         run: node tests/theme-concept-alignment.browser.cjs
       - name: Audit all catalogue themes and domain-specific AI prompts
         run: node tests/theme-catalogue-coverage.browser.cjs
