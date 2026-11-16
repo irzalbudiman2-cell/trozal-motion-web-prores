@@ -232,6 +232,8 @@ jobs:
           })().catch(e => { console.error(e); process.exit(1); });
           NODE
 
+      - name: Validate scene intelligence beat planning and continuity guidance
+        run: node tests/scene-intelligence.test.cjs
       - name: Validate adaptive render advisor recommendations and safe apply
         run: node tests/render-advisor.browser.cjs
       - name: Validate incremental Ollama NDJSON streaming
