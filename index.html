@@ -818,6 +818,16 @@ body[data-ui-layout="professional"] .visual-scene-card:focus-within{
    <p class="help">Proyek JSON menyimpan pengaturan animasi. File media asli perlu disimpan terpisah.</p>
   </section>
   <section class="panel" id="ollamaRenderAdvisor"><h3>◈ RENDER SYNC & PERFORMANCE ADVISOR</h3><p class="help">Periksa jumlah frame dan beban ekspor sebelum render. Preview akan dikunci pada posisi terakhir selama ekspor.</p><div class="ollama-render-stats" id="ollamaRenderStats"><div><b>Total frame</b><span>—</span></div><div><b>Pixel-frame</b><span>—</span></div><div><b>Buffer / frame</b><span>—</span></div><div><b>Profil beban</b><span>—</span></div></div><button type="button" id="ollamaRenderCheck" style="width:100%">Periksa kesiapan render</button><div class="help" id="ollamaRenderAdvice">Atur durasi, FPS, dan resolusi, lalu periksa.</div></section>
+<section class="panel" id="gpuPerformanceHealthPanel" style="border-color:#399bce;background:linear-gradient(145deg,rgba(16,53,78,.42),rgba(12,26,40,.7))">
+ <h3 style="color:#9edcff">◈ GPU & PERFORMANCE HEALTH</h3>
+ <p class="help">Diagnostik lokal untuk WebGPU, WebGL2, Canvas2D, kemampuan perangkat, estimasi beban frame, dan hasil benchmark renderer. Tidak mengirim data perangkat ke server.</p>
+ <div class="ollama-render-stats" id="gpuPerformanceHealthStats">
+  <div><b>GPU API</b><span>Belum diperiksa</span></div><div><b>Canvas</b><span>Belum diperiksa</span></div><div><b>CPU threads</b><span>—</span></div><div><b>RAM terdeteksi</b><span>—</span></div>
+ </div>
+ <div class="help" id="gpuPerformanceHealthStatus" role="status" aria-live="polite">Klik pemeriksaan untuk membaca kemampuan perangkat.</div>
+ <button type="button" id="gpuPerformanceHealthCheck" style="width:100%">Periksa GPU & Performance Health</button>
+ <div class="help" id="trozalHybridCanvasStatus" role="status" aria-live="polite">Hybrid Canvas: benchmark dijalankan sebelum ekspor pertama.</div>
+</section>
  </aside>
  <main class="main">
   <div class="stagewrap"><div class="stage" id="stage"><div class="stage-badge"><span>TROZAL MOTION</span><b>LIVE PREVIEW</b></div>
@@ -1016,6 +1026,7 @@ body[data-ui-layout="professional"] .visual-scene-card:focus-within{
     </div>
     <p class="help" style="margin:7px 0">Mendeteksi model lokal, kemampuan resmi model, ukuran file, dan status model yang sedang dimuat. Koneksi tetap langsung ke komputer ini.</p>
     <div id="ollamaModelManagerStatus" class="help" role="status" aria-live="polite">Belum diperiksa · Klik Deteksi Model untuk membaca /api/tags, /api/show, dan /api/ps.</div>
+    <div class="help" style="margin-top:6px">Alamat API lokal: <code>http://127.0.0.1:11434</code> · Origin yang perlu diizinkan: <code id="ollamaAllowedOriginInline">memuat…</code></div>
     <div id="ollamaModelManagerSummary" class="ollama-model-summary" aria-live="polite"></div>
     <div id="ollamaModelManagerList" class="ollama-model-list"><div class="ollama-model-empty">Daftar model akan muncul setelah pemeriksaan.</div></div>
     <p class="help" style="margin:8px 0 0">Pilihan model di AI Scene Composer dan Local Vision akan diperbarui dari model yang benar-benar terpasang. Kemampuan yang tidak dapat diverifikasi akan ditandai, bukan dianggap kompatibel.</p>
@@ -1040,7 +1051,7 @@ body[data-ui-layout="professional"] .visual-scene-card:focus-within{
      <ol class="help">
       <li>Pasang Ollama untuk Windows.</li>
       <li>Model yang disarankan: <code>qwen3.5:4b</code> (jika sudah terpasang, tidak perlu mengunduh ulang). Alternatif: <code>ollama pull qwen3-vl:2b</code>.</li>
-      <li>Tambahkan environment variable Windows <code>OLLAMA_ORIGINS</code> dengan nilai <code>https://irzalbudiman2-cell.github.io</code>, lalu tutup Ollama dari system tray dan jalankan kembali.</li>
+      <li>Tambahkan origin website yang sedang dibuka ke environment variable Windows <code>OLLAMA_ORIGINS</code>. Origin saat ini: <code id="ollamaAllowedOrigin">akan diisi otomatis dari alamat Preview ini</code>. Jika memakai URL Preview Vercel baru, origin-nya dapat berubah.</li><li>Tutup Ollama sepenuhnya dari system tray, jalankan kembali, lalu izinkan permintaan Local Network Access di Chrome jika diminta.</li>
       <li>Kembali ke sini dan tekan Cek Ollama.</li>
      </ol>
      <p class="help"><a href="https://ollama.com/download/windows" target="_blank" rel="noopener">Unduh Ollama Windows</a> · <a href="https://ollama.com/library/qwen3.5" target="_blank" rel="noopener">Info Qwen3.5 Vision</a> · <a href="https://ollama.com/library/qwen3-vl" target="_blank" rel="noopener">Info Qwen3-VL</a></p>
@@ -3170,7 +3181,7 @@ ctx.beginPath();ctx.rect(-baseW/2,-baseH/2,baseW*motion.revealX,baseH*motion.rev
 const shapeState=shapeMaskState();
 try{
  const p=Math.max(0,Math.min(1,elapsed/Math.max(.001,d))),ph=elapsed*2*Math.PI*+$('speed').value;
- const drawContained=(source,dx=0,dy=0,rot=0,layerScale=1)=>{const sw=source.naturalWidth||source.width||1,sh=source.naturalHeight||source.height||1,fit=Math.min(ow/sw,oh/sh)*layerScale,dw=sw*fit,dh=sh*fit;ctx.save();ctx.translate(dx,dy);ctx.rotate(rot*Math.PI/180);if($('shadow').checked){ctx.shadowColor='rgba(0,0,0,.22)';ctx.shadowBlur=Math.max(1,w/(turboMode?360:180));ctx.shadowOffsetY=Math.max(1,h/180)}ctx.drawImage(source,-dw/2,-dh/2,dw,dh);ctx.restore()};
+ const drawContained=(source,dx=0,dy=0,rot=0,layerScale=1)=>{const sw=source.naturalWidth||source.width||1,sh=source.naturalHeight||source.height||1,fit=Math.min(ow/sw,oh/sh)*layerScale;let dw=sw*fit,dh=sh*fit,drawable=source;if(!htmlMotionSource&&window.__trozalGpuFrameAssistEnabled===true&&window.TrozalGpuFramePipeline){const gw=Math.max(1,Math.round(dw)),gh=Math.max(1,Math.round(dh)),gpuFrame=window.TrozalGpuFramePipeline.render(source,gw,gh);if(gpuFrame){drawable=gpuFrame;dw=gw;dh=gh}else{window.__trozalGpuFrameAssistEnabled=false}}ctx.save();if(typeof motionBlurPx==='number'&&motionBlurPx>0)ctx.filter='blur('+motionBlurPx.toFixed(2)+'px)';ctx.translate(dx,dy);ctx.rotate(rot*Math.PI/180);if($('shadow').checked){ctx.shadowColor='rgba(0,0,0,.22)';ctx.shadowBlur=Math.max(1,w/(turboMode?360:180));ctx.shadowOffsetY=Math.max(1,h/180)}ctx.drawImage(drawable,-dw/2,-dh/2,dw,dh);ctx.restore()};
  if(htmlMotionSource){const htmlCanvas=await captureHtmlMotionAt(elapsed);drawContained(htmlCanvas)}
  else if(svgPieceImgs.length){svgPieceImgs.forEach((pi,i)=>{
   const visible=document.getElementById('autoLayerVisible'+i)?.checked!==false,solo=soloLayerIndex<0||soloLayerIndex===i;if(!visible||!solo)return;
@@ -3205,7 +3216,7 @@ async function draw(){
   setExportStatus('Render gagal pada frame '+frame+': '+(err?.message||String(err)));setRenderProgress(Math.round(frame/Math.max(1,totalFrames)*100),'Render gagal','error');
  }
 }
-if(rec){rec.start(250);renderClockStart=performance.now()}draw()};
+if(window.TrozalHybridCanvasRenderer)await window.TrozalHybridCanvasRenderer.prepare();if(rec){rec.start(250);renderClockStart=performance.now()}draw()};
 function trozalOllamaRenderPreflight(){const [w,h]=String($('resolution')?.value||'1920x1080').split('x').map(Number),d=Math.max(0,Number($('duration')?.value)||0),fps=Math.max(1,Number($('fps')?.value)||30),frames=Math.max(1,Math.round(d*fps)),pixels=w*h*frames,buffer=w*h*4/1048576,profile=pixels>900000000?'Sangat berat':pixels>350000000?'Berat':pixels>120000000?'Menengah':'Ringan';const vals=[['Total frame',frames.toLocaleString('id-ID')],['Pixel-frame',(pixels/1e6).toFixed(1)+' MP'],['Buffer / frame',buffer.toFixed(1)+' MB'],['Profil beban',profile]],host=$('ollamaRenderStats');if(host){host.replaceChildren();vals.forEach(([a,b])=>{const box=document.createElement('div'),label=document.createElement('b'),value=document.createElement('span');label.textContent=a;value.textContent=b;box.append(label,value);host.append(box)})}const notes=[];if(pixels>900000000)notes.push('Beban sangat tinggi: coba resolusi atau FPS lebih rendah.');if(w>3840||h>2160)notes.push('Resolusi di atas 4K dapat membutuhkan memori besar.');if(fps>30)notes.push('FPS di atas 30 menambah jumlah frame dan waktu ekspor.');if(!notes.length)notes.push('Beban dalam rentang moderat. Tetap lakukan uji render singkat.');$('ollamaRenderAdvice').textContent='Pemeriksaan selesai · '+w+'×'+h+' · '+d.toFixed(1)+' dtk · '+fps+' FPS.\\n'+notes.join('\\n')}
 $('ollamaRenderCheck')?.addEventListener('click',trozalOllamaRenderPreflight);['resolution','duration','fps'].forEach(id=>$(id)?.addEventListener('change',()=>{if($('ollamaRenderStats'))trozalOllamaRenderPreflight()}));
 $('cancelRenderBtn')?.addEventListener('click',()=>{if(typeof trozalRenderCancelHandler==='function')trozalRenderCancelHandler();});
@@ -5772,7 +5783,7 @@ function trozalMetadataSanitizeSource(code){
 /* Direct browser connection to the Ollama server on this same PC. */
 function trozalVisionBaseUrl(){ return 'http://127.0.0.1:11434'; }
 var TROZAL_VISION_BASE=trozalVisionBaseUrl();
-var TROZAL_VISION_ORIGIN='https://irzalbudiman2-cell.github.io';
+var TROZAL_VISION_ORIGIN=window.location.origin;
 async function trozalMetadataAnalyzeSource(kind){
  kind=kind==='html'?'html':'scene';
  const button=$(kind==='html'?'metadataFromHtmlMotionBtn':'metadataFromSceneAiBtn');
@@ -6111,7 +6122,7 @@ async function visualMotionAiCheck(){
   return {models,found};
  }catch(e){
   const reason=(e?.name?e.name+': ':'')+(e?.message||String(e));
-  const advice=/failed to fetch|networkerror|load failed/i.test(reason)?'Periksa OLLAMA_ORIGINS. Untuk preview ini izinkan https://trozal-motion-web-prores-git-ollama-direct-web-7718e1-trozal-id.vercel.app (tambahkan juga https://irzalbudiman2-cell.github.io dan https://trozal-motion-web-prores.vercel.app bila dipakai), restart Ollama, lalu izinkan Loopback network Chrome.':'Pastikan Ollama berjalan dan model sudah terpasang.';
+  const advice=/failed to fetch|networkerror|load failed|cors|blocked/i.test(reason)?'Kemungkinan akses diblokir CORS atau izin Local Network Access. Tambahkan origin website yang sedang dibuka ('+window.location.origin+') ke OLLAMA_ORIGINS, restart Ollama sepenuhnya dari system tray, lalu izinkan Local Network Access/Loopback di Chrome.':'Pastikan Ollama aktif di http://127.0.0.1:11434, lalu periksa model dan log Ollama.';
   visualMotionAiStatus('KONEKSI LANGSUNG GAGAL · '+reason+'. '+advice,true);return null;
  }
 }
@@ -6709,6 +6720,9 @@ body[data-ui-layout="classic"] .ui-layout-btn[aria-pressed="true"]{background:#d
  replaceCheckButton('trozalVisionCheckBtn','vision');
 })();
 </script>
+<script src="./browser-gpu-frame-pipeline.js" defer></script>
+<script src="./hybrid-canvas-renderer.js" defer></script>
+<script src="./js/gpu-performance-health.js" defer></script>
 <script src="./js/render-advisor.js" defer></script>
 <script src="./js/scene-intelligence.js" defer></script>
 </body></html>
