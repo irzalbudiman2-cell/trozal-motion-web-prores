@@ -823,6 +823,14 @@ body[data-ui-layout="professional"] .visual-scene-card:focus-within{
    <div class="control"><label>Durasi video <span class="value" id="durationVal">10.0 dtk</span></label><input type="range" id="duration" min="1" max="30" step=".5" value="10"></div>
    <div class="control"><label>Frame rate</label><select id="fps"><option>24</option><option selected>30</option><option>60</option></select></div>
    <div class="control" id="renderTimingGuard" style="padding:9px;border:1px solid #4d9ec4;border-radius:10px;background:linear-gradient(135deg,#102f43,#123c4c)"><label style="color:#bcecff">Frame Accuracy Monitor</label><strong id="renderTimingReadout" style="display:block;color:#e5f7ff;font-size:13px">300 frame · 30 FPS · 10.00s</strong><small style="color:#b8ddec">Waktu video dihitung dari jumlah frame ÷ FPS. Preview dijeda selama render.</small></div>
+   <div class="control" id="adaptiveRenderAdvisor" style="padding:10px;border:1px solid #4c8fa8;border-radius:10px;background:linear-gradient(135deg,#142b3c,#172f3a)">
+<label style="color:#c2edff">ADAPTIVE RENDER ADVISOR</label>
+<div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-top:6px">
+<button type="button" id="renderAdvisorAnalyze" style="background:#174b61;border:1px solid #4f9ab7;color:#e7f8ff;border-radius:7px;padding:7px 10px">◈ Analisis Beban Render</button>
+<button type="button" id="renderAdvisorApply" style="display:none;background:#176346;border:1px solid #50b88c;color:#eafff4;border-radius:7px;padding:7px 10px">Terapkan TURBO</button>
+</div>
+<small id="renderAdvisorStatus" role="status" aria-live="polite" style="display:block;color:#c1d8e5;margin-top:7px">Analisis resolusi, FPS, durasi, dan kemampuan browser. Tidak mengubah resolusi atau FPS secara otomatis.</small>
+</div>
    <div class="control"><label>Resolusi output</label><select id="resolution"><option value="1280x720">HD 720p</option><option value="1920x1080">Full HD 1080p</option><option value="2560x1440">2K QHD</option><option value="3840x2160" selected>4K UHD</option><option value="7680x4320">8K UHD (butuh RAM/GPU besar)</option><option value="1080x1920">Vertical 1080×1920</option><option value="1080x1080">Square 1080×1080</option></select></div>
    <div class="control"><label>Kecepatan render</label><select id="renderSpeedMode"><option value="normal" selected>Normal · kualitas efek penuh</option><option value="turbo">⚡ TURBO · render lebih ringan</option></select><small class="target-hint">TURBO mempertahankan resolusi dan FPS pilihan, mengurangi jumlah elemen dekoratif, dan memakai preset encoder lebih cepat. Normal memakai efek penuh dan preset encoder medium.</small></div>
    <div class="control" id="transparentExportMode"><label for="proresMode">Mode ekspor transparan</label><select id="proresMode"><option value="unlimited" selected>ProRes 4444 · tanpa batas ukuran file</option><option value="pngUnlimited">PNG Sequence ZIP · tanpa batas ukuran file</option></select><small class="target-hint" id="proresModeHint">ProRes 4444 + alpha melalui encoder web. Pilih PNG Sequence ZIP untuk ekspor frame transparan.</small></div>
@@ -6663,4 +6671,5 @@ body[data-ui-layout="classic"] .ui-layout-btn[aria-pressed="true"]{background:#d
  replaceCheckButton('trozalVisionCheckBtn','vision');
 })();
 </script>
+<script src="./js/render-advisor.js" defer></script>
 </body></html>
