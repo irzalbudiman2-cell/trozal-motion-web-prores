@@ -985,9 +985,13 @@ body[data-ui-layout="professional"] .visual-scene-card:focus-within{
    <label>Format video</label><select id="format"><option value="webm">WebM (ekspor langsung dari browser)</option><option value="mp4">MP4 / H.264</option><option value="mov" selected>MOV / QuickTime · ProRes 4444 + Alpha</option><option value="pngseq">PNG Sequence ZIP (transparansi / alpha)</option></select>
    
    <label>Preset kualitas</label><select id="quality"><option value="standard">Standar · file lebih kecil</option><option value="high" selected>Tinggi · detail tajam</option><option value="max">Maksimal · kualitas tertinggi</option></select>
-   <label>MP4 H.264 · CRF (kualitas kompresi)</label>
+   <label>Mode laju data MP4 H.264</label>
+   <select id="mp4RateMode"><option value="quality" selected>Otomatis · CRF (prioritas kualitas)</option><option value="target">Target Byte Rate · Mbps (prioritas ukuran data)</option></select>
+   <label>Target Byte Rate MP4</label>
+   <select id="mp4Bitrate"><option value="12">12 Mbps · 1080p ringan</option><option value="20">20 Mbps · 1080p tajam</option><option value="35" selected>35 Mbps · 4K 30fps standar tinggi</option><option value="50">50 Mbps · 4K 30fps detail tinggi</option><option value="70">70 Mbps · 4K kompleks / detail tinggi</option><option value="90">90 Mbps · 4K sangat tinggi</option></select>
+   <label>MP4 H.264 · CRF (mode Otomatis)</label>
    <select id="mp4Crf"><option value="23">CRF 23 · ukuran lebih kecil</option><option value="20">CRF 20 · seimbang</option><option value="18" selected>CRF 18 · kualitas tinggi</option><option value="16">CRF 16 · sangat tinggi</option><option value="14">CRF 14 · mendekati lossless, file besar</option><option value="auto">Otomatis mengikuti preset kualitas</option></select>
-   <p class="help">Semakin kecil angka CRF, semakin tinggi kualitas dan semakin besar ukuran file. CRF hanya berlaku untuk ekspor MP4 H.264.</p>
+   <p class="help">Mode Otomatis memakai CRF. Mode Target Byte Rate mengunci target laju data encoder (misalnya 35–50 Mbps untuk 4K 30fps) agar video tidak terlalu kecil/terkompresi. Ukuran akhir tetap bergantung pada durasi, gerakan, dan kompleksitas gambar.</p>
    <p class="help">MP4 memakai encoder H.264 berbasis frame untuk menghindari keterbatasan codec MP4 bawaan browser. Preset kualitas mengatur CRF dan bitrate sesuai resolusi. Proses ini membutuhkan koneksi internet saat pertama kali memuat FFmpeg.wasm.</p>
    <p class="help" id="renderSpeedHint">Normal: seluruh efek dekoratif diproses. TURBO: mengurangi partikel, kilau dekoratif, dan beban bayangan; resolusi, FPS, durasi, serta animasi utama tetap mengikuti pengaturan.</p>
    <p class="help">Versi Web ProRes: WebM direkam langsung oleh browser; MP4 H.264 dan MOV ProRes 4444 diproses dengan FFmpeg.wasm lokal dari website; PNG Sequence ZIP mempertahankan transparansi.</p>
@@ -2947,14 +2951,15 @@ async function encodeMovWithWasm(pngZip,totalFrames,fps,width,height,outputForma
     const quality=$('quality').value,crfChoice=$('mp4Crf')?.value||'auto',crf=crfChoice==='auto'?(quality==='max'?15:quality==='high'?18:22):Number(crfChoice);
     const pixelRate=width*height*fps;
     const maxRate=Math.max(8000000,Math.min(160000000,Math.round(pixelRate*(quality==='max'?.00085:quality==='high'?.00062:.00042))));
-    setExportStatus('Encoding MP4 H.264 · CRF '+crf+' · '+width+'×'+height+' · '+fps+' FPS');
+    const rateMode=$('mp4RateMode')?.value||'quality',targetMbps=Math.max(1,Math.min(100,Number($('mp4Bitrate')?.value)||35)),targetBps=Math.round(targetMbps*1000000);
+    const rateArgs=rateMode==='target'?['-b:v',String(targetBps),'-maxrate',String(Math.round(targetBps*1.15)),'-bufsize',String(targetBps*2)]:['-crf',String(crf),'-maxrate',String(maxRate),'-bufsize',String(maxRate*2)];
+    setExportStatus('Encoding MP4 H.264 · '+(rateMode==='target'?'Target '+targetMbps+' Mbps':'CRF '+crf)+' · '+width+'×'+height+' · '+fps+' FPS');
     code=await ffmpeg.exec([
      '-hide_banner','-y','-filter_threads','1','-filter_complex_threads','1',
      '-framerate',String(fps),'-start_number','0','-i','frame_%06d.png',
      '-frames:v',String(totalFrames),'-r',String(fps),'-an',
      '-c:v','libx264','-preset',($('renderSpeedMode')?.value==='turbo'?'veryfast':'medium'),
-     '-profile:v','high','-pix_fmt','yuv420p','-crf',String(crf),
-     '-maxrate',String(maxRate),'-bufsize',String(maxRate*2),
+     '-profile:v','high','-pix_fmt','yuv420p',...rateArgs,
      '-threads','1','-movflags','+faststart',output
     ]);
    }
@@ -4808,6 +4813,7 @@ Main theme: ${theme}
 Visual category: ${cat}
 Specific concept / subtheme: ${specific}
 User art direction (additional constraints; must be combined, never replace the theme blueprint): ${details||'No extra user constraints supplied. Follow the complete theme/category specification below.'}
+${policy}
 THEME-SPECIFIC CREATIVE BLUEPRINT · THEME- AND CATEGORY-SPECIFIC CREATIVE SPECIFICATION — PRESERVE EVERY SECTION
 ${themeSpec.prompt}
 USER DETAIL INTEGRATION RULE
@@ -6167,8 +6173,9 @@ async function generateVisualMotionWithLocalAi(){
   const ratio=$('visualMotionRatio').value,duration=Math.max(3,Math.min(60,+$('visualMotionDuration').value||15));
   const style=$('visualMotionStyle').value,accent=$('visualMotionAccent').value,camera=$('visualMotionCamera').value,transition=$('visualMotionTransition').value;
   const scenePlan=window.TROZAL_SCENE_INTELLIGENCE?.build(brief,duration)||'Treat the full brief as one coherent scene.';
+  const originalContentPolicy='ORIGINAL CONTENT / IP SAFETY POLICY: Create original fictional visual content only. Do not reproduce copyrighted characters, franchises, recognizable mascots, protected signature designs, real company/product logos, trademarks, brand marks, or existing proprietary identities. Do not imitate a specific protected character or recreate a known logo. Use invented names, original silhouettes, original symbols, and generic non-branded objects. Broad genres such as cinematic, futuristic, cyberpunk, premium, 3D, editorial, and commercial motion design are allowed when executed with original assets. If the brief names protected IP, transform it into a distinct original concept preserving only broad mood or genre, never the protected identity or recognizable design.';
   const system='You are a senior motion-graphics art director and SVG animation engineer. Return ONLY a complete standalone HTML5 document, no markdown. Create a polished, richly detailed, coherent scene that faithfully depicts the brief. Follow the SCENE BEAT PLAN in order; it is the narrative spine. Preserve the same main subject identity, silhouette, palette, scale and screen direction across beats unless the brief explicitly changes them. Stage readable action poses with clear cause/effect and foreground, midground and background spatial separation. Use establishing, follow, reveal and hold shots only when they serve the described action; avoid random camera movement, unrelated props and invented events. Use SVG vector illustration, not generic icon placeholders. Structure the scene into at least 5 independently addressable semantic <g> layers with unique descriptive ids: background, environment, main subject, secondary objects, foreground/atmosphere. Animate at least 3 appropriate groups independently using CSS keyframes and transform-origin; use natural, subtle movement. Use gradients, layered shapes, carefully controlled highlights/shadows and depth. Preserve the requested aspect ratio and keep all important objects inside the viewBox. Include complete inline CSS and SVG. No JavaScript, external assets, remote URLs, external fonts, iframe, canvas, scripts or embedded media. Avoid text overlays unless the brief requires visible signage. Ensure the SVG and HTML are fully closed and syntactically complete. Keep output compact enough to finish in one response. Do not explain anything; output only code.';
-  const user='VISUAL BRIEF: '+brief+'\nSCENE BEAT PLAN:\n'+scenePlan+'\nAspect ratio: '+ratio+'. Target duration: '+duration+' seconds. Visual style: '+style+'. Accent: '+accent+'. Camera direction: '+camera+'. Scene transition preference: '+transition+'. Produce a single coherent scene with distinct SVG groups/layers and CSS motion. Set animation duration to match '+duration+' seconds and make the animation loop smoothly when appropriate.';
+  const user=originalContentPolicy+'\nVISUAL BRIEF: '+brief+'\nSCENE BEAT PLAN:\n'+scenePlan+'\nAspect ratio: '+ratio+'. Target duration: '+duration+' seconds. Visual style: '+style+'. Accent: '+accent+'. Camera direction: '+camera+'. Scene transition preference: '+transition+'. Produce a single coherent scene with distinct SVG groups/layers and CSS motion. Set animation duration to match '+duration+' seconds and make the animation loop smoothly when appropriate.';
   visualMotionAiStatus('Mengirim brief ke '+model+' pada komputer lokal. Proses dapat memerlukan beberapa menit…');
   const endpoint=trozalVisionBaseUrl();
   const requestOptions={temperature:.25,num_ctx:8192,num_predict:8192};
