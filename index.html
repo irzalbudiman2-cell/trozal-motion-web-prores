@@ -6144,8 +6144,9 @@ async function generateVisualMotionWithLocalAi(){
     const response=await fetch(request.url,{method:'POST',headers:{'Content-Type':'application/json'},targetAddressSpace:'loopback',signal:controller.signal,body:JSON.stringify(request.body)});
     if(!response.ok){data=await response.json().catch(()=>({}));responseInfo.push(request.url.split('/').pop()+' HTTP '+response.status+': '+String(data.error||''));continue;}
     const streamed=await trozalReadOllamaStream(response,(partial,meta)=>{
-     const chars=partial.length.toLocaleString();
-     visualMotionAiStatus('Menerima keluaran Ollama '+(requestIndex===0?'Chat':'Generate')+'… '+chars+' karakter'+(meta?.item?.done?' · menyelesaikan respons':''));
+     $('visualMotionOutput').value=partial;
+     const chars=partial.length.toLocaleString(),chunks=meta?.lineCount||1;
+     visualMotionAiStatus('Menerima keluaran Ollama '+(requestIndex===0?'Chat':'Generate')+'… '+chars+' karakter · '+chunks+' potongan'+(meta?.item?.done?' · menyelesaikan respons':''));
     });
     data=streamed.data;
     rawCode=String(streamed.content||data.message?.content||data.response||data.message?.tool_calls?.[0]?.function?.arguments||'').trim();
