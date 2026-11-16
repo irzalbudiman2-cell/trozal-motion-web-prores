@@ -174,6 +174,37 @@ jobs:
           });
           NODE
 
+      - name: Verify compact Runtime Diagnostics minimize and restore
+        run: |
+          node <<'NODE'
+          const { chromium } = require('playwright');
+          const assert = require('node:assert/strict');
+          (async () => {
+            const browser = await chromium.launch({ headless: true });
+            const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+            const errors = [];
+            page.on('pageerror', e => errors.push(e.message));
+            await page.goto('http://127.0.0.1:4173/index.html', { waitUntil: 'domcontentloaded' });
+            await page.waitForSelector('#trozalDebugFab');
+            await page.locator('#trozalDebugFab').click();
+            await page.waitForFunction(() => document.getElementById('trozalDebugPanel')?.classList.contains('open'));
+            await page.locator('#trozalDebugPanel .debug-minimize').click();
+            await page.waitForFunction(() => document.getElementById('trozalDebugPanel')?.classList.contains('minimized'));
+            const compact = await page.locator('#trozalDebugPanel').evaluate(el => ({
+              width: el.getBoundingClientRect().width,
+              logDisplay: getComputedStyle(document.getElementById('trozalDebugLog')).display,
+              copyDisplay: getComputedStyle(el.querySelector('button:not(.debug-minimize)')).display
+            }));
+            assert.ok(compact.width <= 300, 'Minimized diagnostics should become a compact floating pill');
+            assert.equal(compact.logDisplay, 'none', 'Log should be hidden while minimized');
+            assert.equal(compact.copyDisplay, 'none', 'Secondary controls should be hidden while minimized');
+            await page.locator('#trozalDebugPanel .debug-minimize').click();
+            await page.waitForFunction(() => !document.getElementById('trozalDebugPanel')?.classList.contains('minimized'));
+            assert.notEqual(await page.locator('#trozalDebugLog').evaluate(el => getComputedStyle(el).display), 'none');
+            assert.deepEqual(errors, [], 'Unexpected browser page errors');
+            await browser.close();
+          })().catch(e => { console.error(e); process.exit(1); });
+          NODE
       - name: Validate incremental Ollama NDJSON streaming
         run: node tests/ollama-streaming.browser.cjs
       - name: Guard central workspace and export capabilities
