@@ -84,7 +84,7 @@
    const value=m[1].trim(),first=value.split(/\s+/)[0].toLowerCase();
    if(!properStop.has(first)&&value.length>2)found.push(value);
   }
-  const objectPattern=/\b(?:the|a|an|this|that|these|those|si|sang|sebuah|seorang|objek|benda)\s+([a-zÀ-ÿ][a-zÀ-ÿ0-9-]*(?:\s+(?!to\b|of\b|in\b|on\b|at\b|with\b|and\b|or\b|ke\b|di\b|dari\b|pada\b|menuju\b)[a-zÀ-ÿ][a-zÀ-ÿ0-9-]*){0,2})/gi;
+  const objectPattern=/\b(?:the|a|an|this|that|these|those|si|sang|sebuah|seorang|objek|benda)\s+([a-zÀ-ÿ][a-zÀ-ÿ0-9-]*(?:\s+(?!to\b|of\b|in\b|on\b|at\b|with\b|and\b|or\b|ke\b|di\b|dari\b|pada\b|menuju\b|through\b|across\b|over\b|under\b|into\b|onto\b|from\b|by\b|around\b|past\b|along\b|toward\b|towards\b|melalui\b|melewati\b|dengan\b)[a-zÀ-ÿ][a-zÀ-ÿ0-9-]*){0,2})/gi;
   for(const m of s.matchAll(objectPattern)){
    const value=m[1].trim();
    if(value.length>2&&!properStop.has(value.toLowerCase()))found.push(value);

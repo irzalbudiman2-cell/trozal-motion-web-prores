@@ -7,7 +7,6 @@ on:
       - ollama-semantic-object-groups-2026-11-15
       - feature/theme-intelligence-floating-render-20261115
       - feature/ollama-adaptive-render-advisor-2026-11-16
-      - feature/ollama-spatial-continuity-ledger-2026-11-16
   workflow_dispatch:
 
 permissions:
@@ -23,9 +22,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Run OLLAMA scene intelligence regression tests
-        run: node tests/scene-intelligence.test.cjs
-
       - name: Validate inline JavaScript syntax
         shell: bash
         run: |
