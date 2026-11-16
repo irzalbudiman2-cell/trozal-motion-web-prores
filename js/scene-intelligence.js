@@ -104,9 +104,11 @@
   const recurring=[...mentions.values()].filter(item=>item.beats.length>1);
   const rows=perBeat.map((item,index)=>{
    const shared=item.entities.filter(entity=>recurring.some(entry=>entry.label.toLowerCase()===entity.toLowerCase()));
+   const delta=inferStateDelta(item.line,index);
    const transition=/\b(?:enters?|arrives?|travels?\s+to|moves?\s+to|leaves?|returns?\s+to|goes?\s+to|walks?\s+into|flies?\s+to|berpindah|memasuki|tiba\s+di|menuju|keluar\s+dari|kembali\s+ke|pergi\s+ke)\b/i.test(item.line);
    return (index+1)+'. HANDOFF: wariskan pose akhir, posisi layar, arah hadap, objek yang sedang dipegang, pencahayaan, dan relasi jarak dari beat sebelumnya; ubah hanya yang disebut oleh aksi beat ini.'
     +(shared.length?'\n   ENTITAS BERULANG: '+shared.join(', ')+' — pertahankan identitas, bentuk, warna, ukuran relatif, dan orientasi yang konsisten.':'')
+    +'\n   STATE DELTA ['+delta.kind+']: '+delta.state
     +(transition?'\n   TRANSISI RUANG: brief memberi isyarat perpindahan; buat establishing cue lokasi baru dan jelaskan perpindahan subjek secara visual sebelum melanjutkan aksi.':'\n   RUANG: jangan pindahkan lokasi, kamera, atau posisi objek secara mendadak tanpa petunjuk dalam brief.');
   });
   const recurringLine=recurring.length
@@ -137,7 +139,7 @@
   const update=()=>{output.textContent=build(prompt.value,duration.value);};
   prompt.addEventListener('input',update);duration.addEventListener('change',update);update();
  }
- const api={splitBeats,classify,inferInteraction,inferMotion,continuityEntities,buildContinuityLedger,build,mountPreview};root.TROZAL_SCENE_INTELLIGENCE=api;
+ const api={splitBeats,classify,inferInteraction,inferMotion,continuityEntities,inferStateDelta,buildContinuityLedger,build,mountPreview};root.TROZAL_SCENE_INTELLIGENCE=api;
  if(typeof module!=='undefined'&&module.exports)module.exports=api;
  if(typeof document!=='undefined'){if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mountPreview,{once:true});else mountPreview();}
 })(typeof window!=='undefined'?window:globalThis);

@@ -40,3 +40,24 @@ assert.match(scene.build('The character runs forward.',8),/POSE & SIKLUS GERAK/)
 assert.match(scene.build('The dancer spins clockwise.',8),/pivot/);
 
 console.log('PASS: beat timing, shot planning, interaction graph, causal order, object continuity');
+
+const transferState=scene.inferStateDelta('Mira gives the blue key to Rafi.',0);
+assert.equal(transferState.kind,'TRANSFER');
+assert.equal(transferState.actor,'Mira');
+assert.equal(transferState.object,'blue key');
+assert.equal(transferState.recipient,'Rafi');
+assert.match(transferState.state,/Mira kepada Rafi/);
+const carryState=scene.inferStateDelta('Mira carries the blue key.',1);
+assert.equal(carryState.kind,'HOLD / CARRY');
+assert.match(carryState.state,/memegang\/membawa/);
+const placeState=scene.inferStateDelta('Mira places the blue key on the table.',2);
+assert.equal(placeState.kind,'PLACE / RELEASE');
+assert.match(placeState.state,/menetap pada the table/);
+const locationState=scene.inferStateDelta('Mira arrives at the rooftop.',3);
+assert.equal(locationState.kind,'LOCATION');
+const noDelta=scene.inferStateDelta('A quiet blue room.',4);
+assert.equal(noDelta.kind,'NO EXPLICIT DELTA');
+const statePlan=scene.build('Mira picks up the blue key. Mira carries the blue key. Mira gives the blue key to Rafi.',12);
+assert.match(statePlan,/STATE DELTA \[HOLD \/ CARRY\]/);
+assert.match(statePlan,/STATE DELTA \[TRANSFER\]/);
+assert.match(statePlan,/blue key/);
