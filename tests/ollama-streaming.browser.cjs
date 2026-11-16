@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const appSource = fs.readFileSync('index.html', 'utf8');
 
-assert.match(appSource, /trozalReadOllamaStream\(response,\(partial,meta\)=>\s*\$\('visualMotionOutput'\)\.value=partial;/, 'Generated code should appear in the output editor incrementally while streaming');
+assert.match(appSource, /trozalReadOllamaStream\\(response,\\(partial,meta\\)=>\\s*\\{\\s*\\$\\('visualMotionOutput'\\)\\.value=partial;/, 'Generated code should appear in the output editor incrementally while streaming');/, 'Generated code should appear in the output editor incrementally while streaming');
 
 (async () => {
   const browser = await chromium.launch({ headless: true });
