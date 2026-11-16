@@ -471,6 +471,8 @@ button.part:focus-visible{outline:2px solid #ffe8a3;outline-offset:2px}
 #trozalFloatingRender .tfr-actions{display:flex;gap:7px;margin-top:10px}#trozalFloatingRender .tfr-actions button{flex:1}#trozalFloatingRender .tfr-cancel{background:#8f2631!important;border-color:#d95b64!important;color:#fff!important}
 #trozalFloatingRender.is-minimized{width:260px}#trozalFloatingRender.is-minimized .tfr-body{display:none}#trozalFloatingRender.is-minimized .tfr-head{border:0}
 @media(max-width:520px){#trozalFloatingRender{right:10px;bottom:10px;width:calc(100vw - 20px)}}
+#motionSpeedCalibrate{border:1px solid #4d9ec4;background:#12384b;color:#d7f4ff;border-radius:7px;padding:6px 9px;font-size:10px}
+#motionSpeedCalibrationStatus{font-size:10px;color:#b9e6ce;max-width:240px}
 </style>
 <style>
 
@@ -826,7 +828,7 @@ body[data-ui-layout="professional"] .visual-scene-card:focus-within{
    <div class="control" id="transparentExportMode"><label for="proresMode">Mode ekspor transparan</label><select id="proresMode"><option value="unlimited" selected>ProRes 4444 · tanpa batas ukuran file</option><option value="pngUnlimited">PNG Sequence ZIP · tanpa batas ukuran file</option></select><small class="target-hint" id="proresModeHint">ProRes 4444 + alpha melalui encoder web. Pilih PNG Sequence ZIP untuk ekspor frame transparan.</small></div>
    <div class="render render-with-progress"><button class="green" id="renderBtn">▶ Render</button><button type="button" id="cancelRenderBtn" style="display:none;width:100%;margin-top:8px;background:#9f3038;color:#fff;border:1px solid #d75c65">■ BATALKAN RENDER</button></div>
   </div>
-  <div class="timeline"><div class="timelinehead"><strong>Timeline & Preview</strong><button id="playBtn">▶ Putar</button><button id="stopBtn">■ Stop</button><button id="prevFrame">◀ Frame</button><button id="nextFrame">Frame ▶</button><span class="muted" id="timeReadout">00:00.0</span></div><input type="range" id="scrubber" min="0" max="1000" value="0"><div class="track"><div class="trackfill" id="trackfill"></div></div><div class="parts" id="timelineTabs" role="tablist" aria-label="Kontrol timeline"><button type="button" class="part active" data-editor-tab="masuk" role="tab" aria-selected="true">01 · Masuk</button><button type="button" class="part" data-editor-tab="gerakan" role="tab" aria-selected="false">02 · Gerakan</button><button type="button" class="part" data-editor-tab="efek" role="tab" aria-selected="false">03 · Efek</button><button type="button" class="part" data-editor-tab="keluar" role="tab" aria-selected="false">04 · Keluar</button><button type="button" class="part" data-editor-tab="loop" role="tab" aria-selected="false">05 · Loop</button><button type="button" class="part" data-editor-tab="ekspor" role="tab" aria-selected="false">06 · Ekspor</button></div><div class="timeline-tab-hint" id="timelineTabHint">Pilih bagian untuk melompat ke waktu preview dan membuka kontrol yang sesuai.</div>
+  <div class="timeline"><div class="timelinehead"><strong>Timeline & Preview</strong><button id="playBtn">▶ Putar</button><button id="stopBtn">■ Stop</button><button id="prevFrame">◀ Frame</button><button id="nextFrame">Frame ▶</button><button type="button" id="motionSpeedCalibrate" title="Ukur frame rate dan kestabilan playback">◈ Kalibrasi Gerak</button><span class="muted" id="motionSpeedCalibrationStatus" aria-live="polite">Belum dikalibrasi</span><span class="muted" id="timeReadout">00:00.0</span></div><input type="range" id="scrubber" min="0" max="1000" value="0"><div class="track"><div class="trackfill" id="trackfill"></div></div><div class="parts" id="timelineTabs" role="tablist" aria-label="Kontrol timeline"><button type="button" class="part active" data-editor-tab="masuk" role="tab" aria-selected="true">01 · Masuk</button><button type="button" class="part" data-editor-tab="gerakan" role="tab" aria-selected="false">02 · Gerakan</button><button type="button" class="part" data-editor-tab="efek" role="tab" aria-selected="false">03 · Efek</button><button type="button" class="part" data-editor-tab="keluar" role="tab" aria-selected="false">04 · Keluar</button><button type="button" class="part" data-editor-tab="loop" role="tab" aria-selected="false">05 · Loop</button><button type="button" class="part" data-editor-tab="ekspor" role="tab" aria-selected="false">06 · Ekspor</button></div><div class="timeline-tab-hint" id="timelineTabHint">Pilih bagian untuk melompat ke waktu preview dan membuka kontrol yang sesuai.</div>
   <section class="multi-track-editor" id="multiTrackEditor" aria-label="Multi-track timeline editor">
    <div class="mt-toolbar">
     <div><strong>Multi-Track Timeline</strong><small id="mtTrackSummary">Komposisi utama · 1 track</small></div>
@@ -2782,6 +2784,32 @@ function renderAt(t,syncPreview=true){
  if($('shadow').checked)filters.push('drop-shadow(0 6px 8px #0003)');$('object').style.filter=filters.join(' ')||'none';$('object').style.outline='none';drawPreviewEffects(playhead,m);
  $('scrubber').value=p*1000;$('trackfill').style.width=p*100+'%';$('timeReadout').textContent='00:'+String(Math.floor(playhead/60)).padStart(2,'0')+':'+(playhead%60).toFixed(1).padStart(4,'0');
 }
+let trozalMotionCalibrationRaf=0,trozalMotionCalibrationRunning=false;
+function trozalRunMotionSpeedCalibration(){
+ const button=$('motionSpeedCalibrate'),status=$('motionSpeedCalibrationStatus');
+ if(!button||trozalMotionCalibrationRunning)return;
+ if($('renderBtn')?.disabled){if(status)status.textContent='Tunggu render selesai sebelum kalibrasi.';return;}
+ trozalMotionCalibrationRunning=true;button.disabled=true;button.textContent='Mengukur…';
+ const originalPlayhead=playhead,wasPlaying=playing,start=performance.now(),targetFps=Math.max(1,Number($('fps').value)||30);
+ playing=false;cancelAnimationFrame(raf);$('playBtn').textContent='▶ Putar';
+ let frames=0,last=0;
+ const finish=()=>{
+  trozalMotionCalibrationRunning=false;cancelAnimationFrame(trozalMotionCalibrationRaf);
+  const elapsed=Math.max(.001,(performance.now()-start)/1000),measured=frames/elapsed,expected=targetFps*elapsed,delivered=Math.min(100,frames/Math.max(1,expected)*100),dropped=Math.max(0,Math.round(expected-frames));
+  playhead=originalPlayhead;renderAt(playhead);button.disabled=false;button.textContent='◈ Kalibrasi Gerak';
+  if(status)status.textContent='Preview '+measured.toFixed(1)+' FPS / target '+targetFps+' · frame terlewat ~'+dropped+' ('+delivered.toFixed(0)+'% terkirim) · posisi dipulihkan.';
+ };
+ const sample=now=>{
+  if(!trozalMotionCalibrationRunning)return;
+  frames++;last=now;
+  const elapsed=now-start,duration=Math.max(.1,Number($('duration').value)||10);
+  playhead=(elapsed/1000)%duration;renderAt(playhead);
+  if(elapsed<3000)trozalMotionCalibrationRaf=requestAnimationFrame(sample);else finish();
+ };
+ if(status)status.textContent='Mengukur playback selama 3 detik… jangan pindah tab.';
+ trozalMotionCalibrationRaf=requestAnimationFrame(sample);
+}
+$('motionSpeedCalibrate')?.addEventListener('click',trozalRunMotionSpeedCalibration);
 function tick(now){if(!playing)return;let d=+$('duration').value;playhead=(now-startAt)/1000;if(playhead>d){if($('loop').checked){startAt=now;playhead=0}else{playhead=d;playing=false;$('playBtn').textContent='▶ Putar'}}renderAt(playhead);if(playing)raf=requestAnimationFrame(tick)}
 $('playBtn').onclick=()=>{if(playing){playing=false;cancelAnimationFrame(raf);$('playBtn').textContent='▶ Putar';return}playing=true;startAt=performance.now()-playhead*1000;$('playBtn').textContent='❚❚ Jeda';raf=requestAnimationFrame(tick)};
 $('stopBtn').onclick=()=>{playing=false;cancelAnimationFrame(raf);playhead=0;renderAt(0);$('playBtn').textContent='▶ Putar'};
