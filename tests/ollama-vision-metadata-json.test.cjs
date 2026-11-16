@@ -1,0 +1,11 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const source = fs.readFileSync('index.html', 'utf8');
+assert.match(source, /function trozalVisionCleanJson\(text\)/);
+assert.match(source, /JSON Vision terpotong sebelum objek selesai/);
+assert.match(source, /let depth=0,inString=false,escaped=false/);
+assert.ok(source.includes("if(ch==='\\\\')"));
+assert.match(source, /keywords 18-24 accurate English terms/);
+assert.match(source, /done_reason: '\+doneReason/);
+assert.match(source, /format:'json',numPredict:4096,prompt:retryPrompt/);
+console.log('Ollama Vision metadata JSON recovery static checks passed.');
