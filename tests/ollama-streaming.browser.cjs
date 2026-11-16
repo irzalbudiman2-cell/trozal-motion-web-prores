@@ -10,9 +10,9 @@ const assert = require('node:assert/strict');
   const result = await page.evaluate(async () => {
     const encoder = new TextEncoder();
     const chunks = [
-      JSON.stringify({ message: { content: '<svg>' }, done: false }) + '\\n',
-      JSON.stringify({ message: { content: '<circle cx="10" cy="10"/>' }, done: false }) + '\\n',
-      JSON.stringify({ message: { content: '</svg>' }, done: true, eval_count: 42 }) + '\\n'
+      JSON.stringify({ message: { content: '<svg>' }, done: false }) + '\n',
+      JSON.stringify({ message: { content: '<circle cx="10" cy="10"/>' }, done: false }) + '\n',
+      JSON.stringify({ message: { content: '</svg>' }, done: true, eval_count: 42 }) + '\n'
     ];
     const stream = new ReadableStream({
       start(controller) { for (const chunk of chunks) controller.enqueue(encoder.encode(chunk)); controller.close(); }
