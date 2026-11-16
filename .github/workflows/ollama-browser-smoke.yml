@@ -1,6 +1,8 @@
 name: OLLAMA Browser Smoke Test
 
 on:
+  pull_request:
+    branches: [main]
   push:
     branches:
       - ollama-repair-cb774c0-2026-11-15
