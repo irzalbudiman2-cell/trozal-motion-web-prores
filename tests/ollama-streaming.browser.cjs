@@ -26,6 +26,17 @@ const assert = require('node:assert/strict');
   assert.equal(result.evalCount, 42);
   assert.equal(result.progress.length, 3, 'Each streamed NDJSON content chunk should update progress');
   assert.equal(result.progress.at(-1).done, true);
+  const splitChunk = await page.evaluate(async () => {
+    const bytes = new TextEncoder().encode(JSON.stringify({ message: { content: 'Halo 世界 🌍' }, done: true }));
+    const cuts = [bytes.slice(0, 7), bytes.slice(7, 13), bytes.slice(13)];
+    const stream = new ReadableStream({ start(controller) { for (const chunk of cuts) controller.enqueue(chunk); controller.close(); } });
+    const progress = [];
+    const parsed = await trozalReadOllamaStream(new Response(stream), text => progress.push(text));
+    return { content: parsed.content, done: parsed.data.done, progressCount: progress.length };
+  });
+  assert.equal(splitChunk.content, 'Halo 世界 🌍', 'UTF-8 and JSON records split across network chunks must be reconstructed');
+  assert.equal(splitChunk.done, true, 'Final NDJSON record without a newline must still be parsed');
+  assert.equal(splitChunk.progressCount, 1);
   const malformed = await page.evaluate(async () => {
     const stream = new ReadableStream({ start(controller) { controller.enqueue(new TextEncoder().encode('{not-json}\n')); controller.close(); } });
     try { await trozalReadOllamaStream(new Response(stream), () => {}); return ''; }
