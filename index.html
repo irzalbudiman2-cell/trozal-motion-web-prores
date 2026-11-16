@@ -818,6 +818,16 @@ body[data-ui-layout="professional"] .visual-scene-card:focus-within{
    <p class="help">Proyek JSON menyimpan pengaturan animasi. File media asli perlu disimpan terpisah.</p>
   </section>
   <section class="panel" id="ollamaRenderAdvisor"><h3>◈ RENDER SYNC & PERFORMANCE ADVISOR</h3><p class="help">Periksa jumlah frame dan beban ekspor sebelum render. Preview akan dikunci pada posisi terakhir selama ekspor.</p><div class="ollama-render-stats" id="ollamaRenderStats"><div><b>Total frame</b><span>—</span></div><div><b>Pixel-frame</b><span>—</span></div><div><b>Buffer / frame</b><span>—</span></div><div><b>Profil beban</b><span>—</span></div></div><button type="button" id="ollamaRenderCheck" style="width:100%">Periksa kesiapan render</button><div class="help" id="ollamaRenderAdvice">Atur durasi, FPS, dan resolusi, lalu periksa.</div></section>
+<section class="panel" id="gpuPerformanceHealthPanel" style="border-color:#399bce;background:linear-gradient(145deg,rgba(16,53,78,.42),rgba(12,26,40,.7))">
+ <h3 style="color:#9edcff">◈ GPU & PERFORMANCE HEALTH</h3>
+ <p class="help">Diagnostik lokal untuk WebGPU, WebGL2, Canvas2D, kemampuan perangkat, estimasi beban frame, dan hasil benchmark renderer. Tidak mengirim data perangkat ke server.</p>
+ <div class="ollama-render-stats" id="gpuPerformanceHealthStats">
+  <div><b>GPU API</b><span>Belum diperiksa</span></div><div><b>Canvas</b><span>Belum diperiksa</span></div><div><b>CPU threads</b><span>—</span></div><div><b>RAM terdeteksi</b><span>—</span></div>
+ </div>
+ <div class="help" id="gpuPerformanceHealthStatus" role="status" aria-live="polite">Klik pemeriksaan untuk membaca kemampuan perangkat.</div>
+ <button type="button" id="gpuPerformanceHealthCheck" style="width:100%">Periksa GPU & Performance Health</button>
+ <div class="help" id="trozalHybridCanvasStatus" role="status" aria-live="polite">Hybrid Canvas: benchmark dijalankan sebelum ekspor pertama.</div>
+</section>
  </aside>
  <main class="main">
   <div class="stagewrap"><div class="stage" id="stage"><div class="stage-badge"><span>TROZAL MOTION</span><b>LIVE PREVIEW</b></div>
@@ -987,7 +997,11 @@ body[data-ui-layout="professional"] .visual-scene-card:focus-within{
    <label>Preset kualitas</label><select id="quality"><option value="standard">Standar · file lebih kecil</option><option value="high" selected>Tinggi · detail tajam</option><option value="max">Maksimal · kualitas tertinggi</option></select>
    <label>MP4 H.264 · CRF (kualitas kompresi)</label>
    <select id="mp4Crf"><option value="23">CRF 23 · ukuran lebih kecil</option><option value="20">CRF 20 · seimbang</option><option value="18" selected>CRF 18 · kualitas tinggi</option><option value="16">CRF 16 · sangat tinggi</option><option value="14">CRF 14 · mendekati lossless, file besar</option><option value="auto">Otomatis mengikuti preset kualitas</option></select>
-   <p class="help">Semakin kecil angka CRF, semakin tinggi kualitas dan semakin besar ukuran file. CRF hanya berlaku untuk ekspor MP4 H.264.</p>
+   <label>Bitrate MP4 H.264 · target Mbps</label>
+   <select id="mp4Bitrate"><option value="auto">Otomatis · CRF mengikuti preset</option><option value="12">12 Mbps · 1080p standar</option><option value="20">20 Mbps · 1080p tinggi / 2K</option><option value="35">35 Mbps · 4K hemat</option><option value="45" selected>45 Mbps · 4K 30 FPS kualitas tinggi</option><option value="60">60 Mbps · 4K detail tinggi</option><option value="80">80 Mbps · 4K sangat tinggi</option></select>
+   <p class="help">Bitrate manual mengatur target laju data encoder H.264 (Mbps, bukan MB/s). Pilih 45–60 Mbps sebagai titik awal untuk 4K/30 FPS. Mode Otomatis memakai CRF dan batas bitrate adaptif. Estimasi ukuran dihitung dari durasi dan target bitrate; ukuran aktual dapat berbeda.</p>
+   <p class="help" id="mp4BitrateEstimate" aria-live="polite">Estimasi ukuran MP4 akan tampil saat format MP4 dipilih.</p>
+   <p class="help">Semakin kecil angka CRF, semakin tinggi kualitas dan semakin besar ukuran file. CRF hanya berlaku untuk ekspor MP4 H.264 saat Bitrate Otomatis dipilih.</p>
    <p class="help">MP4 memakai encoder H.264 berbasis frame untuk menghindari keterbatasan codec MP4 bawaan browser. Preset kualitas mengatur CRF dan bitrate sesuai resolusi. Proses ini membutuhkan koneksi internet saat pertama kali memuat FFmpeg.wasm.</p>
    <p class="help" id="renderSpeedHint">Normal: seluruh efek dekoratif diproses. TURBO: mengurangi partikel, kilau dekoratif, dan beban bayangan; resolusi, FPS, durasi, serta animasi utama tetap mengikuti pengaturan.</p>
    <p class="help">Versi Web ProRes: WebM direkam langsung oleh browser; MP4 H.264 dan MOV ProRes 4444 diproses dengan FFmpeg.wasm lokal dari website; PNG Sequence ZIP mempertahankan transparansi.</p>
@@ -1012,6 +1026,7 @@ body[data-ui-layout="professional"] .visual-scene-card:focus-within{
     </div>
     <p class="help" style="margin:7px 0">Mendeteksi model lokal, kemampuan resmi model, ukuran file, dan status model yang sedang dimuat. Koneksi tetap langsung ke komputer ini.</p>
     <div id="ollamaModelManagerStatus" class="help" role="status" aria-live="polite">Belum diperiksa · Klik Deteksi Model untuk membaca /api/tags, /api/show, dan /api/ps.</div>
+    <div class="help" style="margin-top:6px">Alamat API lokal: <code>http://127.0.0.1:11434</code> · Origin yang perlu diizinkan: <code id="ollamaAllowedOriginInline">memuat…</code></div>
     <div id="ollamaModelManagerSummary" class="ollama-model-summary" aria-live="polite"></div>
     <div id="ollamaModelManagerList" class="ollama-model-list"><div class="ollama-model-empty">Daftar model akan muncul setelah pemeriksaan.</div></div>
     <p class="help" style="margin:8px 0 0">Pilihan model di AI Scene Composer dan Local Vision akan diperbarui dari model yang benar-benar terpasang. Kemampuan yang tidak dapat diverifikasi akan ditandai, bukan dianggap kompatibel.</p>
@@ -1036,7 +1051,7 @@ body[data-ui-layout="professional"] .visual-scene-card:focus-within{
      <ol class="help">
       <li>Pasang Ollama untuk Windows.</li>
       <li>Model yang disarankan: <code>qwen3.5:4b</code> (jika sudah terpasang, tidak perlu mengunduh ulang). Alternatif: <code>ollama pull qwen3-vl:2b</code>.</li>
-      <li>Tambahkan environment variable Windows <code>OLLAMA_ORIGINS</code> dengan nilai <code>https://irzalbudiman2-cell.github.io</code>, lalu tutup Ollama dari system tray dan jalankan kembali.</li>
+      <li>Tambahkan origin website yang sedang dibuka ke environment variable Windows <code>OLLAMA_ORIGINS</code>. Origin saat ini: <code id="ollamaAllowedOrigin">akan diisi otomatis dari alamat Preview ini</code>. Jika memakai URL Preview Vercel baru, origin-nya dapat berubah.</li><li>Tutup Ollama sepenuhnya dari system tray, jalankan kembali, lalu izinkan permintaan Local Network Access di Chrome jika diminta.</li>
       <li>Kembali ke sini dan tekan Cek Ollama.</li>
      </ol>
      <p class="help"><a href="https://ollama.com/download/windows" target="_blank" rel="noopener">Unduh Ollama Windows</a> · <a href="https://ollama.com/library/qwen3.5" target="_blank" rel="noopener">Info Qwen3.5 Vision</a> · <a href="https://ollama.com/library/qwen3-vl" target="_blank" rel="noopener">Info Qwen3-VL</a></p>
@@ -2945,16 +2960,20 @@ async function encodeMovWithWasm(pngZip,totalFrames,fps,width,height,outputForma
     ]);
    }else{
     const quality=$('quality').value,crfChoice=$('mp4Crf')?.value||'auto',crf=crfChoice==='auto'?(quality==='max'?15:quality==='high'?18:22):Number(crfChoice);
+    const bitrateChoice=$('mp4Bitrate')?.value||'auto';
     const pixelRate=width*height*fps;
     const maxRate=Math.max(8000000,Math.min(160000000,Math.round(pixelRate*(quality==='max'?.00085:quality==='high'?.00062:.00042))));
-    setExportStatus('Encoding MP4 H.264 · CRF '+crf+' · '+width+'×'+height+' · '+fps+' FPS');
+    const targetBitrate=bitrateChoice==='auto'?0:Number(bitrateChoice)*1000000;
+    const rateControlArgs=targetBitrate>0
+     ?['-b:v',String(targetBitrate),'-minrate',String(Math.round(targetBitrate*.9)),'-maxrate',String(Math.round(targetBitrate*1.1)),'-bufsize',String(targetBitrate*2)]
+     :['-crf',String(crf),'-maxrate',String(maxRate),'-bufsize',String(maxRate*2)];
+    setExportStatus('Encoding MP4 H.264 · '+(targetBitrate?Number(bitrateChoice)+' Mbps target':'CRF '+crf)+' · '+width+'×'+height+' · '+fps+' FPS');
     code=await ffmpeg.exec([
      '-hide_banner','-y','-filter_threads','1','-filter_complex_threads','1',
      '-framerate',String(fps),'-start_number','0','-i','frame_%06d.png',
      '-frames:v',String(totalFrames),'-r',String(fps),'-an',
      '-c:v','libx264','-preset',($('renderSpeedMode')?.value==='turbo'?'veryfast':'medium'),
-     '-profile:v','high','-pix_fmt','yuv420p','-crf',String(crf),
-     '-maxrate',String(maxRate),'-bufsize',String(maxRate*2),
+     '-profile:v','high','-pix_fmt','yuv420p',...rateControlArgs,
      '-threads','1','-movflags','+faststart',output
     ]);
    }
@@ -3162,7 +3181,7 @@ ctx.beginPath();ctx.rect(-baseW/2,-baseH/2,baseW*motion.revealX,baseH*motion.rev
 const shapeState=shapeMaskState();
 try{
  const p=Math.max(0,Math.min(1,elapsed/Math.max(.001,d))),ph=elapsed*2*Math.PI*+$('speed').value;
- const drawContained=(source,dx=0,dy=0,rot=0,layerScale=1)=>{const sw=source.naturalWidth||source.width||1,sh=source.naturalHeight||source.height||1,fit=Math.min(ow/sw,oh/sh)*layerScale,dw=sw*fit,dh=sh*fit;ctx.save();ctx.translate(dx,dy);ctx.rotate(rot*Math.PI/180);if($('shadow').checked){ctx.shadowColor='rgba(0,0,0,.22)';ctx.shadowBlur=Math.max(1,w/(turboMode?360:180));ctx.shadowOffsetY=Math.max(1,h/180)}ctx.drawImage(source,-dw/2,-dh/2,dw,dh);ctx.restore()};
+ const drawContained=(source,dx=0,dy=0,rot=0,layerScale=1)=>{const sw=source.naturalWidth||source.width||1,sh=source.naturalHeight||source.height||1,fit=Math.min(ow/sw,oh/sh)*layerScale;let dw=sw*fit,dh=sh*fit,drawable=source;if(!htmlMotionSource&&window.__trozalGpuFrameAssistEnabled===true&&window.TrozalGpuFramePipeline){const gw=Math.max(1,Math.round(dw)),gh=Math.max(1,Math.round(dh)),gpuFrame=window.TrozalGpuFramePipeline.render(source,gw,gh);if(gpuFrame){drawable=gpuFrame;dw=gw;dh=gh}else{window.__trozalGpuFrameAssistEnabled=false}}ctx.save();if(typeof motionBlurPx==='number'&&motionBlurPx>0)ctx.filter='blur('+motionBlurPx.toFixed(2)+'px)';ctx.translate(dx,dy);ctx.rotate(rot*Math.PI/180);if($('shadow').checked){ctx.shadowColor='rgba(0,0,0,.22)';ctx.shadowBlur=Math.max(1,w/(turboMode?360:180));ctx.shadowOffsetY=Math.max(1,h/180)}ctx.drawImage(drawable,-dw/2,-dh/2,dw,dh);ctx.restore()};
  if(htmlMotionSource){const htmlCanvas=await captureHtmlMotionAt(elapsed);drawContained(htmlCanvas)}
  else if(svgPieceImgs.length){svgPieceImgs.forEach((pi,i)=>{
   const visible=document.getElementById('autoLayerVisible'+i)?.checked!==false,solo=soloLayerIndex<0||soloLayerIndex===i;if(!visible||!solo)return;
@@ -3197,7 +3216,7 @@ async function draw(){
   setExportStatus('Render gagal pada frame '+frame+': '+(err?.message||String(err)));setRenderProgress(Math.round(frame/Math.max(1,totalFrames)*100),'Render gagal','error');
  }
 }
-if(rec){rec.start(250);renderClockStart=performance.now()}draw()};
+if(window.TrozalHybridCanvasRenderer)await window.TrozalHybridCanvasRenderer.prepare();if(rec){rec.start(250);renderClockStart=performance.now()}draw()};
 function trozalOllamaRenderPreflight(){const [w,h]=String($('resolution')?.value||'1920x1080').split('x').map(Number),d=Math.max(0,Number($('duration')?.value)||0),fps=Math.max(1,Number($('fps')?.value)||30),frames=Math.max(1,Math.round(d*fps)),pixels=w*h*frames,buffer=w*h*4/1048576,profile=pixels>900000000?'Sangat berat':pixels>350000000?'Berat':pixels>120000000?'Menengah':'Ringan';const vals=[['Total frame',frames.toLocaleString('id-ID')],['Pixel-frame',(pixels/1e6).toFixed(1)+' MP'],['Buffer / frame',buffer.toFixed(1)+' MB'],['Profil beban',profile]],host=$('ollamaRenderStats');if(host){host.replaceChildren();vals.forEach(([a,b])=>{const box=document.createElement('div'),label=document.createElement('b'),value=document.createElement('span');label.textContent=a;value.textContent=b;box.append(label,value);host.append(box)})}const notes=[];if(pixels>900000000)notes.push('Beban sangat tinggi: coba resolusi atau FPS lebih rendah.');if(w>3840||h>2160)notes.push('Resolusi di atas 4K dapat membutuhkan memori besar.');if(fps>30)notes.push('FPS di atas 30 menambah jumlah frame dan waktu ekspor.');if(!notes.length)notes.push('Beban dalam rentang moderat. Tetap lakukan uji render singkat.');$('ollamaRenderAdvice').textContent='Pemeriksaan selesai · '+w+'×'+h+' · '+d.toFixed(1)+' dtk · '+fps+' FPS.\\n'+notes.join('\\n')}
 $('ollamaRenderCheck')?.addEventListener('click',trozalOllamaRenderPreflight);['resolution','duration','fps'].forEach(id=>$(id)?.addEventListener('change',()=>{if($('ollamaRenderStats'))trozalOllamaRenderPreflight()}));
 $('cancelRenderBtn')?.addEventListener('click',()=>{if(typeof trozalRenderCancelHandler==='function')trozalRenderCancelHandler();});
@@ -3245,8 +3264,19 @@ $('exportFrames').onclick=exportCurrentFramePng;
   effects.addEventListener('change',()=>{main.value=effects.value;});
  }
 })();
+function updateMp4BitrateEstimate(){
+ const output=$('mp4BitrateEstimate'),choice=$('mp4Bitrate')?.value||'auto';
+ if(!output)return;
+ if($('format')?.value!=='mp4'){output.textContent='Pilih format MP4 untuk melihat estimasi ukuran berdasarkan bitrate.';return;}
+ if(choice==='auto'){output.textContent='Mode Otomatis aktif · CRF dan batas bitrate mengikuti preset kualitas/resolusi. Ukuran aktual bergantung kompleksitas gambar.';return;}
+ const mbps=Number(choice),seconds=Math.max(.1,Number($('duration')?.value)||10);
+ const bytes=mbps*1000000*seconds/8,mib=bytes/1048576;
+ output.textContent='Estimasi target: '+mbps+' Mbps × '+seconds.toFixed(1)+' dtk ≈ '+(mib>=1024?(mib/1024).toFixed(2)+' GB':mib.toFixed(1)+' MB')+' (belum termasuk overhead container/audio).';
+}
+['mp4Bitrate','duration','fps','resolution','format'].forEach(id=>$(id)?.addEventListener('change',updateMp4BitrateEstimate));
+updateMp4BitrateEstimate();
 function getProject(){
- const ids=['shapeMaskType','shapeMaskMode','shapeMaskSize','shapeMaskRotation','shapeMaskX','shapeMaskY','shapePathColor','shapePathWidth','shapePathData','objectName','duration','fps','resolution','proresMode','animation','speed','intensity','scale','posX','posY','rotation','opacity','bgMode','customBg','effectPreset','effectIntensity','effectColor','particleCount','particleSpeed','format','quality','mp4Crf','renderSpeedMode','textLayerContent','textLayerFont','textLayerWeight','textLayerSize','textLayerColor','textLayerAlign','textLayerTracking','textLayerX','textLayerY','textLayerStart','textLayerDuration','textLayerAnimation','visualMotionPrompt','visualMotionRatio','visualMotionDuration','visualMotionStyle','visualMotionCamera','visualMotionTransition','visualMotionAccent','motionBlurAmount','metadataPlatform','metadataSubject','metadataTitle','metadataDescription','metadataCategory','metadataKeywords'];
+ const ids=['shapeMaskType','shapeMaskMode','shapeMaskSize','shapeMaskRotation','shapeMaskX','shapeMaskY','shapePathColor','shapePathWidth','shapePathData','objectName','duration','fps','resolution','proresMode','animation','speed','intensity','scale','posX','posY','rotation','opacity','bgMode','customBg','effectPreset','effectIntensity','effectColor','particleCount','particleSpeed','format','quality','mp4Crf','mp4Bitrate','renderSpeedMode','textLayerContent','textLayerFont','textLayerWeight','textLayerSize','textLayerColor','textLayerAlign','textLayerTracking','textLayerX','textLayerY','textLayerStart','textLayerDuration','textLayerAnimation','visualMotionPrompt','visualMotionRatio','visualMotionDuration','visualMotionStyle','visualMotionCamera','visualMotionTransition','visualMotionAccent','motionBlurAmount','metadataPlatform','metadataSubject','metadataTitle','metadataDescription','metadataCategory','metadataKeywords'];
  const checks=['shapeMaskEnabled','shapePathReveal','transparentBg','sparkles','shadow','loop','effectOn','textLayerEnabled','visualMotionParticles','visualMotionDepth','motionBlurEnabled'];
  const controls={};ids.forEach(k=>{if($(k))controls[k]=$(k).value});
  checks.forEach(k=>{if($(k))controls[k]=$(k).checked});
@@ -4858,6 +4888,12 @@ The HTML scene will be imported as a visual composition into trozal_MOTION. Impo
 - Do not include scripts. Build all visual elements directly in HTML/CSS and all animation in CSS keyframes.
 - Keep animation elegant and avoid transformations that make the scene disappear at arbitrary capture times.
 
+INTELLECTUAL PROPERTY & ORIGINALITY POLICY
+- Create only original visual content. Do not depict, name, reproduce, trace, imitate, or closely evoke copyrighted characters, fictional universes, celebrity likenesses, signature costumes, protected artwork, proprietary designs, or recognizable third-party intellectual property.
+- Do not show real company or product logos, brand marks, trademarks, watermarks, signatures, or recognizable corporate identities. Do not invent a logo or wordmark; for branding/logo themes use abstract non-identifying geometry only, with no logo, brand name, or trademark.
+- Use original fictional subjects, generic non-branded objects, fresh compositions, and independently created visual language. If the brief requests protected IP, transform it into a distinct original alternative using only broad, unprotected mood or genre attributes; never copy distinctive protected elements.
+- Do not include copyrighted lyrics, quotations, source artwork, screenshots, or copied text.
+
 QUALITY CHECK
 Before output, verify each document is valid HTML, has balanced tags, includes all CSS internally, contains no SVG markup, and renders without external assets. Return exactly ${count} distinct HTML documents.
 `;
@@ -5747,7 +5783,7 @@ function trozalMetadataSanitizeSource(code){
 /* Direct browser connection to the Ollama server on this same PC. */
 function trozalVisionBaseUrl(){ return 'http://127.0.0.1:11434'; }
 var TROZAL_VISION_BASE=trozalVisionBaseUrl();
-var TROZAL_VISION_ORIGIN='https://irzalbudiman2-cell.github.io';
+var TROZAL_VISION_ORIGIN=window.location.origin;
 async function trozalMetadataAnalyzeSource(kind){
  kind=kind==='html'?'html':'scene';
  const button=$(kind==='html'?'metadataFromHtmlMotionBtn':'metadataFromSceneAiBtn');
@@ -6086,7 +6122,7 @@ async function visualMotionAiCheck(){
   return {models,found};
  }catch(e){
   const reason=(e?.name?e.name+': ':'')+(e?.message||String(e));
-  const advice=/failed to fetch|networkerror|load failed/i.test(reason)?'Periksa OLLAMA_ORIGINS. Untuk preview ini izinkan https://trozal-motion-web-prores-git-ollama-direct-web-7718e1-trozal-id.vercel.app (tambahkan juga https://irzalbudiman2-cell.github.io dan https://trozal-motion-web-prores.vercel.app bila dipakai), restart Ollama, lalu izinkan Loopback network Chrome.':'Pastikan Ollama berjalan dan model sudah terpasang.';
+  const advice=/failed to fetch|networkerror|load failed|cors|blocked/i.test(reason)?'Kemungkinan akses diblokir CORS atau izin Local Network Access. Tambahkan origin website yang sedang dibuka ('+window.location.origin+') ke OLLAMA_ORIGINS, restart Ollama sepenuhnya dari system tray, lalu izinkan Local Network Access/Loopback di Chrome.':'Pastikan Ollama aktif di http://127.0.0.1:11434, lalu periksa model dan log Ollama.';
   visualMotionAiStatus('KONEKSI LANGSUNG GAGAL · '+reason+'. '+advice,true);return null;
  }
 }
@@ -6150,6 +6186,13 @@ async function trozalReadOllamaStream(response,onProgress){
   throw error;
  }
 }
+const TROZAL_IP_SAFETY_POLICY = [
+ 'INTELLECTUAL PROPERTY / ORIGINALITY: Create original visual content only.',
+ 'Do not depict, name, reproduce, trace, imitate, or closely evoke copyrighted characters, fictional universes, celebrity likenesses, signature costumes, protected artwork, proprietary designs, or recognizable third-party intellectual property.',
+ 'Do not show real company/product logos, brand marks, trademarks, watermarks, signatures, or recognizable corporate identities. Do not invent a logo or wordmark; for branding/logo themes use abstract non-identifying geometry only, with no logo, brand name, or trademark.',
+ 'Use original fictional subjects, generic non-branded objects, fresh compositions, and independently created visual language. If the brief requests protected IP, transform it into a distinct original alternative using only broad, unprotected mood or genre attributes; never copy distinctive protected elements.',
+ 'Do not include copyrighted lyrics, quotations, source artwork, screenshots, or copied text.'
+].join('\\n');
 async function generateVisualMotionWithLocalAi(){
  const btn=$('generateVisualMotionAiBtn');if(btn.disabled)return;
  const brief=$('visualMotionPrompt').value.trim();
@@ -6167,7 +6210,7 @@ async function generateVisualMotionWithLocalAi(){
   const ratio=$('visualMotionRatio').value,duration=Math.max(3,Math.min(60,+$('visualMotionDuration').value||15));
   const style=$('visualMotionStyle').value,accent=$('visualMotionAccent').value,camera=$('visualMotionCamera').value,transition=$('visualMotionTransition').value;
   const scenePlan=window.TROZAL_SCENE_INTELLIGENCE?.build(brief,duration)||'Treat the full brief as one coherent scene.';
-  const system='You are a senior motion-graphics art director and SVG animation engineer. Return ONLY a complete standalone HTML5 document, no markdown. Create a polished, richly detailed, coherent scene that faithfully depicts the brief. Follow the SCENE BEAT PLAN in order; it is the narrative spine. Preserve the same main subject identity, silhouette, palette, scale and screen direction across beats unless the brief explicitly changes them. Stage readable action poses with clear cause/effect and foreground, midground and background spatial separation. Use establishing, follow, reveal and hold shots only when they serve the described action; avoid random camera movement, unrelated props and invented events. Use SVG vector illustration, not generic icon placeholders. Structure the scene into at least 5 independently addressable semantic <g> layers with unique descriptive ids: background, environment, main subject, secondary objects, foreground/atmosphere. Animate at least 3 appropriate groups independently using CSS keyframes and transform-origin; use natural, subtle movement. Use gradients, layered shapes, carefully controlled highlights/shadows and depth. Preserve the requested aspect ratio and keep all important objects inside the viewBox. Include complete inline CSS and SVG. No JavaScript, external assets, remote URLs, external fonts, iframe, canvas, scripts or embedded media. Avoid text overlays unless the brief requires visible signage. Ensure the SVG and HTML are fully closed and syntactically complete. Keep output compact enough to finish in one response. Do not explain anything; output only code.';
+  const system='You are a senior motion-graphics art director and SVG animation engineer. Return ONLY a complete standalone HTML5 document, no markdown. Create a polished, richly detailed, coherent scene that faithfully depicts the brief. Follow the SCENE BEAT PLAN in order; it is the narrative spine. Preserve the same main subject identity, silhouette, palette, scale and screen direction across beats unless the brief explicitly changes them. Stage readable action poses with clear cause/effect and foreground, midground and background spatial separation. Use establishing, follow, reveal and hold shots only when they serve the described action; avoid random camera movement, unrelated props and invented events. Use SVG vector illustration, not generic icon placeholders. Structure the scene into at least 5 independently addressable semantic <g> layers with unique descriptive ids: background, environment, main subject, secondary objects, foreground/atmosphere. Animate at least 3 appropriate groups independently using CSS keyframes and transform-origin; use natural, subtle movement. Use gradients, layered shapes, carefully controlled highlights/shadows and depth. Preserve the requested aspect ratio and keep all important objects inside the viewBox. Include complete inline CSS and SVG. No JavaScript, external assets, remote URLs, external fonts, iframe, canvas, scripts or embedded media. Avoid text overlays unless the brief requires visible signage. Ensure the SVG and HTML are fully closed and syntactically complete. Keep output compact enough to finish in one response. Do not explain anything; output only code.\n\n'+TROZAL_IP_SAFETY_POLICY;
   const user='VISUAL BRIEF: '+brief+'\nSCENE BEAT PLAN:\n'+scenePlan+'\nAspect ratio: '+ratio+'. Target duration: '+duration+' seconds. Visual style: '+style+'. Accent: '+accent+'. Camera direction: '+camera+'. Scene transition preference: '+transition+'. Produce a single coherent scene with distinct SVG groups/layers and CSS motion. Set animation duration to match '+duration+' seconds and make the animation loop smoothly when appropriate.';
   visualMotionAiStatus('Mengirim brief ke '+model+' pada komputer lokal. Proses dapat memerlukan beberapa menit…');
   const endpoint=trozalVisionBaseUrl();
@@ -6215,7 +6258,7 @@ $('generateVisualMotionAiBtn')?.addEventListener('click',generateVisualMotionWit
 (function(){
  'use strict';const URL='http://127.0.0.1:11434/api/tags';
  function status(kind,message,isError){const ids=kind==='vision'?['trozalVisionConnection','trozalVisionStatus']:['visualMotionAiStatus'];ids.forEach(id=>{const el=document.getElementById(id);if(el){el.textContent=message;el.style.color=isError?'#ff8b8b':'#72e6b2';}});}
- function bind(id,kind){const old=document.getElementById(id);if(!old)return;const button=old.cloneNode(true);old.replaceWith(button);button.addEventListener('click',async()=>{button.disabled=true;status(kind,'Menghubungi Ollama langsung melalui 127.0.0.1:11434…',false);try{const response=await fetch(URL,{method:'GET',mode:'cors',credentials:'omit',cache:'no-store',targetAddressSpace:'loopback'});if(!response.ok)throw new Error('HTTP '+response.status);const data=await response.json();if(!Array.isArray(data.models))throw new Error('Respons /api/tags tidak valid.');const models=data.models.map(x=>String(x.name||'')).filter(Boolean),select=document.getElementById(kind==='vision'?'trozalVisionModel':'visualMotionAiModel'),chosen=select?.value||'qwen3.5:4b',found=models.some(n=>n===chosen||n.startsWith(chosen+':'));if(kind==='vision'){const vision=models.filter(n=>/qwen3(?:\\.5|-vl)|llava|gemma.*vision/i.test(n));status(kind,'OLLAMA TERHUBUNG LANGSUNG · '+models.length+' model · '+(vision.length?'Vision: '+vision.join(', '):'Model Vision belum terpasang.'),false);const detail=document.getElementById('trozalVisionStatus');if(detail)detail.textContent='Koneksi langsung aktif. Tidak menggunakan Bridge.';}else status(kind,'OLLAMA TERHUBUNG LANGSUNG · '+models.length+' model · '+(found?'Model '+chosen+' tersedia.':'Model '+chosen+' belum terpasang.')+' · '+models.join(', '),false);}catch(error){const reason=(error?.name?error.name+': ':'')+(error?.message||String(error));status(kind,'KONEKSI GAGAL · '+reason+'. Pastikan Ollama berjalan, OLLAMA_ORIGINS mengizinkan https://trozal-motion-web-prores-git-ollama-direct-web-7718e1-trozal-id.vercel.app (serta origin lain yang dipakai), dan izin Loopback network Chrome = Allow.',true);}finally{button.disabled=false;}});}
+ function bind(id,kind){const old=document.getElementById(id);if(!old)return;const button=old.cloneNode(true);old.replaceWith(button);button.addEventListener('click',async()=>{button.disabled=true;status(kind,'Menghubungi Ollama langsung melalui 127.0.0.1:11434…',false);try{const response=await fetch(URL,{method:'GET',mode:'cors',credentials:'omit',cache:'no-store',targetAddressSpace:'loopback'});if(!response.ok)throw new Error('HTTP '+response.status);const data=await response.json();if(!Array.isArray(data.models))throw new Error('Respons /api/tags tidak valid.');const models=data.models.map(x=>String(x.name||'')).filter(Boolean),select=document.getElementById(kind==='vision'?'trozalVisionModel':'visualMotionAiModel'),chosen=select?.value||'qwen3.5:4b',found=models.some(n=>n===chosen||n.startsWith(chosen+':'));if(kind==='vision'){const vision=models.filter(n=>/qwen3(?:\\.5|-vl)|llava|gemma.*vision/i.test(n));status(kind,'OLLAMA TERHUBUNG LANGSUNG · '+models.length+' model · '+(vision.length?'Vision: '+vision.join(', '):'Model Vision belum terpasang.'),false);const detail=document.getElementById('trozalVisionStatus');if(detail)detail.textContent='Koneksi langsung aktif. Tidak menggunakan Bridge.';}else status(kind,'OLLAMA TERHUBUNG LANGSUNG · '+models.length+' model · '+(found?'Model '+chosen+' tersedia.':'Model '+chosen+' belum terpasang.')+' · '+models.join(', '),false);}catch(error){const reason=(error?.name?error.name+': ':'')+(error?.message||String(error));status(kind,'KONEKSI GAGAL · '+reason+'. Pastikan Ollama berjalan, OLLAMA_ORIGINS mengizinkan '+window.location.origin+', lalu izinkan Local Network Access/Loopback network Chrome = Allow.',true);}finally{button.disabled=false;}});}
  bind('visualMotionAiCheckBtn','scene');bind('trozalVisionCheckBtn','vision');
 })();
 </script>
@@ -6677,6 +6720,9 @@ body[data-ui-layout="classic"] .ui-layout-btn[aria-pressed="true"]{background:#d
  replaceCheckButton('trozalVisionCheckBtn','vision');
 })();
 </script>
+<script src="./browser-gpu-frame-pipeline.js" defer></script>
+<script src="./hybrid-canvas-renderer.js" defer></script>
+<script src="./js/gpu-performance-health.js" defer></script>
 <script src="./js/render-advisor.js" defer></script>
 <script src="./js/scene-intelligence.js" defer></script>
 </body></html>
