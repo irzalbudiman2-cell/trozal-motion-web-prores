@@ -47,6 +47,35 @@ assert.match(appSource, /trozalReadOllamaStream\(response,\(partial,meta\)=>\s*\
     catch (error) { return error.message; }
   });
   assert.match(malformed, /NDJSON Ollama tidak valid pada baris 1/);
+  const partialFailure = await page.evaluate(async () => {
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({ start(controller) {
+      controller.enqueue(encoder.encode(JSON.stringify({ message: { content: '<svg>partial' }, done: false }) + '\\n'));
+      controller.enqueue(encoder.encode('{broken-json}\\n'));
+      controller.close();
+    }});
+    const updates = [];
+    try { await trozalReadOllamaStream(new Response(stream), partial => updates.push(partial)); return { error: '', updates }; }
+    catch (error) { return { error: error.message, updates }; }
+  });
+  assert.match(partialFailure.error, /baris 2/i, 'A malformed later record should identify its exact NDJSON line');
+  assert.deepEqual(partialFailure.updates, ['<svg>partial'], 'Already streamed partial code must remain available when a later record fails');
+  const modelError = await page.evaluate(async () => {
+    const stream = new ReadableStream({ start(controller) {
+      controller.enqueue(new TextEncoder().encode(JSON.stringify({ error: 'model not found' }) + '\\n'));
+      controller.close();
+    }});
+    try { await trozalReadOllamaStream(new Response(stream), () => {}); return ''; }
+    catch (error) { return error.message; }
+  });
+  assert.equal(modelError, 'model not found', 'Ollama error records should surface their server message');
+  const emptyStream = await page.evaluate(async () => {
+    const stream = new ReadableStream({ start(controller) { controller.close(); }});
+    const result = await trozalReadOllamaStream(new Response(stream), () => {});
+    return { content: result.content, data: result.data };
+  });
+  assert.equal(emptyStream.content, '', 'An empty completed stream should be detectable for the Chat-to-Generate fallback');
+
   assert.deepEqual(errors, []);
   console.log(JSON.stringify({ result: 'PASS', streamedChunks: result.progress.length, finalLength: result.content.length }));
   await browser.close();
