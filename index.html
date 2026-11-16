@@ -6375,9 +6375,12 @@ body[data-ui-layout="classic"] .ui-layout-btn[aria-pressed="true"]{background:#d
   const title=document.createElement('strong');title.textContent='RUNTIME DIAGNOSTICS · Ollama Local AI';
   const copy=document.createElement('button');copy.type='button';copy.textContent='Salin log';
   const clear=document.createElement('button');clear.type='button';clear.textContent='Bersihkan';
+  const minimize=document.createElement('button');minimize.type='button';minimize.textContent='Minimize';minimize.setAttribute('aria-label','Minimize runtime diagnostics');
   const close=document.createElement('button');close.type='button';close.textContent='Tutup';
-  logNode=document.createElement('pre');logNode.id='trozalDebugLog';head.append(title,copy,clear,close);panel.append(head,logNode);document.body.append(fab,panel);
-  fab.addEventListener('click',()=>panel.classList.toggle('open'));close.addEventListener('click',()=>panel.classList.remove('open'));
+  logNode=document.createElement('pre');logNode.id='trozalDebugLog';head.append(title,minimize,copy,clear,close);panel.append(head,logNode);document.body.append(fab,panel);
+  fab.addEventListener('click',()=>{const opening=!panel.classList.contains('open');panel.classList.toggle('open',opening);if(opening)panel.classList.remove('minimized');});
+  minimize.addEventListener('click',()=>{const minimized=panel.classList.toggle('minimized');minimize.textContent=minimized?'Perbesar':'Minimize';minimize.setAttribute('aria-label',minimized?'Expand runtime diagnostics':'Minimize runtime diagnostics');});
+  close.addEventListener('click',()=>panel.classList.remove('open'));
   clear.addEventListener('click',()=>{entries.length=0;add('info','Log dibersihkan. Klik Tema Inspirasi Acak untuk merekam ulang.','SYSTEM');});
   copy.addEventListener('click',()=>{const content=entries.map(x=>'['+x.time+'] ['+x.category+'] '+x.message).join('\n')||'Tidak ada log.';if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(content).then(()=>add('info','Log berhasil disalin.','SYSTEM')).catch(()=>fallbackCopy(content));else fallbackCopy(content);});
   function fallbackCopy(content){const area=document.createElement('textarea');area.value=content;area.style.position='fixed';area.style.opacity='0';document.body.appendChild(area);area.select();try{document.execCommand('copy');add('info','Perintah salin log dijalankan.','SYSTEM');}catch(e){add('err',format(e),'CLIPBOARD');}area.remove();}
