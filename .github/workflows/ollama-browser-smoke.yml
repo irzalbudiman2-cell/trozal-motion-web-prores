@@ -51,6 +51,7 @@ jobs:
         run: |
           node tests/hybrid-canvas-bitrate-health.test.cjs
           node tests/hybrid-canvas-bitrate-health.browser.cjs
+          node tests/ollama-vision-metadata-json.test.cjs
 
       - name: Exercise OLLAMA UI in Chromium
         run: |
