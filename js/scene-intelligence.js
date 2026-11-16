@@ -91,6 +91,21 @@
   }
   return [...new Map(found.map(value=>[value.toLowerCase(),value])).values()];
  }
+ function inferStateDelta(line,index){
+  const raw=String(line||'').trim();
+  let m=raw.match(/^([A-Z][a-zÀ-ÿ]+)\s+(?:gives|hands|passes|menyerahkan|memberikan|mengoper)\s+(?:the\s+|a\s+|an\s+)?(.+?)\s+(?:to|kepada|ke)\s+([A-Z][a-zÀ-ÿ]+)[.!?]*$/i);
+  if(m)return {beat:index+1,kind:'TRANSFER',actor:m[1],object:m[2],recipient:m[3],state:'kepemilikan '+m[2]+' berpindah dari '+m[1]+' kepada '+m[3]+' setelah kontak terlihat'};
+  m=raw.match(/^([A-Z][a-zÀ-ÿ]+)\s+(?:receives|takes|menerima|mengambil)\s+(?:the\s+|a\s+|an\s+)?(.+?)[.!?]*$/i);
+  if(m)return {beat:index+1,kind:'ACQUIRE',actor:m[1],object:m[2],state:m[1]+' menjadi pemegang '+m[2]+' setelah objek disentuh/diambil'};
+  m=raw.match(/^([A-Z][a-zÀ-ÿ]+)\s+(?:picks up|grabs|holds|carries|lifts|takes|mengambil|memegang|membawa|mengangkat)\s+(?:the\s+|a\s+|an\s+)?(.+?)[.!?]*$/i);
+  if(m)return {beat:index+1,kind:'HOLD / CARRY',actor:m[1],object:m[2],state:m[1]+' memegang/membawa '+m[2]+'; pertahankan titik kontak dan posisi objek antar-shot'};
+  m=raw.match(/^([A-Z][a-zÀ-ÿ]+)\s+(?:places|puts|drops|sets down|meletakkan|menaruh|menjatuhkan)\s+(?:the\s+|a\s+|an\s+)?(.+?)\s+(?:on|onto|in|into|di|ke|pada)\s+(.+?)[.!?]*$/i);
+  if(m)return {beat:index+1,kind:'PLACE / RELEASE',actor:m[1],object:m[2],location:m[3],state:m[2]+' dilepas oleh '+m[1]+' dan menetap pada '+m[3]+'; jangan teleport objek'};
+  m=raw.match(/^([A-Z][a-zÀ-ÿ]+)\s+(?:opens|closes|activates|switches on|menutup|membuka|mengaktifkan|menyalakan)\s+(?:the\s+|a\s+|an\s+)?(.+?)[.!?]*$/i);
+  if(m)return {beat:index+1,kind:'OBJECT STATE',actor:m[1],object:m[2],state:m[2]+' berubah keadaan hanya setelah aksi '+m[1]+' terlihat'};
+  if(/\b(?:enters?|arrives?|leaves?|returns?|memasuki|tiba di|keluar dari|kembali ke)\b/i.test(raw))return {beat:index+1,kind:'LOCATION',actor:'subjek pada brief',object:'lokasi',state:'perlihatkan perpindahan dari ruang sebelumnya menuju ruang baru dengan establishing cue'};
+  return {beat:index+1,kind:'NO EXPLICIT DELTA',actor:'',object:'',state:'tidak ada perubahan kepemilikan/keadaan objek yang eksplisit; wariskan state sebelumnya tanpa mengarang aksi'};
+ }
  function buildContinuityLedger(beats){
   const mentions=new Map(),perBeat=beats.map((line,index)=>{
    const entities=continuityEntities(line);
