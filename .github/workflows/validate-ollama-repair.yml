@@ -7,6 +7,7 @@ on:
       - ollama-semantic-object-groups-2026-11-15
       - feature/theme-intelligence-floating-render-20261115
       - feature/ollama-adaptive-render-advisor-2026-11-16
+      - integration/ollama-scene-continuity-2026-11-17
       - feature/mp4-bitrate-ip-guardrails-2026-11-16
   workflow_dispatch:
 
@@ -25,6 +26,8 @@ jobs:
           node-version: 20
       - name: Test MP4 bitrate and IP prompt guardrails
         run: node tests/mp4-bitrate-ip-guardrails.test.cjs
+      - name: Test spatial scene continuity ledger
+        run: node tests/scene-intelligence.test.cjs
       - name: Validate inline JavaScript syntax
         shell: bash
         run: |

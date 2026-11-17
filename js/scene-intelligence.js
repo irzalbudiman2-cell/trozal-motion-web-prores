@@ -76,6 +76,86 @@
    'lingkungan tetap stabil kecuali brief menyebut reaksi atau interaksi';
   return {pose,path,pivot,interaction,environment,locomotion,rotation,jump,limb};
  }
+ function continuityEntities(line){
+  const s=String(line||''),found=[];
+  const properStop=new Set(['the','a','an','then','finally','after','before','when','while','one','two','camera','wide','close','medium','shot','scene','beat','di','ke','dari','pada','setelah','sebelum','kemudian','akhirnya','lalu']);
+  for(const m of s.matchAll(/\b([A-Z][a-zÀ-ÿ]+(?:\s+[A-Z][a-zÀ-ÿ]+){0,2})\b/g)){
+   const value=m[1].trim(),first=value.split(/\s+/)[0].toLowerCase();
+   if(!properStop.has(first)&&value.length>2)found.push(value);
+  }
+  const objectPattern=/\b(?:the|a|an|this|that|these|those|si|sang|sebuah|seorang|objek|benda)\s+([a-zÀ-ÿ][a-zÀ-ÿ0-9-]*(?:\s+(?!to\b|of\b|in\b|on\b|at\b|with\b|and\b|or\b|ke\b|di\b|dari\b|pada\b|menuju\b|through\b|across\b|over\b|under\b|into\b|onto\b|from\b|by\b|around\b|past\b|along\b|toward\b|towards\b|melalui\b|melewati\b|dengan\b)[a-zÀ-ÿ][a-zÀ-ÿ0-9-]*){0,2})/gi;
+  for(const m of s.matchAll(objectPattern)){
+   const value=m[1].trim();
+   if(value.length>2&&!properStop.has(value.toLowerCase()))found.push(value);
+  }
+  return [...new Map(found.map(value=>[value.toLowerCase(),value])).values()];
+ }
+ function inferStateDelta(line,index){
+  const raw=String(line||'').trim();
+  let m=raw.match(/^([A-Z][a-zÀ-ÿ]+)\s+(?:gives|hands|passes|menyerahkan|memberikan|mengoper)\s+(?:the\s+|a\s+|an\s+)?(.+?)\s+(?:to|kepada|ke)\s+([A-Z][a-zÀ-ÿ]+)[.!?]*$/i);
+  if(m)return {beat:index+1,kind:'TRANSFER',actor:m[1],object:m[2],recipient:m[3],state:'kepemilikan '+m[2]+' berpindah dari '+m[1]+' kepada '+m[3]+' setelah kontak terlihat'};
+  m=raw.match(/^([A-Z][a-zÀ-ÿ]+)\s+(?:receives|takes|menerima|mengambil)\s+(?:the\s+|a\s+|an\s+)?(.+?)[.!?]*$/i);
+  if(m)return {beat:index+1,kind:'ACQUIRE',actor:m[1],object:m[2],state:m[1]+' menjadi pemegang '+m[2]+' setelah objek disentuh/diambil'};
+  m=raw.match(/^([A-Z][a-zÀ-ÿ]+)\s+(?:picks up|grabs|holds|carries|lifts|takes|mengambil|memegang|membawa|mengangkat)\s+(?:the\s+|a\s+|an\s+)?(.+?)[.!?]*$/i);
+  if(m)return {beat:index+1,kind:'HOLD / CARRY',actor:m[1],object:m[2],state:m[1]+' memegang/membawa '+m[2]+'; pertahankan titik kontak dan posisi objek antar-shot'};
+  m=raw.match(/^([A-Z][a-zÀ-ÿ]+)\s+(?:places|puts|drops|sets down|meletakkan|menaruh|menjatuhkan)\s+(?:the\s+|a\s+|an\s+)?(.+?)\s+(?:on|onto|in|into|di|ke|pada)\s+(.+?)[.!?]*$/i);
+  if(m)return {beat:index+1,kind:'PLACE / RELEASE',actor:m[1],object:m[2],location:m[3],state:m[2]+' dilepas oleh '+m[1]+' dan menetap pada '+m[3]+'; jangan teleport objek'};
+  m=raw.match(/^([A-Z][a-zÀ-ÿ]+)\s+(?:opens|closes|activates|switches on|menutup|membuka|mengaktifkan|menyalakan)\s+(?:the\s+|a\s+|an\s+)?(.+?)[.!?]*$/i);
+  if(m)return {beat:index+1,kind:'OBJECT STATE',actor:m[1],object:m[2],state:m[2]+' berubah keadaan hanya setelah aksi '+m[1]+' terlihat'};
+  if(/\b(?:enters?|arrives?|leaves?|returns?|memasuki|tiba di|keluar dari|kembali ke)\b/i.test(raw))return {beat:index+1,kind:'LOCATION',actor:'subjek pada brief',object:'lokasi',state:'perlihatkan perpindahan dari ruang sebelumnya menuju ruang baru dengan establishing cue'};
+  return {beat:index+1,kind:'NO EXPLICIT DELTA',actor:'',object:'',state:'tidak ada perubahan kepemilikan/keadaan objek yang eksplisit; wariskan state sebelumnya tanpa mengarang aksi'};
+ }
+ function buildContinuityLedger(beats){
+  const mentions=new Map(),perBeat=beats.map((line,index)=>{
+   const entities=continuityEntities(line);
+   entities.forEach(entity=>{
+    const key=entity.toLowerCase();
+    if(!mentions.has(key))mentions.set(key,{label:entity,beats:[]});
+    mentions.get(key).beats.push(index+1);
+   });
+   return {line,entities};
+  });
+  const recurring=[...mentions.values()].filter(item=>item.beats.length>1);
+  const rows=perBeat.map((item,index)=>{
+   const shared=item.entities.filter(entity=>recurring.some(entry=>entry.label.toLowerCase()===entity.toLowerCase()));
+   const delta=inferStateDelta(item.line,index);
+   const transition=/\b(?:enters?|arrives?|travels?\s+to|moves?\s+to|leaves?|returns?\s+to|goes?\s+to|walks?\s+into|flies?\s+to|berpindah|memasuki|tiba\s+di|menuju|keluar\s+dari|kembali\s+ke|pergi\s+ke)\b/i.test(item.line);
+   return (index+1)+'. HANDOFF: wariskan pose akhir, posisi layar, arah hadap, objek yang sedang dipegang, pencahayaan, dan relasi jarak dari beat sebelumnya; ubah hanya yang disebut oleh aksi beat ini.'
+    +(shared.length?'\n   ENTITAS BERULANG: '+shared.join(', ')+' — pertahankan identitas, bentuk, warna, ukuran relatif, dan orientasi yang konsisten.':'')
+    +'\n   STATE DELTA ['+delta.kind+']: '+delta.state
+    +(transition?'\n   TRANSISI RUANG: brief memberi isyarat perpindahan; buat establishing cue lokasi baru dan jelaskan perpindahan subjek secara visual sebelum melanjutkan aksi.':'\n   RUANG: jangan pindahkan lokasi, kamera, atau posisi objek secara mendadak tanpa petunjuk dalam brief.');
+  });
+  const recurringLine=recurring.length
+   ?'KUNCI ENTITAS LINTAS BEAT: '+recurring.map(item=>item.label+' (beat '+item.beats.join(', ')+')').join('; ')+'.'
+   :'KUNCI ENTITAS LINTAS BEAT: tidak ada nama/objek berulang yang terdeteksi secara pasti; pertahankan subjek utama berdasarkan konteks brief tanpa mengarang identitas baru.';
+  return ['LEDGER KONTINUITAS SPASIAL & KEADAAN:',...rows,recurringLine,
+   'STATE HANDOFF: setiap beat mewarisi keadaan akhir beat sebelumnya. Objek yang tidak disentuh tetap pada posisi terakhir; objek yang dipindahkan harus memiliki lintasan; objek yang diberikan/diambil harus berpindah kepemilikan setelah kontak.',
+   'SCREEN-DIRECTION LOCK: pertahankan arah kiri/kanan, eyeline, sumbu aksi 180°, skala karakter, dan hubungan foreground-background antar-shot; jika sumbu kamera berubah, tampilkan shot penghubung.',
+   'LOCATION LOCK: perubahan lokasi hanya terjadi jika brief menyatakannya. Saat lokasi berubah, pertahankan identitas karakter dan properti yang dibawa, tetapi perbarui establishing background, perspektif, pencahayaan, dan ambience secara terencana.'];
+ }
+
+ function inferMultiCharacterRelations(line){
+  const raw=String(line||'').trim(),out=[];
+  const add=(kind,a,b,roles,gaze,blocking)=>out.push({kind,characters:[a,b],roles,gaze,blocking,confidence:'explicit-text'});
+  let m=raw.match(/^([A-Z][a-zÀ-ÿ0-9_-]{1,24})\s+(?:gives|hands|passes|menyerahkan|memberikan|mengoper)\s+(?:the\s+|a\s+|an\s+)?(.+?)\s+(?:to|kepada|ke)\s+([A-Z][a-zÀ-ÿ0-9_-]{1,24})[.!?]*$/i);
+  if(m){add('HANDOFF',m[1],m[3],m[1]+' = pemberi; '+m[3]+' = penerima','penerima melihat objek; pemberi menjaga kontak sampai transfer selesai','kedua karakter harus terlihat; objek bergerak kontinu dari tangan pemberi ke penerima');return out;}
+  m=raw.match(/^([A-Z][a-zÀ-ÿ0-9_-]{1,24})\s+(?:looks at|stares at|watches|menatap|melihat|memperhatikan)\s+(?:the\s+|a\s+|an\s+)?([A-Z][a-zÀ-ÿ0-9_-]{1,24})[.!?]*$/i);
+  if(m){add('GAZE / ATTENTION',m[1],m[2],m[1]+' = pengamat; '+m[2]+' = fokus perhatian',m[1]+' mengarahkan eyeline ke '+m[2],'jaga eyeline dan screen position; jangan memindahkan karakter yang diam');return out;}
+  m=raw.match(/^([A-Z][a-zÀ-ÿ0-9_-]{1,24})\s+(?:follows|chases|mengejar|mengikuti)\s+([A-Z][a-zÀ-ÿ0-9_-]{1,24})[.!?]*$/i);
+  if(m){add('FOLLOW / PURSUIT',m[1],m[2],m[1]+' = pengikut; '+m[2]+' = pemimpin',m[1]+' mempertahankan perhatian ke arah '+m[2],'pertahankan urutan depan-belakang, jarak relatif, dan arah gerak yang sama');return out;}
+  m=raw.match(/^([A-Z][a-zÀ-ÿ0-9_-]{1,24})\s+and\s+([A-Z][a-zÀ-ÿ0-9_-]{1,24})\s+(?:face each other|look at each other|berhadapan|saling menatap)[.!?]*$/i);
+  if(m){add('MUTUAL INTERACTION',m[1],m[2],'kedua karakter = pihak setara dalam interaksi','eyeline saling bertemu','jaga jarak dan orientasi berhadapan; gunakan two-shot agar relasi terbaca');return out;}
+  m=raw.match(/^([A-Z][a-zÀ-ÿ0-9_-]{1,24})\s+(?:stands?|waits?|moves?|walks?|runs?)\s+(?:behind|beside|in front of|next to|di belakang|di samping|di depan)\s+([A-Z][a-zÀ-ÿ0-9_-]{1,24})[.!?]*$/i);
+  if(m){const relation=/behind|di belakang/i.test(raw)?'belakang':/in front of|di depan/i.test(raw)?'depan':'samping';add('SPATIAL BLOCKING',m[1],m[2],m[1]+' = posisi '+relation+' relatif terhadap '+m[2],'arah pandang mengikuti aksi yang dinyatakan','kunci posisi relatif '+relation+'; jangan menukar sisi layar tanpa perpindahan yang terlihat');return out;}
+  return out;
+ }
+ function buildMultiCharacterMap(beats){
+  const rows=[];
+  beats.forEach((line,index)=>inferMultiCharacterRelations(line).forEach(rel=>{
+   rows.push((index+1)+'. '+rel.kind+' | TOKOH: '+rel.characters.join(' ↔ ')+'\n   PERAN: '+rel.roles+'\n   EYELINE: '+rel.gaze+'\n   BLOCKING: '+rel.blocking);
+  }));
+  return rows.length?['PETA INTERAKSI MULTI-KARAKTER:',...rows,'KONTINUITAS KARAKTER: pertahankan identitas, kostum, skala, posisi relatif, eyeline, dan arah hadap tiap tokoh antar-shot. Gunakan two-shot/over-shoulder saat relasi dua pihak penting.','BATAS DETEKSI: hanya relasi yang dinyatakan eksplisit yang dipetakan; jangan menambah tokoh, peran, kontak, atau perpindahan yang tidak disebut.']:['PETA INTERAKSI MULTI-KARAKTER: tidak ada relasi eksplisit antar tokoh yang terdeteksi; pertahankan staging sesuai brief tanpa mengarang karakter tambahan.'];
+ }
  function build(brief,duration){
   const beats=splitBeats(brief),seconds=Math.max(3,Math.min(60,Number(duration)||15));
   if(!beats.length)return 'Belum ada brief. Tulis subjek, aksi, lingkungan, dan perubahan adegan untuk melihat rencana.';
@@ -86,8 +166,9 @@
    rows.push('   POSE & SIKLUS GERAK: '+motion.pose+'\n   TRAJEKTORI: '+motion.path+'\n   PIVOT / ANCHOR: '+motion.pivot+'\n   KONTAK: '+motion.interaction+'\n   RESPONS LINGKUNGAN: '+motion.environment);
    if(relation)relations.push((relations.length+1)+'. '+relation.type+' | AKTOR: '+relation.actor+' | AKSI: '+relation.verb+' | TARGET: '+relation.target+'\n   SEBAB / KONTAK: '+relation.cause+'\n   AKIBAT / RESPONS: '+relation.effect);
   });
+  const continuitySection=buildContinuityLedger(beats);
   const interactionSection=relations.length?['GRAF INTERAKSI OBJEK (hubungan yang terdeteksi):',...relations,'URUTAN KAUSAL: pemicu/niat → pendekatan → kontak/aksi → reaksi target → keadaan akhir. Jangan tampilkan akibat sebelum penyebabnya.']:['GRAF INTERAKSI OBJEK: belum ada relasi aktor-target yang cukup eksplisit. Jangan mengarang interaksi; pertahankan aksi sesuai brief.'];
-  return ['RINGKASAN: '+beats.length+' beat naratif · '+seconds+' detik · shot dan gerak kamera dipilih dari aksi pada tiap beat',...rows,...interactionSection,'KUNCI KONTINUITAS: pertahankan identitas, siluet, bentuk, warna, skala, arah gerak, dan posisi relatif subjek utama antar-beat kecuali brief menyebut perubahan.','KEDALAMAN: pisahkan foreground, midground, dan background; gunakan parallax hanya jika ada layer yang benar-benar berbeda jarak. Jaga subjek utama tetap terbaca dan tidak tertutup dekorasi.','LOGIKA KAMERA: satu motivasi kamera per beat. Jangan menggabungkan pan, zoom, orbit, dan shake secara acak. Gerakan kamera harus membantu aksi atau mengarahkan perhatian.','PACING: sisakan waktu untuk antisipasi, aksi, dan settle/hold; jangan memotong momen penemuan atau impact.','TRANSISI: hubungkan beat dengan arah gerak, komposisi, atau match cut yang konsisten; pergantian lokasi harus didukung brief.','BATAS KREATIF: jangan menambahkan tokoh, properti, lokasi, atau peristiwa baru yang tidak tersirat dalam brief.'].join('\n');
+  return ['RINGKASAN: '+beats.length+' beat naratif · '+seconds+' detik · shot dan gerak kamera dipilih dari aksi pada tiap beat',...rows,...interactionSection,...continuitySection,...buildMultiCharacterMap(beats),'KUNCI KONTINUITAS: pertahankan identitas, siluet, bentuk, warna, skala, arah gerak, dan posisi relatif subjek utama antar-beat kecuali brief menyebut perubahan.','KEDALAMAN: pisahkan foreground, midground, dan background; gunakan parallax hanya jika ada layer yang benar-benar berbeda jarak. Jaga subjek utama tetap terbaca dan tidak tertutup dekorasi.','LOGIKA KAMERA: satu motivasi kamera per beat. Jangan menggabungkan pan, zoom, orbit, dan shake secara acak. Gerakan kamera harus membantu aksi atau mengarahkan perhatian.','PACING: sisakan waktu untuk antisipasi, aksi, dan settle/hold; jangan memotong momen penemuan atau impact.','TRANSISI: hubungkan beat dengan arah gerak, komposisi, atau match cut yang konsisten; pergantian lokasi harus didukung brief.','BATAS KREATIF: jangan menambahkan tokoh, properti, lokasi, atau peristiwa baru yang tidak tersirat dalam brief.'].join('\n');
  }
  function mountPreview(){
   const prompt=document.getElementById('visualMotionPrompt'),duration=document.getElementById('visualMotionDuration'),panel=document.getElementById('trozalSceneUnderstandingPanel'),output=document.getElementById('trozalSceneUnderstandingOutput');
@@ -95,7 +176,7 @@
   const update=()=>{output.textContent=build(prompt.value,duration.value);};
   prompt.addEventListener('input',update);duration.addEventListener('change',update);update();
  }
- const api={splitBeats,classify,inferInteraction,inferMotion,build,mountPreview};root.TROZAL_SCENE_INTELLIGENCE=api;
+ const api={splitBeats,classify,inferInteraction,inferMotion,continuityEntities,inferStateDelta,buildContinuityLedger,inferMultiCharacterRelations,buildMultiCharacterMap,build,mountPreview};root.TROZAL_SCENE_INTELLIGENCE=api;
  if(typeof module!=='undefined'&&module.exports)module.exports=api;
  if(typeof document!=='undefined'){if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mountPreview,{once:true});else mountPreview();}
 })(typeof window!=='undefined'?window:globalThis);
