@@ -27,4 +27,15 @@ assert.match(html, /PNG Sequence/);
 for (const id of ['renderBtn','cancelRenderBtn','format','resolution','proresMode','multiTrackEditor']) {
   assert.equal((html.match(new RegExp("id=[\\\"']"+id+"[\\\"']", 'g'))||[]).length,1,'Existing editor/export control must remain exactly once: #'+id);
 }
+
+const healthUi = fs.readFileSync('js/gpu-performance-health.js', 'utf8');
+for (const id of ['trozalCanvasControlPanel','trozalCanvasUiMode','trozalCanvasUiReason','trozalCanvasUiResults','trozalIpGuardrailPanel']) {
+  assert.ok(healthUi.includes(id), 'Missing new Canvas/IP UI: '+id);
+}
+assert.match(healthUi, /CANVAS RENDER CONTROL/);
+assert.match(healthUi, /ORIGINAL CONTENT & IP GUARDRAILS/);
+assert.match(healthUi, /trozal:hybrid-canvas-status/);
+assert.match(healthUi, /renderSpeedMode/);
+assert.match(html, /TROZAL_IP_SAFETY_POLICY/);
+assert.match(html, /INTELLECTUAL PROPERTY \/ ORIGINALITY/);
 console.log('Ollama hybrid renderer, MP4 bitrate, Ollama direct connection, GPU health, and workspace/export regression guards passed.');
