@@ -13,6 +13,7 @@ on:
       - feature/ollama-adaptive-render-advisor-2026-11-16
       - feature/ollama-hybrid-canvas-bitrate-health-fix-2026-11-16
       - feature/ollama-scene-composer-scene-intelligence-2026-11-16
+      - feature/original-content-ip-panel-2026-11-18
   workflow_dispatch:
 
 permissions:
@@ -52,6 +53,7 @@ jobs:
           node tests/hybrid-canvas-bitrate-health.test.cjs
           node tests/hybrid-canvas-bitrate-health.browser.cjs
           node tests/ollama-vision-metadata-json.test.cjs
+          node tests/ip-guardrails-panel.test.cjs
 
       - name: Exercise OLLAMA UI in Chromium
         run: |
