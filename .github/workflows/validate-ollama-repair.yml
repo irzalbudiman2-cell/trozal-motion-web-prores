@@ -11,6 +11,7 @@ on:
       - feature/mp4-bitrate-ip-guardrails-2026-11-16
       - feature/canvas-render-speed-control-2026-11-17
       - fix/metadata-copy-clear-actions-2026-11-18
+      - feature/original-content-ip-panel-2026-11-18
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -30,6 +31,8 @@ jobs:
           node-version: 20
       - name: Test metadata copy and clear actions
         run: node tests/metadata-actions.test.cjs
+      - name: Test always-on original content IP guardrails
+        run: node tests/ip-guardrails-panel.test.cjs
       - name: Test MP4 bitrate and IP prompt guardrails
         run: node tests/mp4-bitrate-ip-guardrails.test.cjs
       - name: Test Canvas render speed profiles
