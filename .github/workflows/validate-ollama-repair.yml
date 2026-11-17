@@ -10,6 +10,7 @@ on:
       - integration/ollama-scene-continuity-2026-11-17
       - feature/mp4-bitrate-ip-guardrails-2026-11-16
       - feature/canvas-render-speed-control-2026-11-17
+      - fix/metadata-copy-clear-actions-2026-11-18
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -27,6 +28,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+      - name: Test metadata copy and clear actions
+        run: node tests/metadata-actions.test.cjs
       - name: Test MP4 bitrate and IP prompt guardrails
         run: node tests/mp4-bitrate-ip-guardrails.test.cjs
       - name: Test Canvas render speed profiles
@@ -53,6 +56,8 @@ jobs:
               process.exit(1);
             }
           });
+          const metadataActions = fs.readFileSync('metadata-actions.js', 'utf8');
+          if (!html.includes('./metadata-actions.js') || !metadataActions.includes("document.execCommand('copy')")) throw new Error('Metadata copy/clear action script is not wired correctly.');
           const required = ['svgTerminalPanel','svgAiThemeSearch','mtCreateGroup','mtSetGroupParent','browserArtDirection','balanceVisualSceneDurationsBtn','smartCameraDirectorPanel','objectMotionDirectorPanel','motionBlurControlPanel','motionQualityDirectorPanel'];
           for (const id of required) if (!html.includes('id="' + id + '"')) throw new Error('Missing required UI: ' + id);
           console.log('Validated ' + scripts.length + ' inline script block(s) and ' + required.length + ' required feature panels.');
