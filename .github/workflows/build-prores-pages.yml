@@ -39,6 +39,8 @@ jobs:
           set -euo pipefail
           mkdir -p site/vendor/ffmpeg site/vendor/prores-core
           cp index.html site/index.html
+          cp metadata-actions.js site/metadata-actions.js
+          cp ip-guardrails-panel.js site/ip-guardrails-panel.js
           touch site/.nojekyll
 
       - name: Validate inline JavaScript syntax
