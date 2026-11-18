@@ -42,6 +42,7 @@ jobs:
         run: node tests/smart-render-preflight.test.cjs
       - name: Test adaptive render memory manager
         run: node tests/render-memory-manager.test.cjs
+      - name: Test disk-backed render frame store
         run: node tests/render-frame-store.test.cjs
       - name: Test Preview Proxy controller
         run: |
