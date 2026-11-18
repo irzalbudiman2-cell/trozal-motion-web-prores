@@ -14,6 +14,7 @@ on:
       - feature/ollama-hybrid-canvas-bitrate-health-fix-2026-11-16
       - feature/ollama-scene-composer-scene-intelligence-2026-11-16
       - feature/original-content-ip-panel-2026-11-18
+      - feature/preview-proxy-canvas-2026-11-18
   workflow_dispatch:
 
 permissions:
@@ -55,6 +56,8 @@ jobs:
           node tests/ollama-vision-metadata-json.test.cjs
           node tests/ip-guardrails-panel.test.cjs
 
+      - name: Verify Preview Proxy changes only preview canvas resolution
+        run: node tests/preview-proxy.browser.cjs
       - name: Exercise OLLAMA UI in Chromium
         run: |
           node <<'NODE'
