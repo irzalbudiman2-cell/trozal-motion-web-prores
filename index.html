@@ -3281,6 +3281,7 @@ async function draw(){
  if(trozalRenderCancelRequested)return;
  try{await drawUnsafe()}
  catch(err){
+  if(frameStore){const staged=frameStore;frameStore=null;staged.cleanup().catch(error=>console.warn('Frame staging cleanup failed:',error));}
   window.TrozalRenderMemoryManager?.recordAllocationFailure?.(err?.message||String(err));
   console.error('trozal_MOTION render frame error:',err);
   try{if(rec&&rec.state!=='inactive')rec.stop()}catch(e){}
