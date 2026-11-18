@@ -41,6 +41,7 @@ jobs:
           cp index.html site/index.html
           cp metadata-actions.js site/metadata-actions.js
           cp ip-guardrails-panel.js site/ip-guardrails-panel.js
+          cp preview-proxy.js site/preview-proxy.js
           touch site/.nojekyll
 
       - name: Validate inline JavaScript syntax
