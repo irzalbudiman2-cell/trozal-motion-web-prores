@@ -43,6 +43,7 @@ jobs:
           cp ip-guardrails-panel.js site/ip-guardrails-panel.js
           cp preview-proxy.js site/preview-proxy.js
           cp render-memory-manager.js site/render-memory-manager.js
+          cp render-frame-store.js site/render-frame-store.js
           touch site/.nojekyll
 
       - name: Validate inline JavaScript syntax
@@ -157,6 +158,7 @@ jobs:
           set -euo pipefail
           grep -q -- '--enable-encoder=prores_ks' /tmp/ffmpeg-wasm/Dockerfile
           test -s site/index.html
+          test -s site/render-frame-store.js
           test -s site/vendor/ffmpeg/worker.js
           test -s site/vendor/prores-core/ffmpeg-core.js
           test -s site/vendor/prores-core/ffmpeg-core.wasm
