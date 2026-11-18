@@ -3,6 +3,13 @@ name: Build ProRes WASM and Deploy GitHub Pages
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'render-frame-store.js'
+      - 'tests/render-frame-store.test.cjs'
+      - '.github/workflows/build-prores-pages.yml'
   workflow_dispatch:
 
 permissions:
@@ -17,8 +24,8 @@ concurrency:
 jobs:
   build-and-deploy:
     environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      name: ${{ github.event_name == 'pull_request' && 'pages-build-validation' || 'github-pages' }}
+      url: ${{ github.event_name == 'pull_request' && '' || steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     timeout-minutes: 240
     steps:
@@ -69,6 +76,9 @@ jobs:
           });
           console.log('Validated JavaScript syntax in ' + scripts.length + ' script block(s).');
           NODE
+
+      - name: Test render frame store
+        run: node --test tests/render-frame-store.test.cjs
 
       - name: Vendor FFmpeg worker package and JSZip locally
         shell: bash
@@ -166,13 +176,16 @@ jobs:
           du -sh site
 
       - name: Configure GitHub Pages
+        if: github.event_name != 'pull_request'
         uses: actions/configure-pages@v5
 
       - name: Upload Pages artifact
+        if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v3
         with:
           path: site
 
       - name: Deploy to GitHub Pages
+        if: github.event_name != 'pull_request'
         id: deployment
         uses: actions/deploy-pages@v4
