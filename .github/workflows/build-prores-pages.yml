@@ -42,6 +42,7 @@ jobs:
           cp metadata-actions.js site/metadata-actions.js
           cp ip-guardrails-panel.js site/ip-guardrails-panel.js
           cp preview-proxy.js site/preview-proxy.js
+          cp render-memory-manager.js site/render-memory-manager.js
           touch site/.nojekyll
 
       - name: Validate inline JavaScript syntax

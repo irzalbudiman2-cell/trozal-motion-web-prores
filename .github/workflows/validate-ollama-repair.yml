@@ -11,6 +11,7 @@ on:
       - feature/mp4-bitrate-ip-guardrails-2026-11-16
       - feature/canvas-render-speed-control-2026-11-17
       - fix/metadata-copy-clear-actions-2026-11-18
+      - feature/ollama-adaptive-render-memory-2026-11-18
       - feature/original-content-ip-panel-2026-11-18
   pull_request:
     branches: [main]
@@ -39,6 +40,8 @@ jobs:
         run: node tests/canvas-render-speed.test.cjs
       - name: Test Smart Render Preflight reads actual output settings
         run: node tests/smart-render-preflight.test.cjs
+      - name: Test adaptive render memory manager
+        run: node tests/render-memory-manager.test.cjs
       - name: Test Preview Proxy controller
         run: |
           node --check preview-proxy.js
