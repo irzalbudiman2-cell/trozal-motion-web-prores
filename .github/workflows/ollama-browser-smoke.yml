@@ -14,6 +14,7 @@ on:
       - feature/ollama-hybrid-canvas-bitrate-health-fix-2026-11-16
       - feature/ollama-scene-composer-scene-intelligence-2026-11-16
       - feature/original-content-ip-panel-2026-11-18
+      - feature/preview-proxy-canvas-2026-11-18
   workflow_dispatch:
 
 permissions:
