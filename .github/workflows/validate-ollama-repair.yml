@@ -37,6 +37,8 @@ jobs:
         run: node tests/mp4-bitrate-ip-guardrails.test.cjs
       - name: Test Canvas render speed profiles
         run: node tests/canvas-render-speed.test.cjs
+      - name: Test Smart Render Preflight reads actual output settings
+        run: node tests/smart-render-preflight.test.cjs
       - name: Test spatial scene continuity ledger
         run: node tests/scene-intelligence.test.cjs
       - name: Validate inline JavaScript syntax
