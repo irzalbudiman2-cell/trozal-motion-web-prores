@@ -55,9 +55,9 @@ jobs:
           node tests/ollama-vision-metadata-json.test.cjs
           node tests/ip-guardrails-panel.test.cjs
 
-      - name: Exercise OLLAMA UI in Chromium
       - name: Verify Preview Proxy changes only preview canvas resolution
         run: node tests/preview-proxy.browser.cjs
+      - name: Exercise OLLAMA UI in Chromium
         run: |
           node <<'NODE'
           const { chromium } = require('playwright');
