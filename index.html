@@ -2791,7 +2791,7 @@ function trozalSetRenderPreviewLock(locked){
  const key='__trozalRenderPreviewLockState';
  if(locked){
   if(window[key]?.active)return;
-  const state={active:true,media:[],animations:[],styles:[],gifFrames:[]};
+  const state={active:true,media:[],animations:[],svgAnimations:[],styles:[],gifFrames:[]};
   const docs=[];
   try{if(htmlMotionIframe?.contentDocument)docs.push(htmlMotionIframe.contentDocument)}catch(_){}
   try{if($('visualMotionPreview')?.contentDocument)docs.push($('visualMotionPreview').contentDocument)}catch(_){}
@@ -2833,6 +2833,8 @@ function trozalSetRenderPreviewLock(locked){
     const style=doc.createElement('style');style.setAttribute('data-trozal-render-preview-lock','true');
     style.textContent='*,*::before,*::after{animation-play-state:paused!important;transition:none!important;caret-color:transparent!important}';
     (doc.head||doc.documentElement)?.appendChild(style);state.styles.push(style);
+   // SVG SMIL timelines are separate from Web Animations and need explicit pausing.
+   try{doc.querySelectorAll('svg').forEach(svg=>{if(typeof svg.pauseAnimations==='function'){svg.pauseAnimations();state.svgAnimations.push(svg)}})}catch(_){}
    }catch(_){}
   });
   window[key]=state;
@@ -2842,6 +2844,7 @@ function trozalSetRenderPreviewLock(locked){
  state.styles.forEach(style=>{try{style.remove()}catch(_){}});
  state.gifFrames.forEach(item=>{try{if(item.frozen.parentNode)item.frozen.parentNode.replaceChild(item.img,item.frozen)}catch(_){}});
  state.animations.forEach(item=>{if(item.wasRunning)try{item.animation.play()}catch(_){}});
+ state.svgAnimations.forEach(svg=>{try{svg.unpauseAnimations?.()}catch(_){}});
  state.media.forEach(item=>{
   const media=item.media;
   try{media.muted=item.muted;media.volume=item.volume;if(item.wasPlaying){const p=media.play();if(p?.catch)p.catch(()=>{})}}catch(_){}
