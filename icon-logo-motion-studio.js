@@ -161,13 +161,6 @@ function svgFor(l,small=false){
   add('sparkles',Array.from({length:4},(_,i)=>circle(60+(i*37)%120,48+(i*43)%142,4,palettes[(i+seed)%palettes.length],'none')).join(''));
   add('rays',path('M120 20 L120 39 M205 120 L185 120 M120 220 L120 200 M35 120 L55 120','none',c3,5));
  }
-
-  add('base',path('M54 177 L54 105 L88 105 L88 75 L120 45 L152 75 L152 105 L186 105 L186 177Z',c1));
-  add('windows',Array.from({length:6},(_,i)=>'<rect x="'+(75+(i%3)*31)+'" y="'+(119+Math.floor(i/3)*27)+'" width="13" height="17" rx="3" fill="#d9f3f7" stroke="'+dark+'" stroke-width="2"/>').join(''));
-  add('roof-detail',path('M82 104 L120 67 L158 104','none',c3,5));
-  add('ground',path('M34 190 Q120 178 206 190','none',dark,5));
-  add('sparkles',circle(44,66,5,c3,'none')+circle(192,62,5,c3,'none')+path('M183 21 L188 34 L201 39 L188 44 L183 57 L178 44 L165 39 L178 34Z',light,'none',0));
- }
  // Per-concept anatomy and ornament variations: deterministic, seed-driven and visibly distinct.
  const v1=18+(seed*7)%23,v2=34+(seed*11)%27,v3=42+(seed*13)%31;
  const gem=path('M120 '+v1+' L'+(120+v2)+' '+(v1+v3)+' L120 '+(v1+v3*2)+' L'+(120-v2)+' '+(v1+v3)+'Z',palettes[(seed+3)%palettes.length],dark,3);
