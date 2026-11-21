@@ -83,7 +83,7 @@ jobs:
           NODE
 
       - name: Test render frame store and Logo Studio contract
-        run: node --test tests/render-frame-store.test.cjs tests/logo-studio-contract.test.cjs
+        run: node --test tests/render-frame-store.test.cjs tests/logo-studio-contract.test.cjs tests/illustrative-logo-studio.test.cjs
 
       - name: Vendor FFmpeg worker package and JSZip locally
         shell: bash
@@ -187,10 +187,11 @@ jobs:
           const nameA = source.match(/const nameA=\[([^\]]+)\]/);
           const nameB = source.match(/const nameB=\[([^\]]+)\]/);
           if (!nameA || !nameB) throw new Error('Unique logo naming dictionaries missing');
-          const svgFn = source.match(/function svgFor\([\s\S]*?\n}\nfunction motionCSS/);
-          if (!svgFn || !svgFn[0].includes('<path') || svgFn[0].includes('<rect')) throw new Error('Logo artwork must use frameless SVG paths');
+          const hasVectorHelpers = source.includes('const path=(d,fill=p') && source.includes('const ellipse=') && source.includes('const circle=') && source.includes('const poly=');
+          const hasAnimatedParts = source.includes('tm4-part') && source.includes('data-part=') && source.includes('<svg xmlns=') && source.includes('viewBox="0 0 240 240"');
+          if (!hasVectorHelpers || !hasAnimatedParts) throw new Error('Logo artwork must define SVG vector primitives and independently animated semantic parts');
           if (!source.includes('String(i+1).padStart(4')) throw new Error('Sequential unique logo identifiers missing');
-          console.log('Verified 1,500 procedural logo concepts across 30 domains with frameless SVG path artwork.');
+          console.log('Verified 1,500 procedural logo concepts across 30 domains with frameless SVG vector artwork.');
           NODE
           test -s site/render-frame-store.js
           test -s site/vendor/ffmpeg/worker.js
