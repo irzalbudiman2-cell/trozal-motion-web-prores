@@ -161,16 +161,17 @@ function svgFor(l,small=false){
   add('sparkles',Array.from({length:4},(_,i)=>circle(60+(i*37)%120,48+(i*43)%142,4,palettes[(i+seed)%palettes.length],'none')).join(''));
   add('rays',path('M120 20 L120 39 M205 120 L185 120 M120 220 L120 200 M35 120 L55 120','none',c3,5));
  }
- // Per-concept anatomy and ornament variations: deterministic, seed-driven and visibly distinct.
- const v1=18+(seed*7)%23,v2=34+(seed*11)%27,v3=42+(seed*13)%31;
- const gem=path('M120 '+v1+' L'+(120+v2)+' '+(v1+v3)+' L120 '+(v1+v3*2)+' L'+(120-v2)+' '+(v1+v3)+'Z',palettes[(seed+3)%palettes.length],dark,3);
- const crest=path('M'+(86+(seed%9)*3)+' 66 Q120 '+(4+(seed%17)*2)+' '+(154-(seed%7)*2)+' 66 L'+(143-(seed%5)*3)+' 82 Q120 '+(65+(seed%11)*2)+' '+(97+(seed%5)*3)+' 82Z',palettes[(seed+1)%palettes.length],dark,3);
- const spots=Array.from({length:3+(seed%5)},(_,i)=>circle(76+((seed*17+i*31)%88),92+((seed*13+i*19)%86),3+(i%3),palettes[(seed+i)%palettes.length],'none')).join('');
- add('signature-crest',crest);
- add('signature-emblem',gem);
- add('signature-markings',spots);
- // Convert a shape into an independently animated component with staggered timing.
- const partStyles='<style>.tm4-part{transform-box:fill-box;transform-origin:center;animation:'+id+'float 3.6s ease-in-out infinite;}.tm4-part:nth-of-type(2n){animation-name:'+id+'bob;animation-delay:-.7s}.tm4-part:nth-of-type(3n){animation-name:'+id+'pulse;animation-delay:-1.1s}@keyframes '+id+'float{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}@keyframes '+id+'bob{0%,100%{transform:rotate(0deg)}50%{transform:rotate(4deg)}}@keyframes '+id+'pulse{0%,100%{opacity:1}50%{opacity:.72}}</style>';
+ // Small concept-specific details; no universal diamond or crest is placed over every subject.
+ const spots=Array.from({length:3+(seed%5)},(_,i)=>circle(76+((seed*17+i*31)%88),92+((seed*13+i*19)%86),2+(i%3),palettes[(seed+i)%palettes.length],'none')).join('');
+ if([0,5,6,10,11,12,13].includes(family)){
+  const expression=l.expression||'Cheerful';
+  const mouth=expression==='Surprised'?'M114 143 Q120 132 126 143 Q126 153 120 154 Q114 153 114 143Z':expression==='Serious'?'M111 145 L129 145':expression==='Sleepy'?'M111 143 Q120 147 129 143':'M111 140 Q120 149 129 140';
+  add('expression-detail',path(mouth,'none',dark,4));
+ }
+ add('micro-details',spots);
+ const partMode=l.partsEnabled===false?'None':(l.partMotion||'Sequential Reveal');
+ const anim=partMode==='None'?'':partMode==='Orbit Parts'?'animation:'+id+'orbit 4s ease-in-out infinite;':partMode==='Pop Parts'?'animation:'+id+'pop 1.8s cubic-bezier(.2,.8,.2,1) infinite;':partMode==='Wave Parts'?'animation:'+id+'wave 2.6s ease-in-out infinite;':partMode==='Spin Parts'?'animation:'+id+'spin 5s ease-in-out infinite;':'animation:'+id+'reveal 2.4s ease-out both;';
+ const partStyles='<style>.tm4-part{transform-box:fill-box;transform-origin:center;'+anim+'}@keyframes '+id+'reveal{0%{opacity:0;transform:translateY(12px) scale(.86)}100%{opacity:1;transform:translateY(0) scale(1)}}@keyframes '+id+'orbit{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}@keyframes '+id+'pop{0%,100%{transform:scale(1)}45%{transform:scale(1.12)}70%{transform:scale(.96)}}@keyframes '+id+'wave{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}@keyframes '+id+'spin{0%,100%{transform:rotate(0)}50%{transform:rotate(180deg)}}</style>';
  const defs='<defs><linearGradient id="'+id+'grad" x1="0" y1="0" x2="1" y2="1"><stop stop-color="'+p+'"/><stop offset=".55" stop-color="'+a+'"/><stop offset="1" stop-color="'+c3+'"/></linearGradient><filter id="'+id+'shadow" x="-30%" y="-30%" width="160%" height="170%"><feDropShadow dx="0" dy="5" stdDeviation="3" flood-color="#182638" flood-opacity=".24"/></filter></defs>';
  const finish='<g filter="'+(l.style==='3D Soft'?'url(#'+id+'shadow)':'none')+'">'+parts.join('')+'</g>';
  const backdrop=l.style==='Glass'?'<circle cx="120" cy="120" r="76" fill="url(#'+id+'grad)" opacity=".12"/>':'';

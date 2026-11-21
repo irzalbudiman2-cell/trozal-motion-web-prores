@@ -37,7 +37,10 @@ test('illustrations contain independently animated semantic parts, not an enclos
     const parts = (svg.match(/data-part="/g) || []).length;
     minParts = Math.min(minParts, parts);
     assert.ok(parts >= 5, 'concept '+i+' needs multiple semantic parts');
-    assert.match(svg, /@keyframes .*float/);
+    assert.match(svg, /@keyframes .*reveal/);
+    assert.match(svg, /@keyframes .*orbit/);
+    assert.match(svg, /data-part=/);
+    assert.doesNotMatch(svg, /signature-(?:crest|emblem)/, 'no universal diamond or crest overlay');
     assert.doesNotMatch(svg, /<rect[^>]*(?:width="(?:100%|240)"|height="(?:100%|240)")/, 'no enclosing frame');
   }
   assert.equal(families.size, 15, 'all fifteen illustration families must be represented');
