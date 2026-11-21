@@ -10,7 +10,7 @@ test('illustrative catalogue keeps 1,500 concepts across 30 meaningful domains',
   const domains = source.match(/const logoDomains=\[([\s\\S]*?)\];/);
   assert.equal((domains?.[1].match(/'[^']+'/g) || []).length, 30);
   for (const term of ['Hewan & Satwa Liar','Tumbuhan & Botani','Kendaraan Darat','Antariksa & Planet','Fantasi & Mitologi','Robot & Android']) {
-    assert.ok(domains[1].includes(term), 'missing domain: ' + term);
+    assert.ok(domainText.includes(term), 'missing domain: ' + term);
   }
 });
 
