@@ -5,9 +5,9 @@ const fs = require('node:fs');
 const source = fs.readFileSync('icon-logo-motion-studio.js', 'utf8');
 
 test('illustrative catalogue keeps 1,500 concepts across 30 meaningful domains', () => {
-  const motifs = source.match(/const motifs=Array\\.from\\(\\{length:(\\d+)\\}/);
+  const motifs = source.match(/const motifs=Array\.from\(\{length:(\d+)\}/);
   assert.equal(Number(motifs?.[1]), 1500);
-  const domains = source.match(/const logoDomains=\\[([\\s\\S]*?)\\];/);
+  const domains = source.match(/const logoDomains=\[([\s\\S]*?)\];/);
   assert.equal((domains?.[1].match(/'[^']+'/g) || []).length, 30);
   for (const term of ['Hewan & Satwa Liar','Tumbuhan & Botani','Kendaraan Darat','Antariksa & Planet','Fantasi & Mitologi','Robot & Android']) {
     assert.ok(domains[1].includes(term), 'missing domain: ' + term);
@@ -27,7 +27,7 @@ test('illustrations contain independently animated semantic parts, not an enclos
   let minParts = Infinity;
   for (let i = 0; i < 1500; i++) {
     const svg = svgFor({ logoIndex:i, id:'test'+i, name:'Concept '+i, color:'#ffbd45', accent:'#55c7dc', style:'Flat Color' });
-    const family = svg.match(/data-illustration-family="(\\d+)"/);
+    const family = svg.match(/data-illustration-family="(\d+)"/);
     if (family) families.add(family[1]);
     const parts = (svg.match(/data-part="/g) || []).length;
     minParts = Math.min(minParts, parts);
