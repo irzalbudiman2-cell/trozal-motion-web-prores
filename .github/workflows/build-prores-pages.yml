@@ -188,7 +188,7 @@ jobs:
           const nameB = source.match(/const nameB=\[([^\]]+)\]/);
           if (!nameA || !nameB) throw new Error('Unique logo naming dictionaries missing');
           const svgFn = source.match(/function svgFor\([\s\S]*?\n}\nfunction motionCSS/);
-          if (!svgFn || !/<(?:path|rect|circle|ellipse|polygon|polyline|line)\\b/.test(svgFn[0])) throw new Error('Logo artwork must contain valid frameless SVG vector primitives');
+          if (!svgFn || !/<(?:path|rect|circle|ellipse|polygon|polyline|line)\b/.test(svgFn[0])) throw new Error('Logo artwork must contain valid frameless SVG vector primitives');
           if (!source.includes('String(i+1).padStart(4')) throw new Error('Sequential unique logo identifiers missing');
           console.log('Verified 1,500 procedural logo concepts across 30 domains with frameless SVG vector artwork.');
           NODE
