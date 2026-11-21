@@ -27,7 +27,7 @@ function svgFor(l,small=false){
  let n=(seed+1)>>>0;
  const rnd=()=>{n=(n*1664525+1013904223)>>>0;return n/4294967296};
  const escA=esc(l.name),p=l.color||'#ffbd45',a=l.accent||'#55c7dc',dark='#233449',light='#fff4d8';
- const domain=Math.floor(seed/50)%30,family=Math.floor(domain/3),id='ill'+String(l.id||seed).replace(/[^a-z0-9]/gi,'');
+ const domain=Math.floor(seed/50)%30,family=([0,0,0,1,1,1,2,3,3,4,5,5,6,6,6,7,7,8,8,8,9,9,9,9,9,6,8,8,9,9][domain]??9),id='ill'+String(l.id||seed).replace(/[^a-z0-9]/gi,'');
  const parts=[];
  const add=(name,markup)=>parts.push('<g class="tm4-part" data-part="'+name+'">'+markup+'</g>');
  const path=(d,fill=p,stroke=dark,sw=5)=>'<path d="'+d+'" fill="'+fill+'" stroke="'+stroke+'" stroke-width="'+sw+'" stroke-linecap="round" stroke-linejoin="round"/>';
