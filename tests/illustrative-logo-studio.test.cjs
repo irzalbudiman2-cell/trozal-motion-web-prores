@@ -1,0 +1,36 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const source = fs.readFileSync('icon-logo-motion-studio.js', 'utf8');
+
+test('illustrative catalogue keeps 1,500 concepts across 30 meaningful domains', () => {
+  const motifs = source.match(/const motifs=Array\.from\(\{length:(\d+)\}/);
+  assert.equal(Number(motifs?.[1]), 1500);
+  const domains = source.match(/const logoDomains=\[([\s\S]*?)\];/);
+  assert.equal((domains?.[1].match(/'[^']+'/g) || []).length, 30);
+  for (const term of ['Hewan & Satwa Liar','Tumbuhan & Botani','Kendaraan Darat','Antariksa & Planet','Fantasi & Mitologi','Robot & Android']) {
+    assert.ok(domains[1].includes(term), 'missing domain: ' + term);
+  }
+});
+
+test('illustrations contain independently animated semantic parts, not an enclosing frame', () => {
+  const match = source.match(/function svgFor\(l,small=false\)\{[\s\S]*?\n\}\nfunction motionCSS/);
+  assert.ok(match, 'svgFor function must exist');
+  const fnSource = match[0].replace(/\nfunction motionCSS$/, '');
+  const svgFor = new Function('esc', 'rectSvg', 'return (' + fnSource + ');')(
+    value => String(value).replace(/[&<>"']/g, ''),
+    (x,y,w,h,fill) => '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="'+fill+'"/>'
+  );
+  const families = new Set();
+  for (let i = 0; i < 1500; i++) {
+    const svg = svgFor({ logoIndex:i, id:'test'+i, name:'Concept '+i, color:'#ffbd45', accent:'#55c7dc', style:'Flat Color' });
+    const family = svg.match(/data-illustration-family="(\d+)"/);
+    if (family) families.add(family[1]);
+    assert.ok((svg.match(/data-part="/g) || []).length >= 5, 'concept '+i+' needs multiple semantic parts');
+    assert.match(svg, /@keyframes .*float/);
+    assert.match(svg, /data-part="face|data-part="petals|data-part="wheels|data-part="main-hull|data-part="planet|data-part="head|data-part="ball|data-part="base/);
+    assert.doesNotMatch(svg, /<rect[^>]*(?:width="(?:100%|240)"|height="(?:100%|240)")/, 'no enclosing frame');
+  }
+  assert.equal(families.size, 10, 'all ten illustration families must be represented');
+});
