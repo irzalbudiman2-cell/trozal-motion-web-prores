@@ -8,6 +8,8 @@ on:
     paths:
       - 'index.html'
       - 'render-frame-store.js'
+      - 'logo-studio.js'
+      - 'tests/logo-studio-contract.test.cjs'
       - 'tests/render-frame-store.test.cjs'
       - '.github/workflows/build-prores-pages.yml'
   workflow_dispatch:
@@ -51,6 +53,7 @@ jobs:
           cp preview-proxy.js site/preview-proxy.js
           cp render-memory-manager.js site/render-memory-manager.js
           cp render-frame-store.js site/render-frame-store.js
+          cp logo-studio.js site/logo-studio.js
           touch site/.nojekyll
 
       - name: Validate inline JavaScript syntax
@@ -77,8 +80,8 @@ jobs:
           console.log('Validated JavaScript syntax in ' + scripts.length + ' script block(s).');
           NODE
 
-      - name: Test render frame store
-        run: node --test tests/render-frame-store.test.cjs
+      - name: Test render frame store and Logo Studio contract
+        run: node --test tests/render-frame-store.test.cjs tests/logo-studio-contract.test.cjs
 
       - name: Vendor FFmpeg worker package and JSZip locally
         shell: bash
@@ -168,6 +171,8 @@ jobs:
           set -euo pipefail
           grep -q -- '--enable-encoder=prores_ks' /tmp/ffmpeg-wasm/Dockerfile
           test -s site/index.html
+          test -s site/logo-studio.js
+          node --check site/logo-studio.js
           test -s site/render-frame-store.js
           test -s site/vendor/ffmpeg/worker.js
           test -s site/vendor/prores-core/ffmpeg-core.js
