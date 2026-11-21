@@ -20,3 +20,9 @@ assert.match(source, /id="tm4LoadProject"/, 'project load control is available')
 const duplicateIds = [...source.matchAll(/id="([^"]+)"/g)].map(match => match[1]).filter((id, i, ids) => ids.indexOf(id) !== i);
 assert.deepEqual([...new Set(duplicateIds)], [], 'Logo Studio markup must not contain duplicate IDs');
 console.log('Logo composition and playback regression checks passed.');
+
+assert.match(source, /visible:true,locked:false/, 'new layers default to visible and unlocked');
+assert.match(source, /data-layer-visible=/, 'each layer exposes a visibility toggle');
+assert.match(source, /data-layer-lock=/, 'each layer exposes a lock toggle');
+assert.match(source, /filter\(l=>l\.visible!==false\)/, 'hidden layers are excluded from composition output');
+assert.match(source, /pointer-events:'\+\(l\.locked\?'none':'auto'\)/, 'locked layers are protected from preview interaction');
