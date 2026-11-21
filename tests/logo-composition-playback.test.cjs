@@ -11,7 +11,7 @@ assert.match(source, /tm4AddEight/, 'batch add eight logos tool is available');
 assert.match(source, /tm4MirrorSet/, 'horizontal mirror tool is available');
 assert.match(source, /tm4RandomStyle/, 'motion and color randomizer is available');
 assert.match(source, /tm4ArrangeGrid/, 'automatic grid layout is available');
-assert.match(source, /function play\\(\\)\\{state\\.playing=!state\\.playing;state\\.last=0;if\\(state\\.playing\\)\\{tickScene=state\\.scene;/, 'first playback frame preserves the existing SVG DOM');
+assert.ok(source.includes('function play(){state.playing=!state.playing;state.last=0;if(state.playing){tickScene=state.scene;'), 'first playback frame preserves the existing SVG DOM');
 assert.match(source, /id="tm4PartMotion"/, 'semantic part animation selector is exposed');
 assert.match(source, /id="tm4Expression"/, 'character expression selector is exposed');
 assert.match(source, /id="tm4PartsEnabled"/, 'per-part animation can be enabled or disabled');
