@@ -7,8 +7,11 @@ const source = fs.readFileSync('icon-logo-motion-studio.js', 'utf8');
 test('illustrative catalogue keeps 1,500 concepts across 30 meaningful domains', () => {
   const motifs = source.match(/const motifs=Array\.from\(\{length:(\d+)\}/);
   assert.equal(Number(motifs?.[1]), 1500);
-  const domains = source.match(/const logoDomains=\[([\s\\S]*?)\];/);
-  assert.equal((domains?.[1].match(/'[^']+'/g) || []).length, 30);
+  const domainsStart = source.indexOf('const logoDomains=[');
+  const domainsEnd = source.indexOf('];', domainsStart);
+  assert.ok(domainsStart >= 0 && domainsEnd > domainsStart, 'logoDomains catalogue boundaries must exist');
+  const domainText = source.slice(domainsStart, domainsEnd);
+  assert.equal((domainText.match(/'[^']+'/g) || []).length, 30);
   for (const term of ['Hewan & Satwa Liar','Tumbuhan & Botani','Kendaraan Darat','Antariksa & Planet','Fantasi & Mitologi','Robot & Android']) {
     assert.ok(domainText.includes(term), 'missing domain: ' + term);
   }
