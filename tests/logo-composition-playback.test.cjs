@@ -1,0 +1,14 @@
+'use strict';
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const source = fs.readFileSync('icon-logo-motion-studio.js', 'utf8');
+assert.match(source, /name:'Komposisi Logo'/, 'studio starts as one logo composition, not Intro/Discover/Outro');
+assert.doesNotMatch(source, /name:'Intro'|name:'Discover'|name:'Outro'/, 'storyboard defaults are removed');
+assert.match(source, /let tickScene=-1;function tick\(now\)/, 'playback tracks scene changes');
+assert.match(source, /else\{const t=localTime\(\);currentScene\(\)\.layers\.forEach/, 'playback updates visibility without rebuilding SVG every frame');
+assert.match(source, /Acak Komposisi/, 'random non-repeating composition tool is available');
+assert.match(source, /tm4AddEight/, 'batch add eight logos tool is available');
+assert.match(source, /tm4MirrorSet/, 'horizontal mirror tool is available');
+assert.match(source, /tm4RandomStyle/, 'motion and color randomizer is available');
+assert.match(source, /tm4ArrangeGrid/, 'automatic grid layout is available');
+console.log('Logo composition and playback regression checks passed.');
