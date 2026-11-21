@@ -29,7 +29,7 @@ test('illustrations contain independently animated semantic parts, not an enclos
     if (family) families.add(family[1]);
     assert.ok((svg.match(/data-part="/g) || []).length >= 5, 'concept '+i+' needs multiple semantic parts');
     assert.match(svg, /@keyframes .*float/);
-    assert.match(svg, /data-part="face|data-part="petals|data-part="wheels|data-part="main-hull|data-part="planet|data-part="head|data-part="ball|data-part="base/);
+    assert.match(svg, /data-part="face|data-part="petals|data-part="wheels|data-part="main-hull|data-part="planet|data-part="head|data-part="ball|data-part="instrument-body|data-part="vessel|data-part="base/);
     assert.doesNotMatch(svg, /<rect[^>]*(?:width="(?:100%|240)"|height="(?:100%|240)")/, 'no enclosing frame');
   }
   assert.equal(families.size, 10, 'all ten illustration families must be represented');
