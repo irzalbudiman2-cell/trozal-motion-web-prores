@@ -97,6 +97,7 @@ function svgFor(l,small=false){
   add('seams',path('M120 58 Q84 91 120 120 Q156 149 120 182 M61 120 Q92 84 120 120 Q148 156 179 120','none','#fff',5));
   add('motion-trails',path('M21 81 Q53 70 67 89 M12 106 Q39 96 58 110 M172 151 Q197 159 216 143','none',c3,6));
   add('spark',path('M185 48 L191 65 L208 71 L191 77 L185 94 L179 77 L162 71 L179 65Z','#ffe27a','none',0));
+  add('shine',path('M92 80 Q120 62 148 80','none','#fff',4)+circle(86,151,4,'#fff','none')+circle(154,91,4,'#fff','none'));
  } else if(family===8){ // instruments / food / crafted objects
   if(seed%2===0){
    add('instrument-body',path('M105 52 Q85 49 83 74 L91 157 Q120 190 149 157 L157 74 Q155 49 135 52Z',c1));
