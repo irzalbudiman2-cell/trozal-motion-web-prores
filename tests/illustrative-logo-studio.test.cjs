@@ -27,9 +27,11 @@ test('illustrations contain independently animated semantic parts, not an enclos
     (x,y,w,h,fill) => '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="'+fill+'"/>'
   );
   const families = new Set();
+  const uniqueArtwork = new Set();
   let minParts = Infinity;
   for (let i = 0; i < 1500; i++) {
-    const svg = svgFor({ logoIndex:i, id:'test'+i, name:'Concept '+i, color:'#ffbd45', accent:'#55c7dc', style:'Flat Color' });
+    const svg = svgFor({ logoIndex:i, id:'same', name:'Same concept', color:'#ffbd45', accent:'#55c7dc', style:'Flat Color' });
+    uniqueArtwork.add(svg);
     const family = svg.match(/data-illustration-family="(\d+)"/);
     if (family) families.add(family[1]);
     const parts = (svg.match(/data-part="/g) || []).length;
@@ -38,6 +40,7 @@ test('illustrations contain independently animated semantic parts, not an enclos
     assert.match(svg, /@keyframes .*float/);
     assert.doesNotMatch(svg, /<rect[^>]*(?:width="(?:100%|240)"|height="(?:100%|240)")/, 'no enclosing frame');
   }
-  assert.equal(families.size, 10, 'all ten illustration families must be represented');
+  assert.equal(families.size, 15, 'all fifteen illustration families must be represented');
+  assert.equal(uniqueArtwork.size, 1500, 'all 1,500 concepts must render structurally distinct artwork, not only unique labels or IDs');
   assert.ok(minParts >= 5);
 });

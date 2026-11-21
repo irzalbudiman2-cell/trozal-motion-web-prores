@@ -13,6 +13,7 @@ on:
       - fix/metadata-copy-clear-actions-2026-11-18
       - feature/ollama-adaptive-render-memory-2026-11-18
       - feature/original-content-ip-panel-2026-11-18
+      - feature/ollama-illustration-catalogue-1500-unique-2026-11-21
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -50,6 +51,8 @@ jobs:
           node tests/preview-proxy.test.cjs
       - name: Test spatial scene continuity ledger
         run: node tests/scene-intelligence.test.cjs
+      - name: Validate 1,500 distinct illustrated logo artworks
+        run: node tests/illustrative-logo-studio.test.cjs
       - name: Validate inline JavaScript syntax
         shell: bash
         run: |
