@@ -9,6 +9,7 @@ on:
       - 'index.html'
       - 'render-frame-store.js'
       - 'logo-studio.js'
+      - 'icon-logo-motion-studio.js'
       - 'tests/logo-studio-contract.test.cjs'
       - 'tests/render-frame-store.test.cjs'
       - '.github/workflows/build-prores-pages.yml'
@@ -54,6 +55,7 @@ jobs:
           cp render-memory-manager.js site/render-memory-manager.js
           cp render-frame-store.js site/render-frame-store.js
           cp logo-studio.js site/logo-studio.js
+          cp icon-logo-motion-studio.js site/icon-logo-motion-studio.js
           touch site/.nojekyll
 
       - name: Validate inline JavaScript syntax
@@ -173,6 +175,18 @@ jobs:
           test -s site/index.html
           test -s site/logo-studio.js
           node --check site/logo-studio.js
+          test -s site/icon-logo-motion-studio.js
+          node --check site/icon-logo-motion-studio.js
+          node - <<'NODE'
+          const fs = require('fs');
+          const source = fs.readFileSync('site/icon-logo-motion-studio.js', 'utf8');
+          const match = source.match(/const motifs=\[([\s\S]*?)\];\s*const styles=/);
+          if (!match) throw new Error('Icon catalogue not found');
+          const count = (match[1].match(/\[[^\[\]]*\]/g) || []).length;
+          if (count !== 180) throw new Error('Expected 180 base motifs, found ' + count);
+          if (!source.includes("const styles=['Flat Color','Outline','Duotone','Gradient','3D Soft','Glass','Neon','Paper Cut','Geometric']")) throw new Error('Nine style treatments missing');
+          console.log('Verified 180 motifs × 9 treatments = 1620 icon/logo choices.');
+          NODE
           test -s site/render-frame-store.js
           test -s site/vendor/ffmpeg/worker.js
           test -s site/vendor/prores-core/ffmpeg-core.js
