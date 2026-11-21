@@ -83,7 +83,7 @@ jobs:
           NODE
 
       - name: Test render frame store and Logo Studio contract
-        run: node --test tests/render-frame-store.test.cjs tests/logo-studio-contract.test.cjs
+        run: node --test tests/render-frame-store.test.cjs tests/logo-studio-contract.test.cjs tests/illustrative-logo-studio.test.cjs
 
       - name: Vendor FFmpeg worker package and JSZip locally
         shell: bash
