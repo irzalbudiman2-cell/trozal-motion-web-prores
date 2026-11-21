@@ -1,0 +1,11 @@
+const fs = require('node:fs');
+const assert = require('node:assert/strict');
+const source = fs.readFileSync('logo-studio.js', 'utf8');
+const html = fs.readFileSync('index.html', 'utf8');
+assert.equal((source.match(/\{id:'[^']+'/g) || []).length, 16, 'Expected 16 independent logo templates');
+assert.match(source, /function insertIntoCanvas\(\)/, 'Canvas insertion handler must exist');
+assert.match(source, /input\.dispatchEvent\(new Event\('change'/, 'Canvas insertion must use the existing asset import flow');
+assert.match(source, /Masukkan ke Canvas 2D/, 'Canvas insertion action must be visible');
+assert.match(source, /getActiveTemplate/, 'Independent logo API must expose the active template');
+assert.match(html, /src=["']\.\/logo-studio\.js["']/, 'Ollama app must load Logo Studio');
+console.log('Logo Studio contract: PASS');
