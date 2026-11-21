@@ -14,7 +14,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: ollama-logo-studio-\${{ github.event.pull_request.number || github.ref }}
+  group: ollama-logo-studio-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
