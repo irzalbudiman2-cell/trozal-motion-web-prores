@@ -53,6 +53,8 @@ jobs:
         run: node tests/scene-intelligence.test.cjs
       - name: Validate 1,500 distinct illustrated logo artworks
         run: node tests/illustrative-logo-studio.test.cjs
+      - name: Validate logo composition and playback regression
+        run: node tests/logo-composition-playback.test.cjs
       - name: Validate inline JavaScript syntax
         shell: bash
         run: |
