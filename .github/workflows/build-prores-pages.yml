@@ -180,12 +180,17 @@ jobs:
           node - <<'NODE'
           const fs = require('fs');
           const source = fs.readFileSync('site/icon-logo-motion-studio.js', 'utf8');
-          const match = source.match(/const motifs=\[([\s\S]*?)\];\s*const styles=/);
-          if (!match) throw new Error('Icon catalogue not found');
-          const count = (match[1].match(/\[[^\[\]]*\]/g) || []).length;
-          if (count !== 180) throw new Error('Expected 180 base motifs, found ' + count);
-          if (!source.includes("const styles=['Flat Color','Outline','Duotone','Gradient','3D Soft','Glass','Neon','Paper Cut','Geometric']")) throw new Error('Nine style treatments missing');
-          console.log('Verified 180 motifs × 9 treatments = 1620 icon/logo choices.');
+          const countMatch = source.match(/const motifs=Array\.from\(\{length:(\d+)\}/);
+          if (!countMatch || Number(countMatch[1]) !== 1500) throw new Error('Expected exactly 1,500 generated logo concepts');
+          const domainsMatch = source.match(/const logoDomains=\[([\s\S]*?)\];/);
+          if (!domainsMatch || (domainsMatch[1].match(/'[^']+'/g) || []).length !== 30) throw new Error('Expected 30 conceptual logo domains');
+          const nameA = source.match(/const nameA=\[([^\]]+)\]/);
+          const nameB = source.match(/const nameB=\[([^\]]+)\]/);
+          if (!nameA || !nameB) throw new Error('Unique logo naming dictionaries missing');
+          const svgFn = source.match(/function svgFor\([\s\S]*?\n}\nfunction motionCSS/);
+          if (!svgFn || !svgFn[0].includes('<path') || svgFn[0].includes('<rect')) throw new Error('Logo artwork must use frameless SVG paths');
+          if (!source.includes('String(i+1).padStart(4')) throw new Error('Sequential unique logo identifiers missing');
+          console.log('Verified 1,500 procedural logo concepts across 30 domains with frameless SVG path artwork.');
           NODE
           test -s site/render-frame-store.js
           test -s site/vendor/ffmpeg/worker.js
