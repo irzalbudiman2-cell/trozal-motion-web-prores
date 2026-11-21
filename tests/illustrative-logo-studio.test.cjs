@@ -15,9 +15,9 @@ test('illustrative catalogue keeps 1,500 concepts across 30 meaningful domains',
 });
 
 test('illustrations contain independently animated semantic parts, not an enclosing frame', () => {
-  const match = source.match(/function svgFor(l,small=false)\{[\s\S]*?\n\}\nfunction motionCSS/);
+  const match = source.match(/function svgFor(l,small=false)\{[\s\S]*?\n\}\nfunction rectSvg/);
   assert.ok(match, 'svgFor function must exist');
-  const fnSource = match[0].replace(/\nfunction motionCSS$/, '');
+  const fnSource = match[0].replace(/\nfunction rectSvg$/, '');
   const svgFor = new Function('esc', 'rectSvg', 'return (' + fnSource + ');')(
     value => String(value).replace(/[&<>"']/g, ''),
     (x,y,w,h,fill) => '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="'+fill+'"/>'
