@@ -4,6 +4,7 @@
 import base64
 import io
 import os
+import re
 import sys
 import threading
 from pathlib import Path
@@ -21,6 +22,10 @@ CONFIG = "configs/sam2.1/sam2.1_hiera_t.yaml"
 MAX_SIDE = int(os.environ.get("TROZAL_RIG_MAX_SIDE", "1024"))
 MAX_MASKS = int(os.environ.get("TROZAL_RIG_MAX_MASKS", "14"))
 PORT = int(os.environ.get("TROZAL_RIG_PORT", "11436"))
+# Allow the stable app origins plus Vercel preview deployments. Vercel assigns
+# a new hostname to preview builds, so a fixed allowlist silently breaks
+# browser-to-loopback requests after a deployment.
+VERCEL_ORIGIN = re.compile(r"^https://(?:[a-z0-9-]+\\.)*vercel\\.app$", re.IGNORECASE)
 ALLOWED_ORIGINS = [
     "https://irzalbudiman2-cell.github.io",
     "https://trozal-motion-web-prores.vercel.app",
@@ -28,13 +33,28 @@ ALLOWED_ORIGINS = [
     "https://raw.githack.com",
     "http://127.0.0.1:11435",
     "http://localhost:11435",
+    VERCEL_ORIGIN,
 ]
 
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 32 * 1024 * 1024
 CORS(app, resources={r"/api/*": {"origins": ALLOWED_ORIGINS,
                                   "methods": ["GET", "POST", "OPTIONS"],
-                                  "allow_headers": ["Content-Type"]}})
+                                  "allow_headers": ["Content-Type"],
+                                  "max_age": 600}})
+
+
+@app.after_request
+def allow_local_network_preflight(response):
+    # Chromium may send this header when a hosted page calls a loopback API.
+    # Flask-CORS still restricts Access-Control-Allow-Origin to ALLOWED_ORIGINS.
+    origin = request.headers.get("Origin", "")
+    if request.headers.get("Access-Control-Request-Private-Network", "").lower() == "true":
+        origin_allowed = origin in ALLOWED_ORIGINS or bool(VERCEL_ORIGIN.fullmatch(origin))
+        if origin_allowed:
+            response.headers["Access-Control-Allow-Private-Network"] = "true"
+    return response
+
 
 _predictor = None
 _device = "unloaded"
