@@ -121,8 +121,9 @@
     async function check() {
       try {
         const result = await call('/api/health');
-        status('SAM 2.1 Tiny siap · ' + (result.device || 'auto') + ' · ' +
-          (result.model_loaded ? 'model aktif' : 'model dimuat saat segmentasi pertama') + '.');
+        const device = result.device === 'unloaded' ? 'perangkat dipilih otomatis saat inferensi' : (result.device || 'auto');
+        status('SAM 2.1 Tiny terhubung · ' + device + ' · ' +
+          (result.model_loaded ? 'model sudah aktif' : 'checkpoint terdeteksi; model dimuat saat segmentasi pertama') + '.');
         return result;
       } catch (error) {
         status('SAM 2.1 belum aktif: ' + error.message + ' Jalankan TROZAL_UNIVERSAL_RIG_START.bat.');
@@ -267,7 +268,30 @@
       try { await addAt(x, y); }
       catch (error) { status('Gagal memisahkan titik: ' + error.message); }
     });
-    $('itcvRigCheck').addEventListener('click', () => check().catch(() => {}));
+    // Delegate the health-check click so it still works if Mode 5 is mounted
+    // after this controller is created. Always give immediate visible feedback.
+    document.addEventListener('click', async event => {
+      const button = event.target && event.target.closest ? event.target.closest('#itcvRigCheck') : null;
+      if (!button) return;
+      event.preventDefault();
+      if (button.dataset.checking === '1') return;
+      button.dataset.checking = '1';
+      button.disabled = true;
+      const previous = button.textContent;
+      button.textContent = 'Memeriksa SAM 2.1...';
+      status('Menghubungkan ke server lokal SAM 2.1 di http://127.0.0.1:11436/api/health ...');
+      try {
+        await check();
+        button.textContent = 'SAM 2.1 Terhubung';
+      } catch (error) {
+        button.textContent = 'Cek Segmenter Lokal';
+        status('Pemeriksaan SAM 2.1 gagal: ' + error.message + ' Pastikan jendela START tetap terbuka.');
+      } finally {
+        button.disabled = false;
+        delete button.dataset.checking;
+        if (button.textContent === 'Memeriksa SAM 2.1...') button.textContent = previous;
+      }
+    });
     $('itcvRigAuto').addEventListener('click', () => autoSegment().catch(error => status('Segmentasi gagal: ' + error.message)));
     $('itcvRigPickMode').addEventListener('click', () => {
       if (!image) { status('Pilih gambar dahulu.'); return; }
