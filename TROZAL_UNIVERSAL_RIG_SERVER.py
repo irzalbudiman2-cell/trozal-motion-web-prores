@@ -145,6 +145,14 @@ def _predict_masks(image, points, labels):
     return masks, scores
 
 
+@app.after_request
+def allow_loopback_private_network(response):
+    response.headers["Access-Control-Allow-Private-Network"] = "true"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+    response.headers["Vary"] = "Origin"
+    return response
+
+
 @app.get("/api/health")
 def health():
     return jsonify({
