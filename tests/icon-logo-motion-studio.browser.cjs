@@ -46,6 +46,7 @@ const { chromium } = require('playwright');
     await page.locator('[data-layer-lock="'+firstLayerId+'"]').click();
     assert.match(await page.locator('#tm4Stage [data-layer="'+firstLayerId+'"]').getAttribute('style'), /pointer-events:none/, 'locked layers cannot be selected or dragged in preview');
     await page.locator('[data-layer-lock="'+firstLayerId+'"]').click();
+    await page.locator('.tm4-layer[data-select="'+firstLayerId+'"]').click();
     assert.equal(await page.locator('#tm4FlipX').count(),1,'horizontal flip control is available in OLLAMA');
     assert.equal(await page.locator('#tm4FlipY').count(),1,'vertical flip control is available in OLLAMA');
     await page.locator('#tm4FlipX').check();
