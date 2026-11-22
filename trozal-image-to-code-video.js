@@ -23,7 +23,7 @@ if(window.TROZALUniversalRig){
  });
 }
 function showScenePlan(scene){scenePlan=scene||null;$('itcvScenePlan').value=scene?JSON.stringify(scene,null,2):'';}
-function mode(on){document.body.classList.toggle('itcv-mode-active',!!on);const app=document.querySelector('.app');if(app)app.style.display=on?'none':'';ws.style.display=on?'block':'none';document.body.style.overflow=on?'hidden':'';if(on){ws.scrollTop=0;refreshVisionModels();}}
+function mode(on){document.body.classList.toggle('itcv-mode-active',!!on);const app=document.querySelector('.app');if(app)app.style.display=on?'none':'';ws.style.display=on?'block':'none';document.body.style.overflow=on?'hidden':'';if(on){ws.scrollTop=0;refreshVisionModels();if(rigController)rigController.check().catch(()=>{});}}
 const VISION_HINTS=['qwen2.5vl','qwen2-vl','qwen3-vl','gemma3','llava','minicpm-v','moondream','granite3.2-vision','internvl','llama3.2-vision'];
 let visionModels=[];
 function visionBase(){if(typeof window.trozalVisionBaseUrl!=='function')throw new Error('Bridge Ollama belum terhubung. Jalankan bridge lokal TROZAL terlebih dahulu.');const base=String(window.trozalVisionBaseUrl());return base.endsWith('/')?base.slice(0,-1):base}
