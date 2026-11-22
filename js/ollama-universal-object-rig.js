@@ -171,7 +171,7 @@
           part.enabled = enabled.checked; drawSource();
           $('itcvRigCount').textContent = segments.filter(p => p.enabled).length + ' / ' + segments.length + ' aktif';
         });
-        const name = document.createElement('input'); name.value = part.name || ('Komponen ' + (index + 1));
+        const name = document.createElement('input'); name.type = 'text'; name.value = part.name || ('Komponen ' + (index + 1));
         name.title = 'Nama komponen'; name.addEventListener('change', () => { part.name = name.value.slice(0, 60); drawSource(); });
         const motion = document.createElement('select');
         MOTIONS.forEach(entry => { const option = document.createElement('option'); option.value = entry[0]; option.textContent = entry[1]; motion.append(option); });
