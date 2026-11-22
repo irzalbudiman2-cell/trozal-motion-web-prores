@@ -24,6 +24,7 @@ PORT = int(os.environ.get("TROZAL_RIG_PORT", "11436"))
 ALLOWED_ORIGINS = [
     "https://irzalbudiman2-cell.github.io",
     "https://trozal-motion-web-prores.vercel.app",
+    "https://trozal-motion-web-prores-git-ollama-direct-web-7718e1-trozal-id.vercel.app",
     "https://raw.githack.com",
     "http://127.0.0.1:11435",
     "http://localhost:11435",
