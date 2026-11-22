@@ -25,6 +25,10 @@ assert.match(start, /TROZAL_RIG_PORT=11436/, 'Local segmenter should use dedicat
 for (const id of ['itcvRigCheck','itcvRigAuto','itcvRigSource','itcvRigPickMode','itcvRigBuild','itcvRigParts']) {
   assert.ok(mode5.includes(id), 'Missing Universal Rig control: ' + id);
 }
+assert.match(ui, /document\.addEventListener\('click', async event =>/,'Health check must use delegated click handling for dynamically mounted Mode 5 UI');
+assert.match(ui, /Memeriksa SAM 2\.1/,'Health check must show immediate pending feedback');
+assert.match(ui, /SAM 2\.1 Terhubung/,'Health check must show visible success feedback');
+assert.match(ui, /checkpoint terdeteksi; model dimuat saat segmentasi pertama/,'Unloaded model state must be explained as lazy loading, not an error');
 assert.match(ui, /\/api\/segment\/auto/);
 assert.match(ui, /\/api\/segment\/point/);
 assert.match(ui, /\/api\/inpaint/);
