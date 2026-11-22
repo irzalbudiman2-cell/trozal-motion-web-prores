@@ -189,16 +189,16 @@
       const bg = document.createElement('canvas'); bg.width = imageSize.width; bg.height = imageSize.height;
       bg.getContext('2d').drawImage(backgroundImage, 0, 0, bg.width, bg.height);
       const parts = [];
+      const sourceCanvas = document.createElement('canvas'); sourceCanvas.width = imageSize.width; sourceCanvas.height = imageSize.height;
+      const sourceContext = sourceCanvas.getContext('2d', { willReadFrequently: true });
+      sourceContext.drawImage(image, 0, 0, sourceCanvas.width, sourceCanvas.height);
+      const sourcePixels = sourceContext.getImageData(0, 0, sourceCanvas.width, sourceCanvas.height);
       for (const segment of selected) {
         const maskImage = await loadImage(segment.mask);
         const maskCanvas = document.createElement('canvas'); maskCanvas.width = imageSize.width; maskCanvas.height = imageSize.height;
         const maskContext = maskCanvas.getContext('2d', { willReadFrequently: true });
         maskContext.drawImage(maskImage, 0, 0, maskCanvas.width, maskCanvas.height);
         const maskPixels = maskContext.getImageData(0, 0, maskCanvas.width, maskCanvas.height).data;
-        const sourceCanvas = document.createElement('canvas'); sourceCanvas.width = imageSize.width; sourceCanvas.height = imageSize.height;
-        const sourceContext = sourceCanvas.getContext('2d', { willReadFrequently: true });
-        sourceContext.drawImage(image, 0, 0, sourceCanvas.width, sourceCanvas.height);
-        const sourcePixels = sourceContext.getImageData(0, 0, sourceCanvas.width, sourceCanvas.height);
         const bx = Math.max(0, Math.floor(segment.bboxOriginal[0]));
         const by = Math.max(0, Math.floor(segment.bboxOriginal[1]));
         const bw = Math.max(1, Math.min(imageSize.width - bx, Math.ceil(segment.bboxOriginal[2])));
