@@ -260,6 +260,9 @@ jobs:
           })().catch(e => { console.error(e); process.exit(1); });
           NODE
 
+      - name: Test OLLAMA Universal Object Rig, SAM masks and self-contained export
+        run: node tests/ollama-universal-rig.browser.cjs
+
       - name: Validate scene intelligence beat planning and continuity guidance
         run: node tests/scene-intelligence.test.cjs
       - name: Validate adaptive render advisor recommendations and safe apply
