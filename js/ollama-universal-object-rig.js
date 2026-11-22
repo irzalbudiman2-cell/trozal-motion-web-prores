@@ -173,7 +173,11 @@
         const motion = document.createElement('select');
         MOTIONS.forEach(entry => { const option = document.createElement('option'); option.value = entry[0]; option.textContent = entry[1]; motion.append(option); });
         motion.value = part.motion || 'float'; motion.addEventListener('change', () => { part.motion = motion.value; });
-        row.append(enabled, name, motion); host.append(row);
+        const parent = document.createElement('select'); parent.title = 'Parent / bagian induk';
+        const rootOption = document.createElement('option'); rootOption.value = ''; rootOption.textContent = 'Root'; parent.append(rootOption);
+        segments.filter(item => item.id !== part.id).forEach(item => { const option = document.createElement('option'); option.value = item.name; option.textContent = item.name; parent.append(option); });
+        parent.value = part.parent || ''; parent.addEventListener('change', () => { part.parent = parent.value; });
+        row.append(enabled, name, motion, parent); host.append(row);
       });
       $('itcvRigCount').textContent = segments.filter(p => p.enabled).length + ' / ' + segments.length + ' komponen aktif';
     }
