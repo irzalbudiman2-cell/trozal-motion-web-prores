@@ -64,14 +64,14 @@ def _load_predictor(force_cpu=False):
         return _predictor
 
 
-def _image_from_payload(value):
+def _image_from_payload(value, max_side=MAX_SIDE):
     if not isinstance(value, str):
         raise ValueError("Field image harus berupa data URL base64.")
     encoded = value.split(",", 1)[1] if value.startswith("data:") and "," in value else value
     raw = base64.b64decode(encoded, validate=True)
     image = Image.open(io.BytesIO(raw)).convert("RGB")
     original_size = image.size
-    scale = min(1.0, MAX_SIDE / max(image.size))
+    scale = min(1.0, max_side / max(image.size))
     if scale < 1:
         image = image.resize((max(1, round(image.width * scale)),
                               max(1, round(image.height * scale))), Image.Resampling.LANCZOS)
@@ -250,7 +250,8 @@ def segment_point():
 @app.post("/api/inpaint")
 def inpaint():
     body = request.get_json(force=True)
-    image, _ = _image_from_payload(body.get("image"))
+    inpaint_max_side = int(os.environ.get("TROZAL_RIG_INPAINT_MAX_SIDE", "2048"))
+    image, _ = _image_from_payload(body.get("image"), max_side=inpaint_max_side)
     width, height = image.size
     mask_urls = body.get("masks") or []
     if not mask_urls:
