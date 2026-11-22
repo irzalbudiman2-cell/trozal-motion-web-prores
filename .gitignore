@@ -1,0 +1,7 @@
+# Local Universal Object Rig runtime (never commit model weights or Python environments)
+.trozal-rig-venv/
+sam2-runtime/
+sam2-runtime.zip
+checkpoints/
+__pycache__/
+*.py[cod]
