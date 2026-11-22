@@ -92,7 +92,7 @@ const { chromium } = require('playwright');
 
     await page.locator('#itcvRigAuto').click();
     await page.waitForFunction(() => document.querySelector('#itcvRigParts input[type="text"]')?.value === 'Roda depan', { timeout: 20000 });
-    assert.equal(await page.locator('#itcvRigParts select').inputValue(), 'wheel');
+    assert.equal(await page.locator('#itcvRigParts select').first().inputValue(), 'wheel');
 
     await page.locator('#itcvRigBuild').click();
     await page.waitForFunction(() => document.getElementById('itcvHtml')?.value.includes('"universalRig"') &&
