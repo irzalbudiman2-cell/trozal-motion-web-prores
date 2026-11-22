@@ -20,6 +20,7 @@ call ".trozal-rig-venv\Scripts\activate.bat"
 set "TROZAL_RIG_PORT=11436"
 set "TROZAL_RIG_MAX_SIDE=1024"
 set "TROZAL_RIG_MAX_MASKS=14"
+set "TROZAL_RIG_INPAINT_MAX_SIDE=2048"
 echo ==========================================================
 echo   TROZAL UNIVERSAL OBJECT RIG SERVER
 echo ==========================================================
