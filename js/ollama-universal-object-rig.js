@@ -199,15 +199,15 @@
       const parentById = new Map();
       const selectedIds = new Set(selected.map(part => part.id));
       for (const segment of selected) {
-        let parent = segments.find(item => item.id !== segment.id && item.name === segment.parent && selectedIds.has(item.id));
-        const seen = new Set([segment.id]);
-        while (parent) {
-          if (seen.has(parent.id)) { parent = null; break; }
-          seen.add(parent.id);
-          parent = segments.find(item => item.id === parent.parent);
-        }
         const directParent = segments.find(item => item.id !== segment.id && item.name === segment.parent && selectedIds.has(item.id));
-        parentById.set(segment.id, parent === null && directParent ? '' : (directParent ? directParent.id : ''));
+        const seen = new Set([segment.id]);
+        let cursor = directParent, hasCycle = false;
+        while (cursor) {
+          if (seen.has(cursor.id)) { hasCycle = true; break; }
+          seen.add(cursor.id);
+          cursor = segments.find(item => item.name === cursor.parent && selectedIds.has(item.id));
+        }
+        parentById.set(segment.id, hasCycle ? '' : (directParent ? directParent.id : ''));
       }
       const sourceCanvas = document.createElement('canvas'); sourceCanvas.width = imageSize.width; sourceCanvas.height = imageSize.height;
       const sourceContext = sourceCanvas.getContext('2d', { willReadFrequently: true });
