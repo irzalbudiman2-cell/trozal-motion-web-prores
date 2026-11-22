@@ -17,12 +17,22 @@
       if (opt.onStatus) opt.onStatus(String(message || ''));
     };
     const call = async (path, body) => {
-      const response = await fetch(API + path, {
-        method: body ? 'POST' : 'GET',
-        headers: body ? { 'Content-Type': 'application/json' } : undefined,
-        body: body ? JSON.stringify(body) : undefined,
-        cache: 'no-store'
-      });
+      let response;
+      try {
+        response = await fetch(API + path, {
+          method: body ? 'POST' : 'GET',
+          mode: 'cors',
+          credentials: 'omit',
+          headers: body ? { 'Content-Type': 'application/json' } : undefined,
+          body: body ? JSON.stringify(body) : undefined,
+          cache: 'no-store'
+        });
+      } catch (error) {
+        if (error && error.name === 'TypeError') {
+          throw new Error('Browser menolak koneksi ke server lokal (CORS/izin jaringan lokal). Perbarui server TROZAL, restart START.bat, lalu izinkan akses jaringan lokal untuk domain aplikasi.');
+        }
+        throw error;
+      }
       let result;
       try { result = await response.json(); }
       catch (_) { throw new Error('SAM 2 mengirim respons yang tidak dapat dibaca.'); }
@@ -121,6 +131,7 @@
     async function check() {
       try {
         const result = await call('/api/health');
+        if (result.checkpoint === false) throw new Error('API aktif, tetapi checkpoint sam2.1_hiera_tiny.pt tidak ditemukan.');
         const device = result.device === 'unloaded' ? 'perangkat dipilih otomatis saat inferensi' : (result.device || 'auto');
         status('SAM 2.1 Tiny terhubung · ' + device + ' · ' +
           (result.model_loaded ? 'model sudah aktif' : 'checkpoint terdeteksi; model dimuat saat segmentasi pertama') + '.');
