@@ -108,39 +108,40 @@ def _iou(a, b):
     return float(intersection / union) if union else 0.0
 
 
-def _predict_masks(image, points, labels):
-    predictor = _load_predictor()
-    array = np.asarray(image)
-    try:
-        import torch
-        with torch.inference_mode():
-            if _device == "cuda":
-                with torch.autocast(device_type="cuda", dtype=torch.float16):
-                    predictor.set_image(array)
-                    masks, scores, _ = predictor.predict(
-                        point_coords=np.asarray(points, dtype=np.float32),
-                        point_labels=np.asarray(labels, dtype=np.int32),
-                        multimask_output=True,
-                    )
-            else:
-                predictor.set_image(array)
-                masks, scores, _ = predictor.predict(
+def _set_image(image, force_cpu=False):
+    predictor = _load_predictor(force_cpu=force_cpu)
+    predictor.set_image(np.asarray(image))
+    return predictor
+
+
+def _predict_loaded(predictor, points, labels):
+    import torch
+    with torch.inference_mode():
+        if _device == "cuda":
+            with torch.autocast(device_type="cuda", dtype=torch.float16):
+                return predictor.predict(
                     point_coords=np.asarray(points, dtype=np.float32),
                     point_labels=np.asarray(labels, dtype=np.int32),
                     multimask_output=True,
-                )
+                )[:2]
+        return predictor.predict(
+            point_coords=np.asarray(points, dtype=np.float32),
+            point_labels=np.asarray(labels, dtype=np.int32),
+            multimask_output=True,
+        )[:2]
+
+
+def _predict_masks(image, points, labels):
+    predictor = _set_image(image)
+    try:
+        masks, scores = _predict_loaded(predictor, points, labels)
     except Exception as exc:
         if _device != "cuda" or ("out of memory" not in str(exc).lower() and "cuda" not in str(exc).lower()):
             raise
+        import torch
         torch.cuda.empty_cache()
-        predictor = _load_predictor(force_cpu=True)
-        with torch.inference_mode():
-            predictor.set_image(array)
-            masks, scores, _ = predictor.predict(
-                point_coords=np.asarray(points, dtype=np.float32),
-                point_labels=np.asarray(labels, dtype=np.int32),
-                multimask_output=True,
-            )
+        predictor = _set_image(image, force_cpu=True)
+        masks, scores = _predict_loaded(predictor, points, labels)
     return masks, scores
 
 
@@ -166,10 +167,28 @@ def segment_auto():
     axes_x = [0.16, 0.33, 0.50, 0.67, 0.84]
     axes_y = [0.18, 0.38, 0.58, 0.78]
     candidates = []
-    for gy in axes_y:
-        for gx in axes_x:
-            points = [[gx * width, gy * height]]
-            masks, scores = _predict_masks(image, points, [1])
+    grid = [[[gx * width, gy * height]] for gy in axes_y for gx in axes_x]
+    try:
+        predictor = _set_image(image)
+        for points in grid:
+            masks, scores = _predict_loaded(predictor, points, [1])
+            for mask, score in zip(masks, scores):
+                binary = np.asarray(mask).squeeze() > 0
+                ratio = float(binary.mean())
+                if ratio < 0.002 or ratio > 0.78 or float(score) < 0.62:
+                    continue
+                if any(_iou(binary, item["binary"]) > 0.86 for item in candidates):
+                    continue
+                candidates.append({"binary": binary, "score": float(score)})
+    except Exception as exc:
+        if _device != "cuda" or ("out of memory" not in str(exc).lower() and "cuda" not in str(exc).lower()):
+            raise
+        import torch
+        torch.cuda.empty_cache()
+        candidates = []
+        predictor = _set_image(image, force_cpu=True)
+        for points in grid:
+            masks, scores = _predict_loaded(predictor, points, [1])
             for mask, score in zip(masks, scores):
                 binary = np.asarray(mask).squeeze() > 0
                 ratio = float(binary.mean())
