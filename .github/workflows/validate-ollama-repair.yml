@@ -64,6 +64,8 @@ jobs:
         run: node tests/illustrative-logo-studio.test.cjs
       - name: Validate logo composition and playback regression
         run: node tests/logo-composition-playback.test.cjs
+      - name: Validate Mode 5 standalone JavaScript
+        run: node --check trozal-image-to-code-video.js
       - name: Validate inline JavaScript syntax
         shell: bash
         run: |
