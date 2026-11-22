@@ -15,6 +15,8 @@ const { chromium } = require('playwright');
     await page.click('#tm4ModeBtn');
     await page.waitForSelector('#tm4Overlay.open');
     assert.equal(await page.locator('#tm4Catalog .tm4-item').count(), 48, 'catalog renders one lightweight page of 48 concepts');
+    const thumbBox = await page.locator('#tm4Catalog .tm4-thumb').first().evaluate(el => ({width: getComputedStyle(el).width, height: getComputedStyle(el).height}));
+    assert.deepEqual(thumbBox, {width:'58px',height:'58px'}, 'catalog thumbnails stay compact instead of expanding to intrinsic SVG dimensions');
     const catalogNames = await page.locator('#tm4Catalog .tm4-name').allTextContents();
     assert.equal(new Set(catalogNames).size, 48, 'visible logo names are unique and non-repeating');
     assert.match(await page.locator('#tm4CatalogPager').innerText(), /Halaman 1 \/ 32/);
