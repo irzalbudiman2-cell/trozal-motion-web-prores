@@ -25,7 +25,7 @@ PORT = int(os.environ.get("TROZAL_RIG_PORT", "11436"))
 # Allow the stable app origins plus Vercel preview deployments. Vercel assigns
 # a new hostname to preview builds, so a fixed allowlist silently breaks
 # browser-to-loopback requests after a deployment.
-VERCEL_ORIGIN = re.compile(r"^https://(?:[a-z0-9-]+\.)*vercel\.app$", re.IGNORECASE)
+VERCEL_ORIGIN = re.compile(r"^https://trozal-motion-web-prores(?:-[a-z0-9-]+)*-trozal-id\.vercel\.app$", re.IGNORECASE)
 ALLOWED_ORIGINS = [
     "https://irzalbudiman2-cell.github.io",
     "https://trozal-motion-web-prores.vercel.app",
