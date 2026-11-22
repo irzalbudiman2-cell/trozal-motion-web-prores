@@ -39,7 +39,7 @@ const { chromium } = require('playwright');
         'Access-Control-Allow-Headers': 'Content-Type', 'Access-Control-Allow-Private-Network': 'true'
       }});
       if (req.url().endsWith('/api/tags')) return route.fulfill({
-        status: 200, contentType: 'application/json',
+        status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' },
         body: JSON.stringify({ models: [{ name: 'qwen2.5vl:3b' }] })
       });
       if (req.url().endsWith('/api/chat')) {
@@ -48,7 +48,7 @@ const { chromium } = require('playwright');
         const content = prompt.includes('universal object-motion director')
           ? JSON.stringify({ parts: [{ segmentId: 'sam-1', name: 'Roda depan', category: 'vehicle', motion: 'wheel', pivotX: 0.25, pivotY: 0.62, parent: 'Bodi mobil' }] })
           : JSON.stringify({ description: 'Product vehicle motion', layers: [], components: [{ name: 'Roda depan', category: 'vehicle', motion: 'wheel' }] });
-        return route.fulfill({ status: 200, contentType: 'application/json',
+        return route.fulfill({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' },
           body: JSON.stringify({ message: { role: 'assistant', content } }) });
       }
       return route.fulfill({ status: 404, body: '{"error":"unexpected Ollama route"}' });
@@ -61,18 +61,18 @@ const { chromium } = require('playwright');
         'Access-Control-Allow-Headers': 'Content-Type', 'Access-Control-Allow-Private-Network': 'true'
       }});
       if (req.url().endsWith('/api/health')) return route.fulfill({
-        status: 200, contentType: 'application/json',
+        status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' },
         body: JSON.stringify({ ok: true, engine: 'SAM 2.1 Hiera Tiny', device: 'cpu', model_loaded: true })
       });
       if (req.url().endsWith('/api/segment/auto')) return route.fulfill({
-        status: 200, contentType: 'application/json',
+        status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' },
         body: JSON.stringify({ ok: true, width: 64, height: 64, device: 'cpu', segments: [{
           id: 'sam-1', score: .96, area: 960, areaRatio: .23,
           bbox: [16, 18, 32, 30], mask: assets.mask
         }] })
       });
       if (req.url().endsWith('/api/inpaint')) return route.fulfill({
-        status: 200, contentType: 'application/json',
+        status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' },
         body: JSON.stringify({ ok: true, background: assets.image, width: 64, height: 64 })
       });
       return route.fulfill({ status: 404, body: '{"error":"unexpected SAM route"}' });
