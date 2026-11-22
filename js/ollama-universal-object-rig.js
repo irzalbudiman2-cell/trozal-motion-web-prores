@@ -130,6 +130,8 @@
       }
     }
     async function autoSegment() {
+      const autoButton = $('itcvRigAuto'); if (autoButton) autoButton.disabled = true;
+      try {
       if (!imageUrl) imageUrl = await getImageUrl();
       if (!imageUrl) throw new Error('Pilih gambar sumber terlebih dahulu.');
       if (!image) await setImage(imageUrl);
@@ -144,6 +146,7 @@
       catch (error) { status('Mask berhasil. Label AI belum tersedia: ' + error.message + ' Nama komponen dapat diedit manual.'); }
       renderList(); drawSource(); $('itcvRigBuild').disabled = false;
       status(segments.length + ' komponen ditemukan · ' + (result.device || service.device || 'SAM 2'));
+      } finally { if (autoButton) autoButton.disabled = false; }
     }
     async function addAt(x, y) {
       if (!imageUrl) imageUrl = await getImageUrl();
@@ -193,6 +196,19 @@
       const bg = document.createElement('canvas'); bg.width = imageSize.width; bg.height = imageSize.height;
       bg.getContext('2d').drawImage(backgroundImage, 0, 0, bg.width, bg.height);
       const parts = [];
+      const parentById = new Map();
+      const selectedIds = new Set(selected.map(part => part.id));
+      for (const segment of selected) {
+        let parent = segments.find(item => item.id !== segment.id && item.name === segment.parent && selectedIds.has(item.id));
+        const seen = new Set([segment.id]);
+        while (parent) {
+          if (seen.has(parent.id)) { parent = null; break; }
+          seen.add(parent.id);
+          parent = segments.find(item => item.id === parent.parent);
+        }
+        const directParent = segments.find(item => item.id !== segment.id && item.name === segment.parent && selectedIds.has(item.id));
+        parentById.set(segment.id, parent === null && directParent ? '' : (directParent ? directParent.id : ''));
+      }
       const sourceCanvas = document.createElement('canvas'); sourceCanvas.width = imageSize.width; sourceCanvas.height = imageSize.height;
       const sourceContext = sourceCanvas.getContext('2d', { willReadFrequently: true });
       sourceContext.drawImage(image, 0, 0, sourceCanvas.width, sourceCanvas.height);
@@ -222,10 +238,9 @@
         const amplitude = motion === 'wheel' ? 6.283 : motion === 'hinge' ? 0.28 :
           motion === 'swing' ? 0.24 : motion === 'rotate' ? 0.35 :
           motion === 'bob' ? 0.05 : motion === 'pulse' ? 0.08 : motion === 'static' ? 0 : 0.12;
-        const parent = segments.find(item => item.name === segment.parent);
         parts.push({
           id: segment.id, name: segment.name, category: segment.category || 'other',
-          parent: parent ? parent.id : '', motion, src: crop.toDataURL('image/png'),
+          parent: parentById.get(segment.id) || '', motion, src: crop.toDataURL('image/png'),
           x: bx, y: by, w: bw, h: bh,
           pivotX: segment.pivotNormX * imageSize.width, pivotY: segment.pivotNormY * imageSize.height,
           amp: amplitude, speed: motion === 'wheel' ? 1.6 : motion === 'static' ? 0 : 0.9,
