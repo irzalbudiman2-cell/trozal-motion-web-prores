@@ -90,6 +90,10 @@ const { chromium } = require('playwright');
     await page.waitForFunction(() => document.getElementById('itcvHtml')?.value.includes('Cinematic') ||
       document.getElementById('itcvHtml')?.value.includes('universalRig'), { timeout: 20000 });
 
+    await page.locator('#itcvRigCheck').click();
+    await page.waitForFunction(() => document.getElementById('itcvRigStatus')?.textContent.includes('SAM 2.1 Tiny terhubung'), { timeout: 10000 });
+    assert.equal(await page.locator('#itcvRigCheck').textContent(), 'SAM 2.1 Terhubung');
+
     await page.locator('#itcvRigAuto').click();
     await page.waitForFunction(() => document.querySelector('#itcvRigParts input[type="text"]')?.value === 'Roda depan', { timeout: 20000 });
     assert.equal(await page.locator('#itcvRigParts select').first().inputValue(), 'wheel');
