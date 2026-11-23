@@ -100,7 +100,7 @@ const { chromium } = require('playwright');
     await page.locator('#itcvRigBuild').click();
     await page.waitForFunction(() => { const html=document.getElementById('itcvHtml')?.value||''; return html.includes('Roda depan') && html.includes('class="rig-canvas"') && html.includes('class="part part-0"') && html.includes('@keyframes trozal-part-0'); }, { timeout: 20000 });
     const html = await page.locator('#itcvHtml').inputValue();
-    assert.doesNotMatch(html, /<script\\b|\\bimport\\s*\\(/i, 'Importer-safe OLLAMA HTML must not contain JavaScript or module imports.');
+    assert.doesNotMatch(html, /<script\b|\bimport\s*\(/i, 'Importer-safe OLLAMA HTML must not contain JavaScript or module imports.');
     await page.frameLocator('#itcvPreview').locator('.part-0').waitFor({ timeout: 10000 });
     assert.notEqual(await page.frameLocator('#itcvPreview').locator('.part-0').evaluate(el => getComputedStyle(el).animationName), 'none');
     assert.deepEqual(errors, [], 'Unexpected Browser page errors');
