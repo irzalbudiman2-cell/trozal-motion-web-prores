@@ -87,8 +87,7 @@ const { chromium } = require('playwright');
     await page.waitForFunction(() => document.querySelector('#itcvThumbs img')?.complete === true);
 
     await page.locator('#itcvGenerate').click();
-    await page.waitForFunction(() => document.getElementById('itcvHtml')?.value.includes('Cinematic') ||
-      document.getElementById('itcvHtml')?.value.includes('universalRig'), { timeout: 20000 });
+    await page.waitForFunction(() => { const html=document.getElementById('itcvHtml')?.value||''; return html.includes('<!doctype html>') && html.includes('@keyframes'); }, { timeout: 20000 });
 
     await page.locator('#itcvRigCheck').click();
     await page.waitForFunction(() => document.getElementById('itcvRigStatus')?.textContent.includes('SAM 2.1 Tiny terhubung'), { timeout: 10000 });
@@ -99,14 +98,11 @@ const { chromium } = require('playwright');
     assert.equal(await page.locator('#itcvRigParts select').first().inputValue(), 'wheel');
 
     await page.locator('#itcvRigBuild').click();
-    await page.waitForFunction(() => document.getElementById('itcvHtml')?.value.includes('"universalRig"') &&
-      document.getElementById('itcvHtml')?.value.includes('Roda depan'), { timeout: 20000 });
-    await page.waitForFunction(() => document.getElementById('itcvPreview')?.contentWindow?.TROZAL_VIDEO?.universalRigEmbedded === true, { timeout: 20000 });
-    const runtime = await page.locator('#itcvPreview').evaluate(el => ({
-      embedded: el.contentWindow.TROZAL_VIDEO.universalRigEmbedded,
-      count: el.contentWindow.TROZAL_VIDEO.universalRigParts
-    }));
-    assert.deepEqual(runtime, { embedded: true, count: 1 });
+    await page.waitForFunction(() => { const html=document.getElementById('itcvHtml')?.value||''; return html.includes('Roda depan') && html.includes('class="rig-canvas"') && html.includes('class="part part-0"') && html.includes('@keyframes trozal-part-0'); }, { timeout: 20000 });
+    const html = await page.locator('#itcvHtml').inputValue();
+    assert.doesNotMatch(html, /<script\b|\bimport\s*\(/i, 'Importer-safe OLLAMA HTML must not contain JavaScript or module imports.');
+    await page.frameLocator('#itcvPreview').locator('.part-0').waitFor({ timeout: 10000 });
+    assert.notEqual(await page.frameLocator('#itcvPreview').locator('.part-0').evaluate(el => getComputedStyle(el).animationName), 'none');
     assert.deepEqual(errors, [], 'Unexpected Browser page errors');
     console.log('PASS: OLLAMA Universal Rig UI, SAM masks, Qwen component labels and self-contained HTML/JS preview.');
   } finally {
