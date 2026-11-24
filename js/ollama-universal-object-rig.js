@@ -180,8 +180,7 @@
         const fx = w / imageSize.width, fy = h / imageSize.height;
         const x = part.bboxOriginal[0] * fx, y = part.bboxOriginal[1] * fy;
         const bw = part.bboxOriginal[2] * fx, bh = part.bboxOriginal[3] * fy;
-        ctx.save(); ctx.strokeStyle = maskColor(index).map((value, channel) => value).length
-          ? 'rgb(' + maskColor(index).join(',') + ')' : '#60dfc1';
+        ctx.save(); ctx.strokeStyle = 'rgb(' + maskColor(index).join(',') + ')';
         ctx.lineWidth = Math.max(1.3, w / 420); ctx.strokeRect(x, y, bw, bh);
         ctx.fillStyle = 'rgba(2,12,18,.76)'; ctx.fillRect(x, y, Math.min(bw, 140), 16);
         ctx.fillStyle = '#f2fffb'; ctx.font = '10px Arial';
@@ -477,8 +476,14 @@
     ['itcvRigMaskOverlay','itcvRigMaskOpacity','itcvRigMaskFocus','itcvRigShowBounds'].forEach(id => {
       const control = $(id);
       if (!control) return;
-      control.addEventListener('input', drawSource);
-      control.addEventListener('change', drawSource);
+      const refresh = () => {
+        if (id === 'itcvRigMaskOpacity' && $('itcvRigMaskOpacityValue')) {
+          $('itcvRigMaskOpacityValue').textContent = Math.round(Number(control.value) || 0) + '%';
+        }
+        drawSource();
+      };
+      control.addEventListener('input', refresh);
+      control.addEventListener('change', refresh);
     });
     $('itcvRigPickMode').addEventListener('click', () => {
       if (!image) { status('Pilih gambar dahulu.'); return; }
