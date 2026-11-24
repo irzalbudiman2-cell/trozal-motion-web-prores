@@ -149,9 +149,9 @@ const { chromium } = require('playwright');
     // Multi-point refinement sends all foreground/background prompts in one
     // SAM request and retains the already detected component.
     await page.locator('#itcvRigPointPositive').click();
-    await page.locator('#itcvRigSource').click({ position: { x: 260, y: 190 } });
+    await page.locator('#itcvRigSource').evaluate(canvas => { const rect=canvas.getBoundingClientRect(); canvas.dispatchEvent(new MouseEvent('click',{bubbles:true,clientX:rect.left+rect.width*.4,clientY:rect.top+rect.height*.45})); });
     await page.locator('#itcvRigPointNegative').click();
-    await page.locator('#itcvRigSource').click({ position: { x: 520, y: 300 } });
+    await page.locator('#itcvRigSource').evaluate(canvas => { const rect=canvas.getBoundingClientRect(); canvas.dispatchEvent(new MouseEvent('click',{bubbles:true,clientX:rect.left+rect.width*.8,clientY:rect.top+rect.height*.8})); });
     assert.match(await page.locator('#itcvRigPointHint').textContent(), /2 titik/);
     await page.locator('#itcvRigPointRun').click();
     await page.waitForFunction(() => document.querySelector('#itcvRigParts input[type="text"]')?.value === 'Roda depan' && document.querySelectorAll('#itcvRigParts .rig-part').length === 2, { timeout: 10000 });
