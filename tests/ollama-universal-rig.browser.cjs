@@ -109,6 +109,32 @@ const { chromium } = require('playwright');
     assert.match(await page.locator('#itcvRigProgressText').innerText(), /100%/, 'Completed segmentation should show 100% progress');
     assert.equal(await page.locator('#itcvRigParts select').first().inputValue(), 'wheel');
 
+    // Live mask preview must alter only the source-preview canvas and must be
+    // reversible without changing the underlying source image or rig masks.
+    assert.equal(await page.locator('#itcvRigMaskOverlay').isChecked(), true, 'Colored mask overlay should be enabled by default');
+    assert.equal(await page.locator('#itcvRigMaskFocus').inputValue(), 'all');
+    assert.equal(await page.locator('#itcvRigMaskFocus option').count(), 2, 'Focus selector should contain All plus each detected component');
+    await page.locator('#itcvRigMaskFocus').selectOption('sam-1');
+    const readPreviewPixel = () => page.locator('#itcvRigSource').evaluate(canvas =>
+      Array.from(canvas.getContext('2d').getImageData(30, 40, 1, 1).data.slice(0, 3))
+    );
+    const overlaidPixel = await readPreviewPixel();
+    assert.notDeepEqual(overlaidPixel, [213, 164, 61], 'Colored SAM mask should be visible over an object pixel');
+    await page.locator('#itcvRigMaskOverlay').uncheck();
+    const hiddenPixel = await readPreviewPixel();
+    assert.deepEqual(hiddenPixel, [213, 164, 61], 'Hiding the mask overlay must restore the original source pixel');
+    await page.locator('#itcvRigMaskOverlay').check();
+    await page.locator('#itcvRigMaskOpacity').evaluate(el => { el.value = '0'; el.dispatchEvent(new Event('input', { bubbles: true })); });
+    assert.equal(await page.locator('#itcvRigMaskOpacityValue').textContent(), '0%', 'Opacity readout should follow the slider');
+    const transparentPixel = await readPreviewPixel();
+    assert.deepEqual(transparentPixel, [213, 164, 61], 'Zero opacity should preserve the source pixel');
+    await page.locator('#itcvRigMaskOpacity').evaluate(el => { el.value = '60'; el.dispatchEvent(new Event('input', { bubbles: true })); });
+    assert.equal(await page.locator('#itcvRigMaskOpacityValue').textContent(), '60%');
+    const visibleAgain = await readPreviewPixel();
+    assert.notDeepEqual(visibleAgain, [213, 164, 61], 'Increasing opacity should restore colored mask visibility');
+    await page.locator('#itcvRigMaskFocus').selectOption('all');
+    assert.equal(await page.locator('#itcvRigShowBounds').isChecked(), true, 'Bounding boxes should remain independently controllable');
+
     await page.locator('#itcvRigBuild').click();
     await page.waitForFunction(() => { const html=document.getElementById('itcvHtml')?.value||''; return html.includes('Roda depan') && html.includes('class="rig-canvas"') && html.includes('class="part part-0"') && html.includes('@keyframes trozal-part-0'); }, { timeout: 20000 });
     const html = await page.locator('#itcvHtml').inputValue();
