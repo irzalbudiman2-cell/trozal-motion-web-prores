@@ -77,9 +77,11 @@ _segment_progress = {
 
 def _set_segment_progress(request_id, phase, progress=0, completed=0,
                           total=0, message="", error=""):
+    safe_request_id = str(request_id or "")[:96]
     with _segment_progress_lock:
+        previous_request_id = _segment_progress.get("requestId")
         _segment_progress.update({
-            "requestId": str(request_id or "")[:96],
+            "requestId": safe_request_id,
             "phase": str(phase),
             "progress": max(0, min(100, int(progress))),
             "completed": max(0, int(completed)),
@@ -90,7 +92,7 @@ def _set_segment_progress(request_id, phase, progress=0, completed=0,
             "_updated": time.monotonic(),
         })
         if phase in ("decoding", "loading_model", "sampling", "cpu_fallback", "finalizing"):
-            if _segment_progress.get("_started") is None or _segment_progress.get("requestId") != str(request_id or "")[:96]:
+            if _segment_progress.get("_started") is None or previous_request_id != safe_request_id:
                 _segment_progress["_started"] = time.monotonic()
         elif phase in ("completed", "error", "cancelled", "idle"):
             _segment_progress["_started"] = None
