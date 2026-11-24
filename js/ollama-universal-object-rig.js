@@ -302,6 +302,7 @@
         updateProgress({ phase: 'preview', progress: 92, message: 'Membuat overlay mask untuk diperiksa…' }, true);
         status('Membuat preview mask warna untuk ' + segments.length + ' komponen…');
         const previewCount = await prepareMaskPreviews(segments);
+        renderList(); drawSource();
         updateProgress({ phase: 'labeling', progress: 94, message: previewCount + ' overlay mask siap · Qwen Vision sedang memberi nama komponen…' }, true);
         status(segments.length + ' mask ditemukan. Qwen Vision sedang memberi nama dan menyarankan gerakan…');
         let labelWarning = '';
