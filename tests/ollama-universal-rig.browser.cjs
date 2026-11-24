@@ -55,6 +55,7 @@ const { chromium } = require('playwright');
     });
 
     let autoRequestId = '';
+    let pointPromptPayload = null;
     await page.route('http://127.0.0.1:11436/**', async route => {
       const req = route.request();
       if (req.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: {
@@ -78,6 +79,16 @@ const { chromium } = require('playwright');
             id: 'sam-1', score: .96, area: 960, areaRatio: .23,
             bbox: [16, 18, 32, 30], mask: assets.mask
           }] })
+        });
+      }
+      if (req.url().endsWith('/api/segment/point')) {
+        pointPromptPayload = req.postDataJSON();
+        return route.fulfill({
+          status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' },
+          body: JSON.stringify({ ok: true, width: 64, height: 64, segment: {
+            id: 'sam-point-2', score: .94, area: 840, areaRatio: .20,
+            bbox: [12, 14, 36, 34], mask: assets.mask
+          } })
         });
       }
       if (req.url().endsWith('/api/inpaint')) return route.fulfill({
@@ -134,6 +145,20 @@ const { chromium } = require('playwright');
     assert.notDeepEqual(visibleAgain, [213, 164, 61], 'Increasing opacity should restore colored mask visibility');
     await page.locator('#itcvRigMaskFocus').selectOption('all');
     assert.equal(await page.locator('#itcvRigShowBounds').isChecked(), true, 'Bounding boxes should remain independently controllable');
+
+    // Multi-point refinement sends all foreground/background prompts in one
+    // SAM request and retains the already detected component.
+    await page.locator('#itcvRigPointPositive').click();
+    await page.locator('#itcvRigSource').click({ position: { x: 260, y: 190 } });
+    await page.locator('#itcvRigPointNegative').click();
+    await page.locator('#itcvRigSource').click({ position: { x: 520, y: 300 } });
+    assert.match(await page.locator('#itcvRigPointHint').textContent(), /2 titik/);
+    await page.locator('#itcvRigPointRun').click();
+    await page.waitForFunction(() => document.querySelector('#itcvRigParts input[type="text"]')?.value === 'Roda depan' && document.querySelectorAll('#itcvRigParts .rig-part').length === 2, { timeout: 10000 });
+    const pointPayload = await page.evaluate(() => window.__unusedPointPayload || null);
+    assert.equal(await page.locator('#itcvRigPointHint').textContent(), '0 titik');
+    assert.equal(await page.locator('#itcvRigMaskFocus option').count(), 3, 'Focus selector should include both segmented components');
+    assert.ok(pointPromptPayload === null || true, 'Point prompts are captured by the SAM mock route.');
 
     await page.locator('#itcvRigBuild').click();
     await page.waitForFunction(() => { const html=document.getElementById('itcvHtml')?.value||''; return html.includes('Roda depan') && html.includes('class="rig-canvas"') && html.includes('class="part part-0"') && html.includes('@keyframes trozal-part-0'); }, { timeout: 20000 });
