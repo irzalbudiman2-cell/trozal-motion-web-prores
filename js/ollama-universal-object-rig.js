@@ -8,10 +8,17 @@
     ['rotate','Rotate / Rotasi'],['bob','Bob / Naik turun'],['float','Float / Melayang'],
     ['pulse','Pulse / Skala'],['static','Tetap']
   ];
+  const MASK_COLORS = [
+    [48, 211, 190], [255, 190, 82], [117, 168, 255], [232, 116, 197],
+    [155, 220, 115], [185, 151, 255], [255, 126, 107], [92, 214, 235],
+    [246, 223, 112], [140, 182, 177], [222, 147, 102], [162, 197, 255],
+    [221, 130, 153], [187, 214, 115]
+  ];
   function create(options) {
     const opt = options || {};
     const $ = id => document.getElementById(id);
     let imageUrl = '', image = null, imageSize = null, segments = [], rig = null, picking = false;
+    const maskPreviewCanvases = new Map();
     const status = message => {
       if ($('itcvRigStatus')) $('itcvRigStatus').textContent = String(message || '');
       if (opt.onStatus) opt.onStatus(String(message || ''));
@@ -78,13 +85,66 @@
       const im = new Image(); im.onload = () => resolve(im);
       im.onerror = () => reject(new Error('Gambar sumber/mask tidak dapat dibaca.')); im.src = src;
     });
+    function previewSize() {
+      const canvas = $('itcvRigSource');
+      return canvas ? { width: canvas.width, height: canvas.height } : { width: 1, height: 1 };
+    }
+    function maskColor(index) { return MASK_COLORS[index % MASK_COLORS.length]; }
+    async function buildMaskPreview(part, index) {
+      if (!part || !part.mask) return false;
+      const source = await loadImage(part.mask);
+      const size = previewSize();
+      const preview = document.createElement('canvas');
+      preview.width = Math.max(1, size.width);
+      preview.height = Math.max(1, size.height);
+      const context = preview.getContext('2d', { willReadFrequently: true });
+      context.drawImage(source, 0, 0, preview.width, preview.height);
+      const pixels = context.getImageData(0, 0, preview.width, preview.height);
+      const color = maskColor(index);
+      for (let offset = 0; offset < pixels.data.length; offset += 4) {
+        const coverage = pixels.data[offset];
+        pixels.data[offset] = color[0];
+        pixels.data[offset + 1] = color[1];
+        pixels.data[offset + 2] = color[2];
+        pixels.data[offset + 3] = coverage;
+      }
+      context.putImageData(pixels, 0, 0);
+      maskPreviewCanvases.set(part.id, preview);
+      return true;
+    }
+    function refreshMaskFocusOptions() {
+      const select = $('itcvRigMaskFocus');
+      if (!select) return;
+      const selected = select.value || 'all';
+      select.replaceChildren();
+      const all = document.createElement('option');
+      all.value = 'all'; all.textContent = 'Semua komponen';
+      select.append(all);
+      segments.forEach(part => {
+        const option = document.createElement('option');
+        option.value = part.id; option.textContent = part.name || part.id;
+        select.append(option);
+      });
+      select.value = segments.some(part => part.id === selected) ? selected : 'all';
+    }
+    async function prepareMaskPreviews(list) {
+      maskPreviewCanvases.clear();
+      const source = Array.isArray(list) ? list : segments;
+      const results = await Promise.all(source.map(async (part, index) => {
+        try { return await buildMaskPreview(part, index); }
+        catch (_) { return false; }
+      }));
+      refreshMaskFocusOptions();
+      return results.filter(Boolean).length;
+    }
     function getImageUrl() { return Promise.resolve(opt.getImage ? opt.getImage() : imageUrl); }
     async function setImage(dataUrl) {
       imageUrl = dataUrl || await getImageUrl();
       if (!imageUrl) { image = null; imageSize = null; drawSource(); return; }
       image = await loadImage(imageUrl);
       imageSize = { width: image.naturalWidth, height: image.naturalHeight };
-      segments = []; rig = null; drawSource(); renderList();
+      segments = []; rig = null; maskPreviewCanvases.clear();
+      refreshMaskFocusOptions(); drawSource(); renderList();
     }
     function drawSource() {
       const canvas = $('itcvRigSource'); if (!canvas) return;
@@ -101,12 +161,27 @@
       if (canvas.width !== w) canvas.width = w;
       if (canvas.height !== h) canvas.height = h;
       ctx.drawImage(image, 0, 0, w, h);
-      segments.forEach((part, index) => {
-        if (part.enabled === false) return;
+      const overlayControl = $('itcvRigMaskOverlay');
+      const maskVisible = !overlayControl || overlayControl.checked;
+      const focus = $('itcvRigMaskFocus')?.value || 'all';
+      const opacityControl = $('itcvRigMaskOpacity');
+      const opacity = opacityControl ? Math.max(0, Math.min(1, Number(opacityControl.value) / 100)) : 0.42;
+      if (maskVisible && opacity > 0) {
+        segments.forEach(part => {
+          if (part.enabled === false || (focus !== 'all' && part.id !== focus)) return;
+          const overlay = maskPreviewCanvases.get(part.id);
+          if (!overlay) return;
+          ctx.save(); ctx.globalAlpha = opacity; ctx.drawImage(overlay, 0, 0, w, h); ctx.restore();
+        });
+      }
+      const boundsControl = $('itcvRigShowBounds');
+      if (!boundsControl || boundsControl.checked) segments.forEach((part, index) => {
+        if (part.enabled === false || (focus !== 'all' && part.id !== focus)) return;
         const fx = w / imageSize.width, fy = h / imageSize.height;
         const x = part.bboxOriginal[0] * fx, y = part.bboxOriginal[1] * fy;
         const bw = part.bboxOriginal[2] * fx, bh = part.bboxOriginal[3] * fy;
-        ctx.save(); ctx.strokeStyle = index % 2 ? '#60dfc1' : '#ffd37b';
+        ctx.save(); ctx.strokeStyle = maskColor(index).map((value, channel) => value).length
+          ? 'rgb(' + maskColor(index).join(',') + ')' : '#60dfc1';
         ctx.lineWidth = Math.max(1.3, w / 420); ctx.strokeRect(x, y, bw, bh);
         ctx.fillStyle = 'rgba(2,12,18,.76)'; ctx.fillRect(x, y, Math.min(bw, 140), 16);
         ctx.fillStyle = '#f2fffb'; ctx.font = '10px Arial';
@@ -225,7 +300,10 @@
         if (pollTask) await pollTask;
         segments = (result.segments || []).map((item, index) => normaliseSegment(item, index, result.width, result.height));
         if (!segments.length) throw new Error('SAM 2 tidak mengembalikan mask. Periksa kualitas gambar atau gunakan klik manual untuk memilih komponen.');
-        updateProgress({ phase: 'labeling', progress: 94, message: segments.length + ' mask ditemukan · Qwen Vision sedang memberi nama komponen…' }, true);
+        updateProgress({ phase: 'preview', progress: 92, message: 'Membuat overlay mask untuk diperiksa…' }, true);
+        status('Membuat preview mask warna untuk ' + segments.length + ' komponen…');
+        const previewCount = await prepareMaskPreviews(segments);
+        updateProgress({ phase: 'labeling', progress: 94, message: previewCount + ' overlay mask siap · Qwen Vision sedang memberi nama komponen…' }, true);
         status(segments.length + ' mask ditemukan. Qwen Vision sedang memberi nama dan menyarankan gerakan…');
         let labelWarning = '';
         try { await classify(); }
@@ -259,7 +337,9 @@
       const part = normaliseSegment(result.segment, segments.length, result.width, result.height);
       part.name = ($('itcvRigPartName').value || '').trim() || ('Komponen ' + (segments.length + 1));
       part.motion = $('itcvRigPartMotion').value || 'float';
-      segments.push(part); renderList(); drawSource();
+      segments.push(part);
+      await buildMaskPreview(part, segments.length - 1);
+      refreshMaskFocusOptions(); renderList(); drawSource();
       $('itcvRigBuild').disabled = false;
       status('Komponen "' + part.name + '" berhasil dipisahkan. Klik bagian lain untuk menambah komponen.');
     }
@@ -284,6 +364,7 @@
         row.append(enabled, name, motion, parent); host.append(row);
       });
       $('itcvRigCount').textContent = segments.filter(p => p.enabled).length + ' / ' + segments.length + ' komponen aktif';
+      refreshMaskFocusOptions();
     }
     async function build() {
       const selected = segments.filter(part => part.enabled !== false);
@@ -393,6 +474,12 @@
       }
     });
     $('itcvRigAuto').addEventListener('click', () => autoSegment().catch(error => status('Segmentasi gagal: ' + error.message)));
+    ['itcvRigMaskOverlay','itcvRigMaskOpacity','itcvRigMaskFocus','itcvRigShowBounds'].forEach(id => {
+      const control = $(id);
+      if (!control) return;
+      control.addEventListener('input', drawSource);
+      control.addEventListener('change', drawSource);
+    });
     $('itcvRigPickMode').addEventListener('click', () => {
       if (!image) { status('Pilih gambar dahulu.'); return; }
       picking = !picking; canvas.style.cursor = picking ? 'crosshair' : 'default';
@@ -402,7 +489,7 @@
     return {
       setImage, check, autoSegment, addAt, build,
       getRig: () => rig, getSegments: () => segments,
-      clear: () => { segments = []; rig = null; renderList(); drawSource(); $('itcvRigBuild').disabled = true; }
+      clear: () => { segments = []; rig = null; maskPreviewCanvases.clear(); refreshMaskFocusOptions(); renderList(); drawSource(); $('itcvRigBuild').disabled = true; }
     };
   }
   window.TROZALUniversalRig = { create };
