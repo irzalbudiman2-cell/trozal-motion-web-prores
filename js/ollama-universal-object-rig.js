@@ -537,6 +537,17 @@
       picking = false; if (canvas) canvas.style.cursor = 'default';
       runPointSegmentation().catch(error => status('Segmentasi titik gagal: ' + error.message));
     });
+    const undoPointButton = $('itcvRigPointUndo');
+    if (undoPointButton) undoPointButton.addEventListener('click', () => {
+      if (!pendingPoints.length) { status('Tidak ada titik prompt untuk dibatalkan.'); return; }
+      const removed = pendingPoints.pop();
+      picking = false; if (canvas) canvas.style.cursor = 'default';
+      const positives = pendingPoints.filter(point => point.label === 1).length;
+      const negatives = pendingPoints.length - positives;
+      if ($('itcvRigPointHint')) $('itcvRigPointHint').textContent = pendingPoints.length + ' titik · ' + positives + ' positif / ' + negatives + ' negatif';
+      drawSource();
+      status('Titik terakhir (' + (removed.label === 1 ? 'positif' : 'negatif') + ') dibatalkan. ' + pendingPoints.length + ' titik tersisa.');
+    });
     const clearPointsButton = $('itcvRigPointClear');
     if (clearPointsButton) clearPointsButton.addEventListener('click', () => {
       pendingPoints = []; picking = false; if (canvas) canvas.style.cursor = 'default';
