@@ -16,7 +16,36 @@
       if ($('itcvRigStatus')) $('itcvRigStatus').textContent = String(message || '');
       if (opt.onStatus) opt.onStatus(String(message || ''));
     };
-    const call = async (path, body) => {
+    function updateProgress(state, visible) {
+      let panel = $('itcvRigProgress');
+      if (!panel) {
+        panel = document.createElement('div');
+        panel.id = 'itcvRigProgress';
+        panel.style.cssText = 'margin:7px 0;padding:8px;border:1px solid #32776d;border-radius:8px;background:#092522;color:#d6fff2;';
+        const bar = document.createElement('progress');
+        bar.id = 'itcvRigProgressBar'; bar.max = 100; bar.value = 0;
+        bar.style.cssText = 'display:block;width:100%;height:9px;accent-color:#55d6b1;';
+        const label = document.createElement('div');
+        label.id = 'itcvRigProgressText';
+        label.style.cssText = 'margin-top:5px;font-size:10px;line-height:1.4;';
+        panel.append(bar, label);
+        const anchor = $('itcvRigStatus');
+        if (anchor) anchor.insertAdjacentElement('afterend', panel);
+      }
+      panel.hidden = visible === false;
+      const bar = $('itcvRigProgressBar');
+      const label = $('itcvRigProgressText');
+      if (bar) bar.value = Math.max(0, Math.min(100, Number(state && state.progress) || 0));
+      if (label) {
+        const percent = Math.round(Math.max(0, Math.min(100, Number(state && state.progress) || 0)));
+        label.textContent = (state && state.message ? String(state.message) : 'Menyiapkan segmentasi…') + ' · ' + percent + '%';
+      }
+    }
+    const call = async (path, body, options) => {
+      const settings = options || {};
+      const timeoutMs = Number(settings.timeoutMs) > 0 ? Number(settings.timeoutMs) : 15000;
+      const controller = typeof AbortController === 'function' ? new AbortController() : null;
+      const timer = controller ? window.setTimeout(() => controller.abort(), timeoutMs) : null;
       let response;
       try {
         response = await fetch(API + path, {
@@ -25,18 +54,24 @@
           credentials: 'omit',
           headers: body ? { 'Content-Type': 'application/json' } : undefined,
           body: body ? JSON.stringify(body) : undefined,
-          cache: 'no-store'
+          cache: 'no-store',
+          signal: controller ? controller.signal : undefined
         });
       } catch (error) {
+        if (error && error.name === 'AbortError') {
+          throw new Error('SAM 2.1 tidak menyelesaikan ' + path + ' dalam ' + Math.round(timeoutMs / 1000) + ' detik. Periksa jendela server lokal dan beban GPU/CPU, lalu coba lagi.');
+        }
         if (error && error.name === 'TypeError') {
           throw new Error('Browser menolak koneksi ke server lokal (CORS/izin jaringan lokal). Perbarui server TROZAL, restart START.bat, lalu izinkan akses jaringan lokal untuk domain aplikasi.');
         }
         throw error;
+      } finally {
+        if (timer !== null) window.clearTimeout(timer);
       }
       let result;
       try { result = await response.json(); }
-      catch (_) { throw new Error('SAM 2 mengirim respons yang tidak dapat dibaca.'); }
-      if (!response.ok || !result.ok) throw new Error(result.error || ('SAM 2 HTTP ' + response.status));
+      catch (_) { throw new Error('SAM 2 mengirim respons yang tidak dapat dibaca dari ' + path + '.'); }
+      if (!response.ok || !result.ok) throw new Error(result.error || ('SAM 2 HTTP ' + response.status + ' pada ' + path));
       return result;
     };
     const loadImage = src => new Promise((resolve, reject) => {
@@ -142,23 +177,77 @@
       }
     }
     async function autoSegment() {
-      const autoButton = $('itcvRigAuto'); if (autoButton) autoButton.disabled = true;
+      const autoButton = $('itcvRigAuto');
+      let pollActive = false;
+      let pollTask = null;
+      const requestId = 'rig-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+      if (autoButton) { autoButton.disabled = true; autoButton.textContent = 'Menyiapkan SAM 2.1…'; }
+      const pollProgress = async () => {
+        let failures = 0;
+        while (pollActive) {
+          try {
+            const progress = await call('/api/segment/status', null, { timeoutMs: 5000 });
+            if (progress.requestId && progress.requestId !== requestId) {
+              await new Promise(resolve => window.setTimeout(resolve, 700));
+              continue;
+            }
+            updateProgress(progress, true);
+            if (progress.message) status(progress.message);
+            failures = 0;
+          } catch (_) {
+            failures += 1;
+            if (failures >= 3) break; // Older local servers remain usable; show the client-side fallback status.
+          }
+          await new Promise(resolve => window.setTimeout(resolve, 650));
+        }
+      };
       try {
-      if (!imageUrl) imageUrl = await getImageUrl();
-      if (!imageUrl) throw new Error('Pilih gambar sumber terlebih dahulu.');
-      if (!image) await setImage(imageUrl);
-      if (segments.length && !window.confirm('Ganti daftar segmentasi yang sudah ada?')) return;
-      const service = await check();
-      status('SAM 2.1 sedang memindai kandidat objek dan komponen dengan prompt titik…');
-      const result = await call('/api/segment/auto', { image: imageUrl });
-      segments = (result.segments || []).map((item, index) => normaliseSegment(item, index, result.width, result.height));
-      if (!segments.length) throw new Error('SAM 2 tidak menemukan mask jelas. Coba klik komponen secara manual.');
-      status(segments.length + ' mask ditemukan. Qwen Vision sedang memberi nama dan menyarankan gerakan…');
-      try { await classify(); }
-      catch (error) { status('Mask berhasil. Label AI belum tersedia: ' + error.message + ' Nama komponen dapat diedit manual.'); }
-      renderList(); drawSource(); $('itcvRigBuild').disabled = false;
-      status(segments.length + ' komponen ditemukan · ' + (result.device || service.device || 'SAM 2'));
-      } finally { if (autoButton) autoButton.disabled = false; }
+        updateProgress({ phase: 'prepare', progress: 0, message: 'Menyiapkan gambar untuk SAM 2.1…' }, true);
+        status('Menyiapkan gambar dan memeriksa layanan SAM 2.1…');
+        if (!imageUrl) imageUrl = await getImageUrl();
+        if (!imageUrl) throw new Error('Pilih gambar sumber terlebih dahulu.');
+        if (!image) await setImage(imageUrl);
+        if (segments.length && !window.confirm('Ganti daftar segmentasi yang sudah ada?')) {
+          status('Segmentasi tidak dijalankan. Komponen sebelumnya tetap dipertahankan.');
+          updateProgress({ phase: 'idle', progress: 0, message: 'Menunggu perintah segmentasi.' }, false);
+          return null;
+        }
+        const service = await check();
+        status('SAM 2.1 siap · memulai inferensi lokal. Pemuatan model pertama dapat membutuhkan waktu lebih lama.');
+        updateProgress({ phase: 'starting', progress: 2, message: 'Mengirim gambar ke SAM 2.1 lokal…' }, true);
+        pollActive = true;
+        pollTask = pollProgress();
+        const result = await call('/api/segment/auto', {
+          image: imageUrl,
+          requestId
+        }, { timeoutMs: 240000 });
+        pollActive = false;
+        if (pollTask) await pollTask;
+        segments = (result.segments || []).map((item, index) => normaliseSegment(item, index, result.width, result.height));
+        if (!segments.length) throw new Error('SAM 2 tidak mengembalikan mask. Periksa kualitas gambar atau gunakan klik manual untuk memilih komponen.');
+        updateProgress({ phase: 'labeling', progress: 94, message: segments.length + ' mask ditemukan · Qwen Vision sedang memberi nama komponen…' }, true);
+        status(segments.length + ' mask ditemukan. Qwen Vision sedang memberi nama dan menyarankan gerakan…');
+        let labelWarning = '';
+        try { await classify(); }
+        catch (error) { labelWarning = ' · Label AI belum tersedia: ' + error.message; }
+        renderList(); drawSource();
+        if ($('itcvRigBuild')) $('itcvRigBuild').disabled = false;
+        updateProgress({ phase: 'completed', progress: 100, message: 'Segmentasi selesai · ' + segments.length + ' komponen ditemukan.' }, true);
+        status(segments.length + ' komponen ditemukan · ' + (result.device || service.device || 'SAM 2') + labelWarning);
+        return segments;
+      } catch (error) {
+        pollActive = false;
+        updateProgress({ phase: 'error', progress: 0, message: 'Segmentasi gagal: ' + error.message }, true);
+        status('Segmentasi gagal: ' + error.message);
+        throw error;
+      } finally {
+        pollActive = false;
+        if (pollTask) await Promise.race([
+          pollTask,
+          new Promise(resolve => window.setTimeout(resolve, 900))
+        ]);
+        if (autoButton) { autoButton.disabled = false; autoButton.textContent = 'AI Segmentasi Komponen'; }
+      }
     }
     async function addAt(x, y) {
       if (!imageUrl) imageUrl = await getImageUrl();
