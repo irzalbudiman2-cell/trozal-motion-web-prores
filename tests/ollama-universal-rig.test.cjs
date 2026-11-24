@@ -9,7 +9,7 @@ const ui = fs.readFileSync('js/ollama-universal-object-rig.js', 'utf8');
 const mode5 = fs.readFileSync('trozal-image-to-code-video.js', 'utf8');
 const html = fs.readFileSync('index.html', 'utf8');
 
-for (const route of ['/api/health', '/api/segment/auto', '/api/segment/point', '/api/inpaint']) {
+for (const route of ['/api/health', '/api/segment/status', '/api/segment/auto', '/api/segment/point', '/api/inpaint']) {
   assert.ok(server.includes(route), 'Missing local segmenter route: ' + route);
 }
 assert.match(server, /host="127\.0\.0\.1"/, 'SAM2 service must bind only to loopback');
@@ -17,6 +17,15 @@ assert.match(server, /sam2\.1_hiera_tiny\.pt/, 'Use SAM 2.1 Tiny checkpoint');
 assert.match(server, /SAM2ImagePredictor/, 'Use SAM2 image prompt predictor');
 assert.match(server, /Access-Control-Allow-Private-Network/, 'Allow browser local-network preflight');
 assert.match(server, /force_cpu=True/, 'Provide CPU fallback when CUDA runs out of memory');
+assert.match(server, /def _set_segment_progress/, 'Expose server-side inference progress updates');
+assert.match(server, /def segment_status\(\)/, 'Expose SAM inference status for browser polling');
+assert.match(server, /"phase": "loading_model"/, 'Progress should distinguish first model load from point scanning');
+assert.match(server, /"sampling"/, 'Progress should advance while SAM scans candidate regions');
+assert.match(ui, /AbortController/, 'Local SAM requests must have bounded timeouts');
+assert.match(ui, /\/api\/segment\/status/, 'Browser UI must poll local SAM inference progress');
+assert.match(ui, /itcvRigProgressBar/, 'Show actual SAM inference progress in Mode 5 UI');
+assert.match(mode5, /closest\('#itcvRigAuto'\)/, 'Mode 5 needs an independent segmentation click handler');
+assert.match(mode5, /stopImmediatePropagation\(\)/, 'Independent handler must prevent duplicate segment requests');
 assert.match(setup, /SAM2_BUILD_CUDA=0/, 'Do not require nvcc custom extension for setup');
 assert.match(setup, /torch==2\.5\.1/, 'Pin supported PyTorch baseline');
 assert.match(setup, /cu121/, 'Attempt CUDA 12.1 PyTorch for compatible NVIDIA GPUs');
