@@ -92,6 +92,32 @@ if(window.TROZALUniversalRig){
   onApply:rig=>{universalRig=rig;output(scenePlan||{description:'Universal Object Rig',layers:[]});}
  });
 }
+// Capture Mode 5 segmentation clicks independently from the optional controller's
+// direct listener, so users always receive immediate feedback if initialization failed.
+document.addEventListener('click', async event => {
+ const button=event.target&&event.target.closest?event.target.closest('#itcvRigAuto'):null;
+ if(!button||button.dataset.trozalAutoDispatch==='1')return;
+ event.preventDefault();
+ event.stopImmediatePropagation();
+ button.dataset.trozalAutoDispatch='1';
+ button.disabled=true;
+ button.textContent='Memulai SAM 2.1…';
+ const statusNode=$('itcvRigStatus');
+ if(statusNode)statusNode.textContent='Permintaan segmentasi diterima · menyiapkan controller SAM 2.1 lokal…';
+ try{
+  if(!rigController||typeof rigController.autoSegment!=='function'){
+   throw new Error('Controller Universal Rig tidak siap. Muat ulang halaman Mode 5; periksa apakah js/ollama-universal-object-rig.js berhasil dimuat.');
+  }
+  await rigController.autoSegment();
+ }catch(error){
+  if(statusNode)statusNode.textContent='AI Segmentasi tidak berjalan: '+(error.message||String(error));
+ }finally{
+  button.disabled=false;
+  button.textContent='AI Segmentasi Komponen';
+  button.removeAttribute('aria-busy');
+  delete button.dataset.trozalAutoDispatch;
+ }
+},true);
 function showScenePlan(scene){scenePlan=scene||null;$('itcvScenePlan').value=scene?JSON.stringify(scene,null,2):'';}
 function mode(on){document.body.classList.toggle('itcv-mode-active',!!on);const app=document.querySelector('.app');if(app)app.style.display=on?'none':'';ws.style.display=on?'block':'none';document.body.style.overflow=on?'hidden':'';if(on){ws.scrollTop=0;refreshVisionModels();if(rigController)rigController.check().catch(()=>{});}}
 const VISION_HINTS=['qwen2.5vl','qwen2-vl','qwen3-vl','gemma3','llava','minicpm-v','moondream','granite3.2-vision','internvl','llama3.2-vision'];
