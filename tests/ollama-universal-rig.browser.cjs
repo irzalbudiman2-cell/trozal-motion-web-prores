@@ -54,6 +54,7 @@ const { chromium } = require('playwright');
       return route.fulfill({ status: 404, body: '{"error":"unexpected Ollama route"}' });
     });
 
+    let autoRequestId = '';
     await page.route('http://127.0.0.1:11436/**', async route => {
       const req = route.request();
       if (req.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: {
@@ -62,15 +63,23 @@ const { chromium } = require('playwright');
       }});
       if (req.url().endsWith('/api/health')) return route.fulfill({
         status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' },
-        body: JSON.stringify({ ok: true, engine: 'SAM 2.1 Hiera Tiny', device: 'cpu', model_loaded: true })
+        body: JSON.stringify({ ok: true, engine: 'SAM 2.1 Hiera Tiny', device: 'cpu', model_loaded: true, checkpoint: true })
       });
-      if (req.url().endsWith('/api/segment/auto')) return route.fulfill({
+      if (req.url().endsWith('/api/segment/status')) return route.fulfill({
         status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' },
-        body: JSON.stringify({ ok: true, width: 64, height: 64, device: 'cpu', segments: [{
-          id: 'sam-1', score: .96, area: 960, areaRatio: .23,
-          bbox: [16, 18, 32, 30], mask: assets.mask
-        }] })
+        body: JSON.stringify({ ok: true, requestId: autoRequestId, phase: 'sampling', progress: 56, completed: 11, total: 20, message: 'SAM 2.1 menganalisis area 12/20…', active: true, device: 'cpu' })
       });
+      if (req.url().endsWith('/api/segment/auto')) {
+        autoRequestId = req.postDataJSON().requestId;
+        await new Promise(resolve => setTimeout(resolve, 800));
+        return route.fulfill({
+          status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' },
+          body: JSON.stringify({ ok: true, requestId: autoRequestId, width: 64, height: 64, device: 'cpu', segments: [{
+            id: 'sam-1', score: .96, area: 960, areaRatio: .23,
+            bbox: [16, 18, 32, 30], mask: assets.mask
+          }] })
+        });
+      }
       if (req.url().endsWith('/api/inpaint')) return route.fulfill({
         status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' },
         body: JSON.stringify({ ok: true, background: assets.image, width: 64, height: 64 })
@@ -94,7 +103,10 @@ const { chromium } = require('playwright');
     assert.equal(await page.locator('#itcvRigCheck').textContent(), 'SAM 2.1 Terhubung');
 
     await page.locator('#itcvRigAuto').click();
+    await page.waitForFunction(() => Number(document.getElementById('itcvRigProgressBar')?.value || 0) >= 50, { timeout: 10000 });
     await page.waitForFunction(() => document.querySelector('#itcvRigParts input[type="text"]')?.value === 'Roda depan', { timeout: 20000 });
+    assert.equal(await page.locator('#itcvRigAuto').isEnabled(), true, 'Segmentation button must be released after inference completes');
+    assert.match(await page.locator('#itcvRigProgressText').innerText(), /100%/, 'Completed segmentation should show 100% progress');
     assert.equal(await page.locator('#itcvRigParts select').first().inputValue(), 'wheel');
 
     await page.locator('#itcvRigBuild').click();
@@ -104,7 +116,27 @@ const { chromium } = require('playwright');
     await page.frameLocator('#itcvPreview').locator('.part-0').waitFor({ timeout: 10000 });
     assert.notEqual(await page.frameLocator('#itcvPreview').locator('.part-0').evaluate(el => getComputedStyle(el).animationName), 'none');
     assert.deepEqual(errors, [], 'Unexpected Browser page errors');
-    console.log('PASS: OLLAMA Universal Rig UI, SAM masks, Qwen component labels and self-contained HTML/JS preview.');
+
+    // The segmentation button must still explain the failure when its optional
+    // controller script cannot be loaded; it must not remain visually inert.
+    const fallbackPage = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+    const fallbackErrors = [];
+    fallbackPage.on('pageerror', error => fallbackErrors.push(error.message));
+    await fallbackPage.route('**/js/ollama-universal-object-rig.js*', route => route.abort());
+    await fallbackPage.goto('http://127.0.0.1:4173/index.html', { waitUntil: 'domcontentloaded' });
+    await fallbackPage.waitForSelector('#itcvModeBtn', { timeout: 20000 });
+    await fallbackPage.locator('#itcvModeBtn').click();
+    await fallbackPage.locator('#itcvFiles').setInputFiles({
+      name: 'vehicle.png', mimeType: 'image/png', buffer: imageBuffer
+    });
+    await fallbackPage.locator('#itcvRigAuto').click();
+    await fallbackPage.waitForFunction(() => /Controller Universal Rig tidak siap/.test(document.getElementById('itcvRigStatus')?.textContent || ''), { timeout: 5000 });
+    assert.equal(await fallbackPage.locator('#itcvRigAuto').isEnabled(), true, 'Fallback should release the button when controller initialization fails');
+    assert.equal(await fallbackPage.locator('#itcvRigAuto').textContent(), 'AI Segmentasi Komponen');
+    assert.deepEqual(fallbackErrors, [], 'Controller-load fallback must not throw browser errors');
+    await fallbackPage.close();
+
+    console.log('PASS: OLLAMA Universal Rig SAM progress, responsive fallback, masks, Qwen labels and self-contained preview.');
   } finally {
     await browser.close();
   }

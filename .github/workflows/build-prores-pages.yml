@@ -42,8 +42,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p site/vendor/ffmpeg site/vendor/prores-core
+          mkdir -p site/vendor/ffmpeg site/vendor/prores-core site/js
           cp index.html site/index.html
+          cp js/ollama-universal-object-rig.js site/js/ollama-universal-object-rig.js
           cp trozal-image-to-code-video.js site/trozal-image-to-code-video.js
           cp metadata-actions.js site/metadata-actions.js
           cp ip-guardrails-panel.js site/ip-guardrails-panel.js
@@ -170,6 +171,9 @@ jobs:
           set -euo pipefail
           grep -q -- '--enable-encoder=prores_ks' /tmp/ffmpeg-wasm/Dockerfile
           test -s site/index.html
+          test -s site/js/ollama-universal-object-rig.js
+          node --check site/js/ollama-universal-object-rig.js
+          grep -q 'js/ollama-universal-object-rig.js' site/index.html
           test -s site/logo-studio.js
           node --check site/logo-studio.js
           test -s site/icon-logo-motion-studio.js

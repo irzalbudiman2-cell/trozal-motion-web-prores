@@ -7,6 +7,7 @@ import os
 import re
 import sys
 import threading
+import time
 from pathlib import Path
 from contextlib import nullcontext
 
@@ -59,6 +60,53 @@ def allow_local_network_preflight(response):
 _predictor = None
 _device = "unloaded"
 _model_lock = threading.Lock()
+_segment_progress_lock = threading.Lock()
+_segment_progress = {
+    "requestId": "",
+    "phase": "idle",
+    "progress": 0,
+    "completed": 0,
+    "total": 0,
+    "message": "Menunggu perintah segmentasi.",
+    "device": "unloaded",
+    "error": "",
+    "_started": None,
+    "_updated": time.monotonic(),
+}
+
+
+def _set_segment_progress(request_id, phase, progress=0, completed=0,
+                          total=0, message="", error=""):
+    safe_request_id = str(request_id or "")[:96]
+    with _segment_progress_lock:
+        previous_request_id = _segment_progress.get("requestId")
+        _segment_progress.update({
+            "requestId": safe_request_id,
+            "phase": str(phase),
+            "progress": max(0, min(100, int(progress))),
+            "completed": max(0, int(completed)),
+            "total": max(0, int(total)),
+            "message": str(message or ""),
+            "device": _device,
+            "error": str(error or ""),
+            "_updated": time.monotonic(),
+        })
+        if phase in ("decoding", "loading_model", "sampling", "cpu_fallback", "finalizing"):
+            if _segment_progress.get("_started") is None or previous_request_id != safe_request_id:
+                _segment_progress["_started"] = time.monotonic()
+        elif phase in ("completed", "error", "cancelled", "idle"):
+            _segment_progress["_started"] = None
+
+
+def _segment_progress_snapshot():
+    with _segment_progress_lock:
+        snapshot = {key: value for key, value in _segment_progress.items() if not key.startswith("_")}
+        started = _segment_progress.get("_started")
+        snapshot["active"] = snapshot.get("phase") in (
+            "decoding", "loading_model", "sampling", "cpu_fallback", "finalizing"
+        )
+        snapshot["elapsedSeconds"] = round(time.monotonic() - started, 1) if started else 0
+        return snapshot
 
 
 def _load_predictor(force_cpu=False):
@@ -186,58 +234,89 @@ def health():
     })
 
 
+@app.get("/api/segment/status")
+def segment_status():
+    return jsonify({"ok": True, **_segment_progress_snapshot()})
+
+
 @app.post("/api/segment/auto")
 def segment_auto():
     body = request.get_json(force=True)
-    image, original_size = _image_from_payload(body.get("image"))
-    width, height = image.size
-    # A sparse positive-point grid asks SAM for candidate components without
-    # requiring a class-specific detector. Duplicates are merged by mask IoU.
-    axes_x = [0.16, 0.33, 0.50, 0.67, 0.84]
-    axes_y = [0.18, 0.38, 0.58, 0.78]
-    candidates = []
-    grid = [[[gx * width, gy * height]] for gy in axes_y for gx in axes_x]
+    request_id = str(body.get("requestId") or "")
+    _set_segment_progress(request_id, "decoding", 1, 0, 20,
+                          "Membaca dan menyiapkan gambar sumber…")
     try:
-        predictor = _set_image(image)
-        for points in grid:
-            masks, scores = _predict_loaded(predictor, points, [1])
-            for mask, score in zip(masks, scores):
-                binary = np.asarray(mask).squeeze() > 0
-                ratio = float(binary.mean())
-                if ratio < 0.002 or ratio > 0.78 or float(score) < 0.62:
-                    continue
-                if any(_iou(binary, item["binary"]) > 0.86 for item in candidates):
-                    continue
-                candidates.append({"binary": binary, "score": float(score)})
-    except Exception as exc:
-        if _device != "cuda" or ("out of memory" not in str(exc).lower() and "cuda" not in str(exc).lower()):
-            raise
-        import torch
-        torch.cuda.empty_cache()
+        image, original_size = _image_from_payload(body.get("image"))
+        width, height = image.size
+        # A sparse positive-point grid asks SAM for candidate components without
+        # requiring a class-specific detector. Duplicates are merged by mask IoU.
+        axes_x = [0.16, 0.33, 0.50, 0.67, 0.84]
+        axes_y = [0.18, 0.38, 0.58, 0.78]
+        grid = [[[gx * width, gy * height]] for gy in axes_y for gx in axes_x]
+        total = len(grid)
         candidates = []
-        predictor = _set_image(image, force_cpu=True)
-        for points in grid:
-            masks, scores = _predict_loaded(predictor, points, [1])
-            for mask, score in zip(masks, scores):
-                binary = np.asarray(mask).squeeze() > 0
-                ratio = float(binary.mean())
-                if ratio < 0.002 or ratio > 0.78 or float(score) < 0.62:
-                    continue
-                if any(_iou(binary, item["binary"]) > 0.86 for item in candidates):
-                    continue
-                candidates.append({"binary": binary, "score": float(score)})
-    candidates.sort(key=lambda item: (item["score"], float(item["binary"].mean())), reverse=True)
-    records = []
-    for index, item in enumerate(candidates[:MAX_MASKS], 1):
-        record = _mask_record(item["binary"], item["score"], width, height, index)
-        if record:
-            records.append(record)
-    return jsonify({
-        "ok": True, "engine": "SAM 2.1 Hiera Tiny",
-        "width": width, "height": height,
-        "originalWidth": original_size[0], "originalHeight": original_size[1],
-        "device": _device, "segments": records,
-    })
+
+        def scan(predictor):
+            for index, points in enumerate(grid):
+                _set_segment_progress(
+                    request_id, "sampling", 8 + int(index / max(1, total) * 82),
+                    index, total,
+                    "SAM 2.1 menganalisis area " + str(index + 1) + "/" + str(total) + "…"
+                )
+                masks, scores = _predict_loaded(predictor, points, [1])
+                for mask, score in zip(masks, scores):
+                    binary = np.asarray(mask).squeeze() > 0
+                    ratio = float(binary.mean())
+                    if ratio < 0.002 or ratio > 0.78 or float(score) < 0.62:
+                        continue
+                    if any(_iou(binary, item["binary"]) > 0.86 for item in candidates):
+                        continue
+                    candidates.append({"binary": binary, "score": float(score)})
+                _set_segment_progress(
+                    request_id, "sampling", 8 + int((index + 1) / max(1, total) * 82),
+                    index + 1, total,
+                    "SAM 2.1 menyelesaikan area " + str(index + 1) + "/" + str(total) + "…"
+                )
+
+        try:
+            _set_segment_progress(request_id, "loading_model", 4, 0, total,
+                                  "Memuat model SAM 2.1 Tiny pada perangkat terpilih…")
+            predictor = _set_image(image)
+            scan(predictor)
+        except Exception as exc:
+            if _device != "cuda" or ("out of memory" not in str(exc).lower() and "cuda" not in str(exc).lower()):
+                raise
+            import torch
+            torch.cuda.empty_cache()
+            candidates = []
+            _set_segment_progress(request_id, "cpu_fallback", 6, 0, total,
+                                  "VRAM tidak mencukupi · mengulang segmentasi dengan CPU…")
+            predictor = _set_image(image, force_cpu=True)
+            scan(predictor)
+
+        _set_segment_progress(request_id, "finalizing", 93, total, total,
+                              "Menggabungkan mask dan membuang kandidat duplikat…")
+        candidates.sort(key=lambda item: (item["score"], float(item["binary"].mean())), reverse=True)
+        records = []
+        for index, item in enumerate(candidates[:MAX_MASKS], 1):
+            record = _mask_record(item["binary"], item["score"], width, height, index)
+            if record:
+                records.append(record)
+        _set_segment_progress(
+            request_id, "completed", 100, total, total,
+            "Segmentasi selesai · " + str(len(records)) + " mask ditemukan."
+        )
+        return jsonify({
+            "ok": True, "engine": "SAM 2.1 Hiera Tiny",
+            "width": width, "height": height,
+            "originalWidth": original_size[0], "originalHeight": original_size[1],
+            "device": _device, "segments": records,
+            "requestId": request_id,
+        })
+    except Exception as exc:
+        _set_segment_progress(request_id, "error", 0, 0, 20,
+                              "Segmentasi SAM 2.1 gagal.", str(exc))
+        raise
 
 
 @app.post("/api/segment/point")
