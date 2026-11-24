@@ -18,6 +18,7 @@
     const opt = options || {};
     const $ = id => document.getElementById(id);
     let imageUrl = '', image = null, imageSize = null, segments = [], rig = null, picking = false;
+    let pendingPoints = [], pointLabel = 1;
     const maskPreviewCanvases = new Map();
     const status = message => {
       if ($('itcvRigStatus')) $('itcvRigStatus').textContent = String(message || '');
@@ -143,7 +144,8 @@
       if (!imageUrl) { image = null; imageSize = null; drawSource(); return; }
       image = await loadImage(imageUrl);
       imageSize = { width: image.naturalWidth, height: image.naturalHeight };
-      segments = []; rig = null; maskPreviewCanvases.clear();
+      segments = []; pendingPoints = []; rig = null; maskPreviewCanvases.clear();
+      if ($('itcvRigPointHint')) $('itcvRigPointHint').textContent = '0 titik';
       refreshMaskFocusOptions(); drawSource(); renderList();
     }
     function drawSource() {
@@ -174,6 +176,15 @@
           ctx.save(); ctx.globalAlpha = opacity; ctx.drawImage(overlay, 0, 0, w, h); ctx.restore();
         });
       }
+      pendingPoints.forEach((point, index) => {
+        const px = point.x / imageSize.width * w, py = point.y / imageSize.height * h;
+        ctx.save(); ctx.beginPath(); ctx.arc(px, py, Math.max(5, w / 95), 0, Math.PI * 2);
+        ctx.fillStyle = point.label === 1 ? '#35e58b' : '#ff657a'; ctx.fill();
+        ctx.lineWidth = Math.max(2, w / 320); ctx.strokeStyle = '#07131b'; ctx.stroke();
+        ctx.fillStyle = '#06131a'; ctx.font = 'bold ' + Math.max(9, w / 55) + 'px Arial';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(point.label === 1 ? '+' : '−', px, py);
+        ctx.restore();
+      });
       const boundsControl = $('itcvRigShowBounds');
       if (!boundsControl || boundsControl.checked) segments.forEach((part, index) => {
         if (part.enabled === false || (focus !== 'all' && part.id !== focus)) return;
@@ -327,21 +338,41 @@
         if (autoButton) { autoButton.disabled = false; autoButton.textContent = 'AI Segmentasi Komponen'; }
       }
     }
-    async function addAt(x, y) {
+    async function addAt(x, y, label = pointLabel) {
+      if (!imageUrl) imageUrl = await getImageUrl();
+      if (!image) await setImage(imageUrl);
+      const px = Math.max(0, Math.min(imageSize.width - 1, Number(x)));
+      const py = Math.max(0, Math.min(imageSize.height - 1, Number(y)));
+      pendingPoints.push({ x: px, y: py, label: label === 0 ? 0 : 1 });
+      drawSource();
+      const positives = pendingPoints.filter(point => point.label === 1).length;
+      const negatives = pendingPoints.length - positives;
+      if ($('itcvRigPointHint')) $('itcvRigPointHint').textContent = pendingPoints.length + ' titik · ' + positives + ' positif / ' + negatives + ' negatif';
+      status('Titik tersimpan: ' + positives + ' positif (+), ' + negatives + ' negatif (−). Tambahkan titik lain atau jalankan Segmentasi Titik.');
+      return pendingPoints[pendingPoints.length - 1];
+    }
+    async function runPointSegmentation() {
+      if (!pendingPoints.length) throw new Error('Tambahkan minimal satu titik positif atau negatif pada gambar.');
+      if (!pendingPoints.some(point => point.label === 1)) throw new Error('Tambahkan minimal satu titik positif (+) untuk menentukan objek.');
       if (!imageUrl) imageUrl = await getImageUrl();
       if (!image) await setImage(imageUrl);
       const scale = Math.min(1, 1024 / Math.max(imageSize.width, imageSize.height));
-      const result = await call('/api/segment/point', {
-        image: imageUrl, points: [[x * scale, y * scale]], labels: [1]
-      });
+      const points = pendingPoints.map(point => [point.x * scale, point.y * scale]);
+      const labels = pendingPoints.map(point => point.label);
+      status('SAM 2.1 memproses ' + points.length + ' titik prompt…');
+      const result = await call('/api/segment/point', { image: imageUrl, points, labels });
       const part = normaliseSegment(result.segment, segments.length, result.width, result.height);
       part.name = ($('itcvRigPartName').value || '').trim() || ('Komponen ' + (segments.length + 1));
       part.motion = $('itcvRigPartMotion').value || 'float';
+      part.promptPoints = pendingPoints.map(point => ({ x: point.x, y: point.y, label: point.label }));
       segments.push(part);
+      pendingPoints = [];
+      if ($('itcvRigPointHint')) $('itcvRigPointHint').textContent = '0 titik';
       await buildMaskPreview(part, segments.length - 1);
       refreshMaskFocusOptions(); renderList(); drawSource();
       $('itcvRigBuild').disabled = false;
-      status('Komponen "' + part.name + '" berhasil dipisahkan. Klik bagian lain untuk menambah komponen.');
+      status('Komponen "' + part.name + '" berhasil dipisahkan dengan ' + points.length + ' titik prompt.');
+      return part;
     }
     function renderList() {
       const host = $('itcvRigParts'); host.replaceChildren();
@@ -442,12 +473,11 @@
     const canvas = $('itcvRigSource');
     if (canvas) canvas.addEventListener('click', async event => {
       if (!picking || !image) return;
-      picking = false; canvas.style.cursor = 'default';
       const rect = canvas.getBoundingClientRect();
       const x = (event.clientX - rect.left) / rect.width * imageSize.width;
       const y = (event.clientY - rect.top) / rect.height * imageSize.height;
-      try { await addAt(x, y); }
-      catch (error) { status('Gagal memisahkan titik: ' + error.message); }
+      try { await addAt(x, y, pointLabel); }
+      catch (error) { status('Gagal menyimpan titik prompt: ' + error.message); }
     });
     // Delegate the health-check click so it still works if Mode 5 is mounted
     // after this controller is created. Always give immediate visible feedback.
@@ -486,16 +516,38 @@
       control.addEventListener('input', refresh);
       control.addEventListener('change', refresh);
     });
+    const positiveButton = $('itcvRigPointPositive');
+    const negativeButton = $('itcvRigPointNegative');
+    function setPointMode(label) {
+      pointLabel = label;
+      picking = true;
+      if (canvas) canvas.style.cursor = 'crosshair';
+      if (positiveButton) positiveButton.classList.toggle('active', label === 1);
+      if (negativeButton) negativeButton.classList.toggle('active', label === 0);
+      status(label === 1 ? 'Mode titik positif (+): klik bagian objek yang ingin dipertahankan.' : 'Mode titik negatif (−): klik latar/bagian yang harus dikeluarkan dari mask.');
+    }
     $('itcvRigPickMode').addEventListener('click', () => {
       if (!image) { status('Pilih gambar dahulu.'); return; }
-      picking = !picking; canvas.style.cursor = picking ? 'crosshair' : 'default';
-      status(picking ? 'Klik tepat pada komponen yang ingin dipisahkan.' : 'Mode pemilihan komponen dihentikan.');
+      setPointMode(1);
+    });
+    if (positiveButton) positiveButton.addEventListener('click', () => setPointMode(1));
+    if (negativeButton) negativeButton.addEventListener('click', () => setPointMode(0));
+    const runPointsButton = $('itcvRigPointRun');
+    if (runPointsButton) runPointsButton.addEventListener('click', () => {
+      picking = false; if (canvas) canvas.style.cursor = 'default';
+      runPointSegmentation().catch(error => status('Segmentasi titik gagal: ' + error.message));
+    });
+    const clearPointsButton = $('itcvRigPointClear');
+    if (clearPointsButton) clearPointsButton.addEventListener('click', () => {
+      pendingPoints = []; picking = false; if (canvas) canvas.style.cursor = 'default';
+      if ($('itcvRigPointHint')) $('itcvRigPointHint').textContent = '0 titik';
+      drawSource(); status('Titik prompt dihapus. Mask komponen yang sudah ada tetap aman.');
     });
     $('itcvRigBuild').addEventListener('click', () => build().catch(error => status('Build Rig gagal: ' + error.message)));
     return {
-      setImage, check, autoSegment, addAt, build,
+      setImage, check, autoSegment, addAt, runPointSegmentation, build,
       getRig: () => rig, getSegments: () => segments,
-      clear: () => { segments = []; rig = null; maskPreviewCanvases.clear(); refreshMaskFocusOptions(); renderList(); drawSource(); $('itcvRigBuild').disabled = true; }
+      clear: () => { segments = []; pendingPoints = []; rig = null; maskPreviewCanvases.clear(); if ($('itcvRigPointHint')) $('itcvRigPointHint').textContent = '0 titik'; refreshMaskFocusOptions(); renderList(); drawSource(); $('itcvRigBuild').disabled = true; }
     };
   }
   window.TROZALUniversalRig = { create };

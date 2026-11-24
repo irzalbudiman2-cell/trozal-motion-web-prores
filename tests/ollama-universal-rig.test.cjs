@@ -33,7 +33,8 @@ assert.match(setup, /cu121/, 'Attempt CUDA 12.1 PyTorch for compatible NVIDIA GP
 assert.match(start, /TROZAL_RIG_PORT=11436/, 'Local segmenter should use dedicated port 11436');
 
 for (const id of ['itcvRigCheck','itcvRigAuto','itcvRigSource','itcvRigPickMode','itcvRigBuild','itcvRigParts',
-  'itcvRigMaskOverlay','itcvRigMaskOpacity','itcvRigMaskOpacityValue','itcvRigMaskFocus','itcvRigShowBounds']) {
+  'itcvRigMaskOverlay','itcvRigMaskOpacity','itcvRigMaskOpacityValue','itcvRigMaskFocus','itcvRigShowBounds',
+  'itcvRigPointPositive','itcvRigPointNegative','itcvRigPointClear','itcvRigPointRun','itcvRigPointHint']) {
   assert.ok(mode5.includes(id), 'Missing Universal Rig control: ' + id);
 }
 assert.match(ui, /function buildMaskPreview\(/, 'SAM results must be converted into colored mask overlays.');
@@ -41,6 +42,10 @@ assert.match(ui, /maskPreviewCanvases\.get\(part\.id\)/, 'Preview must render th
 assert.match(ui, /globalAlpha = opacity/, 'Mask overlay opacity must be adjustable.');
 assert.match(ui, /itcvRigMaskFocus/, 'Preview must support focusing an individual component.');
 assert.match(ui, /prepareMaskPreviews\(segments\)/, 'Auto segmentation must prepare mask previews before rig construction.');
+assert.match(ui, /function runPointSegmentation\(/, 'Manual point refinement must submit all selected prompts together.');
+assert.match(ui, /points, labels/, 'SAM point endpoint must receive both coordinates and foreground/background labels.');
+assert.match(ui, /pendingPoints\.some\(point => point\.label === 1\)/, 'Point refinement must require at least one positive foreground prompt.');
+assert.match(ui, /pointLabel = label/, 'Positive and negative point modes must be switchable.');
 assert.match(mode5, /rig-mask-controls/, 'Mode 5 must render the dedicated segmentation preview controls.');
 assert.match(ui, /document\.addEventListener\('click', async event =>/,'Health check must use delegated click handling for dynamically mounted Mode 5 UI');
 assert.match(ui, /Memeriksa SAM 2\.1/,'Health check must show immediate pending feedback');
