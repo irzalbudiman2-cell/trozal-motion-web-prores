@@ -144,7 +144,8 @@
       if (!imageUrl) { image = null; imageSize = null; drawSource(); return; }
       image = await loadImage(imageUrl);
       imageSize = { width: image.naturalWidth, height: image.naturalHeight };
-      segments = []; rig = null; maskPreviewCanvases.clear();
+      segments = []; pendingPoints = []; rig = null; maskPreviewCanvases.clear();
+      if ($('itcvRigPointHint')) $('itcvRigPointHint').textContent = '0 titik';
       refreshMaskFocusOptions(); drawSource(); renderList();
     }
     function drawSource() {
@@ -546,7 +547,7 @@
     return {
       setImage, check, autoSegment, addAt, runPointSegmentation, build,
       getRig: () => rig, getSegments: () => segments,
-      clear: () => { segments = []; pendingPoints = []; rig = null; maskPreviewCanvases.clear(); refreshMaskFocusOptions(); renderList(); drawSource(); $('itcvRigBuild').disabled = true; }
+      clear: () => { segments = []; pendingPoints = []; rig = null; maskPreviewCanvases.clear(); if ($('itcvRigPointHint')) $('itcvRigPointHint').textContent = '0 titik'; refreshMaskFocusOptions(); renderList(); drawSource(); $('itcvRigBuild').disabled = true; }
     };
   }
   window.TROZALUniversalRig = { create };
