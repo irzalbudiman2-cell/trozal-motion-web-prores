@@ -8,6 +8,7 @@ const start = fs.readFileSync('TROZAL_UNIVERSAL_RIG_START.bat', 'utf8');
 const ui = fs.readFileSync('js/ollama-universal-object-rig.js', 'utf8');
 const mode5 = fs.readFileSync('trozal-image-to-code-video.js', 'utf8');
 const html = fs.readFileSync('index.html', 'utf8');
+const pagesBuild = fs.readFileSync('.github/workflows/build-prores-pages.yml', 'utf8');
 
 for (const route of ['/api/health', '/api/segment/status', '/api/segment/auto', '/api/segment/point', '/api/inpaint']) {
   assert.ok(server.includes(route), 'Missing local segmenter route: ' + route);
@@ -49,5 +50,9 @@ assert.match(mode5, /universalRigEmbedded/);
 assert.match(mode5, /makeRuntime\(images,cfg,art,universalRig\)/);
 assert.match(mode5, /universalRig:universalRig\|\|null/);
 assert.ok(html.includes('./js/ollama-universal-object-rig.js'), 'Universal Rig controller is not loaded by index.html');
+assert.match(pagesBuild, /cp js\/ollama-universal-object-rig\.js site\/js\/ollama-universal-object-rig\.js/,
+  'GitHub Pages build must package the Universal Rig controller referenced by index.html');
+assert.match(pagesBuild, /test -s site\/js\/ollama-universal-object-rig\.js/,
+  'GitHub Pages build must fail if the Universal Rig controller asset is missing');
 
 console.log('PASS: OLLAMA Universal Object Rig local API, SAM2 routes, loopback guard, UI controls and self-contained export contract.');
