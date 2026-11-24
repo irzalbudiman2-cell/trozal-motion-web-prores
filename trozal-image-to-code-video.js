@@ -78,6 +78,7 @@ const read=f=>new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(Str
 async function optimizeVisionImage(dataUrl,maxSide=1280){try{const im=new Image();im.src=dataUrl;await new Promise((ok,no)=>{im.onload=ok;im.onerror=no;});const scale=Math.min(1,maxSide/Math.max(im.naturalWidth,im.naturalHeight));if(scale>=1)return dataUrl;const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(im.naturalWidth*scale));canvas.height=Math.max(1,Math.round(im.naturalHeight*scale));canvas.getContext('2d',{alpha:false}).drawImage(im,0,0,canvas.width,canvas.height);return canvas.toDataURL('image/jpeg',.84);}catch(_){return dataUrl;}}
 let rigController=null;
 if(window.TROZALUniversalRig){
+ try{
  rigController=window.TROZALUniversalRig.create({
   getImage:async()=>{if(files.length>1)throw new Error('Universal Object Rig memproses satu gambar per project.');if(!uris[0]&&files[0])uris[0]=await read(files[0]);return uris[0]||'';},
   getModel:()=>$('itcvVisionModel')?.value||'',
@@ -91,6 +92,11 @@ if(window.TROZALUniversalRig){
   },
   onApply:rig=>{universalRig=rig;output(scenePlan||{description:'Universal Object Rig',layers:[]});}
  });
+ }catch(error){
+  const node=$('itcvRigStatus');
+  if(node)node.textContent='Controller Universal Rig gagal diinisialisasi: '+(error.message||String(error));
+  console.error('TROZAL Universal Rig initialization failed',error);
+ }
 }
 // Capture Mode 5 segmentation clicks independently from the optional controller's
 // direct listener, so users always receive immediate feedback if initialization failed.
