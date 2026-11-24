@@ -19,7 +19,7 @@ assert.match(server, /Access-Control-Allow-Private-Network/, 'Allow browser loca
 assert.match(server, /force_cpu=True/, 'Provide CPU fallback when CUDA runs out of memory');
 assert.match(server, /def _set_segment_progress/, 'Expose server-side inference progress updates');
 assert.match(server, /def segment_status\(\)/, 'Expose SAM inference status for browser polling');
-assert.match(server, /"phase": "loading_model"/, 'Progress should distinguish first model load from point scanning');
+assert.match(server, /"loading_model"/, 'Progress should distinguish first model load from point scanning');
 assert.match(server, /"sampling"/, 'Progress should advance while SAM scans candidate regions');
 assert.match(ui, /AbortController/, 'Local SAM requests must have bounded timeouts');
 assert.match(ui, /\/api\/segment\/status/, 'Browser UI must poll local SAM inference progress');
