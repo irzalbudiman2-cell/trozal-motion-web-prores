@@ -346,6 +346,7 @@
       drawSource();
       const positives = pendingPoints.filter(point => point.label === 1).length;
       const negatives = pendingPoints.length - positives;
+      if ($('itcvRigPointHint')) $('itcvRigPointHint').textContent = pendingPoints.length + ' titik · ' + positives + ' positif / ' + negatives + ' negatif';
       status('Titik tersimpan: ' + positives + ' positif (+), ' + negatives + ' negatif (−). Tambahkan titik lain atau jalankan Segmentasi Titik.');
       return pendingPoints[pendingPoints.length - 1];
     }
@@ -365,6 +366,7 @@
       part.promptPoints = pendingPoints.map(point => ({ x: point.x, y: point.y, label: point.label }));
       segments.push(part);
       pendingPoints = [];
+      if ($('itcvRigPointHint')) $('itcvRigPointHint').textContent = '0 titik';
       await buildMaskPreview(part, segments.length - 1);
       refreshMaskFocusOptions(); renderList(); drawSource();
       $('itcvRigBuild').disabled = false;
@@ -537,6 +539,7 @@
     const clearPointsButton = $('itcvRigPointClear');
     if (clearPointsButton) clearPointsButton.addEventListener('click', () => {
       pendingPoints = []; picking = false; if (canvas) canvas.style.cursor = 'default';
+      if ($('itcvRigPointHint')) $('itcvRigPointHint').textContent = '0 titik';
       drawSource(); status('Titik prompt dihapus. Mask komponen yang sudah ada tetap aman.');
     });
     $('itcvRigBuild').addEventListener('click', () => build().catch(error => status('Build Rig gagal: ' + error.message)));
