@@ -32,9 +32,16 @@ assert.match(setup, /torch==2\.5\.1/, 'Pin supported PyTorch baseline');
 assert.match(setup, /cu121/, 'Attempt CUDA 12.1 PyTorch for compatible NVIDIA GPUs');
 assert.match(start, /TROZAL_RIG_PORT=11436/, 'Local segmenter should use dedicated port 11436');
 
-for (const id of ['itcvRigCheck','itcvRigAuto','itcvRigSource','itcvRigPickMode','itcvRigBuild','itcvRigParts']) {
+for (const id of ['itcvRigCheck','itcvRigAuto','itcvRigSource','itcvRigPickMode','itcvRigBuild','itcvRigParts',
+  'itcvRigMaskOverlay','itcvRigMaskOpacity','itcvRigMaskOpacityValue','itcvRigMaskFocus','itcvRigShowBounds']) {
   assert.ok(mode5.includes(id), 'Missing Universal Rig control: ' + id);
 }
+assert.match(ui, /function buildMaskPreview\(/, 'SAM results must be converted into colored mask overlays.');
+assert.match(ui, /maskPreviewCanvases\.get\(part\.id\)/, 'Preview must render the matching mask for each component.');
+assert.match(ui, /globalAlpha = opacity/, 'Mask overlay opacity must be adjustable.');
+assert.match(ui, /itcvRigMaskFocus/, 'Preview must support focusing an individual component.');
+assert.match(ui, /prepareMaskPreviews\(segments\)/, 'Auto segmentation must prepare mask previews before rig construction.');
+assert.match(mode5, /rig-mask-controls/, 'Mode 5 must render the dedicated segmentation preview controls.');
 assert.match(ui, /document\.addEventListener\('click', async event =>/,'Health check must use delegated click handling for dynamically mounted Mode 5 UI');
 assert.match(ui, /Memeriksa SAM 2\.1/,'Health check must show immediate pending feedback');
 assert.match(ui, /SAM 2\.1 Terhubung/,'Health check must show visible success feedback');
