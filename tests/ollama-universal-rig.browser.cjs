@@ -155,10 +155,11 @@ const { chromium } = require('playwright');
     assert.match(await page.locator('#itcvRigPointHint').textContent(), /2 titik/);
     await page.locator('#itcvRigPointRun').click();
     await page.waitForFunction(() => document.querySelector('#itcvRigParts input[type="text"]')?.value === 'Roda depan' && document.querySelectorAll('#itcvRigParts .rig-part').length === 2, { timeout: 10000 });
-    const pointPayload = await page.evaluate(() => window.__unusedPointPayload || null);
     assert.equal(await page.locator('#itcvRigPointHint').textContent(), '0 titik');
     assert.equal(await page.locator('#itcvRigMaskFocus option').count(), 3, 'Focus selector should include both segmented components');
-    assert.ok(pointPromptPayload === null || true, 'Point prompts are captured by the SAM mock route.');
+    assert.ok(pointPromptPayload, 'SAM point endpoint must be called.');
+    assert.equal(pointPromptPayload.points.length, 2, 'Both selected points must be sent in one request.');
+    assert.deepEqual(pointPromptPayload.labels, [1, 0], 'Foreground and background prompts must retain their labels.');
 
     await page.locator('#itcvRigBuild').click();
     await page.waitForFunction(() => { const html=document.getElementById('itcvHtml')?.value||''; return html.includes('Roda depan') && html.includes('class="rig-canvas"') && html.includes('class="part part-0"') && html.includes('@keyframes trozal-part-0'); }, { timeout: 20000 });
