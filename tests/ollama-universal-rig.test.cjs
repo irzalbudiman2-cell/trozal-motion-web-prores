@@ -10,7 +10,7 @@ const mode5 = fs.readFileSync('trozal-image-to-code-video.js', 'utf8');
 const html = fs.readFileSync('index.html', 'utf8');
 const pagesBuild = fs.readFileSync('.github/workflows/build-prores-pages.yml', 'utf8');
 
-for (const route of ['/api/health', '/api/segment/status', '/api/segment/auto', '/api/segment/point', '/api/inpaint']) {
+for (const route of ['/api/health', '/api/segment/status', '/api/segment/auto', '/api/segment/point', '/api/pose/estimate', '/api/inpaint']) {
   assert.ok(server.includes(route), 'Missing local segmenter route: ' + route);
 }
 assert.match(server, /host="127\.0\.0\.1"/, 'SAM2 service must bind only to loopback');
@@ -32,6 +32,8 @@ assert.match(ui, /\/api\/segment\/status/, 'Browser UI must poll local SAM infer
 assert.match(ui, /itcvRigProgressBar/, 'Show actual SAM inference progress in Mode 5 UI');
 assert.match(mode5, /closest\('#itcvRigAuto'\)/, 'Mode 5 needs an independent segmentation click handler');
 assert.match(mode5, /stopImmediatePropagation\(\)/, 'Independent handler must prevent duplicate segment requests');
+assert.match(setup, /mediapipe==0\\.10\\.21/, 'Install local MediaPipe Pose runtime');
+assert.match(setup, /pose_landmarker_lite\\.task/, 'Download local pose model during setup');
 assert.match(setup, /SAM2_BUILD_CUDA=0/, 'Do not require nvcc custom extension for setup');
 assert.match(setup, /torch==2\.9\.1/, 'Pin multi-GPU PyTorch baseline');
 assert.match(setup, /cu128/, 'Use CUDA 12.8 for Turing and Blackwell NVIDIA GPUs');
