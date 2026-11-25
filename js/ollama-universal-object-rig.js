@@ -450,12 +450,70 @@
       $('itcvRigCount').textContent = segments.filter(p => p.enabled).length + ' / ' + segments.length + ' komponen aktif';
       refreshMaskFocusOptions();
     }
+    async function estimateLocalPose() {
+      if (!imageUrl) imageUrl = await getImageUrl();
+      const result = await call('/api/pose/estimate', { image: imageUrl }, { timeoutMs: 45000 });
+      return result.pose && result.pose.detected && Array.isArray(result.pose.landmarks) ? result.pose : null;
+    }
+    function applyPoseJointPivots(list, pose) {
+      if (!pose || !Array.isArray(pose.landmarks) || pose.landmarks.length < 29) return 0;
+      const normalizedName = value => String(value || '').toLowerCase()
+        .normalize('NFD').replace(/[\\u0300-\\u036f]/g, '');
+      const midpoint = (a, b) => {
+        const left = pose.landmarks[a], right = pose.landmarks[b];
+        if (!left || !right) return null;
+        return { x: (Number(left.x) + Number(right.x)) * 0.5, y: (Number(left.y) + Number(right.y)) * 0.5,
+          visibility: Math.min(Number(left.visibility ?? 1), Number(right.visibility ?? 1)) };
+      };
+      let applied = 0;
+      for (const part of list) {
+        const name = normalizedName(part.name);
+        const isLeft = /\\b(left|kiri)\\b/.test(name);
+        const isRight = /\\b(right|kanan)\\b/.test(name);
+        const side = isLeft ? 'L' : isRight ? 'R' : '';
+        let point = null, joint = '';
+        const pair = (leftIndex, rightIndex) => side === 'L' ? pose.landmarks[leftIndex] :
+          side === 'R' ? pose.landmarks[rightIndex] : midpoint(leftIndex, rightIndex);
+        if (/head|kepala/.test(name)) { point = midpoint(11, 12); joint = 'neck'; }
+        else if (/upper.?arm|lengan atas|shoulder|bahu/.test(name)) { point = pair(11, 12); joint = 'shoulder'; }
+        else if (/forearm|lower.?arm|lengan bawah|elbow|siku/.test(name)) { point = pair(13, 14); joint = 'elbow'; }
+        else if (/hand|tangan|wrist|pergelangan tangan/.test(name)) { point = pair(15, 16); joint = 'wrist'; }
+        else if (/thigh|upper.?leg|paha|hip|pinggul/.test(name)) { point = pair(23, 24); joint = 'hip'; }
+        else if (/shin|lower.?leg|betis|knee|lutut/.test(name)) { point = pair(25, 26); joint = 'knee'; }
+        else if (/foot|ankle|telapak|pergelangan kaki|kaki/.test(name)) { point = pair(27, 28); joint = 'ankle'; }
+        else if (/torso|body|badan|dada/.test(name)) { point = midpoint(23, 24); joint = 'pelvis'; }
+        if (!point) continue;
+        const x = Number(point.x), y = Number(point.y), visibility = Number(point.visibility ?? point.presence ?? 1);
+        if (!Number.isFinite(x) || !Number.isFinite(y) || visibility < 0.22 || x < 0 || x > 1 || y < 0 || y > 1) continue;
+        const box = part.bboxOriginal || [0, 0, imageSize.width, imageSize.height];
+        const cx = x * imageSize.width, cy = y * imageSize.height;
+        const pad = Math.max(18, Math.max(Number(box[2]) || 0, Number(box[3]) || 0) * 0.32);
+        const inside = cx >= box[0] - pad && cx <= box[0] + box[2] + pad &&
+          cy >= box[1] - pad && cy <= box[1] + box[3] + pad;
+        if (!inside) continue;
+        part.pivotNormX = x; part.pivotNormY = y;
+        part.poseAnchor = { joint, x, y, visibility: +visibility.toFixed(3) };
+        applied++;
+      }
+      return applied;
+    }
     async function build() {
       const selected = segments.filter(part => part.enabled !== false);
       if (!selected.length) throw new Error('Aktifkan minimal satu komponen mask.');
       imageUrl = await getImageUrl();
       if (!imageUrl) throw new Error('Gambar sumber tidak tersedia.');
       if (!image) await setImage(imageUrl);
+      let poseData = null;
+      let poseAnchorsApplied = 0;
+      try {
+        status('Pose Estimation lokal sedang mendeteksi sendi tubuh…');
+        poseData = await estimateLocalPose();
+        poseAnchorsApplied = applyPoseJointPivots(selected, poseData);
+        status(poseData ? 'Pose lokal terdeteksi · ' + poseAnchorsApplied + ' pivot sendi diselaraskan.' :
+          'Tidak ada pose manusia yang terdeteksi · memakai pivot komponen yang sudah ada.');
+      } catch (error) {
+        status('Pose Estimation tidak tersedia · memakai pivot komponen lama: ' + error.message);
+      }
       status('SAM 2.1 sedang mengisi area latar yang tertutup objek…');
       const background = await call('/api/inpaint', { image: imageUrl, masks: selected.map(part => part.mask) });
       const backgroundImage = await loadImage(background.background);
@@ -506,6 +564,7 @@
           motion === 'bob' ? 0.05 : motion === 'pulse' ? 0.08 : motion === 'static' ? 0 : 0.12;
         parts.push({
           id: segment.id, name: segment.name, category: segment.category || 'other',
+          poseAnchor: segment.poseAnchor || null,
           parent: parentById.get(segment.id) || '', motion, src: crop.toDataURL('image/png'),
           x: bx, y: by, w: bw, h: bh,
           pivotX: segment.pivotNormX * imageSize.width, pivotY: segment.pivotNormY * imageSize.height,
@@ -516,11 +575,14 @@
       rig = {
         version: 1, width: imageSize.width, height: imageSize.height,
         background: bg.toDataURL('image/png'), parts,
-        engine: 'SAM 2.1 Tiny + Ollama Vision',
+        pose: poseData ? { engine: poseData.engine, detected: true, landmarks: poseData.landmarks } : null,
+        engine: 'SAM 2.1 Tiny + Local Pose Estimation + Ollama Vision',
         note: 'Mask dan rig dibuat lokal. Latar hasil inpainting adalah perkiraan; tinjau bagian tepi.'
       };
       if (opt.onApply) opt.onApply(rig);
-      status('Universal Rig siap: ' + parts.length + ' komponen terpisah. HTML/JavaScript telah diperbarui.');
+      status('Universal Rig siap: ' + parts.length + ' komponen · ' + poseAnchorsApplied +
+        ' pivot sendi diselaraskan' + (poseData ? ' dengan Pose Estimation lokal.' : ' · pivot default dipertahankan.') +
+        ' HTML/JavaScript telah diperbarui.');
       return rig;
     }
     const canvas = $('itcvRigSource');
