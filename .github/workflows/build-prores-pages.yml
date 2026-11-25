@@ -7,6 +7,8 @@ on:
     branches: [main]
     paths:
       - 'index.html'
+      - 'js/ollama-universal-object-rig.js'
+      - 'tests/ollama-universal-rig.test.cjs'
       - 'render-frame-store.js'
       - 'logo-studio.js'
       - 'tests/logo-studio-contract.test.cjs'
