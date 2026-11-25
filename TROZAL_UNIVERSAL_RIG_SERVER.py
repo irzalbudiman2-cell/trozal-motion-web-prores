@@ -19,6 +19,7 @@ from flask_cors import CORS
 ROOT = Path(__file__).resolve().parent
 SAM2_ROOT = ROOT / "sam2-runtime"
 CHECKPOINT = ROOT / "checkpoints" / "sam2.1_hiera_tiny.pt"
+POSE_CHECKPOINT = ROOT / "checkpoints" / "pose_landmarker_lite.task"
 CONFIG = "configs/sam2.1/sam2.1_hiera_t.yaml"
 MAX_SIDE = int(os.environ.get("TROZAL_RIG_MAX_SIDE", "1024"))
 MAX_MASKS = int(os.environ.get("TROZAL_RIG_MAX_MASKS", "14"))
@@ -414,6 +415,54 @@ def segment_point():
     return jsonify({"ok": True, "width": width, "height": height,
                     "originalWidth": original_size[0], "originalHeight": original_size[1],
                     "device": _device, "segment": record})
+
+
+def _estimate_pose(image):
+    """Run local MediaPipe Pose Landmarker; return normalized 33-joint landmarks."""
+    if not POSE_CHECKPOINT.is_file():
+        raise RuntimeError("Model pose lokal belum tersedia. Jalankan TROZAL_UNIVERSAL_RIG_SETUP.bat untuk mengunduh pose_landmarker_lite.task.")
+    try:
+        import mediapipe as mp
+        from mediapipe.tasks import python
+        from mediapipe.tasks.python import vision
+    except Exception as exc:
+        raise RuntimeError("MediaPipe Pose belum terpasang di lingkungan lokal: " + str(exc))
+    options = vision.PoseLandmarkerOptions(
+        base_options=python.BaseOptions(model_asset_path=str(POSE_CHECKPOINT)),
+        running_mode=vision.RunningMode.IMAGE,
+        num_poses=1,
+        min_pose_detection_confidence=0.35,
+        min_pose_presence_confidence=0.35,
+        min_tracking_confidence=0.35,
+        output_segmentation_masks=False,
+    )
+    rgb = np.ascontiguousarray(np.asarray(image.convert("RGB"), dtype=np.uint8))
+    mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
+    with vision.PoseLandmarker.create_from_options(options) as landmarker:
+        result = landmarker.detect(mp_image)
+    if not result.pose_landmarks:
+        return {"detected": False, "landmarks": [], "width": image.width, "height": image.height}
+    landmarks = []
+    for point in result.pose_landmarks[0]:
+        landmarks.append({
+            "x": float(point.x), "y": float(point.y), "z": float(point.z),
+            "visibility": float(getattr(point, "visibility", 1.0)),
+            "presence": float(getattr(point, "presence", 1.0)),
+        })
+    return {"detected": True, "landmarks": landmarks,
+            "width": image.width, "height": image.height}
+
+
+@app.post("/api/pose/estimate")
+def pose_estimate():
+    body = request.get_json(force=True)
+    image, original_size = _image_from_payload(body.get("image"), max_side=1280)
+    pose = _estimate_pose(image)
+    pose["originalWidth"] = original_size[0]
+    pose["originalHeight"] = original_size[1]
+    pose["engine"] = "MediaPipe Pose Landmarker Lite · local"
+    return jsonify({"ok": True, "pose": pose})
+
 
 
 @app.post("/api/inpaint")
