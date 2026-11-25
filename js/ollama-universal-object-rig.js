@@ -745,6 +745,7 @@
       drawSource(); status('Titik prompt dihapus. Mask komponen yang sudah ada tetap aman.');
     });
     $('itcvRigBuild').addEventListener('click', () => build().catch(error => status('Build Rig gagal: ' + error.message)));
+    mountSeamControls();
     return {
       setImage, check, autoSegment, addAt, runPointSegmentation, build,
       getRig: () => rig, getSegments: () => segments,
