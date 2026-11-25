@@ -18,6 +18,7 @@ if not exist "checkpoints\sam2.1_hiera_tiny.pt" (
 
 call ".trozal-rig-venv\Scripts\activate.bat"
 set "TROZAL_RIG_PORT=11436"
+set "TROZAL_RIG_DEVICE=auto"
 set "TROZAL_RIG_MAX_SIDE=1024"
 set "TROZAL_RIG_MAX_MASKS=14"
 set "TROZAL_RIG_INPAINT_MAX_SIDE=2048"
@@ -26,6 +27,7 @@ echo   TROZAL UNIVERSAL OBJECT RIG SERVER
 echo ==========================================================
 echo Local API: http://127.0.0.1:11436/api/health
 echo Engine   : SAM 2.1 Hiera Tiny
+echo GPU      : Auto-detect NVIDIA CUDA / AMD ROCm, CPU fallback
 echo Model is loaded only when you click Analyze / Segment.
 echo Keep this window open while using Universal Rig.
 echo Press Ctrl+C to stop.
