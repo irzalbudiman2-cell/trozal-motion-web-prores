@@ -94,3 +94,7 @@ assert.match(pagesBuild, /test -s site\/js\/ollama-universal-object-rig\.js/,
   'GitHub Pages build must fail if the Universal Rig controller asset is missing');
 
 console.log('PASS: OLLAMA Universal Object Rig local API, SAM2 routes, loopback guard, UI controls and self-contained export contract.');
+
+assert.match(mode5,/itcvContinuity/,'OLLAMA must expose cross-segment continuity control.');
+assert.match(mode5,/crossSegmentContinuity/,'OLLAMA must serialize cross-segment continuity.');
+assert.match(mode5,/drawPart\(part,parentWave\)/,'OLLAMA must propagate parent motion influence.');
