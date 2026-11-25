@@ -75,6 +75,8 @@ assert.match(ui, /getImageUrl/);
 assert.match(ui, /onApply/);
 assert.match(ui, /toDataURL\('image\/png'\)/);
 assert.match(mode5, /function drawUniversalRig/);
+assert.match(mode5, /function drawJointMesh\(/, 'OLLAMA Universal Rig must deform articulated part textures with local mesh strips.');
+assert.match(mode5, /drawJointMesh\(image,part\.x,part\.y/, 'OLLAMA export renderer must use the mesh deformation path for segmented parts.');
 assert.match(mode5, /universalRigEmbedded/);
 assert.match(mode5, /makeRuntime\(images,cfg,art,universalRig\)/);
 assert.match(mode5, /universalRig:universalRig\|\|null/);
