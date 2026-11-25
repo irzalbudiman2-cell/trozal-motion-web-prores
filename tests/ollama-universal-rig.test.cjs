@@ -79,6 +79,8 @@ assert.match(mode5, /function drawJointMesh\(/, 'OLLAMA Universal Rig must defor
 assert.match(mode5, /function drawTriangle\(/, 'OLLAMA Universal Rig must rasterize actual triangle mesh faces with affine texture mapping.');
 assert.match(mode5, /const meshCols=vertical\?4:12,meshRows=vertical\?12:4/, 'OLLAMA mesh must use a two-dimensional vertex grid.');
 assert.ok(mode5.includes('ctx.transform(A,B,C,D,E,F)'), 'OLLAMA triangle faces must map source texture coordinates onto deformed vertices.');
+assert.ok(mode5.includes('smoothWeight=value=>'), 'OLLAMA vertices must blend proximal/distal joint influences with smooth weights.');
+assert.ok(mode5.includes('distalWeight:weight'), 'OLLAMA must retain normalized joint influence weights per shared mesh vertex.');
 assert.match(mode5, /drawJointMesh\(image,part\.x,part\.y/, 'OLLAMA export renderer must use the mesh deformation path for segmented parts.');
 assert.match(mode5, /universalRigEmbedded/);
 assert.match(mode5, /makeRuntime\(images,cfg,art,universalRig\)/);
