@@ -131,9 +131,9 @@ curl.exe --fail --location --retry 3 --retry-delay 2 "https://dl.fbaipublicfiles
 if errorlevel 1 goto :failed
 
 :checkpoint_ready
-if exist "checkpoints\\pose_landmarker_lite.task" goto :pose_checkpoint_ready
+if exist "checkpoints\pose_landmarker_lite.task" goto :pose_checkpoint_ready
 echo Downloading local MediaPipe Pose Landmarker Lite model...
-curl.exe --fail --location --retry 3 --retry-delay 2 "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task" --output "checkpoints\\pose_landmarker_lite.task"
+curl.exe --fail --location --retry 3 --retry-delay 2 "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task" --output "checkpoints\pose_landmarker_lite.task"
 if errorlevel 1 goto :failed
 
 :pose_checkpoint_ready
