@@ -380,7 +380,9 @@
       const reports = [];
       for (const part of list) {
         const source = await loadImage(part.mask);
-        const width = 256, height = Math.max(1, Math.round(256 * source.naturalHeight / source.naturalWidth));
+        const scale = Math.min(1, 256 / Math.max(source.naturalWidth, source.naturalHeight));
+        const width = Math.max(1, Math.round(source.naturalWidth * scale));
+        const height = Math.max(1, Math.round(source.naturalHeight * scale));
         const sample = document.createElement('canvas'); sample.width = width; sample.height = height;
         const context = sample.getContext('2d', { willReadFrequently: true });
         context.drawImage(source, 0, 0, width, height);
@@ -389,7 +391,8 @@
         const queue = new Int32Array(total);
         let area = 0;
         for (let i = 0; i < total; i++) {
-          if (pixels[i * 4 + 3] >= 32 || pixels[i * 4] >= 32) { foreground[i] = 1; area++; }
+          const alpha = pixels[i * 4 + 3], red = pixels[i * 4];
+          if ((alpha < 250 ? alpha >= 32 : red >= 32)) { foreground[i] = 1; area++; }
         }
         let components = 0, largest = 0;
         for (let start = 0; start < total; start++) {
