@@ -33,13 +33,13 @@ assert.match(ui, /itcvRigProgressBar/, 'Show actual SAM inference progress in Mo
 assert.match(mode5, /closest\('#itcvRigAuto'\)/, 'Mode 5 needs an independent segmentation click handler');
 assert.match(mode5, /stopImmediatePropagation\(\)/, 'Independent handler must prevent duplicate segment requests');
 assert.match(setup, /SAM2_BUILD_CUDA=0/, 'Do not require nvcc custom extension for setup');
-assert.match(setup, /torch==2\\.9\\.1/, 'Pin multi-GPU PyTorch baseline');
+assert.match(setup, /torch==2\.9\.1/, 'Pin multi-GPU PyTorch baseline');
 assert.match(setup, /cu128/, 'Use CUDA 12.8 for Turing and Blackwell NVIDIA GPUs');
-assert.match(setup, /rocm-rel-7\\.2\\.1/, 'Provide AMD ROCm Windows profile');
+assert.match(setup, /rocm-rel-7\.2\.1/, 'Provide AMD ROCm Windows profile');
 assert.match(setup, /GPU_PROFILE/, 'Offer NVIDIA, AMD and CPU profiles');
-assert.match(server, /def _torch_runtime_info\\(/, 'Expose accelerator diagnostics');
-assert.match(server, /def _select_accelerator\\(/, 'Select NVIDIA, AMD ROCm or CPU');
-assert.match(server, /get_arch_list\\(/, 'Check NVIDIA wheel architecture support');
+assert.match(server, /def _torch_runtime_info\(/, 'Expose accelerator diagnostics');
+assert.match(server, /def _select_accelerator\(/, 'Select NVIDIA, AMD ROCm or CPU');
+assert.match(server, /get_arch_list\(/, 'Check NVIDIA wheel architecture support');
 assert.match(server, /"runtime": _torch_runtime_info\\(\\)/, 'Expose GPU diagnostics from health endpoint');
 assert.match(start, /TROZAL_RIG_PORT=11436/, 'Local segmenter should use dedicated port 11436');
 
