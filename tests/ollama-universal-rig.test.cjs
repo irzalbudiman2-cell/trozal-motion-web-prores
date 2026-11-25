@@ -38,6 +38,10 @@ for (const id of ['itcvRigCheck','itcvRigAuto','itcvRigSource','itcvRigPickMode'
   assert.ok(mode5.includes(id), 'Missing Universal Rig control: ' + id);
 }
 assert.match(ui, /function buildMaskPreview\(/, 'SAM results must be converted into colored mask overlays.');
+assert.match(ui, /async function analyzeSegmentMaskQuality\(/, 'Mode 5 must measure mask area and connected fragments before rig construction.');
+assert.match(ui, /maskQuality\.emptyCount/, 'Mode 5 must stop rig construction when SAM returns an empty mask.');
+assert.match(ui, /part\.quality\.warnings/, 'Mode 5 must expose per-component mask warnings in the parts list.');
+assert.match(ui, /fragmen mask terpisah/, 'Mode 5 must identify detached mask fragments for review.');
 assert.match(ui, /maskPreviewCanvases\.get\(part\.id\)/, 'Preview must render the matching mask for each component.');
 assert.match(ui, /globalAlpha = opacity/, 'Mask overlay opacity must be adjustable.');
 assert.match(ui, /itcvRigMaskFocus/, 'Preview must support focusing an individual component.');

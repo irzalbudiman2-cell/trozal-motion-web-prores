@@ -309,9 +309,11 @@
         pollActive = false;
         if (pollTask) await pollTask;
         segments = (result.segments || []).map((item, index) => normaliseSegment(item, index, result.width, result.height));
+        const maskQuality = await analyzeSegmentMaskQuality(segments);
+        if (maskQuality.emptyCount) throw new Error(maskQuality.emptyCount + ' mask kosong. Perbaiki segmentasi sebelum membangun rig.');
         if (!segments.length) throw new Error('SAM 2 tidak mengembalikan mask. Periksa kualitas gambar atau gunakan klik manual untuk memilih komponen.');
         updateProgress({ phase: 'preview', progress: 92, message: 'Membuat overlay mask untuk diperiksa…' }, true);
-        status('Membuat preview mask warna untuk ' + segments.length + ' komponen…');
+        status('Membuat preview mask warna untuk ' + segments.length + ' komponen…' + (maskQuality.warningCount ? ' · ' + maskQuality.warningCount + ' peringatan kualitas; arahkan kursor ke komponen untuk detail.' : ' · kualitas mask awal baik.'));
         const previewCount = await prepareMaskPreviews(segments);
         renderList(); drawSource();
         updateProgress({ phase: 'labeling', progress: 94, message: previewCount + ' overlay mask siap · Qwen Vision sedang memberi nama komponen…' }, true);
@@ -374,10 +376,61 @@
       status('Komponen "' + part.name + '" berhasil dipisahkan dengan ' + points.length + ' titik prompt.');
       return part;
     }
+    async function analyzeSegmentMaskQuality(list) {
+      const reports = [];
+      for (const part of list) {
+        const source = await loadImage(part.mask);
+        const scale = Math.min(1, 256 / Math.max(source.naturalWidth, source.naturalHeight));
+        const width = Math.max(1, Math.round(source.naturalWidth * scale));
+        const height = Math.max(1, Math.round(source.naturalHeight * scale));
+        const sample = document.createElement('canvas'); sample.width = width; sample.height = height;
+        const context = sample.getContext('2d', { willReadFrequently: true });
+        context.drawImage(source, 0, 0, width, height);
+        const pixels = context.getImageData(0, 0, width, height).data;
+        const total = width * height, foreground = new Uint8Array(total), visited = new Uint8Array(total);
+        const queue = new Int32Array(total);
+        let area = 0;
+        for (let i = 0; i < total; i++) {
+          const alpha = pixels[i * 4 + 3], red = pixels[i * 4];
+          if ((alpha < 250 ? alpha >= 32 : red >= 32)) { foreground[i] = 1; area++; }
+        }
+        let components = 0, largest = 0;
+        for (let start = 0; start < total; start++) {
+          if (!foreground[start] || visited[start]) continue;
+          components++;
+          let head = 0, tail = 0; queue[tail++] = start; visited[start] = 1;
+          while (head < tail) {
+            const index = queue[head++], x = index % width, y = (index / width) | 0;
+            for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+              if (!dx && !dy) continue;
+              const nx = x + dx, ny = y + dy;
+              if (nx < 0 || nx >= width || ny < 0 || ny >= height) continue;
+              const next = ny * width + nx;
+              if (foreground[next] && !visited[next]) { visited[next] = 1; queue[tail++] = next; }
+            }
+          }
+          largest = Math.max(largest, tail);
+        }
+        const detached = Math.max(0, area - largest);
+        const warnings = [];
+        if (!area) warnings.push('mask kosong');
+        else if (area < 12) warnings.push('mask sangat kecil');
+        if (components > 1 && detached >= Math.max(6, Math.ceil(area * 0.08))) warnings.push('fragmen mask terpisah');
+        const report = { area, components, detached, warnings };
+        part.quality = report;
+        reports.push(report);
+      }
+      return {
+        parts: reports,
+        warningCount: reports.reduce((sum, report) => sum + report.warnings.length, 0),
+        emptyCount: reports.filter(report => !report.area).length
+      };
+    }
     function renderList() {
       const host = $('itcvRigParts'); host.replaceChildren();
       segments.forEach((part, index) => {
         const row = document.createElement('div'); row.className = 'rig-part';
+        if (part.quality && part.quality.warnings.length) row.title = part.name + ': ' + part.quality.warnings.join('; ');
         const enabled = document.createElement('input'); enabled.type = 'checkbox'; enabled.checked = part.enabled !== false;
         enabled.title = 'Aktifkan komponen'; enabled.addEventListener('change', () => {
           part.enabled = enabled.checked; drawSource();
