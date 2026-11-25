@@ -109,7 +109,7 @@ if errorlevel 1 goto :failed
 
 :torch_ready
 echo [4/6] Installing local API and inpainting dependencies...
-python -m pip install flask flask-cors opencv-python-headless pillow numpy
+python -m pip install flask flask-cors opencv-python-headless pillow numpy mediapipe==0.10.21
 if errorlevel 1 goto :failed
 
 if exist "sam2-runtime\sam2\build_sam.py" goto :sam_source_ready
@@ -131,6 +131,12 @@ curl.exe --fail --location --retry 3 --retry-delay 2 "https://dl.fbaipublicfiles
 if errorlevel 1 goto :failed
 
 :checkpoint_ready
+if exist "checkpoints\\pose_landmarker_lite.task" goto :pose_checkpoint_ready
+echo Downloading local MediaPipe Pose Landmarker Lite model...
+curl.exe --fail --location --retry 3 --retry-delay 2 "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task" --output "checkpoints\\pose_landmarker_lite.task"
+if errorlevel 1 goto :failed
+
+:pose_checkpoint_ready
 echo.
 echo [SUCCESS] Universal Object Rig is installed.
 echo Selected profile: %TORCH_PROFILE%
