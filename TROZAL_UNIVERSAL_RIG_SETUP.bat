@@ -109,7 +109,7 @@ if errorlevel 1 goto :failed
 
 :torch_ready
 echo [4/6] Installing local API and inpainting dependencies...
-python -m pip install flask flask-cors opencv-python-headless pillow numpy mediapipe==0.10.21
+python -m pip install flask flask-cors opencv-python-headless==4.11.0.86 pillow "numpy<2" mediapipe==0.10.21
 if errorlevel 1 goto :failed
 
 if exist "sam2-runtime\sam2\build_sam.py" goto :sam_source_ready
