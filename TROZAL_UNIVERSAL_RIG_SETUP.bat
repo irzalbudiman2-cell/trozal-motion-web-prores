@@ -7,37 +7,64 @@ echo ==========================================================
 echo   TROZAL MOTION - UNIVERSAL OBJECT RIG / SAM 2.1 TINY
 echo ==========================================================
 echo.
-echo This installs a local-only object segmentation engine.
-echo Qwen Vision remains your local Ollama model.
-echo The SAM 2.1 Tiny checkpoint is about 150 MB.
+echo Select the PyTorch accelerator profile:
+echo [1] NVIDIA CUDA 12.8 - GTX 1660 Super, RTX 5060 and supported NVIDIA GPUs
+echo [2] AMD ROCm 7.2.1 - supported Radeon GPUs on Windows 11 only
+echo [3] CPU only - universal fallback, slower
 echo.
+set "GPU_PROFILE=1"
+set /p GPU_PROFILE="Choose profile [1/2/3, default 1]: "
+if "%GPU_PROFILE%"=="" set "GPU_PROFILE=1"
+if "%GPU_PROFILE%"=="1" goto :profile_nvidia
+if "%GPU_PROFILE%"=="2" goto :profile_amd
+if "%GPU_PROFILE%"=="3" goto :profile_cpu
+echo [ERROR] Invalid GPU profile.
+pause
+exit /b 1
 
+:profile_nvidia
+set "TORCH_PROFILE=nvidia"
+set "TROZAL_RIG_DEVICE=auto"
+goto :python_select
+
+:profile_amd
+set "TORCH_PROFILE=amd"
+set "TROZAL_RIG_DEVICE=auto"
+goto :python_select
+
+:profile_cpu
+set "TORCH_PROFILE=cpu"
+set "TROZAL_RIG_DEVICE=cpu"
+goto :python_select
+
+:python_select
 where py.exe >nul 2>nul
 if errorlevel 1 goto :no_launcher
-
 set "PYTHON_CMD="
+py -3.12 -c "import sys" >nul 2>nul
+if not errorlevel 1 set "PYTHON_CMD=py -3.12"
+if defined PYTHON_CMD goto :python_found
+if "%TORCH_PROFILE%"=="amd" goto :python_missing
 py -3.11 -c "import sys" >nul 2>nul
 if not errorlevel 1 set "PYTHON_CMD=py -3.11"
 if defined PYTHON_CMD goto :python_found
 py -3.10 -c "import sys" >nul 2>nul
 if not errorlevel 1 set "PYTHON_CMD=py -3.10"
 if defined PYTHON_CMD goto :python_found
-py -3.12 -c "import sys" >nul 2>nul
-if not errorlevel 1 set "PYTHON_CMD=py -3.12"
-if defined PYTHON_CMD goto :python_found
-echo [ERROR] Python 3.10, 3.11 or 3.12 is required.
+:python_missing
+echo [ERROR] Python 3.12 is required for AMD ROCm. NVIDIA/CPU support Python 3.10-3.12.
 pause
 exit /b 1
 
 :no_launcher
 echo [ERROR] Python Launcher (py.exe) was not found.
 echo Install Python 3.10, 3.11 or 3.12 from https://www.python.org/downloads/windows/
-echo Enable Python Launcher during installation, then run this file again.
 pause
 exit /b 1
 
 :python_found
 echo Python: %PYTHON_CMD%
+echo Accelerator profile: %TORCH_PROFILE%
 
 if exist ".trozal-rig-venv\Scripts\python.exe" goto :venv_ready
 echo [1/6] Creating isolated Python environment...
@@ -52,12 +79,32 @@ echo [2/6] Updating pip tools...
 python -m pip install --upgrade pip setuptools wheel
 if errorlevel 1 goto :failed
 
-echo [3/6] Installing PyTorch CUDA 12.1 for compatible NVIDIA GPUs...
-echo If this fails, the installer will use the CPU-only PyTorch build.
-python -m pip install torch==2.5.1 torchvision==0.20.1 --index-url https://download.pytorch.org/whl/cu121
+echo [3/6] Installing PyTorch for selected GPU profile...
+if "%TORCH_PROFILE%"=="nvidia" goto :install_nvidia
+if "%TORCH_PROFILE%"=="amd" goto :install_amd
+goto :install_cpu
+
+:install_nvidia
+echo NVIDIA CUDA 12.8 PyTorch supports Turing sm_75 and Blackwell sm_120.
+python -m pip install --no-cache-dir torch==2.9.1 torchvision==0.24.1 --index-url https://download.pytorch.org/whl/cu128
 if not errorlevel 1 goto :torch_ready
-echo [NOTICE] CUDA PyTorch install failed. Installing CPU fallback...
-python -m pip install --force-reinstall torch==2.5.1 torchvision==0.20.1 --index-url https://download.pytorch.org/whl/cpu
+echo [NOTICE] NVIDIA CUDA install failed. Installing CPU fallback...
+goto :install_cpu
+
+:install_amd
+echo AMD ROCm 7.2.1 requires Windows 11, Python 3.12 and a supported Radeon GPU/driver.
+echo Unsupported Radeon models will not be accelerated by this AMD Windows package.
+python -m pip install --no-cache-dir https://repo.radeon.com/rocm/windows/rocm-rel-7.2.1/rocm_sdk_core-7.2.1-py3-none-win_amd64.whl https://repo.radeon.com/rocm/windows/rocm-rel-7.2.1/rocm_sdk_devel-7.2.1-py3-none-win_amd64.whl https://repo.radeon.com/rocm/windows/rocm-rel-7.2.1/rocm_sdk_libraries_custom-7.2.1-py3-none-win_amd64.whl https://repo.radeon.com/rocm/windows/rocm-rel-7.2.1/rocm-7.2.1.tar.gz
+if errorlevel 1 goto :amd_failed
+python -m pip install --no-cache-dir https://repo.radeon.com/rocm/windows/rocm-rel-7.2.1/torch-2.9.1%2Brocm7.2.1-cp312-cp312-win_amd64.whl https://repo.radeon.com/rocm/windows/rocm-rel-7.2.1/torchvision-0.24.1%2Brocm7.2.1-cp312-cp312-win_amd64.whl
+if not errorlevel 1 goto :torch_ready
+:amd_failed
+echo [NOTICE] AMD ROCm profile failed or GPU/driver is unsupported.
+echo Installing CPU fallback so SAM 2.1 remains available.
+goto :install_cpu
+
+:install_cpu
+python -m pip install --no-cache-dir --force-reinstall torch==2.9.1 torchvision==0.24.1 --index-url https://download.pytorch.org/whl/cpu
 if errorlevel 1 goto :failed
 
 :torch_ready
@@ -71,7 +118,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "$ProgressPreference=
 if errorlevel 1 goto :failed
 
 :sam_source_ready
-echo Installing SAM 2 without compiling the optional CUDA extension...
+echo Installing SAM 2 without compiling the optional custom CUDA extension...
 set "SAM2_BUILD_CUDA=0"
 set "SAM2_BUILD_ALLOW_ERRORS=1"
 python -m pip install -e sam2-runtime
@@ -86,8 +133,9 @@ if errorlevel 1 goto :failed
 :checkpoint_ready
 echo.
 echo [SUCCESS] Universal Object Rig is installed.
-echo Run TROZAL_UNIVERSAL_RIG_START.bat whenever you want to use Mode 5.
-echo This server binds only to 127.0.0.1:11436.
+echo Selected profile: %TORCH_PROFILE%
+echo Device is detected automatically when the server starts.
+echo Run TROZAL_UNIVERSAL_RIG_START.bat to use Mode 5.
 echo.
 pause
 exit /b 0
