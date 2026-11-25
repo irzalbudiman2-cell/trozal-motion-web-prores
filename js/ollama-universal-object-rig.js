@@ -537,12 +537,58 @@
       const sourceContext = sourceCanvas.getContext('2d', { willReadFrequently: true });
       sourceContext.drawImage(image, 0, 0, sourceCanvas.width, sourceCanvas.height);
       const sourcePixels = sourceContext.getImageData(0, 0, sourceCanvas.width, sourceCanvas.height);
+      // Cache compact one-byte foreground mattes, then create a shared source-pixel
+      // overlap around each parent/child joint. This prevents a narrow SAM seam
+      // from opening when connected segments rotate in opposite directions.
+      const maskDataById = new Map();
+      for (const segment of selected) {
+        const maskImage = await loadImage(segment.mask);
+        const maskCanvas = document.createElement('canvas'); maskCanvas.width = imageSize.width; maskCanvas.height = imageSize.height;
+        const maskContext = maskCanvas.getContext('2d', { willReadFrequently: true });
+        maskContext.drawImage(maskImage, 0, 0, maskCanvas.width, maskCanvas.height);
+        const rgba = maskContext.getImageData(0, 0, maskCanvas.width, maskCanvas.height).data;
+        const matte = new Uint8Array(imageSize.width * imageSize.height);
+        for (let i = 0; i < matte.length; i++) matte[i] = rgba[i * 4];
+        maskDataById.set(segment.id, matte);
+      }
+      const jointSeams = [];
+      const jointSeamsByPart = new Map();
+      for (const child of selected) {
+        const parentId = parentById.get(child.id);
+        const parent = selected.find(part => part.id === parentId);
+        if (!parent) continue;
+        const x = child.pivotNormX * imageSize.width, y = child.pivotNormY * imageSize.height;
+        const childSpan = Math.max(1, Math.min(child.bboxOriginal[2], child.bboxOriginal[3]));
+        const parentSpan = Math.max(1, Math.min(parent.bboxOriginal[2], parent.bboxOriginal[3]));
+        const radius = Math.max(8, Math.min(44, Math.min(childSpan, parentSpan) * 0.18));
+        const parentMask = maskDataById.get(parent.id), childMask = maskDataById.get(child.id);
+        if (!parentMask || !childMask) continue;
+        const unionMask = new Uint8Array(imageSize.width * imageSize.height);
+        const x0 = Math.max(0, Math.floor(x - radius)), x1 = Math.min(imageSize.width - 1, Math.ceil(x + radius));
+        const y0 = Math.max(0, Math.floor(y - radius)), y1 = Math.min(imageSize.height - 1, Math.ceil(y + radius));
+        let sharedPixels = 0, unionPixels = 0;
+        for (let py = y0; py <= y1; py++) for (let px = x0; px <= x1; px++) {
+          const dx = px + 0.5 - x, dy = py + 0.5 - y;
+          if (dx * dx + dy * dy > radius * radius) continue;
+          const index = py * imageSize.width + px;
+          const a = parentMask[index], b = childMask[index], value = Math.max(a, b);
+          if (value > 16) { unionMask[index] = value; unionPixels++; }
+          if (a > 32 && b > 32) sharedPixels++;
+        }
+        const seam = { parentId: parent.id, childId: child.id, x, y, radius, unionMask, sharedPixels, unionPixels };
+        jointSeams.push({ parentId: parent.id, childId: child.id, x, y, radius, sharedPixels, unionPixels });
+        for (const id of [parent.id, child.id]) {
+          const list = jointSeamsByPart.get(id) || [];
+          list.push(seam); jointSeamsByPart.set(id, list);
+        }
+      }
       for (const segment of selected) {
         const maskImage = await loadImage(segment.mask);
         const maskCanvas = document.createElement('canvas'); maskCanvas.width = imageSize.width; maskCanvas.height = imageSize.height;
         const maskContext = maskCanvas.getContext('2d', { willReadFrequently: true });
         maskContext.drawImage(maskImage, 0, 0, maskCanvas.width, maskCanvas.height);
         const maskPixels = maskContext.getImageData(0, 0, maskCanvas.width, maskCanvas.height).data;
+        const partSeams = jointSeamsByPart.get(segment.id) || [];
         const bx = Math.max(0, Math.floor(segment.bboxOriginal[0]));
         const by = Math.max(0, Math.floor(segment.bboxOriginal[1]));
         const bw = Math.max(1, Math.min(imageSize.width - bx, Math.ceil(segment.bboxOriginal[2])));
@@ -555,7 +601,20 @@
           outputPixels.data[targetIndex] = sourcePixels.data[sourceIndex];
           outputPixels.data[targetIndex + 1] = sourcePixels.data[sourceIndex + 1];
           outputPixels.data[targetIndex + 2] = sourcePixels.data[sourceIndex + 2];
-          outputPixels.data[targetIndex + 3] = Math.round(sourcePixels.data[sourceIndex + 3] * maskPixels[sourceIndex] / 255);
+          let alphaMask = maskPixels[sourceIndex];
+          if (partSeams.length) {
+            const px = bx + x + 0.5, py = by + y + 0.5;
+            for (const seam of partSeams) {
+              const dx = px - seam.x, dy = py - seam.y, distance = Math.hypot(dx, dy);
+              if (distance >= seam.radius) continue;
+              const unionAlpha = seam.unionMask[(by + y) * imageSize.width + bx + x];
+              if (unionAlpha <= 0) continue;
+              const t = Math.max(0, Math.min(1, distance / seam.radius));
+              const feather = 1 - t * t * (3 - 2 * t);
+              alphaMask = Math.max(alphaMask, Math.round(unionAlpha * feather));
+            }
+          }
+          outputPixels.data[targetIndex + 3] = Math.round(sourcePixels.data[sourceIndex + 3] * alphaMask / 255);
         }
         cropContext.putImageData(outputPixels, 0, 0);
         const motion = segment.motion || 'float';
@@ -574,7 +633,7 @@
       }
       rig = {
         version: 1, width: imageSize.width, height: imageSize.height,
-        background: bg.toDataURL('image/png'), parts,
+        background: bg.toDataURL('image/png'), parts, jointSeams,
         pose: poseData ? { engine: poseData.engine, detected: true, landmarks: poseData.landmarks } : null,
         engine: 'SAM 2.1 Tiny + Local Pose Estimation + Ollama Vision',
         note: 'Mask dan rig dibuat lokal. Latar hasil inpainting adalah perkiraan; tinjau bagian tepi.'
@@ -582,7 +641,7 @@
       if (opt.onApply) opt.onApply(rig);
       status('Universal Rig siap: ' + parts.length + ' komponen · ' + poseAnchorsApplied +
         ' pivot sendi diselaraskan' + (poseData ? ' dengan Pose Estimation lokal.' : ' · pivot default dipertahankan.') +
-        ' HTML/JavaScript telah diperbarui.');
+        ' · ' + jointSeams.length + ' batas sendi diberi overlap piksel bersama. HTML/JavaScript telah diperbarui.');
       return rig;
     }
     const canvas = $('itcvRigSource');

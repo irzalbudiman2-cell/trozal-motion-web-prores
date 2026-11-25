@@ -101,3 +101,11 @@ console.log('PASS: OLLAMA Universal Object Rig local API, SAM2 routes, loopback 
 assert.match(mode5,/itcvContinuity/,'OLLAMA must expose cross-segment continuity control.');
 assert.match(mode5,/crossSegmentContinuity/,'OLLAMA must serialize cross-segment continuity.');
 assert.match(mode5,/drawPart\(part,parentWave\)/,'OLLAMA must propagate parent motion influence.');
+assert.match(ui, /const jointSeams = \[\]/, 'Universal Rig must build a shared joint seam map for every articulated parent-child pair.');
+assert.match(ui, /jointSeamsByPart/, 'Both connected segments must receive the same joint overlap source pixels.');
+assert.match(ui, /const unionMask = new Uint8Array\(imageSize\.width \* imageSize\.height\)/, 'Joint welding must use the union of the two SAM foreground masks, not invent background pixels.');
+assert.match(ui, /const feather = 1 - t \* t \* \(3 - 2 \* t\)/, 'Shared joint pixels must fade smoothly toward the edge of the seam radius.');
+assert.match(ui, /alphaMask = Math\.max\(alphaMask, Math\.round\(unionAlpha \* feather\)\)/, 'Each connected layer must receive the same feathered foreground pixels around its shared pivot.');
+assert.match(ui, /background: bg\.toDataURL\('image\/png'\), parts, jointSeams/, 'Generated rig must retain per-joint seam diagnostics.');
+assert.match(ui, /batas sendi diberi overlap piksel bersama/, 'Mode 5 must report how many joint seams received shared source-pixel overlap.');
+
