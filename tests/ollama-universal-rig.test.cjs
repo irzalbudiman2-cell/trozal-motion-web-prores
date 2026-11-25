@@ -40,7 +40,7 @@ assert.match(setup, /GPU_PROFILE/, 'Offer NVIDIA, AMD and CPU profiles');
 assert.match(server, /def _torch_runtime_info\(/, 'Expose accelerator diagnostics');
 assert.match(server, /def _select_accelerator\(/, 'Select NVIDIA, AMD ROCm or CPU');
 assert.match(server, /get_arch_list\(/, 'Check NVIDIA wheel architecture support');
-assert.match(server, /"runtime": _torch_runtime_info\\(\\)/, 'Expose GPU diagnostics from health endpoint');
+assert.match(server, /"runtime": _torch_runtime_info\(\)/, 'Expose GPU diagnostics from health endpoint');
 assert.match(start, /TROZAL_RIG_PORT=11436/, 'Local segmenter should use dedicated port 11436');
 
 for (const id of ['itcvRigCheck','itcvRigAuto','itcvRigSource','itcvRigPickMode','itcvRigBuild','itcvRigParts',
