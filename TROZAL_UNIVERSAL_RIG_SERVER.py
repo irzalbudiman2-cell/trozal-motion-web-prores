@@ -218,8 +218,10 @@ def _predict_loaded(predictor, points, labels):
 
 
 def _predict_masks(image, points, labels):
-    predictor = _set_image(image)
     try:
+        # Include model loading and image encoding in the guarded block: CUDA
+        # kernel failures can happen before predictor.predict() is reached.
+        predictor = _set_image(image)
         masks, scores = _predict_loaded(predictor, points, labels)
     except Exception as exc:
         if _device != "cuda" or not _is_cuda_runtime_error(exc):
