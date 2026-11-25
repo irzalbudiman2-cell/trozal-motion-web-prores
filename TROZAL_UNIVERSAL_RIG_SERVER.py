@@ -109,6 +109,56 @@ def _segment_progress_snapshot():
         return snapshot
 
 
+
+def _torch_runtime_info():
+    """Diagnostics for NVIDIA CUDA, AMD ROCm, and CPU."""
+    try:
+        import torch
+        available = bool(torch.cuda.is_available())
+        info = {"torch": str(torch.__version__),
+                "cudaRuntime": str(torch.version.cuda) if torch.version.cuda else None,
+                "hipRuntime": str(getattr(torch.version, "hip", None)) if getattr(torch.version, "hip", None) else None,
+                "acceleratorAvailable": available, "backend": "cpu",
+                "gpuName": None, "computeCapability": None,
+                "torchArchitectures": [], "selectedDevice": _device}
+        if available:
+            info["gpuName"] = str(torch.cuda.get_device_name(0))
+            is_amd = bool(getattr(torch.version, "hip", None))
+            info["backend"] = "amd-rocm" if is_amd else "nvidia-cuda"
+            if not is_amd:
+                try:
+                    major, minor = torch.cuda.get_device_capability(0)
+                    info["computeCapability"] = f"{major}.{minor}"
+                    info["torchArchitectures"] = list(torch.cuda.get_arch_list())
+                except Exception as exc:
+                    info["diagnosticWarning"] = str(exc)
+        return info
+    except Exception as exc:
+        return {"backend": "unavailable", "acceleratorAvailable": False,
+                "diagnosticError": str(exc), "selectedDevice": _device}
+
+
+def _select_accelerator(torch, force_cpu=False):
+    """Select a usable NVIDIA CUDA or AMD ROCm device; otherwise CPU."""
+    profile = os.environ.get("TROZAL_RIG_DEVICE", "auto").strip().lower()
+    if force_cpu or profile == "cpu" or not torch.cuda.is_available():
+        return "cpu"
+    if profile not in ("auto", "cuda", "nvidia", "amd", "rocm"):
+        raise RuntimeError("TROZAL_RIG_DEVICE harus auto, cuda, nvidia, amd, rocm, atau cpu.")
+    is_amd = bool(getattr(torch.version, "hip", None))
+    if profile in ("amd", "rocm") and not is_amd:
+        raise RuntimeError("Profil AMD dipilih, tetapi PyTorch ROCm tidak terdeteksi.")
+    if profile in ("nvidia", "cuda") and is_amd:
+        raise RuntimeError("Profil NVIDIA dipilih, tetapi runtime PyTorch aktif adalah ROCm/AMD.")
+    if not is_amd:
+        major, minor = torch.cuda.get_device_capability(0)
+        arch = f"sm_{major}{minor}"
+        built_arches = set(torch.cuda.get_arch_list())
+        if arch not in built_arches:
+            return "cpu"
+    return "cuda"
+
+
 def _load_predictor(force_cpu=False):
     global _predictor, _device
     with _model_lock:
@@ -123,8 +173,7 @@ def _load_predictor(force_cpu=False):
         from sam2.build_sam import build_sam2
         from sam2.sam2_image_predictor import SAM2ImagePredictor
 
-        use_cuda = torch.cuda.is_available() and not force_cpu and os.environ.get("TROZAL_RIG_DEVICE", "auto") != "cpu"
-        device = "cuda" if use_cuda else "cpu"
+        device = _select_accelerator(torch, force_cpu=force_cpu)
         # Record the attempted device before model construction. SAM can fail
         # inside its CUDA position-encoding kernels before a predictor exists;
         # the caller must still recognize that as a CUDA failure and retry CPU.
@@ -250,6 +299,8 @@ def health():
         "device": _device,
         "checkpoint": CHECKPOINT.is_file(),
         "max_side": MAX_SIDE,
+        "runtime": _torch_runtime_info(),
+        "deviceProfile": os.environ.get("TROZAL_RIG_DEVICE", "auto"),
     })
 
 
@@ -408,5 +459,7 @@ if __name__ == "__main__":
     print("TROZAL Universal Object Rig server")
     print("Local-only API: http://127.0.0.1:%d" % PORT)
     print("SAM 2.1 Tiny checkpoint:", CHECKPOINT)
+    print("Device profile:", os.environ.get("TROZAL_RIG_DEVICE", "auto"))
+    print("GPU runtime:", _torch_runtime_info())
     print("Model is loaded only when the first segmentation request arrives.")
     app.run(host="127.0.0.1", port=PORT, debug=False, threaded=True)
