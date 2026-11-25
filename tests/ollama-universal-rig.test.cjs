@@ -80,6 +80,9 @@ assert.match(mode5, /function drawTriangle\(/, 'OLLAMA Universal Rig must raster
 assert.match(mode5, /const density=Math\.max\(4,Math\.min\(24/, 'OLLAMA mesh density must be user-configurable within safe bounds.');
 assert.match(mode5, /itcvMeshEnabled/, 'OLLAMA must expose a visible mesh enable control.');
 assert.match(mode5, /jointInfluence/, 'OLLAMA must serialize joint influence into the runtime.');
+assert.match(mode5, /itcvJointAnchors/, 'OLLAMA must expose a visible cross-segment shared-joint control.');
+assert.match(mode5, /axisLengthSq/, 'OLLAMA mesh weights must follow the shared proximal-to-distal joint axis.');
+assert.match(mode5, /distal:child\?\{x:Number\(child\.pivotX\),y:Number\(child\.pivotY\)\}/, 'OLLAMA child pivots must anchor parent segment distal seams.');
 assert.ok(mode5.includes('ctx.transform(A,B,C,D,E,F)'), 'OLLAMA triangle faces must map source texture coordinates onto deformed vertices.');
 assert.ok(mode5.includes('smoothWeight=value=>'), 'OLLAMA vertices must blend proximal/distal joint influences with smooth weights.');
 assert.ok(mode5.includes('distalWeight:weight'), 'OLLAMA must retain normalized joint influence weights per shared mesh vertex.');
