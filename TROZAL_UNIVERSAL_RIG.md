@@ -1,52 +1,45 @@
 # TROZAL OLLAMA — Universal Object Rig
 
-Universal Object Rig expands Mode 5 beyond whole-image movement and human-only rigging. It can segment visible components from many kinds of source images: people, animals, vehicles, machinery, plants, products, illustrations and graphic elements.
+Universal Object Rig uses SAM 2.1 Hiera Tiny for local component masks and can run on NVIDIA CUDA, supported AMD ROCm devices, or CPU fallback.
 
-## How it works
+## GPU profiles
 
-1. **Qwen Vision (Ollama)** analyzes the image, labels candidate components and recommends plausible motion and pivot positions.
-2. **SAM 2.1 Hiera Tiny** generates pixel masks locally. Automatic mode samples object regions; manual mode lets the user click a particular component.
-3. **Local inpainting** reconstructs an approximate background after the selected component masks are removed.
-4. **Universal Rig** stores each selected component as a transparent PNG with its own pivot, motion type, speed and optional parent relation.
-5. Mode 5 embeds the reconstructed background and all component PNGs into the exported HTML/JavaScript. The export does not need Ollama or SAM 2 running during playback.
+Run `TROZAL_UNIVERSAL_RIG_SETUP.bat` and select a profile:
 
-The old whole-image animation remains available when the segmentation service is not installed, cannot detect a useful mask, or is not suitable for a source image.
+| Profile | PyTorch runtime | Intended hardware |
+|---|---|---|
+| NVIDIA CUDA 12.8 | PyTorch 2.9.1 + TorchVision 0.24.1 | GTX 1660 Super (Turing, sm_75), RTX 5060 (Blackwell, sm_120), and other architectures included in the official wheel |
+| AMD ROCm 7.2.1 | PyTorch 2.9.1 ROCm + TorchVision 0.24.1 | Only Radeon GPUs listed in AMD's Windows compatibility matrix; Windows 11, Python 3.12 and matching AMD driver required |
+| CPU | PyTorch 2.9.1 CPU | Any supported Windows PC; slower, no GPU acceleration |
 
-## Windows setup
+**For the current RTX 5060, choose profile 1 (NVIDIA CUDA 12.8).** The previous CUDA 12.1 / PyTorch 2.5.1 installer is not suitable for Blackwell sm_120. CUDA 12.8 PyTorch wheels include both Turing sm_75 and Blackwell sm_120 support. The same NVIDIA profile therefore supports switching between the GTX 1660 Super and RTX 5060, provided the installed NVIDIA driver is current.
 
-Requirements:
-- Windows 10/11
-- Python 3.10, 3.11 or 3.12 with the Python Launcher
-- Internet access for the one-time installation and model download
-- NVIDIA GPU is optional; CPU fallback is available
-- For the user's 16 GB RAM / GTX 1660 Super class of hardware, start with SAM 2.1 Tiny and 1024-pixel analysis
+The AMD Windows profile is deliberately limited to AMD's published supported hardware. It is not a universal driver for every Radeon card. Unsupported Radeon models use CPU fallback. On Linux, install the ROCm/PyTorch combination supported for that Linux distribution and GPU; this Windows installer does not configure Linux/WSL ROCm.
 
-1. Keep Ollama running and make sure the chosen Vision model (for example `qwen2.5vl:3b`) is installed.
-2. Run `TROZAL_UNIVERSAL_RIG_SETUP.bat` once. It creates an isolated `.trozal-rig-venv`, installs PyTorch and local segmentation dependencies, downloads the official SAM 2 source, and downloads the SAM 2.1 Tiny checkpoint.
-3. Run `TROZAL_UNIVERSAL_RIG_START.bat` whenever Universal Object Rig is needed. Keep its console window open while using Mode 5.
-4. Open TROZAL OLLAMA, go to Mode 5, select one source image, run **AI ANALISIS & GENERATE**, then press **AI SEGMENTASI KOMPONEN**. Review names and motion types; use **Klik gambar untuk tambah komponen** when an important part was missed. Press **Bangun Universal Rig** to update the preview and standalone HTML/JavaScript.
+## Installation and use
 
-The local segmentation server listens only on `127.0.0.1:11436`. Ollama continues to use its normal local API. The SAM model is not downloaded automatically by the website.
+1. Choose the matching GPU profile in `TROZAL_UNIVERSAL_RIG_SETUP.bat`.
+2. The setup creates the isolated `.trozal-rig-venv`, installs the selected PyTorch backend, downloads official SAM 2 source and the SAM 2.1 Tiny checkpoint.
+3. Run `TROZAL_UNIVERSAL_RIG_START.bat`. The server detects the available accelerator automatically.
+4. Check `http://127.0.0.1:11436/api/health`. The response includes PyTorch version, CUDA/HIP runtime, detected GPU, NVIDIA compute capability, supported PyTorch architectures, backend and selected device.
+5. Use Mode 5 in TROZAL OLLAMA and run AI Segmentasi Komponen.
 
-## Model and device behavior
+## Device selection overrides
 
-The installer requests PyTorch 2.5.1 / TorchVision 0.20.1 with CUDA 12.1 first. If that installation fails, it installs the CPU build. The Python service uses CUDA FP16 when available and can retry on CPU after CUDA out-of-memory errors. It disables compilation of SAM 2's optional custom CUDA extension because the service can run without that extension.
+The server supports `TROZAL_RIG_DEVICE=auto|cuda|nvidia|amd|rocm|cpu`. Default is `auto`. The AMD aliases require a ROCm-enabled PyTorch build. CPU can be forced for troubleshooting. CUDA/ROCm runtime failures, including unsupported kernels, trigger CPU retry where possible.
 
-Meta's SAM 2 installation documentation requires Python 3.10+, PyTorch 2.5.1+ and TorchVision 0.20.1+; it also recommends WSL for Windows installations. The TROZAL installer uses the no-custom-CUDA-extension path, but native Windows setup can still vary with local Python/driver configuration. If installation fails, use the error shown in the setup console; do not delete the existing Ollama model.
+## Accuracy and compatibility notes
 
-## Accuracy limits
-
-- SAM 2 segments visible regions; it does not know the correct physical hinge or joint on its own. Qwen proposes names and pivots, and the user should review them.
-- Automatic segmentation returns candidate masks, not a guaranteed full semantic decomposition. Use manual click selection to isolate a missed component.
-- Inpainting is local approximation. Large removed objects, textured backgrounds and overlapping objects can leave visible artifacts.
-- The first release is a 2D cutout rig. It does not create new 3D geometry, true facial animation, physically simulated deformation or a complete 3D skeleton.
-- One image is processed per Universal Rig. Multi-image slideshow mode remains separate.
-- The generated HTML/JavaScript embeds image masks/backgrounds and can become large when many high-resolution parts are selected.
+- NVIDIA CUDA 12.8 PyTorch wheel architecture support is what makes the GTX 1660 Super and RTX 5060 share one install profile; it does not guarantee every third-party CUDA extension supports both.
+- SAM 2's optional custom CUDA extension remains disabled; segmentation uses supported PyTorch operations.
+- AMD GPU acceleration depends on the exact GPU, OS, driver and ROCm matrix. AMD's Windows PyTorch support is limited to named Radeon products and Windows 11; other cards are not claimed as compatible.
+- CPU fallback preserves availability but is slower.
+- Successful package installation/build checks do not replace a real segmentation test on each physical GPU.
 
 ## Troubleshooting
 
-- **SAM service not active:** run `TROZAL_UNIVERSAL_RIG_START.bat`; verify `http://127.0.0.1:11436/api/health` in the same computer's browser.
-- **Chrome local network permission:** allow local/loopback network access for the TROZAL site if Chrome asks.
-- **CUDA out of memory:** the service retries on CPU. If repeated, close other GPU-heavy applications and keep image input at or below 1024 pixels for analysis.
-- **No masks:** use a clearer image, fewer overlapping objects, or manual click selection. Fall back to whole-image motion if the object cannot be isolated cleanly.
-- **Rough background:** reduce the number of selected masks or keep the original-image motion mode for that image.
+- If the health endpoint reports `backend: nvidia-cuda` and `computeCapability: 12.0`, RTX 5060 is being recognized.
+- GTX 1660 Super should report `computeCapability: 7.5`.
+- If an NVIDIA GPU is detected but its architecture is absent from PyTorch's compiled architecture list, the server selects CPU instead of knowingly launching an unsupported kernel.
+- If AMD reports no accelerator, verify the Radeon model and Windows driver against AMD's current ROCm compatibility matrix.
+- Keep analysis size at or below 1024 pixels when VRAM is limited.
