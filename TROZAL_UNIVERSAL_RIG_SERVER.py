@@ -125,11 +125,28 @@ def _load_predictor(force_cpu=False):
 
         use_cuda = torch.cuda.is_available() and not force_cpu and os.environ.get("TROZAL_RIG_DEVICE", "auto") != "cpu"
         device = "cuda" if use_cuda else "cpu"
-        model = build_sam2(CONFIG, str(CHECKPOINT), device=device, apply_postprocessing=False)
-        model.eval()
-        _predictor = SAM2ImagePredictor(model)
+        # Record the attempted device before model construction. SAM can fail
+        # inside its CUDA position-encoding kernels before a predictor exists;
+        # the caller must still recognize that as a CUDA failure and retry CPU.
         _device = device
+        try:
+            model = build_sam2(CONFIG, str(CHECKPOINT), device=device, apply_postprocessing=False)
+            model.eval()
+            _predictor = SAM2ImagePredictor(model)
+        except Exception:
+            _predictor = None
+            raise
         return _predictor
+
+
+
+def _is_cuda_runtime_error(error):
+    """Recognize CUDA runtime failures, including unsupported GPU kernels."""
+    message = str(error or "").lower()
+    return any(token in message for token in (
+        "cuda", "no kernel image", "cublas", "cudnn", "device-side assert",
+        "invalid device function", "kernel launch"
+    ))
 
 
 def _image_from_payload(value, max_side=MAX_SIDE):
@@ -205,7 +222,7 @@ def _predict_masks(image, points, labels):
     try:
         masks, scores = _predict_loaded(predictor, points, labels)
     except Exception as exc:
-        if _device != "cuda" or ("out of memory" not in str(exc).lower() and "cuda" not in str(exc).lower()):
+        if _device != "cuda" or not _is_cuda_runtime_error(exc):
             raise
         import torch
         torch.cuda.empty_cache()
@@ -284,7 +301,7 @@ def segment_auto():
             predictor = _set_image(image)
             scan(predictor)
         except Exception as exc:
-            if _device != "cuda" or ("out of memory" not in str(exc).lower() and "cuda" not in str(exc).lower()):
+            if _device != "cuda" or not _is_cuda_runtime_error(exc):
                 raise
             import torch
             torch.cuda.empty_cache()
