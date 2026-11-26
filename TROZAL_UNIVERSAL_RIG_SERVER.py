@@ -642,6 +642,14 @@ def pose_segment_parts():
         raise
 
 
+def _adaptive_inpaint_parameters(width, height):
+    """Scale mask expansion and OpenCV repair radius with source resolution."""
+    longest_side = max(int(width), int(height), 1)
+    dilation_px = max(2, min(8, int(round(longest_side / 512))))
+    inpaint_radius = max(3, min(10, int(round(longest_side / 256))))
+    return dilation_px, inpaint_radius
+
+
 @app.post("/api/inpaint")
 def inpaint():
     body = request.get_json(force=True)
@@ -659,9 +667,13 @@ def inpaint():
     try:
         import cv2
         source = cv2.cvtColor(np.asarray(image), cv2.COLOR_RGB2BGR)
-        kernel = np.ones((5, 5), np.uint8)
+        dilation_px, inpaint_radius = _adaptive_inpaint_parameters(width, height)
+        kernel_size = dilation_px * 2 + 1
+        kernel = np.ones((kernel_size, kernel_size), np.uint8)
         dilated = cv2.dilate(union, kernel, iterations=1)
-        filled = cv2.inpaint(source, dilated, 7, cv2.INPAINT_TELEA)
+        filled = cv2.inpaint(source, dilated, inpaint_radius, cv2.INPAINT_TELEA)
+        mask_coverage = float(np.count_nonzero(union)) / float(width * height)
+        expanded_coverage = float(np.count_nonzero(dilated)) / float(width * height)
         filled = cv2.cvtColor(filled, cv2.COLOR_BGR2RGB)
         result = Image.fromarray(filled, "RGB")
     except Exception as exc:
@@ -670,7 +682,13 @@ def inpaint():
     result.save(buff, format="PNG", optimize=True)
     return jsonify({"ok": True, "background": "data:image/png;base64," +
                     base64.b64encode(buff.getvalue()).decode("ascii"),
-                    "width": width, "height": height})
+                    "width": width, "height": height,
+                    "diagnostics": {
+                        "maskCoverage": round(mask_coverage * 100, 2),
+                        "expandedCoverage": round(expanded_coverage * 100, 2),
+                        "dilationPixels": dilation_px,
+                        "inpaintRadius": inpaint_radius
+                    }})
 
 
 @app.errorhandler(Exception)

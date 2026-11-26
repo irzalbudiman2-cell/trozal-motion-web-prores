@@ -111,7 +111,18 @@ assert.match(ui, /\/api\/pose\/segment-parts/, 'Mode 5 must call the dedicated h
 assert.match(mode5, /itcvRigCharacterAuto/, 'Mode 5 must show an explicit AUTO CHARACTER PARTS control.');
 assert.match(mode5, /rigController\.autoCharacterParts\(\)/, 'The visible Mode 5 control must invoke per-body-part segmentation.');
 
+assert.match(server, /def _adaptive_inpaint_parameters\(width, height\)/, 'Background reconstruction must scale its repair parameters to the source resolution.');
+assert.match(server, /cv2\.dilate\(union, kernel, iterations=1\)/, 'Inpainting must expand the foreground mask before reconstructing hidden background.');
+assert.match(server, /cv2\.inpaint\(source, dilated, inpaint_radius, cv2\.INPAINT_TELEA\)/, 'Inpainting radius must use the adaptive resolution-aware value.');
+assert.match(server, /"maskCoverage": round\(mask_coverage \* 100, 2\)/, 'The inpaint API must report original foreground mask coverage.');
+assert.match(ui, /inpaintInfo\.expandedCoverage/, 'Mode 5 must visibly report the expanded background repair coverage.');
+
 console.log('PASS: OLLAMA Universal Object Rig local API, SAM2 routes, Character Part Segmentation, loopback guard, UI controls and self-contained export contract.');
+assert.match(mode5,/trozal-rig-timeline/, 'Mode 5 runtime must expose a visible timeline for the generated rig.');
+assert.match(mode5,/aria-label','Timeline playhead'/, 'Mode 5 timeline must support scrubbing the preview playhead.');
+assert.match(mode5,/UNIVERSAL RIG · TIMELINE/, 'Mode 5 timeline must label the articulated rig tracks.');
+assert.match(mode5,/timelineParts\.forEach/, 'Each segmented body part must have an independently selectable timeline track.');
+assert.match(mode5,/scrub\.addEventListener\('input'/, 'Scrubbing the timeline must seek the rendered preview.');
 
 assert.match(mode5,/itcvContinuity/,'OLLAMA must expose cross-segment continuity control.');
 assert.match(mode5,/crossSegmentContinuity/,'OLLAMA must serialize cross-segment continuity.');
