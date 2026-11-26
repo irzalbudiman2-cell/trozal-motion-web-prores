@@ -616,6 +616,9 @@ def pose_segment_parts():
             if not record:
                 continue
             record.update({
+                # Keep anatomical IDs stable and identical to the parent references.
+                # The SAM mask identifier remains available separately for diagnostics.
+                "id": identifier, "maskId": record["id"],
                 "name": name, "category": "character", "motion": motion,
                 "parent": parent, "pivotX": round(point(pivot_index)[0] / width, 6),
                 "pivotY": round(point(pivot_index)[1] / height, 6),

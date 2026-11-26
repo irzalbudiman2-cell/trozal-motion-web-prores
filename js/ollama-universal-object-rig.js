@@ -681,16 +681,31 @@
         }
         cropContext.putImageData(outputPixels, 0, 0);
         const motion = segment.motion || 'float';
-        const amplitude = motion === 'wheel' ? 6.283 : motion === 'hinge' ? 0.28 :
-          motion === 'swing' ? 0.24 : motion === 'rotate' ? 0.35 :
-          motion === 'bob' ? 0.05 : motion === 'pulse' ? 0.08 : motion === 'static' ? 0 : 0.12;
+        // Character joints use conservative anatomical amplitudes. Large generic
+        // swing values make independent layers look like detached stickers.
+        const anatomicalAmplitude = {
+          torso: 0.012, head: 0.035,
+          upperArmL: 0.045, upperArmR: 0.045,
+          forearmL: 0.05, forearmR: 0.05,
+          handL: 0.025, handR: 0.025,
+          thighL: 0.035, thighR: 0.035,
+          shinL: 0.045, shinR: 0.045,
+          footL: 0.02, footR: 0.02
+        };
+        const amplitude = segment.category === 'character'
+          ? (motion === 'static' ? 0 : (anatomicalAmplitude[segment.id] ?? 0.025))
+          : (motion === 'wheel' ? 6.283 : motion === 'hinge' ? 0.28 :
+            motion === 'swing' ? 0.24 : motion === 'rotate' ? 0.35 :
+            motion === 'bob' ? 0.05 : motion === 'pulse' ? 0.08 : motion === 'static' ? 0 : 0.12);
+        const speed = segment.id.startsWith('foot') || segment.id.startsWith('shin') ? 1.1 :
+          segment.id.startsWith('hand') ? 1.5 : segment.id.startsWith('forearm') ? 1.25 : 0.9;
         parts.push({
           id: segment.id, name: segment.name, category: segment.category || 'other',
           poseAnchor: segment.poseAnchor || null,
           parent: parentById.get(segment.id) || '', motion, src: crop.toDataURL('image/png'),
           x: bx, y: by, w: bw, h: bh,
           pivotX: segment.pivotNormX * imageSize.width, pivotY: segment.pivotNormY * imageSize.height,
-          amp: amplitude, speed: motion === 'wheel' ? 1.6 : motion === 'static' ? 0 : 0.9,
+          amp: amplitude, speed: segment.category === 'character' ? speed : (motion === 'wheel' ? 1.6 : motion === 'static' ? 0 : 0.9),
           phase: parts.length * 0.73, enabled: true
         });
       }
