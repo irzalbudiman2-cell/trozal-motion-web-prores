@@ -103,9 +103,9 @@ for (const part of ['Kepala','Badan / Torso','Lengan Atas Kiri','Lengan Bawah Ki
 }
 assert.match(server, /_pose_part_roi/, 'SAM masks must be constrained to pose-guided anatomical regions rather than treating the whole person as one object.');
 assert.match(ui, /async function autoCharacterParts\(/, 'Mode 5 must expose an automatic human body-part segmentation workflow.');
-assert.match(ui, /\\/api\\/pose\\/segment-parts/, 'Mode 5 must call the dedicated human body-part segmentation endpoint.');
+assert.match(ui, /\/api\/pose\/segment-parts/, 'Mode 5 must call the dedicated human body-part segmentation endpoint.');
 assert.match(mode5, /itcvRigCharacterAuto/, 'Mode 5 must show an explicit AUTO CHARACTER PARTS control.');
-assert.match(mode5, /rigController\\.autoCharacterParts\\(\\)/, 'The visible Mode 5 control must invoke per-body-part segmentation.');
+assert.match(mode5, /rigController\.autoCharacterParts\(\)/, 'The visible Mode 5 control must invoke per-body-part segmentation.');
 
 console.log('PASS: OLLAMA Universal Object Rig local API, SAM2 routes, Character Part Segmentation, loopback guard, UI controls and self-contained export contract.');
 
