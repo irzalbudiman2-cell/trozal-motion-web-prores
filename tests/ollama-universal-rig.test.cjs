@@ -118,6 +118,11 @@ assert.match(server, /"maskCoverage": round\(mask_coverage \* 100, 2\)/, 'The in
 assert.match(ui, /inpaintInfo\.expandedCoverage/, 'Mode 5 must visibly report the expanded background repair coverage.');
 
 console.log('PASS: OLLAMA Universal Object Rig local API, SAM2 routes, Character Part Segmentation, loopback guard, UI controls and self-contained export contract.');
+assert.match(mode5,/trozal-rig-timeline/, 'Mode 5 runtime must expose a visible timeline for the generated rig.');
+assert.match(mode5,/aria-label','Timeline playhead'/, 'Mode 5 timeline must support scrubbing the preview playhead.');
+assert.match(mode5,/UNIVERSAL RIG · TIMELINE/, 'Mode 5 timeline must label the articulated rig tracks.');
+assert.match(mode5,/timelineParts\.forEach/, 'Each segmented body part must have an independently selectable timeline track.');
+assert.match(mode5,/scrub\.addEventListener\('input'/, 'Scrubbing the timeline must seek the rendered preview.');
 
 assert.match(mode5,/itcvContinuity/,'OLLAMA must expose cross-segment continuity control.');
 assert.match(mode5,/crossSegmentContinuity/,'OLLAMA must serialize cross-segment continuity.');
