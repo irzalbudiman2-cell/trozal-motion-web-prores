@@ -291,9 +291,17 @@ def _predict_masks(image, points, labels):
 
 @app.after_request
 def allow_loopback_private_network(response):
-    response.headers["Access-Control-Allow-Private-Network"] = "true"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
-    response.headers["Vary"] = "Origin"
+    # Explicit, origin-scoped CORS + Chromium Private Network Access headers.
+    # Keep this deterministic for OPTIONS preflights from GitHub Pages/Vercel.
+    origin = request.headers.get("Origin", "")
+    origin_allowed = origin in [item for item in ALLOWED_ORIGINS if isinstance(item, str)] or bool(VERCEL_ORIGIN.fullmatch(origin))
+    if origin_allowed:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Vary"] = "Origin"
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+        response.headers["Access-Control-Max-Age"] = "600"
+        response.headers["Access-Control-Allow-Private-Network"] = "true"
     return response
 
 
