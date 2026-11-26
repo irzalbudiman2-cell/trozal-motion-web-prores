@@ -140,7 +140,7 @@ assert.match(mode5,/crossSegmentContinuity/,'OLLAMA must serialize cross-segment
 assert.match(mode5,/drawPart\(part,parentWave\)/,'OLLAMA must propagate parent motion influence.');
 assert.match(ui, /const jointSeams = \[\]/, 'Universal Rig must build a shared joint seam map for every articulated parent-child pair.');
 assert.match(ui, /torso: 0\.08, head: 0\.14/,'Character rig must use visible anatomical motion amplitudes instead of near-static values.');
-assert.match(mode5, /\.camera\\{animation:none!important;transform:none!important\\}/,'The rig preview must lock global camera movement so articulated body motion is visible.');
+assert.ok(mode5.includes('.camera{animation:none!important;transform:none!important}'),'The rig preview must lock global camera movement so articulated body motion is visible.');
 assert.match(mode5, /motion==='rotate'&&part\.category==='character'/,'Human limb rotate motion must not spin a full 360 degrees.');
 assert.match(ui, /jointSeamsByPart/, 'Both connected segments must receive the same joint overlap source pixels.');
 assert.match(ui, /const unionMask = new Uint8Array\(imageSize\.width \* imageSize\.height\)/, 'Joint welding must use the union of the two SAM foreground masks, not invent background pixels.');
