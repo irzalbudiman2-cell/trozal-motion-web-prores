@@ -97,6 +97,8 @@ assert.match(pagesBuild, /test -s site\/js\/ollama-universal-object-rig\.js/,
   'GitHub Pages build must fail if the Universal Rig controller asset is missing');
 
 
+assert.match(server, /"id": identifier, "maskId": record\["id"\]/, 'Character part IDs must match the parent IDs so the Universal Rig can build connected anatomical chains.');
+assert.match(ui, /part\.parentId = String\(item\.parent \|\| ''\)/, 'The Mode 5 controller must preserve anatomical parent references.');
 assert.match(server, /def pose_segment_parts\(\)/, 'Mode 5 must expose a dedicated pose-guided human part segmentation endpoint.');
 for (const part of ['Kepala','Badan / Torso','Lengan Atas Kiri','Lengan Bawah Kiri','Tangan Kiri','Paha Kiri','Betis Kiri','Kaki Kiri']) {
   assert.ok(server.includes(part), 'Character Part Segmentation is missing anatomical layer: ' + part);
