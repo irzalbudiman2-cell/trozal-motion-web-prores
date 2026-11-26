@@ -51,10 +51,16 @@ def allow_local_network_preflight(response):
     # Chromium may send this header when a hosted page calls a loopback API.
     # Flask-CORS still restricts Access-Control-Allow-Origin to ALLOWED_ORIGINS.
     origin = request.headers.get("Origin", "")
-    if request.headers.get("Access-Control-Request-Private-Network", "").lower() == "true":
-        origin_allowed = origin in ALLOWED_ORIGINS or bool(VERCEL_ORIGIN.fullmatch(origin))
-        if origin_allowed:
-            response.headers["Access-Control-Allow-Private-Network"] = "true"
+    origin_allowed = origin in ALLOWED_ORIGINS or bool(VERCEL_ORIGIN.fullmatch(origin))
+    # Return the Private Network Access opt-in on every allowed preflight.
+    # Newer Chromium builds may not expose the legacy request header in the
+    # same way, but still require the server to explicitly permit loopback.
+    if origin_allowed and request.method == "OPTIONS":
+        response.headers["Access-Control-Allow-Private-Network"] = "true"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+        response.headers["Vary"] = "Origin"
+    elif origin_allowed and request.headers.get("Access-Control-Request-Private-Network", "").lower() == "true":
+        response.headers["Access-Control-Allow-Private-Network"] = "true"
     return response
 
 
