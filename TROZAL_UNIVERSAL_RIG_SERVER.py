@@ -465,6 +465,180 @@ def pose_estimate():
 
 
 
+
+
+def _capsule_roi(width, height, start, end, radius):
+    """Conservative limb corridor around a pose bone, used to crop SAM candidates."""
+    yy, xx = np.ogrid[:height, :width]
+    ax, ay = float(start[0]), float(start[1])
+    bx, by = float(end[0]), float(end[1])
+    dx, dy = bx - ax, by - ay
+    length_sq = dx * dx + dy * dy
+    if length_sq < 1:
+        return (xx - ax) ** 2 + (yy - ay) ** 2 <= radius * radius
+    t = np.clip(((xx - ax) * dx + (yy - ay) * dy) / length_sq, 0, 1)
+    nearest_x, nearest_y = ax + t * dx, ay + t * dy
+    return (xx - nearest_x) ** 2 + (yy - nearest_y) ** 2 <= radius * radius
+
+
+def _pose_part_roi(width, height, kind, points, radius):
+    if kind == "torso":
+        from PIL import ImageDraw
+        canvas = Image.new("L", (width, height), 0)
+        draw = ImageDraw.Draw(canvas)
+        polygon = [(int(x), int(y)) for x, y in points]
+        draw.polygon(polygon, fill=255)
+        return np.asarray(canvas, dtype=np.uint8) > 0
+    if kind == "head":
+        cx, cy = points[0]
+        yy, xx = np.ogrid[:height, :width]
+        return (xx - cx) ** 2 + (yy - cy) ** 2 <= radius * radius
+    return _capsule_roi(width, height, points[0], points[1], radius)
+
+
+@app.post("/api/pose/segment-parts")
+def pose_segment_parts():
+    """Create independently addressable human body layers from Pose landmarks + SAM 2.1 masks."""
+    body = request.get_json(force=True)
+    request_id = str(body.get("requestId") or "character-parts")
+    _set_segment_progress(request_id, "decoding", 1, 0, 11,
+                          "Membaca gambar untuk Character Part Segmentation…")
+    try:
+        image, original_size = _image_from_payload(body.get("image"), max_side=MAX_SIDE)
+        width, height = image.size
+        pose = _estimate_pose(image)
+        if not pose.get("detected"):
+            return jsonify({"ok": False, "error": "Pose manusia tidak terdeteksi. Pastikan seluruh tubuh terlihat dan gambar cukup jelas."}), 422
+        lm = pose["landmarks"]
+        def point(index):
+            item = lm[index]
+            return (float(item["x"]) * width, float(item["y"]) * height)
+        def visible(*indices):
+            return all(float(lm[i].get("visibility", 1)) >= 0.18 and
+                       float(lm[i].get("presence", 1)) >= 0.12 for i in indices)
+        shoulder_span = max(12.0, float(np.linalg.norm(np.subtract(point(11), point(12)))))
+        hip_span = max(10.0, float(np.linalg.norm(np.subtract(point(23), point(24)))))
+        specs = [
+            ("head", "Kepala", "head", (0,), "torso", "bob", 0),
+            ("torso", "Badan / Torso", "torso", (11, 12, 24, 23), "", "bob", 23),
+            ("upperArmL", "Lengan Atas Kiri", "limb", (11, 13), "torso", "swing", 11),
+            ("forearmL", "Lengan Bawah Kiri", "limb", (13, 15), "upperArmL", "hinge", 13),
+            ("handL", "Tangan Kiri", "limb", (15, 19), "forearmL", "swing", 15),
+            ("upperArmR", "Lengan Atas Kanan", "limb", (12, 14), "torso", "swing", 12),
+            ("forearmR", "Lengan Bawah Kanan", "limb", (14, 16), "upperArmR", "hinge", 14),
+            ("handR", "Tangan Kanan", "limb", (16, 20), "forearmR", "swing", 16),
+            ("thighL", "Paha Kiri", "limb", (23, 25), "torso", "swing", 23),
+            ("shinL", "Betis Kiri", "limb", (25, 27), "thighL", "hinge", 25),
+            ("footL", "Kaki Kiri", "limb", (27, 31), "shinL", "rotate", 27),
+            ("thighR", "Paha Kanan", "limb", (24, 26), "torso", "swing", 24),
+            ("shinR", "Betis Kanan", "limb", (26, 28), "thighR", "hinge", 26),
+            ("footR", "Kaki Kanan", "limb", (28, 32), "shinR", "rotate", 28),
+        ]
+        _set_segment_progress(request_id, "loading_model", 5, 0, len(specs),
+                              "Memuat SAM 2.1 Tiny untuk pemisahan anggota tubuh…")
+        predictor = _set_image(image)
+        records = []
+        for index, (identifier, name, kind, indices, parent, motion, pivot_index) in enumerate(specs):
+            if not visible(*indices):
+                continue
+            coords = [point(i) for i in indices]
+            if kind == "head":
+                center = point(0)
+                radius = max(10.0, shoulder_span * 0.34)
+                roi = _pose_part_roi(width, height, "head", [center], radius)
+                positive = [center]
+                negatives = [point(11), point(12), point(23)]
+            elif kind == "torso":
+                shoulder_l, shoulder_r, hip_r, hip_l = coords
+                pad = max(5.0, shoulder_span * 0.07)
+                polygon = [
+                    (shoulder_l[0] - pad, shoulder_l[1] - pad),
+                    (shoulder_r[0] + pad, shoulder_r[1] - pad),
+                    (hip_r[0] + pad, hip_r[1] + pad),
+                    (hip_l[0] - pad, hip_l[1] + pad),
+                ]
+                roi = _pose_part_roi(width, height, "torso", polygon, 0)
+                center = (sum(p[0] for p in polygon) / 4, sum(p[1] for p in polygon) / 4)
+                positive = [center, ((shoulder_l[0]+hip_l[0])/2, (shoulder_l[1]+hip_l[1])/2),
+                            ((shoulder_r[0]+hip_r[0])/2, (shoulder_r[1]+hip_r[1])/2)]
+                negatives = [point(0), point(13), point(14), point(25), point(26)]
+            else:
+                a, b = coords
+                length = float(np.linalg.norm(np.subtract(a, b)))
+                if length < max(8.0, shoulder_span * 0.045):
+                    continue
+                if identifier.startswith(("upperArm", "forearm")):
+                    radius = max(7.0, shoulder_span * (0.105 if identifier.startswith("upperArm") else 0.085))
+                elif identifier.startswith(("thigh", "shin")):
+                    radius = max(8.0, hip_span * (0.17 if identifier.startswith("thigh") else 0.12))
+                elif identifier.startswith("hand"):
+                    radius = max(7.0, shoulder_span * 0.11)
+                else:
+                    radius = max(7.0, hip_span * 0.12)
+                roi = _pose_part_roi(width, height, "limb", coords, radius)
+                positive = [(a[0] * 0.35 + b[0] * 0.65, a[1] * 0.35 + b[1] * 0.65),
+                            (a[0] * 0.68 + b[0] * 0.32, a[1] * 0.68 + b[1] * 0.32)]
+                dx, dy = b[0] - a[0], b[1] - a[1]
+                norm = max(1.0, float(np.hypot(dx, dy)))
+                nx, ny = -dy / norm, dx / norm
+                mid = ((a[0]+b[0])/2, (a[1]+b[1])/2)
+                negatives = [(mid[0] + nx * radius * 1.8, mid[1] + ny * radius * 1.8),
+                             (mid[0] - nx * radius * 1.8, mid[1] - ny * radius * 1.8)]
+            points, labels = [], []
+            for x, y in positive:
+                points.append([max(0, min(width - 1, x)), max(0, min(height - 1, y))]); labels.append(1)
+            for x, y in negatives:
+                points.append([max(0, min(width - 1, x)), max(0, min(height - 1, y))]); labels.append(0)
+            try:
+                masks, scores = _predict_loaded(predictor, points, labels)
+            except Exception as exc:
+                if _device != "cuda" or not _is_cuda_runtime_error(exc):
+                    raise
+                import torch
+                torch.cuda.empty_cache()
+                predictor = _set_image(image, force_cpu=True)
+                masks, scores = _predict_loaded(predictor, points, labels)
+            candidates = []
+            for mask, score in zip(masks, scores):
+                binary = np.asarray(mask).squeeze() > 0
+                clipped = np.logical_and(binary, roi)
+                area = int(clipped.sum())
+                if area < max(8, int(width * height * 0.00008)):
+                    continue
+                candidates.append((float(score), area, clipped))
+            if not candidates:
+                _set_segment_progress(request_id, "sampling", 10 + int((index + 1) / len(specs) * 82),
+                                      index + 1, len(specs), "SAM melewati bagian yang tidak memiliki mask meyakinkan: " + name)
+                continue
+            candidates.sort(key=lambda item: (item[0], item[1]), reverse=True)
+            score, area, mask = candidates[0]
+            record = _mask_record(mask, score, width, height, identifier)
+            if not record:
+                continue
+            record.update({
+                "name": name, "category": "character", "motion": motion,
+                "parent": parent, "pivotX": round(point(pivot_index)[0] / width, 6),
+                "pivotY": round(point(pivot_index)[1] / height, 6),
+            })
+            records.append(record)
+            _set_segment_progress(request_id, "sampling", 10 + int((index + 1) / len(specs) * 82),
+                                  index + 1, len(specs), "Memisahkan komponen tubuh: " + name)
+        _set_segment_progress(request_id, "completed", 100, len(specs), len(specs),
+                              "Pemisahan tubuh selesai · " + str(len(records)) + " layer terdeteksi.")
+        return jsonify({
+            "ok": True, "engine": "MediaPipe Pose + SAM 2.1 Tiny · Character Parts",
+            "width": width, "height": height, "originalWidth": original_size[0],
+            "originalHeight": original_size[1], "device": _device,
+            "pose": pose, "segments": records,
+            "diagnostics": {"requestedParts": len(specs), "detectedParts": len(records),
+                            "missingParts": [spec[1] for spec in specs if spec[0] not in {item["id"] for item in records}]}
+        })
+    except Exception as exc:
+        _set_segment_progress(request_id, "error", 0, 0, 11,
+                              "Character Part Segmentation gagal.", str(exc))
+        raise
+
+
 @app.post("/api/inpaint")
 def inpaint():
     body = request.get_json(force=True)
