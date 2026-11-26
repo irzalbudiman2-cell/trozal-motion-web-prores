@@ -17,6 +17,9 @@ assert.match(server, /host="127\.0\.0\.1"/, 'SAM2 service must bind only to loop
 assert.match(server, /sam2\.1_hiera_tiny\.pt/, 'Use SAM 2.1 Tiny checkpoint');
 assert.match(server, /SAM2ImagePredictor/, 'Use SAM2 image prompt predictor');
 assert.match(server, /Access-Control-Allow-Private-Network/, 'Allow browser local-network preflight');
+assert.match(server, /request\.method == "OPTIONS"/, 'Private Network Access must be enabled on allowlisted OPTIONS preflights even when Chromium omits the legacy request header.');
+assert.match(ui, /Local network access/, 'Local API connection errors must explain the Chrome/Edge local-network permission.');
+assert.match(ui, /127\.0\.0\.1:11436/, 'Local API diagnostics must identify the expected loopback endpoint.');
 assert.match(server, /force_cpu=True/, 'Provide CPU fallback when CUDA runs out of memory');
 assert.ok(server.indexOf('_device = device') >= 0 && server.indexOf('_device = device') < server.indexOf('model = build_sam2(CONFIG'), 'Record the CUDA attempt before SAM2 model initialization so kernel-load failures can trigger CPU retry');
 assert.ok(server.includes('def _is_cuda_runtime_error('), 'Recognize unsupported CUDA kernel images and runtime failures');
