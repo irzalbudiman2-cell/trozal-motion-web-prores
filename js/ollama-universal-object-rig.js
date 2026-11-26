@@ -481,6 +481,13 @@
       segments.forEach((part, index) => {
         const row = document.createElement('div'); row.className = 'rig-part';
         if (part.quality && part.quality.warnings.length) row.title = part.name + ': ' + part.quality.warnings.join('; ');
+        const quality = document.createElement('small');
+        quality.style.cssText = 'grid-column:1/-1;display:block;margin:3px 0 5px 24px;font-size:10px;line-height:1.4;color:' +
+          (part.quality && part.quality.warnings.length ? '#ffc18b' : '#91d9bf');
+        quality.textContent = part.quality
+          ? ('Mask · ' + part.quality.area + ' px sampel · ' + part.quality.components + ' fragmen' +
+            (part.quality.warnings.length ? ' · PERIKSA: ' + part.quality.warnings.join(', ') : ' · OK'))
+          : 'Mask belum dianalisis';
         const enabled = document.createElement('input'); enabled.type = 'checkbox'; enabled.checked = part.enabled !== false;
         enabled.title = 'Aktifkan komponen'; enabled.addEventListener('change', () => {
           part.enabled = enabled.checked; drawSource();
@@ -495,7 +502,7 @@
         const rootOption = document.createElement('option'); rootOption.value = ''; rootOption.textContent = 'Root'; parent.append(rootOption);
         segments.filter(item => item.id !== part.id).forEach(item => { const option = document.createElement('option'); option.value = item.name; option.textContent = item.name; parent.append(option); });
         parent.value = part.parent || ''; parent.addEventListener('change', () => { part.parent = parent.value; });
-        row.append(enabled, name, motion, parent); host.append(row);
+        row.append(enabled, name, motion, parent, quality); host.append(row);
       });
       $('itcvRigCount').textContent = segments.filter(p => p.enabled).length + ' / ' + segments.length + ' komponen aktif';
       refreshMaskFocusOptions();
@@ -597,6 +604,17 @@
 
     async function build() {
       mountSeamControls();
+      if (!segments.length) throw new Error('Belum ada mask. Jalankan Character Part Segmentation atau AI Segmentasi Komponen terlebih dahulu.');
+      const maskAudit = await analyzeSegmentMaskQuality(segments);
+      await prepareMaskPreviews(segments);
+      drawSource();
+      if (maskAudit.emptyCount) throw new Error(maskAudit.emptyCount + ' mask kosong. Universal Rig tidak dibangun agar bagian tubuh tidak hilang.');
+      const flagged = segments.filter(part => part.quality && part.quality.warnings.length);
+      if (flagged.length && typeof window.confirm === 'function') {
+        const details = flagged.slice(0, 8).map(part => part.name + ': ' + part.quality.warnings.join(', ')).join('\\n');
+        const proceed = window.confirm('Pemeriksaan overlay menemukan ' + flagged.length + ' layer yang perlu ditinjau. Periksa warna mask dan batas komponennya pada preview.\\n\\n' + details + (flagged.length > 8 ? '\\n…dan ' + (flagged.length - 8) + ' layer lainnya.' : '') + '\\n\\nLanjut Bangun Universal Rig?');
+        if (!proceed) { status('Build dibatalkan. Perbaiki/disable layer bermasalah lalu periksa overlay kembali.'); return null; }
+      }
       const selected = segments.filter(part => part.enabled !== false);
       if (!selected.length) throw new Error('Aktifkan minimal satu komponen mask.');
       imageUrl = await getImageUrl();
