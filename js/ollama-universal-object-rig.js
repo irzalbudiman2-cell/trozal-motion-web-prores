@@ -83,7 +83,7 @@
           throw new Error('SAM 2.1 tidak menyelesaikan ' + path + ' dalam ' + Math.round(timeoutMs / 1000) + ' detik. Periksa jendela server lokal dan beban GPU/CPU, lalu coba lagi.');
         }
         if (error && error.name === 'TypeError') {
-          throw new Error('Browser menolak koneksi ke server lokal (CORS/izin jaringan lokal). Perbarui server TROZAL, restart START.bat, lalu izinkan akses jaringan lokal untuk domain aplikasi.');
+          throw new Error('Akses ke server lokal 127.0.0.1:11436 diblokir browser. Di Chrome/Edge: klik ikon pengaturan situs di kiri alamat → Izin situs → Akses jaringan lokal (Local network access) → Izinkan, lalu muat ulang halaman. Jika opsi izin tidak muncul, pastikan aplikasi dibuka melalui HTTPS/GitHub Pages atau localhost. Pastikan START.bat tetap terbuka dan server menampilkan Local-only API: http://127.0.0.1:11436. Jika tetap gagal, periksa apakah port 11436 dipakai server TROZAL. Detail browser: '+(error&&error.message||'NetworkError'));
         }
         throw error;
       } finally {
