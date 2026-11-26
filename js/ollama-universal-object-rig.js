@@ -578,6 +578,10 @@
       }
       status('SAM 2.1 sedang mengisi area latar yang tertutup objek…');
       const background = await call('/api/inpaint', { image: imageUrl, masks: selected.map(part => part.mask) });
+      const inpaintInfo = background.diagnostics || {};
+      status('Rekonstruksi latar selesai · cakupan mask ' + (inpaintInfo.maskCoverage ?? '—') +
+        '% · area perbaikan ' + (inpaintInfo.expandedCoverage ?? '—') +
+        '% · radius adaptif ' + (inpaintInfo.inpaintRadius ?? '—') + ' px.');
       const backgroundImage = await loadImage(background.background);
       const bg = document.createElement('canvas'); bg.width = imageSize.width; bg.height = imageSize.height;
       bg.getContext('2d').drawImage(backgroundImage, 0, 0, bg.width, bg.height);
