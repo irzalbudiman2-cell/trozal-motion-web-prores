@@ -132,6 +132,13 @@ assert.match(mode5,/itcvMotionAssistControls/,'OLLAMA must expose pose preset, f
 
 for(const id of ['itcvGestureAction','itcvGazeDirection','itcvBreathing','itcvBodySway','itcvRootMotion']) assert.ok(mode5.includes('id="'+id+'"'),'Mode 5 must expose '+id+'.');
 for(const token of ['gestureAngle','gazeAngle','breathing','bodySway','rootPath']) assert.ok(mode5.includes(token),'Generated OLLAMA rig runtime must apply '+token+'.');
+for(const id of ['itcvArmSwing','itcvStrideLength','itcvTorsoTwist','itcvHeadNod','itcvMotionSmoothness']) assert.ok(mode5.includes('id="'+id+'"'),'Mode 5 must expose biomechanical control '+id+'.');
+for(const token of ['armSwing','strideLength','torsoTwist','headNod','motionSmoothness']) assert.ok(mode5.includes(token),'Generated OLLAMA rig runtime must apply biomechanical control '+token+'.');
+assert.match(mode5,/isArm\?Math\.sin\(phase\+Math\.PI\)\*armSwing/, 'Arm swing must drive arm segments independently.');
+assert.match(mode5,/footSwing\*Math\.PI\)\*part\.h\*\.075\*footLock\*\(\.65\+strideLength\*\.7\)/, 'Stride length must scale the foot lift during swing.');
+assert.match(mode5,/Math\.sin\(t\*1\.8\)\*torsoTwist/, 'Torso twist must animate the torso.');
+assert.match(mode5,/Math\.sin\(t\*2\.4\)\*headNod/, 'Head nod must animate the head.');
+assert.match(mode5,/smoothness\*\.18/, 'Motion smoothness must blend the motion phase to soften transitions.');
 console.log('PASS: OLLAMA Universal Object Rig local API, SAM2 routes, Character Part Segmentation, motion assist, loopback guard, UI controls and self-contained export contract.');
 assert.match(mode5,/trozal-rig-timeline/, 'Mode 5 runtime must expose a visible timeline for the generated rig.');
 assert.match(mode5,/aria-label','Timeline playhead'/, 'Mode 5 timeline must support scrubbing the preview playhead.');
