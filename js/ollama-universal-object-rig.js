@@ -795,7 +795,7 @@
     $('itcvRigBuild').addEventListener('click', () => build().catch(error => status('Build Rig gagal: ' + error.message)));
     mountSeamControls();
     return {
-      setImage, check, autoSegment, addAt, runPointSegmentation, build,
+      setImage, check, autoSegment, autoCharacterParts, addAt, runPointSegmentation, build,
       getRig: () => rig, getSegments: () => segments,
       clear: () => { segments = []; pendingPoints = []; rig = null; maskPreviewCanvases.clear(); if ($('itcvRigPointHint')) $('itcvRigPointHint').textContent = '0 titik'; refreshMaskFocusOptions(); renderList(); drawSource(); $('itcvRigBuild').disabled = true; }
     };
