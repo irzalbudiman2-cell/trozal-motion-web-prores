@@ -171,3 +171,6 @@ assert.match(mode5,/selectedTrack\.speed=Number\(speed\.value\)/, 'Track speed m
 assert.match(mode5,/part\.intensity\?\?1/, 'The runtime must apply per-track intensity to mesh deformation.');
 assert.match(mode5,/scale=trunc\(iw\/2\)\*2:trunc\(ih\/2\)\*2/, 'MP4 encoder must normalize canvas dimensions to even H.264 dimensions.');
 assert.match(mode5,/FFmpeg gagal dimuat/, 'MP4 render errors must identify local FFmpeg asset/runtime problems.');
+
+for(const id of ['itcvGaitPhaseOffset','itcvStanceRatio','itcvKneeFlexAssist','itcvAnkleStabilization','itcvPoseBlend']) assert.ok(mode5.includes('id="'+id+'"'),'Mode 5 must expose adaptive gait control '+id+'.');
+for(const token of ['gaitPhaseOffset','stanceRatio','kneeFlexAssist','ankleStabilization','poseBlend','gaitOffset','kneeFlexAssist','ankleStabilization']) assert.ok(mode5.includes(token),'Generated OLLAMA rig must apply '+token+'.');
