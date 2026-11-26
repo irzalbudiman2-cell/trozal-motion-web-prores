@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   if (window.TROZALUniversalRig) return;
-  const API = 'http://127.0.0.1:11436';
+  const API_HOSTS = ['http://127.0.0.1:11436', 'http://localhost:11436'];
   const MOTIONS = [
     ['swing','Swing / Ayun'],['hinge','Hinge / Engsel'],['wheel','Wheel / Putar'],
     ['rotate','Rotate / Rotasi'],['bob','Bob / Naik turun'],['float','Float / Melayang'],
@@ -67,23 +67,33 @@
       const timeoutMs = Number(settings.timeoutMs) > 0 ? Number(settings.timeoutMs) : 15000;
       const controller = typeof AbortController === 'function' ? new AbortController() : null;
       const timer = controller ? window.setTimeout(() => controller.abort(), timeoutMs) : null;
-      let response;
+      let response, lastNetworkError = null;
       try {
-        response = await fetch(API + path, {
-          method: body ? 'POST' : 'GET',
-          mode: 'cors',
-          credentials: 'omit',
-          headers: body ? { 'Content-Type': 'application/json' } : undefined,
-          body: body ? JSON.stringify(body) : undefined,
-          cache: 'no-store',
-          signal: controller ? controller.signal : undefined
-        });
+        for (const host of API_HOSTS) {
+          try {
+            response = await fetch(host + path, {
+              method: body ? 'POST' : 'GET',
+              mode: 'cors',
+              credentials: 'omit',
+              headers: body ? { 'Content-Type': 'application/json' } : undefined,
+              body: body ? JSON.stringify(body) : undefined,
+              cache: 'no-store',
+              signal: controller ? controller.signal : undefined
+            });
+            break;
+          } catch (error) {
+            if (error && error.name === 'AbortError') throw error;
+            if (error && error.name !== 'TypeError') throw error;
+            lastNetworkError = error;
+          }
+        }
+        if (!response) throw lastNetworkError || new TypeError('NetworkError');
       } catch (error) {
         if (error && error.name === 'AbortError') {
           throw new Error('SAM 2.1 tidak menyelesaikan ' + path + ' dalam ' + Math.round(timeoutMs / 1000) + ' detik. Periksa jendela server lokal dan beban GPU/CPU, lalu coba lagi.');
         }
         if (error && error.name === 'TypeError') {
-          throw new Error('Akses ke server lokal 127.0.0.1:11436 diblokir browser. Di Chrome/Edge: klik ikon pengaturan situs di kiri alamat → Izin situs → Akses jaringan lokal (Local network access) → Izinkan, lalu muat ulang halaman. Jika opsi izin tidak muncul, pastikan aplikasi dibuka melalui HTTPS/GitHub Pages atau localhost. Pastikan START.bat tetap terbuka dan server menampilkan Local-only API: http://127.0.0.1:11436. Jika tetap gagal, periksa apakah port 11436 dipakai server TROZAL. Detail browser: '+(error&&error.message||'NetworkError'));
+          throw new Error('Browser tidak dapat menjangkau SAM 2.1 di port 11436. Saya sudah mencoba 127.0.0.1 dan localhost. Periksa berurutan: (1) jalankan TROZAL_UNIVERSAL_RIG_START.bat dan biarkan jendelanya terbuka; (2) buka http://127.0.0.1:11436/api/health di tab baru—harus muncul JSON dengan "ok":true; (3) jika alamat lokal itu tidak terbuka, server belum aktif atau port 11436 bentrok; (4) jika alamat lokal terbuka tetapi fitur dari situs HTTPS gagal, izinkan Local network access untuk situs TROZAL di Chrome/Edge, lalu reload. Gunakan situs HTTPS/GitHub Pages atau localhost, bukan file://. Detail browser: '+(error&&error.message||'NetworkError'));
         }
         throw error;
       } finally {
