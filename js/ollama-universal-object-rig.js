@@ -742,14 +742,16 @@
         const motion = segment.motion || 'float';
         // Character joints use conservative anatomical amplitudes. Large generic
         // swing values make independent layers look like detached stickers.
+        // Make articulated motion clearly visible in the CSS preview while
+        // keeping a conservative range for a single still-image character.
         const anatomicalAmplitude = {
-          torso: 0.012, head: 0.035,
-          upperArmL: 0.045, upperArmR: 0.045,
-          forearmL: 0.05, forearmR: 0.05,
-          handL: 0.025, handR: 0.025,
-          thighL: 0.035, thighR: 0.035,
-          shinL: 0.045, shinR: 0.045,
-          footL: 0.02, footR: 0.02
+          torso: 0.08, head: 0.14,
+          upperArmL: 0.24, upperArmR: 0.24,
+          forearmL: 0.28, forearmR: 0.28,
+          handL: 0.18, handR: 0.18,
+          thighL: 0.14, thighR: 0.14,
+          shinL: 0.22, shinR: 0.22,
+          footL: 0.12, footR: 0.12
         };
         const amplitude = segment.category === 'character'
           ? (motion === 'static' ? 0 : (anatomicalAmplitude[segment.id] ?? 0.025))
