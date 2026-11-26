@@ -20,10 +20,23 @@
     let imageUrl = '', image = null, imageSize = null, segments = [], rig = null, picking = false;
     let pendingPoints = [], pointLabel = 1;
     const maskPreviewCanvases = new Map();
+    const seamSettings = { enabled: true, strength: 0.85, radiusScale: 1 };
     const status = message => {
       if ($('itcvRigStatus')) $('itcvRigStatus').textContent = String(message || '');
       if (opt.onStatus) opt.onStatus(String(message || ''));
     };
+    function mountSeamControls() {
+      const anchor = $('itcvRigStatus');
+      if (!anchor || $('itcvRigSeamControls')) return;
+      const panel = document.createElement('section'); panel.id = 'itcvRigSeamControls';
+      panel.style.cssText = 'margin:8px 0;padding:10px;border:1px solid #9a6bd6;border-radius:9px;background:linear-gradient(145deg,#24183a,#171326);color:#f0e7ff;';
+      panel.innerHTML = '<strong style="display:block;color:#d9c1ff;margin-bottom:7px">JOINT SEAM WELDING · PENGATUR SAMBUNGAN</strong><label style="display:flex;gap:7px;align-items:center"><input id="itcvRigSeamEnabled" type="checkbox" checked> Aktifkan overlap piksel sendi</label><label style="display:block;margin-top:7px">Kekuatan sambungan <output id="itcvRigSeamStrengthValue">85%</output><input id="itcvRigSeamStrength" type="range" min="0" max="100" value="85" style="width:100%"></label><label style="display:block;margin-top:7px">Radius sambungan <output id="itcvRigSeamRadiusValue">100%</output><input id="itcvRigSeamRadius" type="range" min="50" max="180" value="100" style="width:100%"></label><small>Overlap hanya memakai piksel foreground dari mask SAM 2.1, bukan piksel latar buatan.</small>';
+      anchor.insertAdjacentElement('afterend', panel);
+      const strength = $('itcvRigSeamStrength'), radius = $('itcvRigSeamRadius');
+      strength.addEventListener('input', () => { seamSettings.strength = Number(strength.value) / 100; $('itcvRigSeamStrengthValue').textContent = strength.value + '%'; });
+      radius.addEventListener('input', () => { seamSettings.radiusScale = Number(radius.value) / 100; $('itcvRigSeamRadiusValue').textContent = radius.value + '%'; });
+      $('itcvRigSeamEnabled').addEventListener('change', event => { seamSettings.enabled = !!event.target.checked; });
+    }
     function updateProgress(state, visible) {
       let panel = $('itcvRigProgress');
       if (!panel) {
@@ -498,6 +511,7 @@
       return applied;
     }
     async function build() {
+      mountSeamControls();
       const selected = segments.filter(part => part.enabled !== false);
       if (!selected.length) throw new Error('Aktifkan minimal satu komponen mask.');
       imageUrl = await getImageUrl();
@@ -560,7 +574,8 @@
         const x = child.pivotNormX * imageSize.width, y = child.pivotNormY * imageSize.height;
         const childSpan = Math.max(1, Math.min(child.bboxOriginal[2], child.bboxOriginal[3]));
         const parentSpan = Math.max(1, Math.min(parent.bboxOriginal[2], parent.bboxOriginal[3]));
-        const radius = Math.max(8, Math.min(44, Math.min(childSpan, parentSpan) * 0.18));
+        if (!seamSettings.enabled) continue;
+        const radius = Math.max(5, Math.min(60, Math.min(childSpan, parentSpan) * 0.18 * seamSettings.radiusScale));
         const parentMask = maskDataById.get(parent.id), childMask = maskDataById.get(child.id);
         if (!parentMask || !childMask) continue;
         const unionMask = new Uint8Array(imageSize.width * imageSize.height);
@@ -610,7 +625,7 @@
               const unionAlpha = seam.unionMask[(by + y) * imageSize.width + bx + x];
               if (unionAlpha <= 0) continue;
               const t = Math.max(0, Math.min(1, distance / seam.radius));
-              const feather = 1 - t * t * (3 - 2 * t);
+              const feather = (1 - t * t * (3 - 2 * t)) * seamSettings.strength;
               alphaMask = Math.max(alphaMask, Math.round(unionAlpha * feather));
             }
           }
@@ -634,6 +649,7 @@
       rig = {
         version: 1, width: imageSize.width, height: imageSize.height,
         background: bg.toDataURL('image/png'), parts, jointSeams,
+        jointSeamSettings: { enabled: seamSettings.enabled, strength: seamSettings.strength, radiusScale: seamSettings.radiusScale },
         pose: poseData ? { engine: poseData.engine, detected: true, landmarks: poseData.landmarks } : null,
         engine: 'SAM 2.1 Tiny + Local Pose Estimation + Ollama Vision',
         note: 'Mask dan rig dibuat lokal. Latar hasil inpainting adalah perkiraan; tinjau bagian tepi.'
@@ -641,7 +657,7 @@
       if (opt.onApply) opt.onApply(rig);
       status('Universal Rig siap: ' + parts.length + ' komponen · ' + poseAnchorsApplied +
         ' pivot sendi diselaraskan' + (poseData ? ' dengan Pose Estimation lokal.' : ' · pivot default dipertahankan.') +
-        ' · ' + jointSeams.length + ' batas sendi diberi overlap piksel bersama. HTML/JavaScript telah diperbarui.');
+        ' · ' + jointSeams.length + ' batas sendi diberi overlap piksel bersama (' + (seamSettings.enabled ? Math.round(seamSettings.strength * 100) + '% kekuatan' : 'nonaktif') + '). HTML/JavaScript telah diperbarui.');
       return rig;
     }
     const canvas = $('itcvRigSource');
@@ -729,6 +745,7 @@
       drawSource(); status('Titik prompt dihapus. Mask komponen yang sudah ada tetap aman.');
     });
     $('itcvRigBuild').addEventListener('click', () => build().catch(error => status('Build Rig gagal: ' + error.message)));
+    mountSeamControls();
     return {
       setImage, check, autoSegment, addAt, runPointSegmentation, build,
       getRig: () => rig, getSegments: () => segments,
