@@ -137,3 +137,12 @@ assert.match(ui, /alphaMask = Math\.max\(alphaMask, Math\.round\(unionAlpha \* f
 assert.match(ui, /background: bg\.toDataURL\('image\/png'\), parts, jointSeams/, 'Generated rig must retain per-joint seam diagnostics.');
 assert.match(ui, /batas sendi diberi overlap piksel bersama/, 'Mode 5 must report how many joint seams received shared source-pixel overlap.');
 
+
+assert.match(mode5,/Pilih track tubuh/, 'Mode 5 timeline must expose a selected-track editor.');
+assert.match(mode5,/Intensitas gerak/, 'Each rig track must expose an independent motion intensity control.');
+assert.match(mode5,/Kecepatan/, 'Each rig track must expose an independent speed control.');
+assert.match(mode5,/selectedTrack\.intensity=Number\(amp\.value\)/, 'Track intensity must update the selected body part.');
+assert.match(mode5,/selectedTrack\.speed=Number\(speed\.value\)/, 'Track speed must update the selected body part.');
+assert.match(mode5,/part\.intensity\?\?1/, 'The runtime must apply per-track intensity to mesh deformation.');
+assert.match(mode5,/scale=trunc\(iw\/2\)\*2:trunc\(ih\/2\)\*2/, 'MP4 encoder must normalize canvas dimensions to even H.264 dimensions.');
+assert.match(mode5,/FFmpeg gagal dimuat/, 'MP4 render errors must identify local FFmpeg asset/runtime problems.');
