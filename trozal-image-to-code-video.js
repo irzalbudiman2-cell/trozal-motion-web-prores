@@ -185,6 +185,8 @@ function makeCssHtml(images,cfg,art,rig){
  let body='';
  if(rig&&Array.isArray(rig.parts)&&rig.parts.length){
   const rw=Math.max(1,Number(rig.width)||1),rh=Math.max(1,Number(rig.height)||1);
+  // Lock the camera while a character rig is active so body articulation is not hidden by whole-image zoom.
+  css.push('.camera{animation:none!important;transform:none!important}');
   css.push('.rig-canvas{position:absolute;left:50%;top:50%;width:min(100%,'+(100*rw/rh)+'vh);height:min(100%,'+(100*rh/rw)+'vw);aspect-ratio:'+rw+'/'+rh+';transform:translate(-50%,-50%);overflow:hidden}.rig-canvas .source{object-fit:fill}');
   body+='<div class="rig-canvas"><img class="source" alt="Latar hasil segmentasi" src="'+esc(rig.background||images[0]||'')+'">';
   rig.parts.forEach((part,index)=>{
@@ -194,7 +196,8 @@ function makeCssHtml(images,cfg,art,rig){
    const motion=String(part.motion||'swing'),amp=clamp((part.amp==null?.15:part.amp)*(part.amplitudeMultiplier==null?1:clamp(part.amplitudeMultiplier,0,2.5))*clamp(cfg.rigAmplitude==null?1:cfg.rigAmplitude,0,2.5),0,2.5),speed=clamp((part.speed==null?1:part.speed)*(part.speedMultiplier==null?1:clamp(part.speedMultiplier,.1,3))*clamp(cfg.rigSpeed==null?1:cfg.rigSpeed,.25,3),.1,36);
    const name='trozal-part-'+index,period=clamp(duration/Math.max(.25,speed),.6,duration*3),phase=-Math.abs(Number(part.phase)||0)-(cfg.rigStagger?index*.31:0);
    let a='transform:rotate('+(-amp*32)+'deg)',b='transform:rotate('+(amp*32)+'deg)';
-   if(motion==='wheel'||motion==='rotate'){a='transform:rotate(0deg)';b='transform:rotate(360deg)';}
+   if(motion==='wheel'||(motion==='rotate'&&part.category!=='character')){a='transform:rotate(0deg)';b='transform:rotate(360deg)';}
+   else if(motion==='rotate'&&part.category==='character'){a='transform:rotate('+(-amp*32)+'deg)';b='transform:rotate('+(amp*32)+'deg)';}
    else if(motion==='bob'){a='transform:translateY(-'+(amp*28)+'px)';b='transform:translateY('+(amp*28)+'px)';}
    else if(motion==='float'){a='transform:translate3d(-'+(amp*18)+'px,-'+(amp*18)+'px,0)';b='transform:translate3d('+(amp*18)+'px,'+(amp*18)+'px,0)';}
    else if(motion==='pulse'){a='transform:scale('+(1-amp*.18)+')';b='transform:scale('+(1+amp*.18)+')';}
