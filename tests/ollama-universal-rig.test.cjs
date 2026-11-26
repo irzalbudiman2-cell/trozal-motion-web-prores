@@ -10,7 +10,7 @@ const mode5 = fs.readFileSync('trozal-image-to-code-video.js', 'utf8');
 const html = fs.readFileSync('index.html', 'utf8');
 const pagesBuild = fs.readFileSync('.github/workflows/build-prores-pages.yml', 'utf8');
 
-for (const route of ['/api/health', '/api/segment/status', '/api/segment/auto', '/api/segment/point', '/api/pose/estimate', '/api/inpaint']) {
+for (const route of ['/api/health', '/api/segment/status', '/api/segment/auto', '/api/segment/point', '/api/pose/estimate', '/api/pose/segment-parts', '/api/inpaint']) {
   assert.ok(server.includes(route), 'Missing local segmenter route: ' + route);
 }
 assert.match(server, /host="127\.0\.0\.1"/, 'SAM2 service must bind only to loopback');
@@ -96,7 +96,18 @@ assert.match(pagesBuild, /cp js\/ollama-universal-object-rig\.js site\/js\/ollam
 assert.match(pagesBuild, /test -s site\/js\/ollama-universal-object-rig\.js/,
   'GitHub Pages build must fail if the Universal Rig controller asset is missing');
 
-console.log('PASS: OLLAMA Universal Object Rig local API, SAM2 routes, loopback guard, UI controls and self-contained export contract.');
+
+assert.match(server, /def pose_segment_parts\(\)/, 'Mode 5 must expose a dedicated pose-guided human part segmentation endpoint.');
+for (const part of ['Kepala','Badan / Torso','Lengan Atas Kiri','Lengan Bawah Kiri','Tangan Kiri','Paha Kiri','Betis Kiri','Kaki Kiri']) {
+  assert.ok(server.includes(part), 'Character Part Segmentation is missing anatomical layer: ' + part);
+}
+assert.match(server, /_pose_part_roi/, 'SAM masks must be constrained to pose-guided anatomical regions rather than treating the whole person as one object.');
+assert.match(ui, /async function autoCharacterParts\(/, 'Mode 5 must expose an automatic human body-part segmentation workflow.');
+assert.match(ui, /\\/api\\/pose\\/segment-parts/, 'Mode 5 must call the dedicated human body-part segmentation endpoint.');
+assert.match(mode5, /itcvRigCharacterAuto/, 'Mode 5 must show an explicit AUTO CHARACTER PARTS control.');
+assert.match(mode5, /rigController\\.autoCharacterParts\\(\\)/, 'The visible Mode 5 control must invoke per-body-part segmentation.');
+
+console.log('PASS: OLLAMA Universal Object Rig local API, SAM2 routes, Character Part Segmentation, loopback guard, UI controls and self-contained export contract.');
 
 assert.match(mode5,/itcvContinuity/,'OLLAMA must expose cross-segment continuity control.');
 assert.match(mode5,/crossSegmentContinuity/,'OLLAMA must serialize cross-segment continuity.');
