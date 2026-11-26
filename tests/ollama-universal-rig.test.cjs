@@ -120,6 +120,14 @@ assert.match(server, /cv2\.inpaint\(source, dilated, inpaint_radius, cv2\.INPAIN
 assert.match(server, /"maskCoverage": round\(mask_coverage \* 100, 2\)/, 'The inpaint API must report original foreground mask coverage.');
 assert.match(ui, /inpaintInfo\.expandedCoverage/, 'Mode 5 must visibly report the expanded background repair coverage.');
 
+assert.match(mode5,/id="itcvTransportBar"/, 'Mode 5 must display a dedicated playback transport bar.');
+assert.match(mode5,/id="itcvPlay"/, 'Mode 5 must expose Play.');
+assert.match(mode5,/id="itcvPause"/, 'Mode 5 must expose Pause.');
+assert.match(mode5,/id="itcvStop"/, 'Mode 5 must expose Stop.');
+assert.match(mode5,/id="itcvTimelineScrub"/, 'Mode 5 must expose a visible timeline scrubber.');
+assert.match(mode5,/function seekPreview\(/, 'Timeline scrubbing must seek CSS animations in the preview iframe.');
+assert.match(mode5,/animation\.currentTime=/, 'Playback transport must update animation currentTime.');
+assert.match(mode5,/function stopPreview\(/, 'Stop must pause and reset the preview to time zero.');
 console.log('PASS: OLLAMA Universal Object Rig local API, SAM2 routes, Character Part Segmentation, loopback guard, UI controls and self-contained export contract.');
 assert.match(mode5,/trozal-rig-timeline/, 'Mode 5 runtime must expose a visible timeline for the generated rig.');
 assert.match(mode5,/aria-label','Timeline playhead'/, 'Mode 5 timeline must support scrubbing the preview playhead.');
