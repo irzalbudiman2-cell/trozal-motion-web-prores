@@ -510,6 +510,54 @@
       }
       return applied;
     }
+    async function autoCharacterParts() {
+      const button = $('itcvRigCharacterAuto');
+      if (!imageUrl) imageUrl = await getImageUrl();
+      if (!imageUrl) throw new Error('Pilih gambar sumber terlebih dahulu.');
+      if (!image) await setImage(imageUrl);
+      if (button) { button.disabled = true; button.textContent = 'Memisahkan tubuh…'; }
+      try {
+        const requestId = 'character-parts-' + Date.now();
+        updateProgress({ phase: 'prepare', progress: 1, message: 'Mendeteksi pose dan sendi tubuh…' }, true);
+        status('Character Part Segmentation: MediaPipe mendeteksi sendi, lalu SAM 2.1 memisahkan kepala, torso, lengan, tangan, paha, betis, dan kaki…');
+        const result = await call('/api/pose/segment-parts', { image: imageUrl, requestId }, { timeoutMs: 360000 });
+        if (!Array.isArray(result.segments) || !result.segments.length) {
+          const missing = result.diagnostics && result.diagnostics.missingParts ? result.diagnostics.missingParts.join(', ') : '';
+          throw new Error('Tidak ada layer tubuh yang berhasil dibuat. ' + missing);
+        }
+        segments = result.segments.map((item, index) => {
+          const part = normaliseSegment(item, index, result.width, result.height);
+          part.name = String(item.name || part.name);
+          part.category = 'character';
+          part.motion = MOTIONS.some(entry => entry[0] === item.motion) ? item.motion : 'swing';
+          part.parent = '';
+          part.parentId = String(item.parent || '');
+          part.pivotNormX = Number.isFinite(Number(item.pivotX)) ? Number(item.pivotX) : part.pivotNormX;
+          part.pivotNormY = Number.isFinite(Number(item.pivotY)) ? Number(item.pivotY) : part.pivotNormY;
+          part.poseAnchor = { engine: 'MediaPipe Pose Landmarker Lite', x: part.pivotNormX, y: part.pivotNormY };
+          return part;
+        });
+        segments.forEach(part => {
+          const parent = segments.find(item => item.id === part.parentId);
+          part.parent = parent ? parent.name : '';
+        });
+        const quality = await analyzeSegmentMaskQuality(segments);
+        if (quality.emptyCount) throw new Error('Ada mask kosong. Ulangi segmentasi atau gunakan titik manual.');
+        await prepareMaskPreviews(segments);
+        renderList(); drawSource();
+        if ($('itcvRigBuild')) $('itcvRigBuild').disabled = false;
+        updateProgress({ phase: 'completed', progress: 100, message: 'Pemisahan tubuh selesai.' }, true);
+        const missing = result.diagnostics && result.diagnostics.missingParts || [];
+        status('Character Part Segmentation selesai: ' + segments.length + ' layer terpisah · ' +
+          segments.map(part => part.name).join(', ') +
+          (missing.length ? ' · bagian yang tidak terdeteksi: ' + missing.join(', ') : '') +
+          '. Periksa overlay mask sebelum Bangun Universal Rig.');
+        return segments;
+      } finally {
+        if (button) { button.disabled = false; button.textContent = '♙ AUTO CHARACTER PARTS'; }
+      }
+    }
+
     async function build() {
       mountSeamControls();
       const selected = segments.filter(part => part.enabled !== false);
