@@ -309,6 +309,13 @@ def allow_loopback_private_network(response):
 def health():
     return jsonify({
         "ok": True,
+        "server_version": "2026.11.26-pose-parts",
+        "capabilities": [
+            "segment_auto",
+            "pose_segment_parts",
+            "segment_status",
+            "background_inpaint"
+        ],
         "engine": "SAM 2.1 Hiera Tiny",
         "model_loaded": _predictor is not None,
         "device": _device,
@@ -508,6 +515,13 @@ def _pose_part_roi(width, height, kind, points, radius):
         yy, xx = np.ogrid[:height, :width]
         return (xx - cx) ** 2 + (yy - cy) ** 2 <= radius * radius
     return _capsule_roi(width, height, points[0], points[1], radius)
+
+
+@app.route("/api/pose/segment-parts", methods=["OPTIONS"])
+def pose_segment_parts_options():
+    # Explicit preflight route for browsers calling the local loopback service
+    # from the hosted TROZAL app. The after_request hook adds scoped CORS/PNA.
+    return ("", 204)
 
 
 @app.post("/api/pose/segment-parts")

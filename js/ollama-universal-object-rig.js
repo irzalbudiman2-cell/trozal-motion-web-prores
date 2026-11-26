@@ -93,7 +93,34 @@
           throw new Error('SAM 2.1 tidak menyelesaikan ' + path + ' dalam ' + Math.round(timeoutMs / 1000) + ' detik. Periksa jendela server lokal dan beban GPU/CPU, lalu coba lagi.');
         }
         if (error && error.name === 'TypeError') {
-          throw new Error('Browser tidak dapat menjangkau SAM 2.1 di port 11436. Saya sudah mencoba 127.0.0.1 dan localhost. Periksa berurutan: (1) jalankan TROZAL_UNIVERSAL_RIG_START.bat dan biarkan jendelanya terbuka; (2) buka http://127.0.0.1:11436/api/health di tab baru—harus muncul JSON dengan "ok":true; (3) jika alamat lokal itu tidak terbuka, server belum aktif atau port 11436 bentrok; (4) jika alamat lokal terbuka tetapi fitur dari situs HTTPS gagal, izinkan Local network access untuk situs TROZAL di Chrome/Edge, lalu reload. Gunakan situs HTTPS/GitHub Pages atau localhost, bukan file://. Detail browser: '+(error&&error.message||'NetworkError'));
+          // A failed POST preflight can also mean the local Python server is an
+          // older copy that does not register the requested route. Probe the
+          // simple GET health endpoint to distinguish that from a network block.
+          if (path === '/api/pose/segment-parts') {
+            for (const host of API_HOSTS) {
+              try {
+                const healthResponse = await fetch(host + '/api/health', {
+                  method: 'GET', mode: 'cors', credentials: 'omit',
+                  cache: 'no-store', signal: controller ? controller.signal : undefined
+                });
+                if (!healthResponse.ok) continue;
+                const health = await healthResponse.json();
+                if (health && health.ok) {
+                  const capabilities = Array.isArray(health.capabilities) ? health.capabilities : [];
+                  if (!capabilities.includes('pose_segment_parts')) {
+                    throw new Error('Server SAM 2.1 lokal masih versi lama: /api/pose/segment-parts belum terdaftar. Perbarui file TROZAL_UNIVERSAL_RIG_SERVER.py dari repositori OLLAMA terbaru, tutup server lama, lalu jalankan kembali TROZAL_UNIVERSAL_RIG_START.bat. SAM 2.1 dan /api/segment/auto sudah aktif; yang belum tersedia hanya Character Part Segmentation.');
+                  }
+                  throw new Error('Endpoint Character Part Segmentation sudah terdaftar pada server lokal, tetapi preflight browser gagal. Izinkan Local network access untuk origin TROZAL di Chrome/Edge, lalu reload. Periksa juga bahwa server yang berjalan memakai file TROZAL_UNIVERSAL_RIG_SERVER.py versi terbaru.');
+                }
+              } catch (diagnosticError) {
+                if (diagnosticError && diagnosticError.message && diagnosticError.message.startsWith('Server SAM 2.1 lokal') ||
+                    diagnosticError && diagnosticError.message && diagnosticError.message.startsWith('Endpoint Character Part')) {
+                  throw diagnosticError;
+                }
+              }
+            }
+          }
+          throw new Error('Browser tidak dapat menjangkau SAM 2.1 di port 11436. Saya sudah mencoba 127.0.0.1 dan localhost. Periksa TROZAL_UNIVERSAL_RIG_START.bat, endpoint /api/health, dan izin Local network access Chrome/Edge. Gunakan HTTPS/GitHub Pages atau localhost, bukan file://. Detail browser: '+(error&&error.message||'NetworkError'));
         }
         throw error;
       } finally {
