@@ -20,6 +20,16 @@ const { chromium } = require('playwright');
     assert.ok(initial.objects.some(o=>o.type==='sphere'));
     assert.ok(initial.objects.some(o=>o.type==='torus'));
     assert.equal(await page.locator('#trozal3DObjectList button').count(),3);
+    assert.equal(await page.locator('#trozal3DLightingControls .trozal3d-light-card').count(),3,'Studio lighting rig should expose three independently editable lights.');
+    const keyLightIntensity=page.locator('[data-light-index="0"][data-light-field="intensity"]');
+    await keyLightIntensity.evaluate(el=>{el.value='1.75';el.dispatchEvent(new Event('input',{bubbles:true}));});
+    let lightProject=await page.evaluate(()=>window.TROZAL_CANVAS_3D.getProject());
+    assert.equal(lightProject.lights.length,3,'Scene JSON should retain all three lights.');
+    assert.equal(lightProject.lights[0].intensity,1.75,'Changing one light intensity should update scene data.');
+    const fillLightColor=page.locator('[data-light-index="1"][data-light-field="color"]');
+    await fillLightColor.evaluate(el=>{el.value='#22cc88';el.dispatchEvent(new Event('input',{bubbles:true}));});
+    lightProject=await page.evaluate(()=>window.TROZAL_CANVAS_3D.getProject());
+    assert.equal(lightProject.lights[1].color,'#22cc88','Each light should support independent color editing.');
     // Verify viewport gizmo controls are interactive, not decorative.
     assert.equal(await page.locator('#trozal3DGizmoMove').getAttribute('aria-pressed'),'true');
     await page.locator('#trozal3DGizmoAxis').selectOption('x');
@@ -87,6 +97,6 @@ const { chromium } = require('playwright');
     assert.deepEqual(errors,[],'Unexpected uncaught browser errors.');
     await page.locator('#trozal3DClose').click();
     assert.equal(await page.locator('#trozalCanvas3DOverlay').evaluate(el=>getComputedStyle(el).display),'none');
-    console.log(JSON.stringify({result:'PASS',renderer:'WebGL2',initialMeshes:3,addedMesh:'cylinder',duplicateDelete:'PASS',transform:'PASS',viewportGizmo:['move','rotate','camera'],perObjectAnimation:'PASS',timeline:'PASS',loop:'PASS',exports:['JSON','PNG']},null,2));
+    console.log(JSON.stringify({result:'PASS',renderer:'WebGL2',initialMeshes:3,addedMesh:'cylinder',duplicateDelete:'PASS',transform:'PASS',viewportGizmo:['move','rotate','camera'],perObjectAnimation:'PASS',timeline:'PASS',loop:'PASS',lighting:['three independent lights','intensity','color'],exports:['JSON','PNG']},null,2));
   } finally { await browser.close(); }
 })().catch(error=>{console.error(error);process.exit(1);});
