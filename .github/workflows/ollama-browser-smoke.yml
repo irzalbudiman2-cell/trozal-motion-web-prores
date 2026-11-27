@@ -283,6 +283,9 @@ jobs:
       - name: Compare render throughput with pointer over and away from progress panel
         run: node tests/render-pointer-independence.browser.cjs
 
+      - name: Test CANVAS 3D WebGL2 scene, transforms, motion and exports
+        run: node tests/canvas-3d-studio.browser.cjs
+
       - name: Stop local app server
         if: always()
         run: |
