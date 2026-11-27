@@ -73,6 +73,9 @@ jobs:
         run: node tests/render-memory-manager.test.cjs
       - name: Verify Preview Proxy changes only preview canvas resolution
         run: node tests/preview-proxy.browser.cjs
+      - name: Verify Mode 5 preview ratios, Loop toggle and composition guides
+        run: node tests/image-to-code-preview-controls.browser.cjs
+
       - name: Exercise OLLAMA UI in Chromium
         run: |
           node <<'NODE'
