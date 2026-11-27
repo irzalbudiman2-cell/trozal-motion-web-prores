@@ -21,6 +21,22 @@ const { chromium } = require('playwright');
     assert.ok(initial.objects.some(o=>o.type==='torus'));
     assert.equal(await page.locator('#trozal3DObjectList button').count(),3);
     assert.equal(await page.locator('#trozal3DLightingControls .trozal3d-light-card').count(),3,'Studio lighting rig should expose three independently editable lights.');
+    // Surface presets must change real material parameters and persist to Scene JSON.
+    await page.locator('#trozal3DMaterialPreset').selectOption('neon');
+    let materialProject=await page.evaluate(()=>window.TROZAL_CANVAS_3D.getProject());
+    assert.equal(materialProject.objects[0].materialPreset,'neon','Selected surface preset should persist.');
+    assert.equal(materialProject.objects[0].emission,1.35,'Neon preset should enable emissive output.');
+    assert.equal(materialProject.objects[0].metallic,.12,'Neon preset should set metallic response.');
+    await page.locator('#trozal3DEmission').evaluate(el=>{el.value='0.75';el.dispatchEvent(new Event('input',{bubbles:true}));});
+    materialProject=await page.evaluate(()=>window.TROZAL_CANVAS_3D.getProject());
+    assert.equal(materialProject.objects[0].emission,.75,'Emission control should update the selected object.');
+    assert.equal(materialProject.objects[0].materialPreset,'custom','Manual material edits should switch preset to Custom.');
+    await page.locator('#trozal3DMaterialPreset').selectOption('polished-metal');
+    materialProject=await page.evaluate(()=>window.TROZAL_CANVAS_3D.getProject());
+    assert.equal(materialProject.objects[0].metallic,.96,'Polished Metal preset should set a high metallic value.');
+    assert.equal(materialProject.objects[0].roughness,.1,'Polished Metal preset should set low roughness.');
+    assert.equal(materialProject.objects[0].emission,0,'Non-emissive preset should disable emission.');
+
     const keyLightIntensity=page.locator('[data-light-index="0"][data-light-field="intensity"]');
     await keyLightIntensity.evaluate(el=>{el.value='1.75';el.dispatchEvent(new Event('input',{bubbles:true}));});
     let lightProject=await page.evaluate(()=>window.TROZAL_CANVAS_3D.getProject());
