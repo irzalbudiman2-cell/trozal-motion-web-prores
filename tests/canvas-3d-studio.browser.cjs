@@ -1,6 +1,12 @@
 'use strict';
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 const { chromium } = require('playwright');
+const studioSource = fs.readFileSync(path.join(__dirname,'..','canvas-3d-studio.js'),'utf8');
+assert.match(studioSource,/uniform mat3 uNormalMatrix/,'WebGL2 shader must receive a normal matrix.');
+assert.match(studioSource,/normalize\(uNormalMatrix\*aNormal\)/,'WebGL2 shader must transform normals with the inverse-transpose matrix.');
+assert.match(studioSource,/uniformMatrix3fv\(l\.normal,false,normalMatrix\(m\)\)/,'WebGL2 must upload a model-specific inverse-transpose matrix.');
 (async () => {
   const browser = await chromium.launch({headless:true,args:[
     '--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--ignore-gpu-blocklist'
@@ -57,6 +63,12 @@ const { chromium } = require('playwright');
     assert.equal(await page.locator('#trozal3DObjectList button').count(),4,'Redo should restore the newly added mesh.');
     await page.locator('#trozal3DUndo').click();
     assert.equal(await page.locator('#trozal3DObjectList button').count(),3,'Undo should restore the starter object count.');
+    await page.locator('#trozal3DX').evaluate(el=>{el.value='-0.5';el.dispatchEvent(new Event('input',{bubbles:true}));});
+    await page.keyboard.press('Control+z');
+    assert.equal((await page.evaluate(()=>window.TROZAL_CANVAS_3D.getProject())).objects[0].x,undoStart,'Ctrl+Z should undo the latest scene edit.');
+    await page.keyboard.press('Control+y');
+    assert.equal((await page.evaluate(()=>window.TROZAL_CANVAS_3D.getProject())).objects[0].x,-0.5,'Ctrl+Y should redo the latest scene edit.');
+    await page.keyboard.press('Control+z');
     assert.equal(initial.camera.projection,'perspective','Perspective should be the default camera projection.');
     await page.locator('#trozal3DCameraProjection').selectOption('orthographic');
     let cameraProject=await page.evaluate(()=>window.TROZAL_CANVAS_3D.getProject());
