@@ -17,7 +17,7 @@ for (const id of [
 for (const token of [
   "getContext('webgl2'", 'drawArrays(gl.TRIANGLES', 'drawArrays(gl.LINES',
   'function geometry(type)', "type==='cube'", "type==='sphere'", "type==='torus'",
-  "type==='cylinder'", "type==='cone'", "type==='plane'", 'function model(o,t)',
+  "type==='cylinder'", "type==='cone'", "type==='plane'", 'function localModel(o,t)', 'function model(o,t,seen=new Set())',
   "o.animation==='spin'", "o.animation==='orbit'", "o.animation==='bounce'",
   "o.animation==='pulse'", 'function camera(w,h)', 'function lookAt(eye,target)',
   'uMetallic','uRoughness','function exportPng()', 'function save()', 'function keyedValues(o,t)', 'function model(o,t,seen=new Set())',
