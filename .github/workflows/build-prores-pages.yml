@@ -8,6 +8,7 @@ on:
     paths:
       - 'index.html'
       - 'canvas-3d-studio.js'
+      - 'browser-render-engine-groups.js'
       - 'canvas-3d-ai-theme-studio.js'
       - 'canvas-3d-terminal.js'
       - 'tests/canvas-3d-ai-theme-terminal.test.cjs'
@@ -61,6 +62,7 @@ jobs:
           cp logo-studio.js site/logo-studio.js
           cp icon-logo-motion-studio.js site/icon-logo-motion-studio.js
           cp canvas-3d-studio.js site/canvas-3d-studio.js
+          cp browser-render-engine-groups.js site/browser-render-engine-groups.js
           cp canvas-3d-ai-theme-studio.js site/canvas-3d-ai-theme-studio.js
           cp canvas-3d-terminal.js site/canvas-3d-terminal.js
           touch site/.nojekyll
