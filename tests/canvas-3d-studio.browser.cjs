@@ -97,7 +97,7 @@ const { chromium } = require('playwright');
     assert.ok(Math.abs(afterGizmo/.5-Math.round(afterGizmo/.5))<.001,'Move snapping should quantize the object position to the selected step.');
     await page.locator('#trozal3DGizmoRotate').click();
     assert.equal(await page.locator('#trozal3DGizmoRotate').getAttribute('aria-pressed'),'true');
-    const beforeRotate=await page.evaluate(()=>window.TROZAL_CANVAS_3D.getProject().objects[0].rz);
+    const beforeRotate=await page.evaluate(()=>window.TROZAL_CANVAS_3D.getProject().objects[0].rx);
     await page.mouse.move(viewport.x+viewport.width*.5,viewport.y+viewport.height*.5);
     await page.mouse.down();
     await page.mouse.move(viewport.x+viewport.width*.5+50,viewport.y+viewport.height*.5,{steps:3});
