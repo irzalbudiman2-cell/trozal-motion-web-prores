@@ -100,6 +100,43 @@ const { chromium } = require('playwright');
 
     await page.locator('#itcvModeBtn').click();
     await page.waitForSelector('#itcvRigAuto');
+
+    // Character-motion controls belong below the center Preview, while SAM
+    // segmentation and per-component editing remain in the right inspector.
+    const motionDockZone = await page.locator('#itcvMotionAssistControls').evaluate(el => el.closest('[data-itcv-zone]')?.dataset.itcvZone);
+    const rigInspectorZone = await page.locator('#itcvRigParts').evaluate(el => el.closest('[data-itcv-zone]')?.dataset.itcvZone);
+    assert.equal(motionDockZone, 'preview', 'Character Motion Assist must be moved below the central Preview panel.');
+    assert.equal(rigInspectorZone, 'inspector', 'SAM / component controls must remain in the right inspector.');
+    const dockPlacement = await page.evaluate(() => ({
+      previewBottom: document.querySelector('#itcvPreview').getBoundingClientRect().bottom,
+      motionTop: document.querySelector('#itcvMotionAssistControls').getBoundingClientRect().top
+    }));
+    assert.ok(dockPlacement.motionTop > dockPlacement.previewBottom, 'Motion controls must sit below the Live Video Preview.');
+
+    assert.equal(await page.locator('#itcvPosePresetPanel [data-pose-preset]').count(), 3, 'Mode 5 must show the three full-body presets.');
+    await page.locator('[data-pose-preset="idle"]').click();
+    assert.equal(await page.locator('#itcvMotionPreset').inputValue(), 'idle');
+    assert.equal(await page.locator('#itcvStrideLength').inputValue(), '0');
+    assert.equal(await page.locator('#itcvFootstepImpact').inputValue(), '0');
+    await page.locator('[data-pose-preset="run"]').click();
+    assert.equal(await page.locator('#itcvMotionPreset').inputValue(), 'run');
+    assert.equal(await page.locator('#itcvGroundClearance').inputValue(), '86');
+
+    // The advisor must identify and safely correct inconsistent gait settings.
+    await page.locator('#itcvFootLockEnabled').uncheck();
+    for (const [id, value] of [['itcvFootLock', '10'], ['itcvBodySway', '85'], ['itcvGaitBalance', '15'], ['itcvMotionSmoothness', '20'], ['itcvGroundClearance', '10']]) {
+      await page.locator('#' + id).evaluate((el, next) => { el.value = next; el.dispatchEvent(new Event('input', { bubbles: true })); }, value);
+    }
+    await page.locator('#itcvMotionAdvisorAnalyze').click();
+    assert.match(await page.locator('#itcvMotionAdvisorStatus').innerText(), /kontak kaki lemah|ayunan badan tinggi|transisi gerak berpotensi kasar|angkat kaki untuk Run/i);
+    await page.locator('#itcvMotionAdvisorApply').click();
+    assert.equal(await page.locator('#itcvFootLockEnabled').isChecked(), true, 'Safe correction should re-enable foot contact lock.');
+    assert.ok(Number(await page.locator('#itcvFootLock').inputValue()) >= 72, 'Safe correction should raise weak foot lock.');
+    assert.ok(Number(await page.locator('#itcvGroundClearance').inputValue()) >= 68, 'Safe correction should increase insufficient run foot clearance.');
+    await page.locator('[data-pose-preset="walk"]').click();
+    assert.equal(await page.locator('#itcvMotionPreset').inputValue(), 'walk');
+    assert.equal(await page.locator('#itcvFootstepImpact').inputValue(), '46', 'Natural Walk should restore its footstep-impact tuning.');
+
     await page.waitForFunction(() => document.getElementById('itcvVisionModel')?.value === 'qwen2.5vl:3b');
     await page.locator('#itcvFiles').setInputFiles({
       name: 'vehicle.png', mimeType: 'image/png', buffer: imageBuffer
@@ -108,6 +145,9 @@ const { chromium } = require('playwright');
 
     await page.locator('#itcvGenerate').click();
     await page.waitForFunction(() => { const html=document.getElementById('itcvHtml')?.value||''; return html.includes('<!doctype html>') && html.includes('@keyframes'); }, { timeout: 20000 });
+    const generatedRuntime = await page.locator('#itcvJs').inputValue();
+    assert.match(generatedRuntime, /"preset":"walk"/, 'Selected Natural Walk preset must be serialized into the runtime.');
+    assert.match(generatedRuntime, /"footstepImpact":0\.46/, 'Footstep Impact Response must be serialized into the generated runtime.');
 
     await page.locator('#itcvRigCheck').click();
     await page.waitForFunction(() => document.getElementById('itcvRigStatus')?.textContent.includes('SAM 2.1 Tiny terhubung'), { timeout: 10000 });
