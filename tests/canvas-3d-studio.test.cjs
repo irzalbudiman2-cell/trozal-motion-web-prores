@@ -12,7 +12,7 @@ for (const id of [
   'trozal3DSX','trozal3DSY','trozal3DSZ','trozal3DMetal','trozal3DRough','trozal3DMaterialPreset','trozal3DEmission',
   'trozal3DAnimation','trozal3DSpeed','trozal3DAmount','trozal3DPlay','trozal3DPause',
   'trozal3DStop','trozal3DTime','trozal3DLoop','trozal3DDuration','trozal3DFps',
-  'trozal3DSave','trozal3DExportJson','trozal3DExportPng','trozal3DParent','trozal3DAddKeyframe','trozal3DKeyframeInfo','trozal3DLightingControls',
+  'trozal3DSave','trozal3DExportJson','trozal3DExportPng','trozal3DParent','trozal3DAddKeyframe','trozal3DKeyframeInfo','trozal3DLightingControls','trozal3DRenderer','trozal3DCanvas2D','trozal3DCanvasGL1','trozal3DCanvasGPU','trozal3DImport','trozal3DImportFile',
   'trozal3DCameraTools','trozal3DCameraProjection','trozal3DCameraFocus','trozal3DCameraFront','trozal3DCameraSide','trozal3DCameraTop','trozal3DOrthoScale',
   'trozal3DTransformSnap','trozal3DSnapEnabled','trozal3DSnapMove','trozal3DSnapRotate','trozal3DSnapScale',
   'trozal3DUndo','trozal3DRedo','trozal3DHistoryCount'
