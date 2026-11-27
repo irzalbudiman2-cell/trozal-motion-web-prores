@@ -56,6 +56,7 @@ jobs:
           cp logo-studio.js site/logo-studio.js
           cp icon-logo-motion-studio.js site/icon-logo-motion-studio.js
           cp canvas-3d-studio.js site/canvas-3d-studio.js
+          cp canvas-3d-ai-theme-studio.js site/canvas-3d-ai-theme-studio.js
           touch site/.nojekyll
 
       - name: Validate inline JavaScript syntax
