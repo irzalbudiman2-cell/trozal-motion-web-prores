@@ -215,6 +215,18 @@ assert.match(studioSource,/uniformMatrix3fv\(l\.normal,false,normalMatrix\(m\)\)
     const pngDownload=page.waitForEvent('download');
     await page.locator('#trozal3DExportPng').click();
     assert.match((await pngDownload).suggestedFilename(),/\.png$/);
+    // AI Theme Studio must use the same 333-theme catalogue and refresh theme-specific guidance.
+    await page.waitForSelector('#trozal3DAIThemePanel',{timeout:10000});
+    assert.equal(await page.locator('#trozal3DAITheme option').count(),333,'AI Theme Studio must expose all 333 main themes.');
+    await page.locator('#trozal3DAIThemeSearch').fill('Space & Astronomy');
+    await page.waitForFunction(()=>document.querySelectorAll('#trozal3DAITheme option').length===1);
+    assert.equal(await page.locator('#trozal3DAITheme').inputValue(),'Space & Astronomy');
+    const aiCategories=await page.locator('#trozal3DAICategory option').allTextContents();
+    assert.ok(aiCategories.includes('Futuristic Sci-Fi'),'Theme change must refresh relevant 3D visual categories.');
+    assert.ok(await page.locator('#trozal3DAISpecific option').count()>0,'Theme change must refresh specific subthemes.');
+    assert.ok(await page.locator('#trozal3DAIThemeSpecs').innerText().then(t=>t.includes('Tujuan')&&t.includes('Gerak')),'Theme intelligence must show specific visual guidance.');
+    await page.locator('#trozal3DAIExtra').fill('Gunakan hero object kaca transparan dan kamera orbit perlahan.');
+    assert.equal(await page.locator('#trozal3DAIExtra').inputValue(),'Gunakan hero object kaca transparan dan kamera orbit perlahan.');
     assert.deepEqual(errors,[],'Unexpected uncaught browser errors.');
     await page.locator('#trozal3DClose').click();
     assert.equal(await page.locator('#trozalCanvas3DOverlay').evaluate(el=>getComputedStyle(el).display),'none');
