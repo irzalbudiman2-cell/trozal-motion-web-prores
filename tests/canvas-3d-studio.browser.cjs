@@ -1,6 +1,12 @@
 'use strict';
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 const { chromium } = require('playwright');
+const studioSource = fs.readFileSync(path.join(__dirname,'..','canvas-3d-studio.js'),'utf8');
+assert.match(studioSource,/uniform mat3 uNormalMatrix/,'WebGL2 shader must receive a normal matrix.');
+assert.match(studioSource,/normalize\(uNormalMatrix\*aNormal\)/,'WebGL2 shader must transform normals with the inverse-transpose matrix.');
+assert.match(studioSource,/uniformMatrix3fv\(l\.normal,false,normalMatrix\(m\)\)/,'WebGL2 must upload a model-specific inverse-transpose matrix.');
 (async () => {
   const browser = await chromium.launch({headless:true,args:[
     '--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--ignore-gpu-blocklist'
@@ -37,6 +43,32 @@ const { chromium } = require('playwright');
     await page.locator('#trozal3DImportFile').setInputFiles({name:'restore-initial-scene.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(initial))});
     await page.waitForFunction(()=>document.getElementById('trozal3DStatus')?.textContent.includes('Scene JSON imported'));
     assert.equal(await page.locator('#trozal3DObjectList button').count(),3);
+    // Scene history should undo and redo object transforms and structural edits.
+    const undoStart=await page.evaluate(()=>window.TROZAL_CANVAS_3D.getProject().objects[0].x);
+    await page.locator('#trozal3DX').evaluate(el=>{el.value='-0.75';el.dispatchEvent(new Event('input',{bubbles:true}));});
+    assert.equal((await page.evaluate(()=>window.TROZAL_CANVAS_3D.getProject())).objects[0].x,-0.75);
+    assert.equal(await page.locator('#trozal3DUndo').isDisabled(),false,'Undo should become available after an edit.');
+    await page.locator('#trozal3DUndo').click();
+    assert.equal((await page.evaluate(()=>window.TROZAL_CANVAS_3D.getProject())).objects[0].x,undoStart,'Undo should restore the previous transform.');
+    assert.equal(await page.locator('#trozal3DRedo').isDisabled(),false,'Redo should become available after undo.');
+    await page.locator('#trozal3DRedo').click();
+    assert.equal((await page.evaluate(()=>window.TROZAL_CANVAS_3D.getProject())).objects[0].x,-0.75,'Redo should restore the edited transform.');
+    await page.locator('#trozal3DUndo').click();
+    await page.locator('#trozal3DNewType').selectOption('cylinder');
+    await page.locator('#trozal3DAdd').click();
+    assert.equal(await page.locator('#trozal3DObjectList button').count(),4,'Adding a mesh should create one history entry.');
+    await page.locator('#trozal3DUndo').click();
+    assert.equal(await page.locator('#trozal3DObjectList button').count(),3,'Undo should remove the newly added mesh.');
+    await page.locator('#trozal3DRedo').click();
+    assert.equal(await page.locator('#trozal3DObjectList button').count(),4,'Redo should restore the newly added mesh.');
+    await page.locator('#trozal3DUndo').click();
+    assert.equal(await page.locator('#trozal3DObjectList button').count(),3,'Undo should restore the starter object count.');
+    await page.locator('#trozal3DX').evaluate(el=>{el.value='-0.5';el.dispatchEvent(new Event('input',{bubbles:true}));});
+    await page.keyboard.press('Control+z');
+    assert.equal((await page.evaluate(()=>window.TROZAL_CANVAS_3D.getProject())).objects[0].x,undoStart,'Ctrl+Z should undo the latest scene edit.');
+    await page.keyboard.press('Control+y');
+    assert.equal((await page.evaluate(()=>window.TROZAL_CANVAS_3D.getProject())).objects[0].x,-0.5,'Ctrl+Y should redo the latest scene edit.');
+    await page.keyboard.press('Control+z');
     assert.equal(initial.camera.projection,'perspective','Perspective should be the default camera projection.');
     await page.locator('#trozal3DCameraProjection').selectOption('orthographic');
     let cameraProject=await page.evaluate(()=>window.TROZAL_CANVAS_3D.getProject());
@@ -186,6 +218,6 @@ const { chromium } = require('playwright');
     assert.deepEqual(errors,[],'Unexpected uncaught browser errors.');
     await page.locator('#trozal3DClose').click();
     assert.equal(await page.locator('#trozalCanvas3DOverlay').evaluate(el=>getComputedStyle(el).display),'none');
-    console.log(JSON.stringify({result:'PASS',renderer:'WebGL2',initialMeshes:3,addedMesh:'cylinder',duplicateDelete:'PASS',transform:'PASS',viewportGizmo:['move','rotate','camera'],perObjectAnimation:'PASS',timeline:'PASS',loop:'PASS',lighting:['three independent lights','intensity','color'],exports:['JSON','PNG']},null,2));
+    console.log(JSON.stringify({result:'PASS',renderer:'WebGL2',initialMeshes:3,addedMesh:'cylinder',undoRedo:['transform','add object','redo'],duplicateDelete:'PASS',transform:'PASS',viewportGizmo:['move','rotate','camera'],perObjectAnimation:'PASS',timeline:'PASS',loop:'PASS',lighting:['three independent lights','intensity','color'],exports:['JSON','PNG']},null,2));
   } finally { await browser.close(); }
 })().catch(error=>{console.error(error);process.exit(1);});
