@@ -52,7 +52,9 @@ function scene(name='Terminal Scene',duration=6){
   await page.locator('#trozal3DAIThemeSearch').fill('');
   await page.locator('#trozal3DAITheme').selectOption('Space & Astronomy');
   const spaceProfile=await page.evaluate(()=>window.trozalGetThemeDomainProfile('Space & Astronomy'));
-  assert.deepEqual(await page.locator('#trozal3DAICategory option').allTextContents(),spaceProfile.styles,'Theme category must synchronize with selected theme.');
+  const visibleSpaceCategories=await page.locator('#trozal3DAICategory option').allTextContents();
+  for(const category of spaceProfile.styles)assert.ok(visibleSpaceCategories.includes(category),'Theme category profile is missing '+category+'.');
+  assert.ok(visibleSpaceCategories.length>=spaceProfile.styles.length,'Theme Studio may add supported direction presets but must retain all domain categories.');
   await page.locator('#trozal3DAIExtra').fill('Podium obsidian, aksen cyan, kamera orbit perlahan dan material brushed titanium.');
   await page.locator('#trozal3DAICheck').click();
   await page.waitForFunction(()=>document.getElementById('trozal3DAIStatus')?.textContent.includes('OLLAMA TERHUBUNG'));
