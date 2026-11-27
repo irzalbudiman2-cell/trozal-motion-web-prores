@@ -591,7 +591,9 @@
           if (a > 32 && b > 32) sharedPixels++;
         }
         const seam = { parentId: parent.id, childId: child.id, x, y, radius, unionMask, sharedPixels, unionPixels };
-        jointSeams.push({ parentId: parent.id, childId: child.id, x, y, radius, sharedPixels, unionPixels, overlapRatio: unionPixels ? sharedPixels / unionPixels : 0 });
+        const overlapRatio = unionPixels ? sharedPixels / unionPixels : 0;
+        const quality = overlapRatio >= 0.25 ? 'baik' : overlapRatio >= 0.12 ? 'perlu ditinjau' : 'rendah';
+        jointSeams.push({ parentId: parent.id, childId: child.id, x, y, radius, sharedPixels, unionPixels, overlapRatio, quality });
         for (const id of [parent.id, child.id]) {
           const list = jointSeamsByPart.get(id) || [];
           list.push(seam); jointSeamsByPart.set(id, list);
@@ -601,16 +603,19 @@
       if (seamDiagnostics) {
         seamDiagnostics.replaceChildren();
         const summary = document.createElement('strong');
+        const weakCount = jointSeams.filter(seam => seam.quality === 'rendah').length;
+        const meanOverlap = jointSeams.length ? Math.round(jointSeams.reduce((sum, seam) => sum + seam.overlapRatio, 0) / jointSeams.length * 100) : 0;
         summary.textContent = jointSeams.length
-          ? 'DIAGNOSTIK: ' + jointSeams.length + ' sambungan · rasio overlap mask bersama'
+          ? 'DIAGNOSTIK: ' + jointSeams.length + ' sambungan · rata-rata overlap ' + meanOverlap + '% · ' + weakCount + ' sambungan rendah'
           : 'DIAGNOSTIK: belum ada pasangan sendi yang dapat dihitung';
         seamDiagnostics.append(summary);
         jointSeams.forEach((seam, index) => {
           const row = document.createElement('div');
           const ratio = Math.round((seam.overlapRatio || 0) * 100);
-          row.style.cssText = 'margin-top:5px;padding-top:5px;border-top:1px solid #403451;color:' + (ratio >= 12 ? '#b9f4d0' : '#ffd49a');
+          row.style.cssText = 'margin-top:5px;padding-top:5px;border-top:1px solid #403451;color:' + (seam.quality === 'baik' ? '#b9f4d0' : seam.quality === 'perlu ditinjau' ? '#ffd49a' : '#ff9b9b');
           row.textContent = (index + 1) + '. ' + seam.parentId + ' → ' + seam.childId +
-            ' · overlap ' + ratio + '% · piksel bersama ' + seam.sharedPixels + '/' + seam.unionPixels;
+            ' · overlap ' + ratio + '% · ' + seam.quality + ' · piksel bersama ' + seam.sharedPixels + '/' + seam.unionPixels +
+            (seam.quality === 'rendah' ? ' · saran: cek pivot dan refine mask dengan titik +/−.' : '');
           seamDiagnostics.append(row);
         });
       }
