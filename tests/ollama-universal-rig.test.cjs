@@ -181,3 +181,6 @@ for(const token of ['gaitPhaseOffset','stanceRatio','kneeFlexAssist','ankleStabi
 
 for(const id of ['itcvElbowDeformation','itcvKneeDeformation','itcvShoulderArc']) assert.ok(mode5.includes('id="'+id+'"'),'Missing joint deformation control '+id+'.');
 for(const token of ['elbowDeformation','kneeDeformation','shoulderArc']) assert.ok(mode5.includes(token),'Missing runtime deformation '+token+'.');
+for(const id of ['itcvWristDeformation','itcvHipDeformation','itcvSpineFlexion','itcvPelvisTwist','itcvSurfaceElasticity']) assert.ok(mode5.includes('id="'+id+'"'),'Mode 5 is missing visible skinning control '+id+'.');
+for(const token of ['wristDeformation','hipDeformation','spineFlexion','pelvisTwist','surfaceElasticity','spineGain','const elasticity=','const pelvisTwist=']) assert.ok(mode5.includes(token),'Mode 5 mesh runtime must apply '+token+'.');
+
