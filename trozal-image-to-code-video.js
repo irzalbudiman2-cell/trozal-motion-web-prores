@@ -152,6 +152,7 @@ document.addEventListener('click',async event=>{
  #trozalImageCodeVideoWorkspace .itcv-workspace-preview #itcvMotionAdvisorStatus{display:block;margin-top:7px;color:#b6d9e7;font-size:10px;line-height:1.45}
  #trozalImageCodeVideoWorkspace .itcv-workspace-preview #itcvMotionAdvisor .advisor-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:7px}
  #trozalImageCodeVideoWorkspace .itcv-workspace-preview #itcvMotionAdvisor .advisor-actions button{padding:7px 10px;font-size:10px}
+ @media(max-width:760px){#trozalImageCodeVideoWorkspace .itcv-workspace-preview #itcvMotionAssistControls{grid-template-columns:minmax(0,1fr)}#trozalImageCodeVideoWorkspace .itcv-workspace-preview .pose-preset-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
  #trozalImageCodeVideoWorkspace .itcv-workspace-preview iframe{width:100%;max-height:calc(100vh - 260px);min-height:260px}
  #trozalImageCodeVideoWorkspace .itcv-workspace-inspector>.scene-director,#trozalImageCodeVideoWorkspace .itcv-workspace-inspector>.rig-panel{margin:0;min-width:0;max-width:100%;resize:vertical;overflow:auto}
  #trozalImageCodeVideoWorkspace .itcv-output-dock>.out{margin:0;min-width:0;min-height:220px;resize:both;overflow:auto}
