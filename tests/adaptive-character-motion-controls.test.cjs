@@ -69,4 +69,25 @@ assert.match(source,/function analyzeMotionBalance\(applyFixes=false\)/,'Motion 
 assert.match(source,/if\(applyFixes\)\{[\s\S]*?Object\.entries\(updates\)/,'Motion Balance Advisor must apply bounded safe corrections.');
 assert.match(source,/grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/,'The moved motion dock must use a compact two-column control layout.');
 
+// Character Dynamics Lab: six additional visible articulation controls and runtime effects.
+const dynamicsControls=[
+ ['itcvShoulderStabilization','shoulderStabilization'],
+ ['itcvHeadLookAhead','headLookAhead'],
+ ['itcvWristFollowThrough','wristFollowThrough'],
+ ['itcvAnkleStiffness','ankleStiffness'],
+ ['itcvPelvisTilt','pelvisTilt'],
+ ['itcvStrideSymmetry','strideSymmetryAssist']
+];
+for(const [id,key] of dynamicsControls){
+ assert.ok(source.includes(id),`Missing Character Dynamics Lab control: ${id}`);
+ assert.ok(source.includes(key),`Missing Character Dynamics Lab runtime value: ${key}`);
+}
+assert.match(source,/CHARACTER DYNAMICS LAB · 6 ARTICULATION CONTROLS/,'Mode 5 must show the distinct Character Dynamics Lab panel.');
+assert.match(source,/shoulderStabilization\*\.28/,'Shoulder stabilization must damp arm rotation.');
+assert.match(source,/Math\.cos\(phase\)\*headLookAhead\*\.045/,'Head look-ahead must add anticipatory head motion.');
+assert.match(source,/Math\.sin\(phase-\.58\)\*wristFollowThrough\*\.09/,'Wrist follow-through must add delayed hand motion.');
+assert.match(source,/ankleStiffness\*\.28/,'Ankle stiffness must damp ankle/foot rotation.');
+assert.match(source,/Math\.sin\(phase\+Math\.PI\/2\)\*pelvisTilt\*\.05/,'Pelvis tilt must affect torso articulation.');
+assert.match(source,/1-strideSymmetryAssist\*\.08/,'Stride symmetry assist must moderate leg swing amplitude.');
+
 console.log('PASS: adaptive gait controls, five Character Balance Lab controls, and five quick motion profiles are visible and wired to exported runtime.');
