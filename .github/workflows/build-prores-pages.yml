@@ -55,6 +55,7 @@ jobs:
           cp render-frame-store.js site/render-frame-store.js
           cp logo-studio.js site/logo-studio.js
           cp icon-logo-motion-studio.js site/icon-logo-motion-studio.js
+          cp canvas-3d-studio.js site/canvas-3d-studio.js
           touch site/.nojekyll
 
       - name: Validate inline JavaScript syntax
@@ -179,6 +180,8 @@ jobs:
           test -s site/logo-studio.js
           node --check site/logo-studio.js
           test -s site/icon-logo-motion-studio.js
+          test -s site/canvas-3d-studio.js
+          node --check site/canvas-3d-studio.js
           node --check site/icon-logo-motion-studio.js
           node - <<'NODE'
           const fs = require('fs');
