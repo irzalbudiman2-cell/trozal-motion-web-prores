@@ -34,6 +34,8 @@ const { chromium } = require('playwright');
     await page.waitForFunction(()=>document.getElementById('trozal3DStatus')?.textContent.includes('Scene import failed'));
     imported=await page.evaluate(()=>window.TROZAL_CANVAS_3D.getProject());
     assert.equal(imported.objects[0].name,'Imported Hero','Invalid imports must not mutate the active scene.');
+    await page.locator('#trozal3DImportFile').setInputFiles({name:'restore-initial-scene.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(initial))});
+    await page.waitForFunction(()=>document.getElementById('trozal3DStatus')?.textContent.includes('Scene JSON imported'));
     assert.equal(await page.locator('#trozal3DObjectList button').count(),3);
     assert.equal(initial.camera.projection,'perspective','Perspective should be the default camera projection.');
     await page.locator('#trozal3DCameraProjection').selectOption('orthographic');
