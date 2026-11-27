@@ -30,7 +30,7 @@
       if (!anchor || $('itcvRigSeamControls')) return;
       const panel = document.createElement('section'); panel.id = 'itcvRigSeamControls';
       panel.style.cssText = 'margin:8px 0;padding:10px;border:1px solid #9a6bd6;border-radius:9px;background:linear-gradient(145deg,#24183a,#171326);color:#f0e7ff;';
-      panel.innerHTML = '<strong style="display:block;color:#d9c1ff;margin-bottom:7px">JOINT SEAM WELDING · PENGATUR SAMBUNGAN</strong><label style="display:flex;gap:7px;align-items:center"><input id="itcvRigSeamEnabled" type="checkbox" checked> Aktifkan overlap piksel sendi</label><label style="display:block;margin-top:7px">Kekuatan sambungan <output id="itcvRigSeamStrengthValue">85%</output><input id="itcvRigSeamStrength" type="range" min="0" max="100" value="85" style="width:100%"></label><label style="display:block;margin-top:7px">Radius sambungan <output id="itcvRigSeamRadiusValue">100%</output><input id="itcvRigSeamRadius" type="range" min="50" max="180" value="100" style="width:100%"></label><small>Overlap hanya memakai piksel foreground dari mask SAM 2.1, bukan piksel latar buatan.</small>';
+      panel.innerHTML = '<strong style="display:block;color:#d9c1ff;margin-bottom:7px">JOINT SEAM WELDING · PENGATUR SAMBUNGAN</strong><label style="display:flex;gap:7px;align-items:center"><input id="itcvRigSeamEnabled" type="checkbox" checked> Aktifkan overlap piksel sendi</label><label style="display:block;margin-top:7px">Kekuatan sambungan <output id="itcvRigSeamStrengthValue">85%</output><input id="itcvRigSeamStrength" type="range" min="0" max="100" value="85" style="width:100%"></label><label style="display:block;margin-top:7px">Radius sambungan <output id="itcvRigSeamRadiusValue">100%</output><input id="itcvRigSeamRadius" type="range" min="50" max="180" value="100" style="width:100%"></label><small>Overlap hanya memakai piksel foreground dari mask SAM 2.1, bukan piksel latar buatan. rasio overlap mask bersama = piksel mask yang bertumpuk dibagi total piksel gabungan di area sendi.</small><div id="itcvRigSeamDiagnostics" aria-live="polite" style="margin-top:8px;padding:8px;border:1px solid #55416f;border-radius:7px;background:#100d1b;font-size:11px;color:#e9ddff">Diagnostik sambungan akan muncul setelah rig dibuat.</div>';
       anchor.insertAdjacentElement('afterend', panel);
       const strength = $('itcvRigSeamStrength'), radius = $('itcvRigSeamRadius');
       strength.addEventListener('input', () => { seamSettings.strength = Number(strength.value) / 100; $('itcvRigSeamStrengthValue').textContent = strength.value + '%'; });
@@ -698,11 +698,33 @@
           if (a > 32 && b > 32) sharedPixels++;
         }
         const seam = { parentId: parent.id, childId: child.id, x, y, radius, unionMask, sharedPixels, unionPixels };
-        jointSeams.push({ parentId: parent.id, childId: child.id, x, y, radius, sharedPixels, unionPixels });
+        const overlapRatio = unionPixels ? sharedPixels / unionPixels : 0;
+        const quality = overlapRatio >= 0.25 ? 'baik' : overlapRatio >= 0.12 ? 'perlu ditinjau' : 'rendah';
+        jointSeams.push({ parentId: parent.id, childId: child.id, x, y, radius, sharedPixels, unionPixels, overlapRatio, quality });
         for (const id of [parent.id, child.id]) {
           const list = jointSeamsByPart.get(id) || [];
           list.push(seam); jointSeamsByPart.set(id, list);
         }
+      }
+      const seamDiagnostics = $('itcvRigSeamDiagnostics');
+      if (seamDiagnostics) {
+        seamDiagnostics.replaceChildren();
+        const summary = document.createElement('strong');
+        const weakCount = jointSeams.filter(seam => seam.quality === 'rendah').length;
+        const meanOverlap = jointSeams.length ? Math.round(jointSeams.reduce((sum, seam) => sum + seam.overlapRatio, 0) / jointSeams.length * 100) : 0;
+        summary.textContent = jointSeams.length
+          ? 'DIAGNOSTIK: ' + jointSeams.length + ' sambungan · rata-rata overlap ' + meanOverlap + '% · ' + weakCount + ' sambungan rendah'
+          : 'DIAGNOSTIK: belum ada pasangan sendi yang dapat dihitung';
+        seamDiagnostics.append(summary);
+        jointSeams.forEach((seam, index) => {
+          const row = document.createElement('div');
+          const ratio = Math.round((seam.overlapRatio || 0) * 100);
+          row.style.cssText = 'margin-top:5px;padding-top:5px;border-top:1px solid #403451;color:' + (seam.quality === 'baik' ? '#b9f4d0' : seam.quality === 'perlu ditinjau' ? '#ffd49a' : '#ff9b9b');
+          row.textContent = (index + 1) + '. ' + seam.parentId + ' → ' + seam.childId +
+            ' · overlap ' + ratio + '% · ' + seam.quality + ' · piksel bersama ' + seam.sharedPixels + '/' + seam.unionPixels +
+            (seam.quality === 'rendah' ? ' · saran: cek pivot dan refine mask dengan titik +/−.' : '');
+          seamDiagnostics.append(row);
+        });
       }
       for (const segment of selected) {
         const maskImage = await loadImage(segment.mask);

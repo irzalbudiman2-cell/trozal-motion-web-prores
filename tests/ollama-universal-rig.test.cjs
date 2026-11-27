@@ -161,6 +161,13 @@ assert.match(ui, /jointSeamsByPart/, 'Both connected segments must receive the s
 assert.match(ui, /const unionMask = new Uint8Array\(imageSize\.width \* imageSize\.height\)/, 'Joint welding must use the union of the two SAM foreground masks, not invent background pixels.');
 assert.match(ui, /const feather = \(1 - t \* t \* \(3 - 2 \* t\)\) \* seamSettings\.strength/, 'Shared joint pixels must fade smoothly using the configured seam strength.');
 assert.match(ui, /itcvRigSeamControls/, 'Mode 5 must display visible joint seam controls.');
+assert.match(ui, /itcvRigSeamDiagnostics/, 'Mode 5 must display per-joint seam diagnostics after rig generation.');
+assert.match(ui, /const overlapRatio = unionPixels \? sharedPixels \/ unionPixels : 0/, 'Mode 5 must calculate a normalized shared-mask overlap ratio per joint.');
+assert.match(ui, /rasio overlap mask bersama/, 'Mode 5 diagnostics must explain the shared-mask overlap metric.');
+assert.match(ui, /piksel bersama/, 'Mode 5 diagnostics must report the shared foreground pixel count.');
+assert.match(ui, /const quality = overlapRatio >= 0\.25 \? 'baik' : overlapRatio >= 0\.12 \? 'perlu ditinjau' : 'rendah'/, 'Mode 5 must classify seam overlap into explicit review bands.');
+assert.match(ui, /rata-rata overlap/, 'Mode 5 must summarize mean seam overlap across the generated rig.');
+assert.match(ui, /saran: cek pivot dan refine mask/, 'Low-overlap seams must provide an actionable mask and pivot review hint.');
 assert.match(ui, /seamSettings\.radiusScale/, 'Mode 5 must apply the user-configured seam radius.');
 assert.match(ui, /alphaMask = Math\.max\(alphaMask, Math\.round\(unionAlpha \* feather\)\)/, 'Each connected layer must receive the same feathered foreground pixels around its shared pivot.');
 assert.match(ui, /background: bg\.toDataURL\('image\/png'\), parts, jointSeams/, 'Generated rig must retain per-joint seam diagnostics.');
