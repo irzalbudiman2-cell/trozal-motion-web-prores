@@ -37,4 +37,18 @@ assert.match(source,/landingSoftness\*\.18/,'Landing softness must damp knee imp
 assert.match(source,/neckStabilization\*\.38/,'Neck stabilization must damp head rotation.');
 assert.match(source,/part\.w\*\.025\*pelvisLateralShift/,'Pelvis shift must alter torso pivot translation.');
 
-console.log('PASS: adaptive gait controls and five Character Balance Lab controls are visible and wired to exported runtime.');
+
+
+const motionProfiles=['natural','run','landing','upper','default'];
+for(const profile of motionProfiles){
+ assert.ok(source.includes(profile+':{itcvPelvisShift:'),`Missing Character Balance Lab profile: ${profile}`);
+}
+for(const id of ['itcvBalancePresets','itcvBalancePresetStatus'])assert.ok(source.includes(id),`Missing motion profile UI element: ${id}`);
+assert.match(source,/data-balance-preset="natural"/,'Natural Walk profile button must be visible.');
+assert.match(source,/data-balance-preset="run"/,'Run Impact profile button must be visible.');
+assert.match(source,/data-balance-preset="landing"/,'Soft Landing profile button must be visible.');
+assert.match(source,/data-balance-preset="upper"/,'Upper Body Stable profile button must be visible.');
+assert.match(source,/data-balance-preset="default"/,'Restore Defaults button must be visible.');
+assert.ok(source.includes("input.dispatchEvent(new Event('input'"),'Applying a profile must update slider outputs through input events.');
+
+console.log('PASS: adaptive gait controls, five Character Balance Lab controls, and five quick motion profiles are visible and wired to exported runtime.');
