@@ -3,7 +3,7 @@ const assert=require('node:assert/strict');
 const {chromium}=require('playwright');
 function scene(name='Terminal Scene',duration=6){
  const objects=[
-  ['hero','Hero','sphere',0,0,0,'#36c7dc','spin'],
+  ['hero',name+' Hero','sphere',0,0,0,'#36c7dc','spin'],
   ['stage','Stage','cylinder',0,-1,0,'#26364f','none'],
   ['accent','Accent','torus',0,.8,0,'#9a82f5','orbit'],
   ['detail','Detail','cube',1,.2,.4,'#f2a84b','pulse']
