@@ -178,3 +178,6 @@ assert.match(mode5,/FFmpeg gagal dimuat/, 'MP4 render errors must identify local
 
 for(const id of ['itcvGaitPhaseOffset','itcvStanceRatio','itcvKneeFlexAssist','itcvAnkleStabilization','itcvPoseBlend']) assert.ok(mode5.includes('id="'+id+'"'),'Mode 5 must expose adaptive gait control '+id+'.');
 for(const token of ['gaitPhaseOffset','stanceRatio','kneeFlexAssist','ankleStabilization','poseBlend','gaitOffset','kneeFlexAssist','ankleStabilization']) assert.ok(mode5.includes(token),'Generated OLLAMA rig must apply '+token+'.');
+
+for(const id of ['itcvElbowDeformation','itcvKneeDeformation','itcvShoulderArc']) assert.ok(mode5.includes('id="'+id+'"'),'Missing joint deformation control '+id+'.');
+for(const token of ['elbowDeformation','kneeDeformation','shoulderArc']) assert.ok(mode5.includes(token),'Missing runtime deformation '+token+'.');
