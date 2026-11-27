@@ -32,6 +32,7 @@ const { chromium } = require('playwright');
     await page.locator('#trozal3DRX').evaluate(el=>{el.value='35';el.dispatchEvent(new Event('input',{bubbles:true}));});
     await page.locator('#trozal3DAnimation').selectOption('bounce');
     // Build a parent-child relationship and verify cycle prevention.
+    let project;
     const objectButtons=page.locator('#trozal3DObjectList button');
     await objectButtons.nth(0).click();
     const parentId=await page.evaluate(()=>window.TROZAL_CANVAS_3D.getProject().objects[0].id);
@@ -50,7 +51,7 @@ const { chromium } = require('playwright');
     assert.ok(project.objects[0].keyframes.some(k=>Math.abs(k.time-1.5)<.01),'Keyframe should be stored at the playhead.');
     assert.equal(project.objects[0].keyframes.find(k=>Math.abs(k.time-1.5)<.01).values.x,1.8,'Keyframe should capture transform values.');
     
-    let project=await page.evaluate(()=>window.TROZAL_CANVAS_3D.getProject());
+    project=await page.evaluate(()=>window.TROZAL_CANVAS_3D.getProject());
     const active=project.objects.find(o=>o.id===project.objects[project.objects.length-1].id);
     assert.ok(project.objects.some(o=>o.rx===35),'The inspector must update the selected object rotation.');
     assert.ok(project.objects.some(o=>o.animation==='bounce'),'Animation selection must persist in project data.');
