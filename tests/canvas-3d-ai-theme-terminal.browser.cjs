@@ -64,7 +64,7 @@ function scene(name='Terminal Scene',duration=6){
   assert.equal(themePrompts.length,3,'Each concept must be generated in a separate Ollama request.');
   for(const prompt of themePrompts){assert.ok(prompt.includes('MAIN THEME: Space & Astronomy'));assert.ok(prompt.includes('Podium obsidian, aksen cyan'));assert.ok(prompt.includes('INTELLECTUAL PROPERTY POLICY'));}
   await page.locator('#trozal3DAIConcepts [data-concept="1"]').click();
-  assert.match(await page.locator('#trozal3DAIJson').inputValue(),/"Concept 2"|Concept 2/);
+  assert.match(await page.locator('#trozal3DAIJson').inputValue(),/"duration": 8/,'Selecting concept 2 must switch the JSON editor to its own scene.');
   await page.locator('#trozal3DAIApply').click();
   let active=await page.evaluate(()=>window.TROZAL_CANVAS_3D.getProject());
   assert.equal(active.objects.length,4,'A selected generated concept must apply to Canvas 3D.');
