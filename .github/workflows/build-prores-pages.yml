@@ -7,8 +7,8 @@ on:
     branches: [main]
     paths:
       - 'index.html'
-      - 'canvas-3d-studio.js
-          browser-render-engine-groups.js'
+      - 'canvas-3d-studio.js'
+      - 'browser-render-engine-groups.js'
       - 'canvas-3d-ai-theme-studio.js'
       - 'canvas-3d-terminal.js'
       - 'tests/canvas-3d-ai-theme-terminal.test.cjs'
