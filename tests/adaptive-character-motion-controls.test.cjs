@@ -51,4 +51,22 @@ assert.match(source,/data-balance-preset="upper"/,'Upper Body Stable profile but
 assert.match(source,/data-balance-preset="default"/,'Restore Defaults button must be visible.');
 assert.ok(source.includes("input.dispatchEvent(new Event('input'"),'Applying a profile must update slider outputs through input events.');
 
+
+// Mode 5 workspace layout, dedicated full-body presets, and motion advisor.
+for(const id of ['itcvPosePresetPanel','itcvPosePresetStatus','itcvMotionAdvisor','itcvMotionAdvisorAnalyze','itcvMotionAdvisorApply','itcvFootstepImpact']){
+ assert.ok(source.includes(id),`Missing Mode 5 motion workspace feature: ${id}`);
+}
+for(const preset of ['walk','idle','run']){
+ assert.ok(source.includes(preset+':{itcvMotionPreset:'),`Missing full-body motion preset: ${preset}`);
+ assert.match(source,new RegExp('data-pose-preset="'+preset+'"'),`Missing visible ${preset} preset button.`);
+}
+assert.match(source,/motionDock=rigPanel&&rigPanel\.querySelector\('#itcvMotionAssistControls'\)/,'Character Motion Assist must be detached from the right inspector.');
+assert.match(source,/center\.append\(motionDock\)/,'Character Motion Assist must appear below the center Preview.');
+assert.match(source,/footstepImpact:Number\(/,'Footstep impact value must be serialized into the exported runtime.');
+assert.match(source,/impactPulse\*part\.h\*\.018\*footstepImpact/,'Footstep impact must affect torso weight absorption.');
+assert.match(source,/impactPulse\*footstepImpact\*\.025/,'Footstep impact must add a subtle head follow-through.');
+assert.match(source,/function analyzeMotionBalance\(applyFixes=false\)/,'Motion Balance Advisor must calculate recommendations.');
+assert.match(source,/if\(applyFixes\)\{[\s\S]*?Object\.entries\(updates\)/,'Motion Balance Advisor must apply bounded safe corrections.');
+assert.match(source,/grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/,'The moved motion dock must use a compact two-column control layout.');
+
 console.log('PASS: adaptive gait controls, five Character Balance Lab controls, and five quick motion profiles are visible and wired to exported runtime.');
