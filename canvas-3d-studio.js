@@ -99,8 +99,8 @@ function inspector(){const o=selected();if(!o)return;$('trozal3DName').value=o.n
 function updateParentOptions(o){const el=$('trozal3DParent');if(!el)return;el.replaceChildren(new Option('— Root object —',''));state.objects.filter(p=>p.id!==o.id).forEach(p=>el.add(new Option(p.name+' ('+p.type+')',p.id)));el.value=o.parentId||'';}
 function outputs(){const o=selected();$('trozal3DLightValue').textContent=state.light.toFixed(2);$('trozal3DZoomValue').textContent=state.camera.distance.toFixed(1);if(!o)return;$('trozal3DMetalValue').textContent=o.metallic.toFixed(2);$('trozal3DRoughValue').textContent=o.roughness.toFixed(2);$('trozal3DSpeedValue').textContent=o.speed.toFixed(2)+'×';$('trozal3DAmountValue').textContent=o.amount.toFixed(2);}
 function defaults(){return [
-{id:uid(),name:'Hero Cube',type:'cube',x:-1.25,y:0,z:0,rx:12,ry:22,rz:0,sx:1,sy:1,sz:1,color:'#36c7dc',metallic:.3,roughness:.34,animation:'spin',speed:.55,amount:.7},
-{id:uid(),name:'Orbit Sphere',type:'sphere',x:1.25,y:.1,z:0,rx:0,ry:0,rz:0,sx:.72,sy:.72,sz:.72,color:'#f2a84b',metallic:.55,roughness:.22,animation:'orbit',speed:.8,amount:.65},
+{id:uid(),name:'Hero Cube',type:'cube',x:-1.25,y:0,z:0,rx:12,ry:22,rz:0,sx:1,sy:1,sz:1,color:'#36c7dc',metallic:.3,roughness:.34,animation:'spin',speed:.55,amount:.7,parentId:null,keyframes:[]},
+{id:uid(),name:'Orbit Sphere',type:'sphere',x:1.25,y:.1,z:0,rx:0,ry:0,rz:0,sx:.72,sy:.72,sz:.72,color:'#f2a84b',metallic:.55,roughness:.22,animation:'orbit',speed:.8,amount:.65,parentId:null,keyframes:[]},
 {id:uid(),name:'Torus Accent',type:'torus',x:0,y:1.35,z:-.25,rx:65,ry:0,rz:0,sx:.56,sy:.56,sz:.56,color:'#9a82f5',metallic:.7,roughness:.28,animation:'spin',speed:.4,amount:.45,parentId:null,keyframes:[]}]}
 function project(){return {version:1,engine:'TROZAL CANVAS 3D · WebGL2',duration:state.duration,fps:state.fps,loop:state.loop,light:state.light,showGrid:state.showGrid,camera:{...state.camera},objects:state.objects.map(o=>({...o}))};}
 function download(blob,name){const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1200);}
