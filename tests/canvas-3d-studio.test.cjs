@@ -35,3 +35,9 @@ assert.ok(source.includes("case 'ease-in'" ) && source.includes("case 'ease-out'
 assert.ok(source.includes('trozal3DKeyframeEasing') && source.includes("easing:$(\'trozal3DKeyframeEasing\')?.value||\'ease-in-out\'"), 'Keyframe easing must be selectable and saved per keyframe.');
 assert.ok(source.includes("b.easing||a.easing||'linear'"), 'Each keyframe segment must apply its stored easing with a linear fallback for old projects.');
 console.log('PASS: CANVAS 3D WebGL2 scene, geometry, transform, materials, three-point lighting, per-object motion, camera, timeline and exports are wired.');
+
+assert.ok(html.includes('./canvas-3d-ai-theme-studio.js'), 'AI Theme Studio script must load.');
+assert.ok(source.includes('applyProject(data)'), 'Canvas 3D exposes validated scene application.');
+const aiStudio = fs.readFileSync(path.join(__dirname, '..', 'canvas-3d-ai-theme-studio.js'), 'utf8');
+for (const token of ['TROZAL_AI_THEMES','TROZAL_THEME_RULES','TROZAL_THEME_RULES_EXTRA','trozalGetThemeDomainProfile','Detail Tambahan','Generate 3 Concepts','/api/chat','/api/generate','applyProject']) assert.ok(aiStudio.includes(token), 'Missing AI Theme Studio feature: '+token);
+console.log('PASS: CANVAS 3D AI Theme Studio catalogue, theme intelligence, Ollama concepts and scene apply.');
