@@ -18,7 +18,7 @@ for (const id of [
   'trozal3DUndo','trozal3DRedo','trozal3DHistoryCount'
 ]) assert.ok(source.includes('id=\''+id+'\'') || source.includes('id="'+id+'"') || source.includes(".id='"+id+"'"), 'Missing CANVAS 3D control: '+id);
 for (const token of [
-  "getContext('webgl2'", 'drawArrays(gl.TRIANGLES', 'drawArrays(gl.LINES',
+  "getContext('webgl2'", 'uniform mat3 uNormalMatrix', 'normalize(uNormalMatrix*aNormal)', 'function normalMatrix(m)', 'uniformMatrix3fv(l.normal,false,normalMatrix(m))', 'drawArrays(gl.TRIANGLES', 'drawArrays(gl.LINES',
   'function geometry(type)', "type==='cube'", "type==='sphere'", "type==='torus'",
   "type==='cylinder'", "type==='cone'", "type==='plane'", 'function localModel(o,t)', 'function model(o,t,seen=new Set())',
   "o.animation==='spin'", "o.animation==='orbit'", "o.animation==='bounce'",
