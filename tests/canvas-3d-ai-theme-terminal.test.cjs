@@ -16,4 +16,5 @@ assert.ok(studio.includes('concepts.push(ready);render();'),'Successfully genera
 for(const token of ["open.id='t3dTerminalOpen'","panel.id='t3dTerminalPanel'",'id="t3dTerminalMode"','value="json"','value="js"','id="t3dTerminalGenerate"','id="t3dTerminalValidate"','id="t3dTerminalApply"','id="t3dTerminalCopy"','id="t3dTerminalSave"','id="t3dTerminalThemeBrief"','askAI','validateScene','runSandbox','connect-src &#39;none&#39;','worker-src blob:','IP_POLICY','targetAddressSpace:\'loopback\'','window.TROZAL_CANVAS_3D.applyProject'])assert.ok(terminal.includes(token),'Missing Terminal contract: '+token);
 assert.ok(renderer.includes('applyProject(data)'),'Canvas 3D must expose the validated scene-apply API.');
 assert.ok(terminal.includes('setTimeout(()=>finish(\'JavaScript melewati batas 8 detik; worker dihentikan.\'),8000)'),'JavaScript runner must have an execution timeout.');
+assert.ok(terminal.includes(String.raw`<\/script>`),'Sandbox srcdoc must close its bootstrap script element correctly.');
 console.log('PASS: OLLAMA CANVAS 3D Theme Studio random theme, separate concept generation, IP policy, Loopback requests and JavaScript/JSON Terminal contracts.');
