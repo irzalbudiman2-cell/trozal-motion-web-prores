@@ -20,3 +20,11 @@ assert.match(source, /refreshRatioPreview\(\)/, 'Changing the preview ratio must
 assert.match(source, /addEventListener\('click',\(\)=>\{previewLoopEnabled=!previewLoopEnabled/, 'Loop button click must toggle the loop state');
 new Function(source);
 console.log('Mode 5 preview ratio, custom size, loop toggle, ratio refresh, and framing-guide regression checks passed.');
+
+const globalRatioSource = require('node:fs').readFileSync('index.html','utf8');
+for (const ratio of ['16:9','9:16','1:1','4:5','3:4','2:3','3:2','4:3','5:4','21:9','custom']) {
+  assert.ok(globalRatioSource.includes('value="'+ratio+'"'), 'All-mode preview ratio is missing '+ratio);
+}
+for (const id of ['trozalGlobalPreviewRatio','trozalGlobalRatioWidth','trozalGlobalRatioHeight','trozalGlobalRatioReset']) {
+  assert.ok(globalRatioSource.includes('id="'+id+'"'), 'Global preview ratio control is missing '+id);
+}
