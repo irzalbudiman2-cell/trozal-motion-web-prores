@@ -134,9 +134,13 @@ for(const id of ['itcvGestureAction','itcvGazeDirection','itcvBreathing','itcvBo
 for(const token of ['gestureAngle','gazeAngle','breathing','bodySway','rootPath']) assert.ok(mode5.includes(token),'Generated OLLAMA rig runtime must apply '+token+'.');
 for(const id of ['itcvArmSwing','itcvStrideLength','itcvTorsoTwist','itcvHeadNod','itcvMotionSmoothness']) assert.ok(mode5.includes('id="'+id+'"'),'Mode 5 must expose biomechanical control '+id+'.');
 for(const token of ['armSwing','strideLength','torsoTwist','headNod','motionSmoothness']) assert.ok(mode5.includes(token),'Generated OLLAMA rig runtime must apply biomechanical control '+token+'.');
-assert.match(mode5,/isArm\?Math\.sin\(phase\+Math\.PI\)\*armSwing/, 'Arm swing must drive arm segments independently.');
-assert.match(mode5,/footSwing\*Math\.PI\)\*part\.h\*\.075\*footLock\*\(\.65\+strideLength\*\.7\)/, 'Stride length must scale the foot lift during swing.');
+assert.match(mode5,/isArm\?\(Math\.sin\(phase\+Math\.PI\)\*\(1-armLegSync\)\+Math\.sin/, 'Arm swing must remain independently animated while blending the opposite-leg gait phase.');
+assert.match(mode5,/footSwing\*Math\.PI\)\*part\.h\*\.075\*footLock\*\(\.65\+strideLength\*\.7\)\*\(1\+groundClearance\*\.9\)/, 'Stride length and ground clearance must scale the foot lift during swing.');
 assert.match(mode5,/Math\.sin\(t\*1\.8\)\*torsoTwist/, 'Torso twist must animate the torso.');
+assert.match(mode5,/hipCounterRotation\*\.10/, 'Hip counter-rotation must counterbalance torso motion.');
+assert.match(mode5,/gaitBalance\*\.5/, 'Gait balance must damp excessive torso sway.');
+assert.match(mode5,/jointImpactDamping\*\.24/, 'Joint impact damping must soften knee and ankle rotation.');
+for(const id of ['itcvHipCounter','itcvArmLegSync','itcvGroundClearance','itcvGaitBalance','itcvJointDamping']) assert.ok(mode5.includes('id="'+id+'"'),'Mode 5 must expose adaptive motion control '+id+'.');
 assert.match(mode5,/Math\.sin\(t\*2\.4\)\*headNod/, 'Head nod must animate the head.');
 assert.match(mode5,/smoothness\*\.18/, 'Motion smoothness must blend the motion phase to soften transitions.');
 console.log('PASS: OLLAMA Universal Object Rig local API, SAM2 routes, Character Part Segmentation, motion assist, loopback guard, UI controls and self-contained export contract.');
