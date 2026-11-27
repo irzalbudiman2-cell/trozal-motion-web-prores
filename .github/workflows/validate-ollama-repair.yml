@@ -66,6 +66,12 @@ jobs:
         run: node tests/logo-composition-playback.test.cjs
       - name: Validate Mode 5 standalone JavaScript
         run: node --check trozal-image-to-code-video.js
+
+      - name: Validate CANVAS 3D script and static contract
+        run: |
+          node --check canvas-3d-studio.js
+          node --check tests/canvas-3d-studio.test.cjs
+          node tests/canvas-3d-studio.test.cjs
       - name: Validate Mode 5 preview ratio, custom size, loop and guides
         run: node tests/image-to-code-preview-controls.test.cjs
       - name: Validate Universal Rig browser and Python segmenter syntax
