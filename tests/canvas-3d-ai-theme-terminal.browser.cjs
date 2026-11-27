@@ -96,7 +96,9 @@ function scene(name='Terminal Scene',duration=6){
   await page.locator('#t3dTerminalGenerate').click();
   await page.waitForFunction(()=>document.getElementById('t3dTerminalCode')?.value.includes('Terminal JavaScript Scene'),{timeout:20000});
   await page.locator('#t3dTerminalValidate').click();
-  await page.waitForFunction(()=>document.getElementById('t3dTerminalStatus')?.textContent.includes('JavaScript berhasil'),{timeout:15000});
+  await page.waitForFunction(()=>{const status=document.getElementById('t3dTerminalStatus');return status?.textContent.includes('JavaScript berhasil')||status?.dataset.error==='1';},{timeout:20000});
+  const jsStatus=await page.locator('#t3dTerminalStatus').innerText();
+  assert.ok(jsStatus.includes('JavaScript berhasil'),'JavaScript sandbox execution failed: '+jsStatus);
   await page.locator('#t3dTerminalApply').click();
   active=await page.evaluate(()=>window.TROZAL_CANVAS_3D.getProject());
   assert.equal(active.objects.length,4);
