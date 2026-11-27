@@ -71,6 +71,7 @@ jobs:
           node --check js/ollama-universal-object-rig.js
           python -m py_compile TROZAL_UNIVERSAL_RIG_SERVER.py
           node tests/ollama-universal-rig.test.cjs
+          node tests/adaptive-character-motion-controls.test.cjs
       - name: Validate inline JavaScript syntax
         shell: bash
         run: |
