@@ -35,6 +35,6 @@ assert.match(source,/shoulderCounterSwing\*\.095/,'Shoulder counter-swing must a
 assert.match(source,/heelToeRoll\*\.13/,'Heel-to-toe roll must affect foot rotation.');
 assert.match(source,/landingSoftness\*\.18/,'Landing softness must damp knee impact.');
 assert.match(source,/neckStabilization\*\.38/,'Neck stabilization must damp head rotation.');
-assert.match(source,/pelvisLateralShift\*\.025/,'Pelvis shift must alter torso pivot translation.');
+assert.match(source,/part\.w\*\.025\*pelvisLateralShift/,'Pelvis shift must alter torso pivot translation.');
 
 console.log('PASS: adaptive gait controls and five Character Balance Lab controls are visible and wired to exported runtime.');
