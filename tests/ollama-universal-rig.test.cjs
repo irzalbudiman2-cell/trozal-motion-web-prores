@@ -107,7 +107,7 @@ assert.match(ui, /const unionMask = new Uint8Array\(imageSize\.width \* imageSiz
 assert.match(ui, /const feather = \(1 - t \* t \* \(3 - 2 \* t\)\) \* seamSettings\.strength/, 'Shared joint pixels must fade smoothly using the configured seam strength.');
 assert.match(ui, /itcvRigSeamControls/, 'Mode 5 must display visible joint seam controls.');
 assert.match(ui, /itcvRigSeamDiagnostics/, 'Mode 5 must display per-joint seam diagnostics after rig generation.');
-assert.match(ui, /overlapRatio: unionPixels \? sharedPixels \/ unionPixels : 0/, 'Mode 5 must calculate a normalized shared-mask overlap ratio per joint.');
+assert.match(ui, /const overlapRatio = unionPixels \? sharedPixels \/ unionPixels : 0/, 'Mode 5 must calculate a normalized shared-mask overlap ratio per joint.');
 assert.match(ui, /rasio overlap mask bersama/, 'Mode 5 diagnostics must explain the shared-mask overlap metric.');
 assert.match(ui, /piksel bersama/, 'Mode 5 diagnostics must report the shared foreground pixel count.');
 assert.match(ui, /const quality = overlapRatio >= 0\.25 \? 'baik' : overlapRatio >= 0\.12 \? 'perlu ditinjau' : 'rendah'/, 'Mode 5 must classify seam overlap into explicit review bands.');
