@@ -4,6 +4,7 @@
 'use strict';
 if(window.__TROZAL_CANVAS3D__)return;window.__TROZAL_CANVAS3D__=true;
 const $=id=>document.getElementById(id),uid=()=> 'obj-'+Math.random().toString(36).slice(2,9),clamp=(v,a,b)=>Math.max(a,Math.min(b,Number(v)||0));
+function snapValue(value,step){return step>0?Math.round(value/step)*step:value;}
 const state={objects:[
 {id:'cube-main',name:'Hero Cube',type:'cube',x:-1.25,y:0,z:0,rx:12,ry:22,rz:0,sx:1,sy:1,sz:1,color:'#36c7dc',metallic:.3,roughness:.34,emission:0,materialPreset:'custom',animation:'spin',speed:.55,amount:.7,parentId:null,keyframes:[]},
 {id:'sphere-main',name:'Orbit Sphere',type:'sphere',x:1.25,y:.1,z:0,rx:0,ry:0,rz:0,sx:.72,sy:.72,sz:.72,color:'#f2a84b',metallic:.55,roughness:.22,emission:0,materialPreset:'custom',animation:'orbit',speed:.8,amount:.65,parentId:null,keyframes:[]},
@@ -142,7 +143,7 @@ function defaults(){return [
 {id:uid(),name:'Hero Cube',type:'cube',x:-1.25,y:0,z:0,rx:12,ry:22,rz:0,sx:1,sy:1,sz:1,color:'#36c7dc',metallic:.3,roughness:.34,emission:0,materialPreset:'custom',animation:'spin',speed:.55,amount:.7,parentId:null,keyframes:[]},
 {id:uid(),name:'Orbit Sphere',type:'sphere',x:1.25,y:.1,z:0,rx:0,ry:0,rz:0,sx:.72,sy:.72,sz:.72,color:'#f2a84b',metallic:.55,roughness:.22,emission:0,materialPreset:'custom',animation:'orbit',speed:.8,amount:.65,parentId:null,keyframes:[]},
 {id:uid(),name:'Torus Accent',type:'torus',x:0,y:1.35,z:-.25,rx:65,ry:0,rz:0,sx:.56,sy:.56,sz:.56,color:'#9a82f5',metallic:.7,roughness:.28,emission:0,materialPreset:'custom',animation:'spin',speed:.4,amount:.45,parentId:null,keyframes:[]}]}
-function project(){return {version:2,engine:'TROZAL CANVAS 3D · '+state.renderer,duration:state.duration,fps:state.fps,loop:state.loop,light:state.light,lights:state.lights.map(light=>({...light})),showGrid:state.showGrid,camera:{...state.camera},objects:state.objects.map(o=>({...o}))};}
+function project(){return {version:2,engine:'TROZAL CANVAS 3D · '+state.renderer,duration:state.duration,fps:state.fps,loop:state.loop,light:state.light,lights:state.lights.map(light=>({...light})),showGrid:state.showGrid,camera:{...state.camera},transformSnap:{...state.transformSnap},objects:state.objects.map(o=>({...o}))};}
 
 function applySceneProject(data){
 if(!data||typeof data!=='object'||data.version!==2||!Array.isArray(data.objects)||data.objects.length<1||data.objects.length>100)throw new Error('Invalid Scene JSON v2 or object count.');
