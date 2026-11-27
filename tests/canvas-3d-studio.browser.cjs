@@ -31,7 +31,27 @@ const { chromium } = require('playwright');
     assert.equal(await page.locator('#trozal3DObjectList button').count(),4,'Delete should remove only the selected object.');
     await page.locator('#trozal3DRX').evaluate(el=>{el.value='35';el.dispatchEvent(new Event('input',{bubbles:true}));});
     await page.locator('#trozal3DAnimation').selectOption('bounce');
-    let project=await page.evaluate(()=>window.TROZAL_CANVAS_3D.getProject());
+    // Build a parent-child relationship and verify cycle prevention.
+    let project;
+    const objectButtons=page.locator('#trozal3DObjectList button');
+    await objectButtons.nth(0).click();
+    const parentId=await page.evaluate(()=>window.TROZAL_CANVAS_3D.getProject().objects[0].id);
+    await objectButtons.nth(1).click();
+    await page.locator('#trozal3DParent').selectOption(parentId);
+    project=await page.evaluate(()=>window.TROZAL_CANVAS_3D.getProject());
+    assert.equal(project.objects[1].parentId,parentId,'Child should retain its selected parent.');
+    await objectButtons.nth(0).click();
+    await page.locator('#trozal3DParent').selectOption(project.objects[1].id);
+    project=await page.evaluate(()=>window.TROZAL_CANVAS_3D.getProject());
+    assert.notEqual(project.objects[0].parentId,project.objects[1].id,'Hierarchy must reject cyclic parent assignments.');
+    await page.locator('#trozal3DTime').evaluate(el=>{el.value='1.5';el.dispatchEvent(new Event('input',{bubbles:true}));});
+    await page.locator('#trozal3DX').evaluate(el=>{el.value='1.8';el.dispatchEvent(new Event('input',{bubbles:true}));});
+    await page.locator('#trozal3DAddKeyframe').click();
+    project=await page.evaluate(()=>window.TROZAL_CANVAS_3D.getProject());
+    assert.ok(project.objects[0].keyframes.some(k=>Math.abs(k.time-1.5)<.01),'Keyframe should be stored at the playhead.');
+    assert.equal(project.objects[0].keyframes.find(k=>Math.abs(k.time-1.5)<.01).values.x,1.8,'Keyframe should capture transform values.');
+    
+    project=await page.evaluate(()=>window.TROZAL_CANVAS_3D.getProject());
     const active=project.objects.find(o=>o.id===project.objects[project.objects.length-1].id);
     assert.ok(project.objects.some(o=>o.rx===35),'The inspector must update the selected object rotation.');
     assert.ok(project.objects.some(o=>o.animation==='bounce'),'Animation selection must persist in project data.');
