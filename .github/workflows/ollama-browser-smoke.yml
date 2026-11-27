@@ -25,6 +25,7 @@ on:
       - feature/original-content-ip-panel-2026-11-18
       - feature/preview-proxy-canvas-2026-11-18
       - feature/ollama-adaptive-render-memory-2026-11-18
+      - feature/ollama-canvas3d-terminal-ip-random-20261128
   workflow_dispatch:
 
 permissions:
@@ -285,6 +286,9 @@ jobs:
 
       - name: Test CANVAS 3D WebGL2 scene, transforms, motion and exports
         run: node tests/canvas-3d-studio.browser.cjs
+
+      - name: Test OLLAMA CANVAS 3D AI Theme Studio and JavaScript / JSON Terminal
+        run: node tests/canvas-3d-ai-theme-terminal.browser.cjs
 
       - name: Stop local app server
         if: always()

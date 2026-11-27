@@ -14,6 +14,7 @@ on:
       - feature/ollama-adaptive-render-memory-2026-11-18
       - feature/original-content-ip-panel-2026-11-18
       - feature/ollama-illustration-catalogue-1500-unique-2026-11-21
+      - feature/ollama-canvas3d-terminal-ip-random-20261128
   pull_request:
     branches: [main]
     paths-ignore:
@@ -71,8 +72,11 @@ jobs:
         run: |
           node --check canvas-3d-studio.js
           node --check canvas-3d-ai-theme-studio.js
+          node --check canvas-3d-terminal.js
           node --check tests/canvas-3d-studio.test.cjs
+          node --check tests/canvas-3d-ai-theme-terminal.test.cjs
           node tests/canvas-3d-studio.test.cjs
+          node tests/canvas-3d-ai-theme-terminal.test.cjs
       - name: Validate Mode 5 preview ratio, custom size, loop and guides
         run: node tests/image-to-code-preview-controls.test.cjs
       - name: Validate Universal Rig browser and Python segmenter syntax
