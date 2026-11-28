@@ -14,7 +14,7 @@ for (const id of [
   'trozal3DStop','trozal3DTime','trozal3DLoop','trozal3DDuration','trozal3DFps',
   'trozal3DSave','trozal3DExportJson','trozal3DExportPng','trozal3DParent','trozal3DAddKeyframe','trozal3DKeyframeInfo','trozal3DLightingControls','trozal3DRenderer','trozal3DCanvas2D','trozal3DCanvasGL1','trozal3DCanvasGPU','trozal3DImport','trozal3DImportFile',
   'trozal3DCameraTools','trozal3DCameraProjection','trozal3DCameraFocus','trozal3DCameraFront','trozal3DCameraSide','trozal3DCameraTop','trozal3DOrthoScale',
-  'trozal3DTransformSnap','trozal3DSnapEnabled','trozal3DSnapMove','trozal3DSnapRotate','trozal3DSnapScale',
+  'trozal3DTransformSnap','trozal3DSnapEnabled','trozal3DSnapMove','trozal3DSnapRotate','trozal3DSnapScale','trozal3DEnvironment',
   'trozal3DUndo','trozal3DRedo','trozal3DHistoryCount'
 ]) assert.ok(source.includes('id=\''+id+'\'') || source.includes('id="'+id+'"') || source.includes(".id='"+id+"'"), 'Missing CANVAS 3D control: '+id);
 for (const token of [
@@ -27,6 +27,10 @@ for (const token of [
   'pointerdown','pointermove','addEventListener(\'wheel\'', 'function snapValue(value,step)', 'function historyUndo()', 'function historyRedo()', 'function historyRecord(label,key)', 'historySnapshot()', 'historyRestore(snapshot)', 'Ctrl+Z', 'Ctrl+Y', 'transformSnap:{...state.transformSnap}', 'state.transformSnap.enabled?snapValue(value,state.transformSnap.move)', 'state.transformSnap.enabled?snapValue(value,state.transformSnap.rotate)', 'state.transformSnap.enabled?snapValue(value,state.transformSnap.scale)'
 ]) assert.ok(source.includes(token), 'Missing 3D renderer feature: '+token);
 assert.ok(source.includes("Object.defineProperty(window,'TROZAL_CANVAS_3D'"), 'CANVAS 3D must expose its public scene API.');
+assert.ok(source.includes('ENVIRONMENTS={studio:') && source.includes('daylight:') && source.includes('warm:') && source.includes('neon:') && source.includes('dark:'), 'Canvas 3D must provide five preview environment presets.');
+assert.ok(source.includes('environment:state.environment') && source.includes("data.environment)?data.environment:'studio'"), 'Preview environment must persist through Scene JSON export and import.');
+assert.ok(source.includes('uColor*(.28+.16*uLight)') && source.includes('uColor*(0.28+0.16*uLight)') && source.includes('u.color.rgb*(0.28+0.16*u.viewPos.w)'), 'WebGL2, WebGL1 and WebGPU must use the brighter ambient baseline.');
+assert.ok(source.includes('let diffuse=.28;') && source.includes('diffuse+state.light*.16'), 'Canvas2D software 3D fallback must use the brighter ambient baseline.');
 assert.match(source, /WebGL2 tidak tersedia/);
 assert.doesNotMatch(source, /three\.min\.js|cdnjs\.cloudflare\.com\/ajax\/libs\/three/i,
   'CANVAS 3D must not depend on an external Three.js CDN.');
