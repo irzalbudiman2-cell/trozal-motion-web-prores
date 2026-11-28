@@ -72,6 +72,9 @@ jobs:
       - name: Validate CANVAS 3D script and static contract
         run: |
           node --check canvas-3d-studio.js
+          node --check canvas-3d-skeletal.js
+          node --check tests/canvas-3d-skeletal-foundation.test.cjs
+          node tests/canvas-3d-skeletal-foundation.test.cjs
           node --check canvas-3d-ai-theme-studio.js
           node --check canvas-3d-terminal.js
           node --check tests/canvas-3d-studio.test.cjs
