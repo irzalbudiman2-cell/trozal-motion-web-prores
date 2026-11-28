@@ -291,6 +291,13 @@ jobs:
       - name: Test OLLAMA CANVAS 3D AI Theme Studio and JavaScript / JSON Terminal
         run: node tests/canvas-3d-ai-theme-terminal.browser.cjs
 
+      - name: Test CANVAS 3D Multi Terminal formats and imported mesh rendering
+        run: |
+          node --check canvas-3d-multi-terminal.js
+          node --check canvas-3d-studio.js
+          node --check tests/canvas-3d-multi-terminal.browser.cjs
+          node tests/canvas-3d-multi-terminal.browser.cjs
+
       - name: Stop local app server
         if: always()
         run: |
