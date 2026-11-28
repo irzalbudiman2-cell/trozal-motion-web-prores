@@ -207,6 +207,9 @@ jobs:
           test -s site/canvas-3d-skeletal.js
           node --check site/canvas-3d-skeletal.js
           node --check site/canvas-3d-studio.js
+          node --check tests/canvas-3d-skeletal-foundation.test.cjs
+          node --check tests/canvas-3d-skeletal-foundation.browser.cjs
+          node tests/canvas-3d-skeletal-foundation.test.cjs
           node --check tests/canvas-3d-animation-system.browser.cjs
           test -s site/canvas-3d-ai-theme-studio.js
           test -s site/canvas-3d-terminal.js
