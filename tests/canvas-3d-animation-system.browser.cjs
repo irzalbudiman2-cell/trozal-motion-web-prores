@@ -30,6 +30,7 @@ const {chromium}=require('playwright');
    const linear=TROZAL_CANVAS_3D.evaluateObjectTransform('motion-test',2)[12];
    const orbitScene=JSON.parse(JSON.stringify(linearScene));
    orbitScene.objects[0].animation='orbit3d';
+   orbitScene.objects[0].keyframes=[];
    orbitScene.objects[0].speed=.25;
    orbitScene.objects[0].amount=2;
    TROZAL_CANVAS_3D.applyProject(orbitScene);
