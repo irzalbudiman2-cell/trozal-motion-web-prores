@@ -11,6 +11,9 @@ on:
       - 'browser-render-engine-groups.js'
       - 'canvas-3d-ai-theme-studio.js'
       - 'canvas-3d-terminal.js'
+      - 'canvas-3d-multi-terminal.js'
+      - 'tests/canvas-3d-multi-terminal.browser.cjs'
+      - '.github/workflows/build-prores-pages.yml'
       - 'tests/canvas-3d-ai-theme-terminal.test.cjs'
       - 'tests/canvas-3d-ai-theme-terminal.browser.cjs'
       - 'js/ollama-universal-object-rig.js'
@@ -65,6 +68,7 @@ jobs:
           cp browser-render-engine-groups.js site/browser-render-engine-groups.js
           cp canvas-3d-ai-theme-studio.js site/canvas-3d-ai-theme-studio.js
           cp canvas-3d-terminal.js site/canvas-3d-terminal.js
+          cp canvas-3d-multi-terminal.js site/canvas-3d-multi-terminal.js
           touch site/.nojekyll
 
       - name: Validate inline JavaScript syntax
@@ -193,9 +197,12 @@ jobs:
           node --check site/canvas-3d-studio.js
           test -s site/canvas-3d-ai-theme-studio.js
           test -s site/canvas-3d-terminal.js
+          test -s site/canvas-3d-multi-terminal.js
           node --check site/canvas-3d-ai-theme-studio.js
           node --check site/canvas-3d-terminal.js
+          node --check site/canvas-3d-multi-terminal.js
           grep -q 'canvas-3d-terminal.js' site/index.html
+          grep -q 'canvas-3d-multi-terminal.js' site/index.html
           node --check site/icon-logo-motion-studio.js
           node - <<'NODE'
           const fs = require('fs');
