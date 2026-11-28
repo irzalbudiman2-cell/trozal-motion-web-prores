@@ -12,7 +12,7 @@ for (const id of [
   'trozal3DSX','trozal3DSY','trozal3DSZ','trozal3DMetal','trozal3DRough','trozal3DMaterialPreset','trozal3DEmission',
   'trozal3DAnimation','trozal3DSpeed','trozal3DAmount','trozal3DPlay','trozal3DPause',
   'trozal3DStop','trozal3DTime','trozal3DLoop','trozal3DDuration','trozal3DFps',
-  'trozal3DSave','trozal3DExportJson','trozal3DExportPng','trozal3DParent','trozal3DAddKeyframe','trozal3DKeyframeInfo','trozal3DLightingControls',
+  'trozal3DSave','trozal3DExportJson','trozal3DExportPng','trozal3DParent','trozal3DAddKeyframe','trozal3DKeyframeInfo','trozal3DLightingControls','trozal3DRenderer','trozal3DCanvas2D','trozal3DCanvasGL1','trozal3DCanvasGPU','trozal3DImport','trozal3DImportFile',
   'trozal3DCameraTools','trozal3DCameraProjection','trozal3DCameraFocus','trozal3DCameraFront','trozal3DCameraSide','trozal3DCameraTop','trozal3DOrthoScale',
   'trozal3DTransformSnap','trozal3DSnapEnabled','trozal3DSnapMove','trozal3DSnapRotate','trozal3DSnapScale',
   'trozal3DUndo','trozal3DRedo','trozal3DHistoryCount'
@@ -34,6 +34,10 @@ assert.ok(source.includes('function easingProgress(u,mode)'), 'Keyframe easing e
 assert.ok(source.includes("case 'ease-in'" ) && source.includes("case 'ease-out'") && source.includes("case 'ease-in-out'") && source.includes("case 'smoothstep'") && source.includes("case 'hold'"), 'All supported interpolation modes must be implemented.');
 assert.ok(source.includes('trozal3DKeyframeEasing') && source.includes("easing:$(\'trozal3DKeyframeEasing\')?.value||\'ease-in-out\'"), 'Keyframe easing must be selectable and saved per keyframe.');
 assert.ok(source.includes("b.easing||a.easing||'linear'"), 'Each keyframe segment must apply its stored easing with a linear fallback for old projects.');
+assert.ok(source.includes('function setRenderer(choice)') && source.includes("const order=['webgpu','webgl2','webgl1','canvas2d']"), 'OLLAMA must expose selectable WebGPU, WebGL2, WebGL1 and Canvas2D CPU backends.');
+assert.ok(source.includes('function drawCanvas2D(time,force)') && source.includes('function drawWebGL1(time,force)') && source.includes('function drawGPU(time,force)'), 'Every advertised 3D backend must have a real draw implementation.');
+assert.ok(html.includes('./browser-render-engine-groups.js'), 'OLLAMA must load the 3D and 2D render engine groups panel.');
+console.log('PASS: OLLAMA Canvas 3D renderer choices, 2D/3D engine groups, snap and history controls.');
 console.log('PASS: CANVAS 3D WebGL2 scene, geometry, transform, materials, three-point lighting, per-object motion, camera, timeline and exports are wired.');
 
 assert.ok(html.includes('./canvas-3d-ai-theme-studio.js'), 'AI Theme Studio script must load.');

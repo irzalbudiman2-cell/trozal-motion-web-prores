@@ -15,6 +15,7 @@ on:
       - feature/original-content-ip-panel-2026-11-18
       - feature/ollama-illustration-catalogue-1500-unique-2026-11-21
       - feature/ollama-canvas3d-terminal-ip-random-20261128
+      - feat/ollama-canvas3d-render-engine-choice-20261128
   pull_request:
     branches: [main]
     paths-ignore:
