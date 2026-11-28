@@ -87,6 +87,10 @@ function scene(name='Terminal Scene',duration=6){
   await page.locator('#t3dTerminalValidate').click();
   await page.waitForFunction(()=>document.getElementById('t3dTerminalStatus')?.textContent.includes('JSON valid'));
   await page.locator('#t3dTerminalApply').click();
+  const applyStatus=await page.locator('#t3dTerminalStatus').innerText();
+  const durationInput=await page.locator('#trozal3DDuration').inputValue();
+  assert.match(applyStatus,/Scene diterapkan/,'Terminal Apply must report a successful Scene application: '+applyStatus);
+  assert.equal(Number(durationInput),5,'Canvas timeline control must receive imported duration.');
   active=await page.evaluate(()=>window.TROZAL_CANVAS_3D.getProject());
   assert.equal(active.objects.length,4);
   assert.equal(active.duration,5);
