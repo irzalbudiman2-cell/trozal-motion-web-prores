@@ -22,6 +22,14 @@ assert.match(studioSource,/uniformMatrix3fv\(l\.normal,false,normalMatrix\(m\)\)
     await page.waitForFunction(()=>window.TROZAL_CANVAS_3D?.status?.webgl===true,null,{timeout:15000});
     const initial=await page.evaluate(()=>window.TROZAL_CANVAS_3D.getProject());
     assert.equal(initial.objects.length,3,'The starter 3D scene should contain three independently editable meshes.');
+    const texturePng=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=','base64');
+    await page.locator('#trozal3DTextureFile').setInputFiles({name:'material-test.png',mimeType:'image/png',buffer:texturePng});
+    await page.waitForFunction(()=>Boolean(window.TROZAL_CANVAS_3D?.getProject?.().objects[0]?.textureDataUrl),null,{timeout:10000});
+    const texturedScene=await page.evaluate(()=>window.TROZAL_CANVAS_3D.getProject());
+    assert.match(texturedScene.objects[0].textureDataUrl,/^data:image\/png;base64,/,'Image texture must be embedded in the selected object and Scene JSON.');
+    await page.locator('#trozal3DTextureRemove').click();
+    const textureRemoved=await page.evaluate(()=>window.TROZAL_CANVAS_3D.getProject().objects[0].textureDataUrl);
+    assert.equal(textureRemoved,null,'Image texture removal must clear the selected object asset.');
     assert.equal(initial.environment,'studio','Studio environment should be the default preview.');
     await page.locator('#trozal3DEnvironment').selectOption('daylight');
     let environmentProject=await page.evaluate(()=>window.TROZAL_CANVAS_3D.getProject());
