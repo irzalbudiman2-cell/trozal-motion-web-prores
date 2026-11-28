@@ -15,7 +15,7 @@ for (const id of [
   'trozal3DSave','trozal3DExportJson','trozal3DExportPng','trozal3DParent','trozal3DAddKeyframe','trozal3DKeyframeInfo','trozal3DLightingControls','trozal3DRenderer','trozal3DCanvas2D','trozal3DCanvasGL1','trozal3DCanvasGPU','trozal3DImport','trozal3DImportFile',
   'trozal3DCameraTools','trozal3DCameraProjection','trozal3DCameraFocus','trozal3DCameraFront','trozal3DCameraSide','trozal3DCameraTop','trozal3DOrthoScale',
   'trozal3DTransformSnap','trozal3DSnapEnabled','trozal3DSnapMove','trozal3DSnapRotate','trozal3DSnapScale','trozal3DEnvironment',
-  'trozal3DUndo','trozal3DRedo','trozal3DHistoryCount'
+  'trozal3DUndo','trozal3DRedo','trozal3DHistoryCount','trozal3DHdriFile','trozal3DHdriIntensity','trozal3DHdriRemove','trozal3DHdriInfo'
 ]) assert.ok(source.includes('id=\''+id+'\'') || source.includes('id="'+id+'"') || source.includes(".id='"+id+"'"), 'Missing CANVAS 3D control: '+id);
 for (const token of [
   "getContext('webgl2'", 'uniform mat3 uNormalMatrix', 'normalize(uNormalMatrix*aNormal)', 'function normalMatrix(m)', 'uniformMatrix3fv(l.normal,false,normalMatrix(m))', 'drawArrays(gl.TRIANGLES', 'drawArrays(gl.LINES',
@@ -31,6 +31,8 @@ assert.ok(source.includes('in vec2 aUv') && source.includes('out vec2 vUv') && s
 assert.ok(source.includes('attribute vec2 aUv') && source.includes('texture2D(uTexture,vUv)'), 'WebGL1 compatibility renderer must support image textures.');
 assert.ok(source.includes('id="trozal3DTextureFile"') && source.includes('id="trozal3DTextureRemove"') && source.includes('2*1024*1024'), 'Object inspector must expose safe image texture upload and removal.');
 assert.ok(source.includes('imageTexture(gl,o.textureDataUrl)') && source.includes('textureDataUrl.length<=2800000'), 'Image textures must upload to GPU and persist safely in Scene JSON.');
+assert.ok(source.includes('uniform sampler2D uEnvironmentMap') && source.includes('texture(uEnvironmentMap,envUv)') && source.includes('texture2D(uEnvironmentMap,envUv)'), 'WebGL1/WebGL2 must sample an equirectangular HDRI for image-based reflections.');
+assert.ok(source.includes('id="trozal3DHdriFile"') && source.includes('hdriDataUrl') && source.includes('hdriIntensity'), 'HDRI upload, intensity and Scene JSON persistence must be wired.');
 assert.ok(source.includes('ENVIRONMENTS={studio:') && source.includes('daylight:') && source.includes('warm:') && source.includes('neon:') && source.includes('dark:'), 'Canvas 3D must provide five preview environment presets.');
 assert.ok(source.includes('environment:state.environment') && source.includes("data.environment)?data.environment:'studio'"), 'Preview environment must persist through Scene JSON export and import.');
 assert.ok(source.includes('base*(.28+.16*uLight)') && source.includes('base*(0.28+0.16*uLight)') && source.includes('u.color.rgb*(0.28+0.16*u.viewPos.w)'), 'WebGL2, WebGL1 and WebGPU must use the brighter ambient baseline with optional texture color.');
