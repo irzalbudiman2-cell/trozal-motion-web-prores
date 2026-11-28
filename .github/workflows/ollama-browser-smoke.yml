@@ -26,6 +26,7 @@ on:
       - feature/preview-proxy-canvas-2026-11-18
       - feature/ollama-adaptive-render-memory-2026-11-18
       - feature/ollama-canvas3d-terminal-ip-random-20261128
+      - fix/ollama-canvas3d-import-smoke-20261128
   workflow_dispatch:
 
 permissions:
