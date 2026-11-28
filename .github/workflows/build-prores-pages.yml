@@ -16,6 +16,8 @@ on:
       - 'canvas-3d-preview-renderer.js'
       - 'canvas-3d-multi-preview.js'
       - 'tests/canvas-3d-multi-preview-gallery.browser.cjs'
+      - 'tests/canvas-3d-skeletal-foundation.test.cjs'
+      - 'tests/canvas-3d-skeletal-foundation.browser.cjs'
       - 'tests/canvas-3d-multi-terminal.browser.cjs'
       - '.github/workflows/build-prores-pages.yml'
       - 'tests/canvas-3d-ai-theme-terminal.test.cjs'
@@ -201,6 +203,8 @@ jobs:
           node --check site/logo-studio.js
           test -s site/icon-logo-motion-studio.js
           test -s site/canvas-3d-studio.js
+          test -s site/canvas-3d-skeletal.js
+          node --check site/canvas-3d-skeletal.js
           node --check site/canvas-3d-studio.js
           test -s site/canvas-3d-ai-theme-studio.js
           test -s site/canvas-3d-terminal.js
