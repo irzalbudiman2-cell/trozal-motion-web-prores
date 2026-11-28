@@ -28,6 +28,7 @@ function glbFixture(){
    const binary=atob(base64),data=new Uint8Array(binary.length);for(let i=0;i<binary.length;i++)data[i]=binary.charCodeAt(i);
    const file={name:'dragon-fixture.glb',arrayBuffer:async()=>data.buffer};
    const asset=await TROZAL_CANVAS3D_SKELETAL.parseFiles([file],file);
+   const alternate=JSON.parse(JSON.stringify(asset.animations[0]));alternate.name='Wing Sweep';alternate.samplers[0].output=[0,3,0,0,4,0];asset.animations.push(alternate);
    const imported=await TROZAL_CANVAS_3D.importSkinnedGLTF(asset);
    const roundTrip=JSON.parse(JSON.stringify(TROZAL_CANVAS_3D.getProject()));
    TROZAL_CANVAS_3D.applyProject(roundTrip);
@@ -35,7 +36,7 @@ function glbFixture(){
    return {imported,renderer:TROZAL_CANVAS_3D.status.renderer,project:TROZAL_CANVAS_3D.getProject(),pose0:pose0.skinsByNode['0'][29],poseMid:poseMid.skinsByNode['0'][29],clipValue:document.getElementById('trozal3DSkeletalClip').value,clipOptions:document.getElementById('trozal3DSkeletalClip').options.length,skinInfo:document.getElementById('trozal3DSkeletalInfo').textContent};
   },bytes);
   assert.equal(result.renderer,'webgl2','Skinned asset should switch to the WebGL2 GPU skinning path.');
-  assert.equal(result.imported.nodes,3);assert.equal(result.imported.joints,2);assert.equal(result.imported.clips.length,1);
+  assert.equal(result.imported.nodes,3);assert.equal(result.imported.joints,2);assert.equal(result.imported.clips.length,2);
   assert.equal(result.project.skeletalAssets.length,1,'Skeletal asset must survive Scene JSON save/load.');
   await page.waitForSelector('#t3dMultiOpen',{timeout:10000});
   await page.locator('#t3dMultiOpen').click();
@@ -49,6 +50,12 @@ function glbFixture(){
   await page.waitForFunction(()=>TROZAL_CANVAS_3D.getProject().skeletalAssets?.length===1);
   assert.ok(result.project.objects.some(o=>o.skeletal),'Scene objects must retain skeletal primitive references.');
   assert.equal(result.clipValue,'0');assert.equal(result.clipOptions,2);
+  await page.locator('#trozal3DSkeletalBlendClip').selectOption('1');
+  await page.locator('#trozal3DSkeletalBlendWeight').fill('0.5');
+  const blendState=await page.evaluate(()=>({asset:TROZAL_CANVAS_3D.getProject().skeletalAssets[0],weight:document.getElementById('trozal3DSkeletalBlendValue').textContent,api:typeof TROZAL_CANVAS3D_SKELETAL.computeBlendedPose}));
+  assert.equal(blendState.asset.blendClip,1,'Secondary clip selection must persist in Scene JSON.');
+  assert.equal(blendState.asset.blendWeight,.5,'Clip blend weight must persist in Scene JSON.');
+  assert.equal(blendState.weight,'50%');assert.equal(blendState.api,'function');
   assert.ok(result.skinInfo.includes('WebGL2 GPU skinning'));
   assert.ok(Math.abs(result.pose0)<1e-5&&Math.abs(result.poseMid-.5)<1e-4,'Animation must update joint matrices across the clip.');
   const glState=await page.evaluate(()=>{const c=document.getElementById('trozal3DCanvas'),gl=c.getContext('webgl2');gl.finish();return {error:gl.getError(),width:c.width,height:c.height};});
