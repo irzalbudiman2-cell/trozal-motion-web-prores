@@ -30,6 +30,16 @@ assert.match(studioSource,/uniformMatrix3fv\(l\.normal,false,normalMatrix\(m\)\)
     await page.locator('#trozal3DTextureRemove').click();
     const textureRemoved=await page.evaluate(()=>window.TROZAL_CANVAS_3D.getProject().objects[0].textureDataUrl);
     assert.equal(textureRemoved,null,'Image texture removal must clear the selected object asset.');
+    const hdriPng=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=','base64');
+    await page.locator('#trozal3DHdriFile').setInputFiles({name:'environment-test.png',mimeType:'image/png',buffer:hdriPng});
+    await page.waitForFunction(()=>Boolean(window.TROZAL_CANVAS_3D?.getProject?.().hdriDataUrl),null,{timeout:10000});
+    let hdriScene=await page.evaluate(()=>window.TROZAL_CANVAS_3D.getProject());
+    assert.match(hdriScene.hdriDataUrl,/^data:image\\/png;base64,/,'HDRI image must be embedded in Scene JSON.');
+    await page.locator('#trozal3DHdriIntensity').fill('1.25');
+    hdriScene=await page.evaluate(()=>window.TROZAL_CANVAS_3D.getProject());
+    assert.equal(hdriScene.hdriIntensity,1.25,'HDRI intensity control must update scene state.');
+    await page.locator('#trozal3DHdriRemove').click();
+    assert.equal(await page.evaluate(()=>window.TROZAL_CANVAS_3D.getProject().hdriDataUrl),null,'HDRI removal must clear the environment map.');
     assert.equal(initial.environment,'studio','Studio environment should be the default preview.');
     await page.locator('#trozal3DEnvironment').selectOption('daylight');
     let environmentProject=await page.evaluate(()=>window.TROZAL_CANVAS_3D.getProject());
