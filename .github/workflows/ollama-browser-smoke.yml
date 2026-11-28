@@ -64,6 +64,9 @@ jobs:
       - name: Verify independent Logo Studio catalogue, motion, prompt and Canvas import
         run: node tests/logo-studio.browser.cjs
 
+      - name: Verify Canvas 3D motion paths, per-object interpolation and 3-axis orbit
+        run: node tests/canvas-3d-animation-system.browser.cjs
+
       - name: Verify Hybrid Canvas, bitrate, Ollama and GPU health regression guards
         run: |
           node tests/hybrid-canvas-bitrate-health.test.cjs
