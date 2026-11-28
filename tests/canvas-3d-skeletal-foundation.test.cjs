@@ -70,6 +70,15 @@ const {json,bin}=fixture();
  assert.ok(restSkin&&liftedSkin,'Skin matrices must be generated for the mesh node.');
  assert.ok(Math.abs(restSkin[16+13])<1e-5,'Inverse bind matrix should cancel the bind-pose joint translation.');
  assert.ok(Math.abs(liftedSkin[16+13]-.5)<1e-4,'Animation sampling should move the joint and update its skin matrix.');
+ const blendAsset=JSON.parse(JSON.stringify(asset));
+ const alternate=JSON.parse(JSON.stringify(blendAsset.animations[0]));alternate.name='Wing Sweep';alternate.samplers[0].output=[0,3,0,0,4,0];blendAsset.animations.push(alternate);
+ const blendZero=Skeletal.computeBlendedPose(blendAsset,0,.5,1,.5,0),blendFull=Skeletal.computeBlendedPose(blendAsset,0,.5,1,.5,1),blendHalf=Skeletal.computeBlendedPose(blendAsset,0,.5,1,.5,.5);
+ assert.ok(Math.abs(blendZero.skinsByNode['0'][16+13]-.5)<1e-4,'Zero blend weight must exactly preserve the primary clip.');
+ assert.ok(Math.abs(blendFull.skinsByNode['0'][16+13]-2.5)<1e-4,'Full blend weight must exactly use the secondary clip.');
+ assert.ok(Math.abs(blendHalf.skinsByNode['0'][16+13]-1.5)<1e-4,'Half blend weight must interpolate skeletal joint translation between clips.');
+ const blendSaved=Skeletal.sanitizeAsset({...blendAsset,blendClip:1,blendWeight:.35});
+ assert.equal(blendSaved.blendClip,1);assert.equal(blendSaved.blendWeight,.35,'Clip blend controls must survive asset JSON sanitization.');
+
  const endPose=Skeletal.computePose(asset,0,1);
  assert.ok(Math.abs(endPose.skinsByNode['0'][16+13]-1)<1e-4,'Non-looping timeline must hold the last animation pose at clip duration.');
  const saved=Skeletal.sanitizeAsset(JSON.parse(JSON.stringify(asset)));
