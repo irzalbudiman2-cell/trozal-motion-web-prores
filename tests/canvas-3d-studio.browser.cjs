@@ -34,7 +34,7 @@ assert.match(studioSource,/uniformMatrix3fv\(l\.normal,false,normalMatrix\(m\)\)
     await page.locator('#trozal3DHdriFile').setInputFiles({name:'environment-test.png',mimeType:'image/png',buffer:hdriPng});
     await page.waitForFunction(()=>Boolean(window.TROZAL_CANVAS_3D?.getProject?.().hdriDataUrl),null,{timeout:10000});
     let hdriScene=await page.evaluate(()=>window.TROZAL_CANVAS_3D.getProject());
-    assert.match(hdriScene.hdriDataUrl,/^data:image\\/png;base64,/,'HDRI image must be embedded in Scene JSON.');
+    assert.ok(hdriScene.hdriDataUrl.startsWith('data:image/png;base64,'),'HDRI image must be embedded in Scene JSON.');
     await page.locator('#trozal3DHdriIntensity').fill('1.25');
     hdriScene=await page.evaluate(()=>window.TROZAL_CANVAS_3D.getProject());
     assert.equal(hdriScene.hdriIntensity,1.25,'HDRI intensity control must update scene state.');
