@@ -22,6 +22,15 @@ assert.match(studioSource,/uniformMatrix3fv\(l\.normal,false,normalMatrix\(m\)\)
     await page.waitForFunction(()=>window.TROZAL_CANVAS_3D?.status?.webgl===true,null,{timeout:15000});
     const initial=await page.evaluate(()=>window.TROZAL_CANVAS_3D.getProject());
     assert.equal(initial.objects.length,3,'The starter 3D scene should contain three independently editable meshes.');
+    assert.equal(initial.environment,'studio','Studio environment should be the default preview.');
+    await page.locator('#trozal3DEnvironment').selectOption('daylight');
+    let environmentProject=await page.evaluate(()=>window.TROZAL_CANVAS_3D.getProject());
+    assert.equal(environmentProject.environment,'daylight','Daylight preview environment should persist in scene data.');
+    assert.equal(environmentProject.light,2,'Daylight environment should raise ambient intensity to its preset.');
+    await page.locator('#trozal3DEnvironment').selectOption('warm');
+    environmentProject=await page.evaluate(()=>window.TROZAL_CANVAS_3D.getProject());
+    assert.equal(environmentProject.environment,'warm','Warm preview environment should update the active scene.');
+    await page.locator('#trozal3DEnvironment').selectOption('studio');
     assert.ok(initial.objects.some(o=>o.type==='cube'));
     assert.ok(initial.objects.some(o=>o.type==='sphere'));
     assert.ok(initial.objects.some(o=>o.type==='torus'));
