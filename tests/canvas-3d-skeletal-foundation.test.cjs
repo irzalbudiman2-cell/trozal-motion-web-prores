@@ -64,6 +64,7 @@ const {json,bin}=fixture();
  assert.equal(asset.primitives[0].weights.length,12);
  assert.equal(asset.animations.length,1);
  assert.equal(asset.animations[0].name,'Wing Lift');
+assert.equal(typeof Skeletal.computeBlendedPose,'function','Skeletal runtime must expose a deterministic two-clip mixer.');
  const rest=Skeletal.computePose(asset,0,0);
  const lifted=Skeletal.computePose(asset,0,.5);
  const restSkin=rest.skinsByNode['0'],liftedSkin=lifted.skinsByNode['0'];
