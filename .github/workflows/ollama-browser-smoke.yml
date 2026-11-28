@@ -314,6 +314,9 @@ jobs:
           node --check tests/canvas-3d-skeletal-foundation.browser.cjs
           node tests/canvas-3d-skeletal-foundation.browser.cjs
 
+      - name: Test skeletal animation clip blending and crossfade controls
+        run: node tests/canvas-3d-skeletal-foundation.browser.cjs
+
       - name: Stop local app server
         if: always()
         run: |
