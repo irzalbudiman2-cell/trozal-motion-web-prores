@@ -56,7 +56,7 @@ function glbFixture(){
   assert.equal(blendState.asset.blendClip,1,'Secondary clip selection must persist in Scene JSON.');
   assert.equal(blendState.asset.blendWeight,.5,'Clip blend weight must persist in Scene JSON.');
   assert.equal(blendState.weight,'50%');assert.equal(blendState.api,'function');
-  assert.ok(result.skinInfo.includes('WebGL2 GPU skinning'));
+  assert.ok(result.skinInfo.includes('GPU skinning'));
   assert.ok(Math.abs(result.pose0)<1e-5&&Math.abs(result.poseMid-.5)<1e-4,'Animation must update joint matrices across the clip.');
   const glState=await page.evaluate(()=>{const c=document.getElementById('trozal3DCanvas'),gl=c.getContext('webgl2');gl.finish();return {error:gl.getError(),width:c.width,height:c.height};});
   assert.equal(glState.error,0,'WebGL2 skinning draw should not leave a GL error.');
