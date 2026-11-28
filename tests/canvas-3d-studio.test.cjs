@@ -49,7 +49,7 @@ assert.ok(source.includes("o.interpolation||'linear'") && source.includes('troza
 assert.ok(source.includes('item.motionPath=') && source.includes('easing:[\'linear\''), 'Motion paths and per-keyframe easing must survive Scene JSON validation.');
 assert.ok(source.includes('evaluateObjectTransform(id,time)'), 'Browser regression tests must be able to evaluate the object transform deterministically.');
 assert.ok(source.includes("case 'ease-in'" ) && source.includes("case 'ease-out'") && source.includes("case 'ease-in-out'") && source.includes("case 'smoothstep'") && source.includes("case 'hold'"), 'All supported interpolation modes must be implemented.');
-assert.ok(source.includes('trozal3DKeyframeEasing') && source.includes("easing:$(\'trozal3DKeyframeEasing\')?.value||\'ease-in-out\'"), 'Keyframe easing must be selectable and saved per keyframe.');
+assert.ok(source.includes('trozal3DKeyframeEasing') && source.includes("o.interpolation||'ease-in-out'") && source.includes('key={time:at,values,easing:'), 'Keyframe easing must be selectable and use the per-object default.');
 assert.ok(source.includes("b.easing||a.easing||o.interpolation||'linear'"), 'Each keyframe segment must apply stored easing, then object interpolation, then legacy linear fallback.');
 assert.ok(source.includes('function setRenderer(choice)') && source.includes("const order=['webgpu','webgl2','webgl1','canvas2d']"), 'OLLAMA must expose selectable WebGPU, WebGL2, WebGL1 and Canvas2D CPU backends.');
 assert.ok(source.includes('function drawCanvas2D(time,force)') && source.includes('function drawWebGL1(time,force)') && source.includes('function drawGPU(time,force)'), 'Every advertised 3D backend must have a real draw implementation.');
