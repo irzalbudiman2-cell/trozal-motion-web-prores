@@ -15,7 +15,7 @@ for (const id of [
   'trozal3DSave','trozal3DExportJson','trozal3DExportPng','trozal3DParent','trozal3DAddKeyframe','trozal3DKeyframeInfo','trozal3DLightingControls','trozal3DRenderer','trozal3DCanvas2D','trozal3DCanvasGL1','trozal3DCanvasGPU','trozal3DImport','trozal3DImportFile',
   'trozal3DCameraTools','trozal3DCameraProjection','trozal3DCameraFocus','trozal3DCameraFront','trozal3DCameraSide','trozal3DCameraTop','trozal3DOrthoScale',
   'trozal3DTransformSnap','trozal3DSnapEnabled','trozal3DSnapMove','trozal3DSnapRotate','trozal3DSnapScale','trozal3DEnvironment',
-  'trozal3DUndo','trozal3DRedo','trozal3DHistoryCount','trozal3DHdriFile','trozal3DHdriIntensity','trozal3DHdriRemove','trozal3DHdriInfo'
+  'trozal3DUndo','trozal3DRedo','trozal3DHistoryCount','trozal3DHdriFile','trozal3DHdriIntensity','trozal3DHdriRemove','trozal3DHdriInfo','trozal3DObjectInterpolation','trozal3DPathInterpolation','trozal3DPathClosed','trozal3DAddPathPoint','trozal3DClearPath'
 ]) assert.ok(source.includes('id=\''+id+'\'') || source.includes('id="'+id+'"') || source.includes(".id='"+id+"'"), 'Missing CANVAS 3D control: '+id);
 for (const token of [
   "getContext('webgl2'", 'uniform mat3 uNormalMatrix', 'normalize(uNormalMatrix*aNormal)', 'function normalMatrix(m)', 'uniformMatrix3fv(l.normal,false,normalMatrix(m))', 'drawArrays(gl.TRIANGLES', 'drawArrays(gl.LINES',
@@ -43,6 +43,11 @@ assert.match(source, /WebGL2 tidak tersedia/);
 assert.doesNotMatch(source, /three\.min\.js|cdnjs\.cloudflare\.com\/ajax\/libs\/three/i,
   'CANVAS 3D must not depend on an external Three.js CDN.');
 assert.ok(source.includes('function easingProgress(u,mode)'), 'Keyframe easing evaluator must be present.');
+assert.ok(source.includes('function motionPathPosition(o,t)') && source.includes("path.interpolation==='catmull-rom'"), '3D motion path must support linear and Catmull-Rom interpolation.');
+assert.ok(source.includes("o.animation==='orbit3d'") && source.includes('Math.sin(phase*2)') && source.includes('Math.cos(phase)'), '3-axis orbit must animate X, Y and Z.');
+assert.ok(source.includes("o.interpolation||'linear'") && source.includes('trozal3DObjectInterpolation'), 'Each object must retain its own default interpolation.');
+assert.ok(source.includes('item.motionPath=') && source.includes('easing:[\'linear\''), 'Motion paths and per-keyframe easing must survive Scene JSON validation.');
+assert.ok(source.includes('evaluateObjectTransform(id,time)'), 'Browser regression tests must be able to evaluate the object transform deterministically.');
 assert.ok(source.includes("case 'ease-in'" ) && source.includes("case 'ease-out'") && source.includes("case 'ease-in-out'") && source.includes("case 'smoothstep'") && source.includes("case 'hold'"), 'All supported interpolation modes must be implemented.');
 assert.ok(source.includes('trozal3DKeyframeEasing') && source.includes("easing:$(\'trozal3DKeyframeEasing\')?.value||\'ease-in-out\'"), 'Keyframe easing must be selectable and saved per keyframe.');
 assert.ok(source.includes("b.easing||a.easing||'linear'"), 'Each keyframe segment must apply its stored easing with a linear fallback for old projects.');
