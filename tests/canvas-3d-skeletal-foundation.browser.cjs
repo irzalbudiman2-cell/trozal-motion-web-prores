@@ -49,7 +49,7 @@ function glbFixture(){
   await page.locator('#t3dMultiApply').click();
   await page.waitForFunction(()=>TROZAL_CANVAS_3D.getProject().skeletalAssets?.length===1);
   assert.ok(result.project.objects.some(o=>o.skeletal),'Scene objects must retain skeletal primitive references.');
-  assert.equal(result.clipValue,'0');assert.equal(result.clipOptions,2);
+  assert.equal(result.clipValue,'0');assert.equal(result.clipOptions,3,'One placeholder plus two animation clips should be available.');
   await page.locator('#trozal3DSkeletalBlendClip').selectOption('1');
   await page.locator('#trozal3DSkeletalBlendWeight').fill('0.5');
   const blendState=await page.evaluate(()=>({asset:TROZAL_CANVAS_3D.getProject().skeletalAssets[0],weight:document.getElementById('trozal3DSkeletalBlendValue').textContent,api:typeof TROZAL_CANVAS3D_SKELETAL.computeBlendedPose}));
