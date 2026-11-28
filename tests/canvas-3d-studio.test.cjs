@@ -33,7 +33,7 @@ assert.ok(source.includes('id="trozal3DTextureFile"') && source.includes('id="tr
 assert.ok(source.includes('imageTexture(gl,o.textureDataUrl)') && source.includes('textureDataUrl.length<=2800000'), 'Image textures must upload to GPU and persist safely in Scene JSON.');
 assert.ok(source.includes('ENVIRONMENTS={studio:') && source.includes('daylight:') && source.includes('warm:') && source.includes('neon:') && source.includes('dark:'), 'Canvas 3D must provide five preview environment presets.');
 assert.ok(source.includes('environment:state.environment') && source.includes("data.environment)?data.environment:'studio'"), 'Preview environment must persist through Scene JSON export and import.');
-assert.ok(source.includes('uColor*(.28+.16*uLight)') && source.includes('uColor*(0.28+0.16*uLight)') && source.includes('u.color.rgb*(0.28+0.16*u.viewPos.w)'), 'WebGL2, WebGL1 and WebGPU must use the brighter ambient baseline.');
+assert.ok(source.includes('base*(.28+.16*uLight)') && source.includes('base*(0.28+0.16*uLight)') && source.includes('u.color.rgb*(0.28+0.16*u.viewPos.w)'), 'WebGL2, WebGL1 and WebGPU must use the brighter ambient baseline with optional texture color.');
 assert.ok(source.includes('let diffuse=.28;') && source.includes('diffuse+state.light*.16'), 'Canvas2D software 3D fallback must use the brighter ambient baseline.');
 assert.match(source, /WebGL2 tidak tersedia/);
 assert.doesNotMatch(source, /three\.min\.js|cdnjs\.cloudflare\.com\/ajax\/libs\/three/i,
