@@ -305,6 +305,12 @@ jobs:
           node --check tests/canvas-3d-multi-terminal.browser.cjs
           node tests/canvas-3d-multi-terminal.browser.cjs
 
+      - name: Test GLTF skeletal import, inverse bind matrices and WebGL2 GPU skinning
+        run: |
+          node --check canvas-3d-skeletal.js
+          node --check tests/canvas-3d-skeletal-foundation.browser.cjs
+          node tests/canvas-3d-skeletal-foundation.browser.cjs
+
       - name: Stop local app server
         if: always()
         run: |
