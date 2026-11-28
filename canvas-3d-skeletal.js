@@ -237,12 +237,14 @@ function sampleSampler(sampler,time,path){
  const sz=sampler.outputSize,a=sampler.output.slice(i*sz,(i+1)*sz),b=sampler.output.slice((i+1)*sz,(i+2)*sz);
  return path==='rotation'?quatLerp(a,b,u):a.map((v,k)=>v+(b[k]-v)*u);
 }
-function computePose(asset,clipIndex,time){
- const clip=asset.animations?.[clipIndex]||null,trs=asset.nodes.map(n=>({translation:n.translation.slice(),rotation:n.rotation.slice(),scale:n.scale.slice()}));
- if(clip){
-  const t=clip.start+Math.max(0,Math.min(clip.duration,Number(time)||0));
-  for(const channel of clip.channels){const value=sampleSampler(clip.samplers[channel.sampler],t,channel.path);trs[channel.node][channel.path]=channel.path==='rotation'?normalizeQuat(value):value;}
- }
+function sampleClipTRS(asset,clipIndex,time){
+ const trs=asset.nodes.map(n=>({translation:n.translation.slice(),rotation:n.rotation.slice(),scale:n.scale.slice()})),clip=asset.animations?.[clipIndex]||null;
+ if(!clip)return trs;
+ const t=clip.start+Math.max(0,Math.min(clip.duration,Number(time)||0));
+ for(const channel of clip.channels){const value=sampleSampler(clip.samplers[channel.sampler],t,channel.path);trs[channel.node][channel.path]=channel.path==='rotation'?normalizeQuat(value):value;}
+ return trs;
+}
+function poseFromTRS(asset,trs){
  const locals=asset.nodes.map((n,i)=>n.matrix?n.matrix.slice():localNodeMatrix(n,trs[i])),worlds=worldMatrices(asset.nodes,locals),skinsByNode={};
  asset.nodes.forEach((node,nodeIndex)=>{
   if(node.skin==null)return;const skin=asset.skins[node.skin],inverseMesh=invert(worlds[nodeIndex]),matrices=[];
@@ -250,6 +252,13 @@ function computePose(asset,clipIndex,time){
   skinsByNode[nodeIndex]=matrices;
  });
  return {nodeWorld:worlds,skinsByNode};
+}
+function computePose(asset,clipIndex,time){return poseFromTRS(asset,sampleClipTRS(asset,clipIndex,time));}
+function computeBlendedPose(asset,clipA,timeA,clipB,timeB,weight){
+ const a=sampleClipTRS(asset,clipA,timeA),b=sampleClipTRS(asset,clipB,timeB),w=Math.max(0,Math.min(1,Number(weight)||0));
+ if(w<=0)return poseFromTRS(asset,a);if(w>=1)return poseFromTRS(asset,b);
+ const blended=a.map((trs,index)=>({translation:trs.translation.map((v,k)=>v+(b[index].translation[k]-v)*w),scale:trs.scale.map((v,k)=>v+(b[index].scale[k]-v)*w),rotation:quatSlerp(trs.rotation,b[index].rotation,w)}));
+ return poseFromTRS(asset,blended);
 }
 function boundsAndRoot(asset){
  let low=[Infinity,Infinity,Infinity],high=[-Infinity,-Infinity,-Infinity],count=0;
@@ -312,7 +321,7 @@ function sanitizeAsset(raw){
   return {name:String(a.name||('Animation '+(i+1))),start,duration,samplers:normalizedSamplers,channels:normalizedChannels};
  });
  const rootTransform=Array.isArray(raw.rootTransform)&&raw.rootTransform.length===16?raw.rootTransform.map(Number):identity();finiteArray(rootTransform,'root transform',16);
- return {version:1,id:String(raw.id||('skeletal-'+Math.random().toString(36).slice(2,10))),name:String(raw.name||'Imported Skeletal Model').slice(0,96),nodes,skins,primitives,animations,activeClip:Number.isInteger(raw.activeClip)&&raw.activeClip>=0&&raw.activeClip<animations.length?raw.activeClip:0,rootTransform,bounds:raw.bounds||null,warnings:Array.isArray(raw.warnings)?raw.warnings.map(String):[]};
+ return {version:1,id:String(raw.id||('skeletal-'+Math.random().toString(36).slice(2,10))),name:String(raw.name||'Imported Skeletal Model').slice(0,96),nodes,skins,primitives,animations,activeClip:Number.isInteger(raw.activeClip)&&raw.activeClip>=0&&raw.activeClip<animations.length?raw.activeClip:0,blendClip:Number.isInteger(raw.blendClip)&&raw.blendClip>=0&&raw.blendClip<animations.length?raw.blendClip:-1,blendWeight:Math.max(0,Math.min(1,Number.isFinite(Number(raw.blendWeight))?Number(raw.blendWeight):0)),rootTransform,bounds:raw.bounds||null,warnings:Array.isArray(raw.warnings)?raw.warnings.map(String):[]};
 }
 async function parseFiles(files,rootFile){
  const {json,buffers}=await readContainer(files,rootFile);if(!Array.isArray(json.skins)||!json.skins.length)return null;const read=accessorReader(json,buffers),nodes=buildNodes(json),skins=buildSkins(json,read);
@@ -324,5 +333,5 @@ async function parseFiles(files,rootFile){
  Object.assign(asset,boundsAndRoot(asset));
  return sanitizeAsset(asset);
 }
-return {parseFiles,computePose,sanitizeAsset,limits:{maxFileBytes:MAX_FILE_BYTES,maxNodes:MAX_NODES,maxJoints:MAX_JOINTS,maxVertices:MAX_VERTICES}};
+return {parseFiles,computePose,computeBlendedPose,sanitizeAsset,limits:{maxFileBytes:MAX_FILE_BYTES,maxNodes:MAX_NODES,maxJoints:MAX_JOINTS,maxVertices:MAX_VERTICES}};
 });
